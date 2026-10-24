@@ -6,81 +6,115 @@
 import Foundation
 import JavaScriptCore
 import IOBluetooth
+import CoreBluetooth
 
 // MARK: - JavaScript API
 
-/// Inspect Bluetooth devices and watch them connect and disconnect.
+/// Inspect, connect to and scan for Bluetooth devices, and watch them connect and disconnect.
+///
+/// Devices are `HSBluetoothDevice` objects, whether they are paired with this Mac or Bluetooth Low
+/// Energy (BLE) peripherals found nearby, and offer battery levels, connection control and GATT
+/// access through the same API.
 ///
 /// ```javascript
 /// hs.bluetooth.pairedDevices().forEach(d => console.log(d.name + " " + d.address))
-/// hs.bluetooth.connectedDevices().forEach(d => console.log(d.name + " is connected"))
 ///
-/// const nearby = await hs.bluetooth.availableDevices(5)
+/// hs.bluetooth.connectedDevices()
+///     .filter(d => d.batteryLevel !== null)
+///     .forEach(d => console.log(d.name + ": " + d.batteryLevel + "%"))
+///
+/// const nearby = await hs.bluetooth.scan({ seconds: 5 })
+/// nearby.forEach(d => console.log((d.name ?? d.identifier) + " " + d.rssi + " dBm"))
 ///
 /// hs.bluetooth.on('connected', d => console.log(d.name + " connected"))
-/// hs.bluetooth.on('disconnected', d => console.log(d.name + " disconnected"))
+/// hs.bluetooth.on('powerChanged', on => console.log("Bluetooth is " + (on ? "on" : "off")))
 /// ```
 ///
-/// macOS asks the user for Bluetooth permission the first time this module is used.
+/// macOS asks the user for Bluetooth permission the first time this module talks to Bluetooth.
+/// Use `hs.permissions.checkBluetooth()` to see whether it has been granted.
 @objc protocol HSBluetoothModuleAPI: JSExport {
-    /// Whether the Bluetooth controller is powered on.
+    /// Whether the Mac's Bluetooth is turned on.
     /// - Example:
     /// ```js
     /// console.log("Bluetooth on: " + hs.bluetooth.powered)
     /// ```
     @objc var powered: Bool { get }
 
+    /// Whether a scan started by `scan()` is running.
+    /// - Example:
+    /// ```js
+    /// if (!hs.bluetooth.isScanning) hs.bluetooth.scan()
+    /// ```
+    @objc var isScanning: Bool { get }
+
     /// All devices paired with this Mac, connected or not.
     ///
-    /// - Returns: An array of device objects. Each has `name` (string), `address` (string, `xx-xx-xx-xx-xx-xx`), `connected` (boolean), `paired` (boolean), `classOfDevice` (number), `majorClass` (number), `minorClass` (number) and `serviceClasses` (number). `rssi` (number, dBm) is included only when IOBluetooth has a reading, which in practice means a classic (non-BLE) device found by `availableDevices()`.
+    /// - Returns: An array of `HSBluetoothDevice` objects
     /// - Example:
     /// ```js
     /// hs.bluetooth.pairedDevices().forEach(d => console.log(d.name + " " + d.address))
     /// ```
-    @objc func pairedDevices() -> [[String: Any]]
+    @objc func pairedDevices() -> [HSBluetoothDevice]
 
-    /// All paired devices that are currently connected.
+    /// All connected devices: paired devices macOS has connected, and BLE peripherals connected with `connect()`.
     ///
-    /// - Returns: An array of device objects, see `pairedDevices()` for the shape.
+    /// - Returns: An array of `HSBluetoothDevice` objects
     /// - Example:
     /// ```js
     /// hs.bluetooth.connectedDevices().forEach(d => console.log(d.name + " is connected"))
     /// ```
-    @objc func connectedDevices() -> [[String: Any]]
+    @objc func connectedDevices() -> [HSBluetoothDevice]
 
-    /// Scans for discoverable devices nearby. Only one scan can run at a time.
+    /// Looks up a device by its address or identifier.
     ///
-    /// - Parameter seconds: How long to scan for; `0` uses the system default (10 seconds).
-    /// - Returns: {Promise<object[]>} A Promise resolving to the devices found, see `pairedDevices()` for the shape. Rejects if the scan fails or is aborted, for example because Bluetooth was switched off.
+    /// - Parameter id: A Bluetooth address (`"a4-83-e7-12-34-56"` or `"A4:83:E7:12:34:56"`) of a device macOS knows, or the `identifier` of a BLE peripheral Hammerspoon has seen
+    /// - Returns: The `HSBluetoothDevice`, or `null` if no such device is known
     /// - Example:
     /// ```js
-    /// const nearby = await hs.bluetooth.availableDevices(5)
-    /// nearby.forEach(d => console.log(d.name + " " + d.address))
+    /// const keyboard = hs.bluetooth.device("a4-83-e7-12-34-56")
+    /// if (keyboard) console.log(keyboard.name + " battery: " + keyboard.batteryLevel + "%")
     /// ```
-    @objc func availableDevices(_ seconds: Int) -> JSPromise?
+    @objc func device(_ id: String) -> HSBluetoothDevice?
 
-    /// Details for one device, looked up by address.
+    /// Scans for devices nearby. Only one scan can run at a time.
     ///
-    /// - Parameter address: The device address as returned in `address`, e.g. `"a4-83-e7-12-34-56"`.
-    /// - Returns: A device object (see `pairedDevices()`) with the additional fields `services` (string[], SDP service names), `favorite` (boolean), `incoming` (boolean, true if the device initiated the connection) and `lastAccess` (number, Unix seconds, when known), or `null` if the address is malformed.
+    /// Each device found is also delivered to `'discovered'` listeners (see `on()`) as soon as it's seen.
+    ///
+    /// - Parameter options?: An object with any of:
+    ///   - `seconds` (number, default `10`): how long to scan for
+    ///   - `lowEnergy` (boolean, default `true`): look for BLE peripherals
+    ///   - `classic` (boolean, default `false`): look for discoverable classic devices. This interrupts the audio of connected Bluetooth headphones while it runs, and only runs for up to 255 seconds
+    ///   - `services` (string[]): only report BLE peripherals advertising one of these service UUIDs
+    ///   - `allowDuplicates` (boolean, default `false`): deliver every advertisement to `'discovered'` listeners, not just the first from each device, e.g. to follow signal strength
+    /// - Returns: {Promise<HSBluetoothDevice[]>} A Promise resolving to the devices found when the scan ends, or when `stopScan()` is called. Rejects if a scan is already running, the options are invalid, or Bluetooth is unavailable
     /// - Example:
     /// ```js
-    /// hs.bluetooth.on('connected', d => {
-    ///     const info = hs.bluetooth.device(d.address)
-    ///     console.log(info.name + " rssi=" + info.rssi + " services=" + info.services.join(", "))
-    /// })
+    /// const nearby = await hs.bluetooth.scan({ seconds: 5 })
+    /// nearby.forEach(d => console.log((d.name ?? d.identifier) + " " + d.rssi + " dBm"))
+    ///
+    /// const heartStraps = await hs.bluetooth.scan({ services: ["180D"] })
     /// ```
-    @objc func device(_ address: String) -> [String: Any]?
+    @objc func scan(_ options: [String: Any]?) -> JSPromise?
+
+    /// Ends a scan started by `scan()` early. Its Promise resolves with the devices found so far.
+    /// - Example:
+    /// ```js
+    /// hs.bluetooth.once('discovered', d => hs.bluetooth.stopScan())
+    /// const [first] = await hs.bluetooth.scan({ seconds: 30 })
+    /// ```
+    @objc func stopScan()
 
     // MARK: Watcher
 
     // NOTE: Private API consumed only by hs.bluetooth.js
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool
+    @objc(_addWatcher::) func _addWatcher(_ event: String, _ listener: JSFunction) -> Bool
     /// SKIP_DOCS
-    @objc func _removeWatcher()
+    @objc func _removeWatcher(_ event: String)
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var _makeDeviceEmitter: JSFunction? { get set }
 
     /// The event names `on()`/`once()` accept - see HSBluetoothEvent
     /// SKIP_DOCS
@@ -101,29 +135,49 @@ import IOBluetooth
 
 // MARK: - Implementation
 
-/// Events emitted by hs.bluetooth's watcher
+/// Events emitted by hs.bluetooth's module-level watcher
 nonisolated enum HSBluetoothEvent: String, HSEventName {
-    case connected, disconnected
+    case connected, disconnected, powerChanged, discovered
 }
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSBluetoothModule: NSObject, HSModuleAPI, HSBluetoothModuleAPI, IOBluetoothDeviceInquiryDelegate {
+@objc class HSBluetoothModule: NSObject, HSModuleAPI, HSBluetoothModuleAPI {
     var moduleName = "hs.bluetooth"
     let engineID: UUID
 
+    /// Every device handed to JS, so the same device is always the same object while it's alive
+    let devices = HSObjectTracker<HSBluetoothDevice>()
+
+    // Module-level watcher
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _makeDeviceEmitter: JSFunction? = nil
     @objc var _eventNames: [String] { HSBluetoothEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    private var watcherCallback: JSCallback?
-    private var connectNotification: IOBluetoothUserNotification?
-    // One disconnect notification per connected device, keyed by address
-    private var disconnectNotifications: [String: IOBluetoothUserNotification] = [:]
+    private var watcherCallbacks: [String: JSCallback] = [:]
 
-    private var inquiry: IOBluetoothDeviceInquiry?
-    private var inquiryPromise: JSPromiseHolder?
+    // IOBluetooth connect/disconnect notifications, shared by the module's watcher and every
+    // device that has listeners
+    private var connectNotification: IOBluetoothUserNotification?
+    // One per connected device, keyed by address
+    private var disconnectNotifications: [String: IOBluetoothUserNotification] = [:]
+    // Devices that were already connected when the notifications started. IOBluetooth may replay
+    // a connect notification for each of them, which isn't a new connection.
+    private var connectedWhenWatchStarted: Set<String> = []
+
+    // CoreBluetooth, created on first use (that's what shows the permission prompt), so internal
+    // for the extension in HSBluetoothModule+CoreBluetooth.swift
+    var central: CBCentralManager?
+    var readyWaiters: [CheckedContinuation<Void, Error>] = []
+    var lastKnownPowered: Bool?
+    /// What CoreBluetooth has told us about each BLE peripheral seen, keyed by identifier
+    var peripheralRecords: [UUID: BluetoothPeripheralRecord] = [:]
+
+    // Scanning
+    var activeScan: BluetoothScan?
+    var inquiry: IOBluetoothDeviceInquiry?
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -132,25 +186,28 @@ nonisolated enum HSBluetoothEvent: String, HSEventName {
     }
 
     func shutdown() {
-        _removeWatcher()
+        endScan(nil, settlingPromise: false)
+        for callback in watcherCallbacks.values {
+            callback.detach(from: self)
+        }
+        watcherCallbacks.removeAll()
+        devices.shutdown()
+        stopClassicNotifications()
+        shutdownCentral()
         _watcherEmitter = nil
+        _makeDeviceEmitter = nil
         on = nil
         off = nil
         once = nil
-        // The inquiry's delegate is unretained, so clear it before this module can go away
-        inquiry?.delegate = nil
-        inquiry?.stop()
-        inquiry = nil
-        inquiryPromise = nil
     }
 
     isolated deinit {
         AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
+    // Deliberately doesn't touch Bluetooth: logging the module mustn't show the permission prompt
     @objc func toString() -> String {
-        let n = connectedDevices().count
-        return "<\(moduleName): \(n) connected device\(n == 1 ? "" : "s")>"
+        "<\(moduleName)\(activeScan == nil ? "" : ": scanning")>"
     }
 
     nonisolated override var description: String {
@@ -160,165 +217,226 @@ nonisolated enum HSBluetoothEvent: String, HSEventName {
     // MARK: - Public API
 
     @objc var powered: Bool {
-        IOBluetoothHostController.default()?.powerState == kBluetoothHCIPowerStateON
-    }
-
-    @objc func pairedDevices() -> [[String: Any]] {
-        (IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] ?? []).map(deviceInfo)
-    }
-
-    @objc func connectedDevices() -> [[String: Any]] {
-        (IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] ?? [])
-            .filter { $0.isConnected() }
-            .map(deviceInfo)
-    }
-
-    @objc func availableDevices(_ seconds: Int) -> JSPromise? {
-        guard let context = JSContext.current() else { return nil }
-        guard inquiry == nil else {
-            return context.createRejectedPromise(with: "hs.bluetooth.availableDevices(): a scan is already running")
+        switch central?.state {
+        case .poweredOn: return true
+        case .poweredOff: return false
+        default: return IOBluetoothHostController.default()?.powerState == kBluetoothHCIPowerStateON
         }
-        return wrapAsyncInJSPromise(in: context) { [weak self] holder in
-            guard let self else { return }
-            let inquiry = IOBluetoothDeviceInquiry(delegate: self)!
-            if seconds > 0 { inquiry.inquiryLength = UInt8(clamping: seconds) }
-            inquiry.updateNewDeviceNames = true
-            let status = inquiry.start()
-            guard status == kIOReturnSuccess else {
-                AKError("hs.bluetooth.availableDevices(): failed to start inquiry (error \(status))")
-                holder.rejectWithMessage("hs.bluetooth.availableDevices(): failed to start scan (error \(status))")
-                return
+    }
+
+    @objc var isScanning: Bool { activeScan != nil }
+
+    @objc func pairedDevices() -> [HSBluetoothDevice] {
+        Self.pairedIOBluetoothDevices().map(device(for:))
+    }
+
+    @objc func connectedDevices() -> [HSBluetoothDevice] {
+        let paired = Self.pairedIOBluetoothDevices().filter { $0.isConnected() }.map(device(for:))
+        let lowEnergy = devices.allObjects.filter { $0.classic == nil && $0.isConnected }
+        return paired + lowEnergy
+    }
+
+    @objc func device(_ id: String) -> HSBluetoothDevice? {
+        if let address = HSBluetoothAddress.normalize(id) {
+            guard let classic = IOBluetoothDevice(addressString: address),
+                  classic.isPaired() || classic.name != nil || classic.getLastInquiryUpdate() != nil else {
+                return nil
             }
-            self.inquiry = inquiry
-            self.inquiryPromise = holder
+            return device(for: classic)
         }
-    }
-
-    @objc func device(_ address: String) -> [String: Any]? {
-        guard let device = IOBluetoothDevice(addressString: address) else { return nil }
-        var info = deviceInfo(device)
-        info["services"] = (device.services as? [IOBluetoothSDPServiceRecord] ?? []).compactMap { $0.getServiceName() }
-        info["favorite"] = device.isFavorite()
-        info["incoming"] = device.isIncoming()
-        if let date = device.recentAccessDate() {
-            info["lastAccess"] = date.timeIntervalSince1970
-        }
-        return info
-    }
-
-    nonisolated func deviceInquiryComplete(_ sender: IOBluetoothDeviceInquiry!, error: IOReturn, aborted: Bool) {
-        onMain { module in
-            let found = module.inquiry?.foundDevices() as? [IOBluetoothDevice] ?? []
-            let promise = module.inquiryPromise
-            module.inquiryPromise = nil
-            module.inquiry = nil
-            if error != kIOReturnSuccess {
-                AKError("hs.bluetooth.availableDevices(): scan failed (error \(error))")
-                promise?.rejectWithMessage("hs.bluetooth.availableDevices(): scan failed (error \(error))")
-            } else if aborted {
-                AKWarning("hs.bluetooth.availableDevices(): scan was aborted")
-                promise?.rejectWithMessage("hs.bluetooth.availableDevices(): scan was aborted")
-            } else {
-                promise?.resolveWith(found.map(module.deviceInfo))
+        if let uuid = UUID(uuidString: id) {
+            if let record = peripheralRecords[uuid] {
+                return device(for: record)
+            }
+            // Only if CoreBluetooth is already running: this lookup mustn't start it
+            if let central, central.state == .poweredOn,
+               let peripheral = central.retrievePeripherals(withIdentifiers: [uuid]).first {
+                return device(for: record(for: peripheral))
             }
         }
+        return nil
     }
 
-    /// IOBluetooth delivers its notifications on whatever thread CoreBluetooth's XPC connection
-    /// uses, not the main thread, so every callback hops to the main actor before touching state.
-    private nonisolated func onMain(_ body: @escaping @MainActor (HSBluetoothModule) -> Void) {
-        DispatchQueue.main.async { MainActor.assumeIsolated { body(self) } }
+    // MARK: - Device objects
+
+    static func pairedIOBluetoothDevices() -> [IOBluetoothDevice] {
+        IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] ?? []
+    }
+
+    /// The object for a device macOS knows, reusing the existing one if JS still holds it
+    func device(for classic: IOBluetoothDevice) -> HSBluetoothDevice {
+        if let address = classic.addressString.flatMap(HSBluetoothAddress.normalize),
+           let existing = existingDevice(address: address) {
+            return existing
+        }
+        return makeDevice(classic: classic, record: nil)
+    }
+
+    /// The object for a BLE peripheral, reusing the existing one if JS still holds it
+    func device(for record: BluetoothPeripheralRecord) -> HSBluetoothDevice {
+        existingDevice(identifier: record.peripheral.identifier) ?? makeDevice(classic: nil, record: record)
+    }
+
+    /// Creates and tracks a device object. Internal so tests can make one without any Bluetooth hardware.
+    func makeDevice(classic: IOBluetoothDevice?, record: BluetoothPeripheralRecord?) -> HSBluetoothDevice {
+        let device = HSBluetoothDevice(module: self, tracker: devices, classic: classic, record: record)
+        devices.add(device)
+        return device
+    }
+
+    func existingDevice(address: String) -> HSBluetoothDevice? {
+        devices.allObjects.first { $0.address == address }
+    }
+
+    func existingDevice(identifier: UUID) -> HSBluetoothDevice? {
+        devices.allObjects.first { $0.record?.peripheral.identifier == identifier }
     }
 
     // MARK: - Watcher
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool {
-        guard watcherCallback == nil else {
-            AKWarning("hs.bluetooth._addWatcher: already watching — refusing second subscription")
+    @objc(_addWatcher::) func _addWatcher(_ event: String, _ listener: JSFunction) -> Bool {
+        guard let kind = HSBluetoothEvent(rawValue: event) else {
+            AKWarning("hs.bluetooth._addWatcher: unknown event '\(event)'")
             return false
         }
-        guard let notification = IOBluetoothDevice.register(forConnectNotifications: self,
-                                                             selector: #selector(deviceConnected(_:device:))) else {
-            AKError("hs.bluetooth._addWatcher: failed to register for connect notifications")
+        guard watcherCallbacks[event] == nil else {
+            AKWarning("hs.bluetooth._addWatcher: already watching '\(event)', refusing a second subscription")
             return false
         }
-        connectNotification = notification
-        watcherCallback = JSCallback(value: callback, owner: self)
-        // Devices already connected won't fire a connect notification, so watch them for disconnects now
-        for device in IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] ?? [] where device.isConnected() {
-            watchForDisconnect(device)
+        if kind == .powerChanged {
+            guard startPowerWatching() else { return false }
         }
-        AKDebug("hs.bluetooth._addWatcher: started")
+        watcherCallbacks[event] = JSCallback(value: listener, owner: self)
+        if kind == .connected || kind == .disconnected {
+            updateClassicNotifications()
+            guard isReceivingClassicNotifications else {
+                AKError("hs.bluetooth._addWatcher: failed to register for Bluetooth connection notifications")
+                watcherCallbacks.removeValue(forKey: event)?.detach(from: self)
+                return false
+            }
+        }
+        AKDebug("hs.bluetooth._addWatcher: started watching '\(event)'")
         return true
     }
 
-    @objc func _removeWatcher() {
-        guard watcherCallback != nil else { return }
-        connectNotification?.unregister()
-        connectNotification = nil
+    @objc func _removeWatcher(_ event: String) {
+        guard let callback = watcherCallbacks.removeValue(forKey: event) else { return }
+        callback.detach(from: self)
+        updateClassicNotifications()
+        AKDebug("hs.bluetooth._removeWatcher: stopped watching '\(event)'")
+    }
+
+    /// Whether anything is listening for an event
+    func isWatching(_ event: HSBluetoothEvent) -> Bool {
+        watcherCallbacks[event.rawValue] != nil
+    }
+
+    /// Delivers an event to the module's listeners
+    func emit(_ event: HSBluetoothEvent, _ argument: Any) {
+        _ = watcherCallbacks[event.rawValue]?.call(withArguments: [argument])
+    }
+
+    /// Delivers a connection event for a BLE peripheral Hammerspoon connected to itself
+    func deliverLowEnergyEvent(_ event: HSBluetoothEvent, _ device: HSBluetoothDevice) {
+        emit(event, device)
+    }
+
+    // MARK: - IOBluetooth connection notifications
+
+    var isReceivingClassicNotifications: Bool { connectNotification != nil }
+
+    /// Starts or stops IOBluetooth's connect/disconnect notifications, so they run exactly while
+    /// the module or some device has listeners for them
+    func updateClassicNotifications() {
+        let needed = isWatching(.connected) || isWatching(.disconnected)
+            || devices.allObjects.contains { $0.isWatching && $0.classic != nil }
+        if needed && connectNotification == nil {
+            startClassicNotifications()
+        } else if !needed && connectNotification != nil {
+            stopClassicNotifications()
+        }
+    }
+
+    private func startClassicNotifications() {
+        guard let notification = IOBluetoothDevice.register(forConnectNotifications: self,
+                                                             selector: #selector(classicDeviceConnected(_:device:))) else {
+            AKError("hs.bluetooth: failed to register for connect notifications")
+            return
+        }
+        connectNotification = notification
+        // Devices already connected won't get a connect notification (or get a replayed one, see
+        // classicDeviceConnected), so watch them for disconnects now
+        for device in Self.pairedIOBluetoothDevices() where device.isConnected() {
+            guard let address = device.addressString.flatMap(HSBluetoothAddress.normalize) else { continue }
+            connectedWhenWatchStarted.insert(address)
+            watchForDisconnect(device, address: address)
+        }
+        AKDebug("hs.bluetooth: started connection notifications")
+    }
+
+    private func stopClassicNotifications() {
+        guard let connectNotification else { return }
+        connectNotification.unregister()
+        self.connectNotification = nil
         disconnectNotifications.values.forEach { $0.unregister() }
         disconnectNotifications.removeAll()
-        watcherCallback?.detach(from: self)
-        watcherCallback = nil
-        AKDebug("hs.bluetooth._removeWatcher: stopped")
+        connectedWhenWatchStarted.removeAll()
+        AKDebug("hs.bluetooth: stopped connection notifications")
     }
 
-    private func watchForDisconnect(_ device: IOBluetoothDevice) {
-        let address = device.addressString ?? ""
+    private func watchForDisconnect(_ device: IOBluetoothDevice, address: String) {
         guard disconnectNotifications[address] == nil else { return }
         disconnectNotifications[address] = device.register(forDisconnectNotification: self,
-                                                           selector: #selector(deviceDisconnected(_:device:)))
+                                                           selector: #selector(classicDeviceDisconnected(_:device:)))
     }
 
-    // Both selectors hop to the main actor, so they can run after _removeWatcher() has already
-    // cleaned up, or after a later _addWatcher() has started a new subscription. Each checks that
-    // its notification still belongs to the current watcher before registering or firing anything.
+    // Both selectors hop to the main actor, so they can run after the notifications have been
+    // stopped, or restarted. Each checks that its notification is still current first.
 
-    @objc private nonisolated func deviceConnected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
-        nonisolated(unsafe) let notification = notification
-        nonisolated(unsafe) let device = device
+    @objc private nonisolated func classicDeviceConnected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
+        nonisolated(unsafe) let unsafeNotification = notification
+        nonisolated(unsafe) let unsafeDevice = device
         onMain { module in
-            guard module.connectNotification === notification else { return }
-            module.watchForDisconnect(device)
-            module.fire(.connected, device)
+            let (notification, device) = unsafe (unsafeNotification, unsafeDevice)
+            guard module.connectNotification === notification,
+                  let address = device.addressString.flatMap(HSBluetoothAddress.normalize) else { return }
+            // A device that was connected when the notifications started, and hasn't disconnected
+            // since, can't be connecting now: this is IOBluetooth replaying its existing connection
+            if module.connectedWhenWatchStarted.remove(address) != nil, module.disconnectNotifications[address] != nil {
+                return
+            }
+            module.watchForDisconnect(device, address: address)
+            module.deliverClassicEvent(.connected, device, address: address)
         }
     }
 
-    @objc private nonisolated func deviceDisconnected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
-        nonisolated(unsafe) let notification = notification
-        nonisolated(unsafe) let device = device
+    @objc private nonisolated func classicDeviceDisconnected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
+        nonisolated(unsafe) let unsafeNotification = notification
+        nonisolated(unsafe) let unsafeDevice = device
         onMain { module in
-            let address = device.addressString ?? ""
-            guard module.disconnectNotifications[address] === notification else { return }
+            let (notification, device) = unsafe (unsafeNotification, unsafeDevice)
+            guard let address = device.addressString.flatMap(HSBluetoothAddress.normalize),
+                  module.disconnectNotifications[address] === notification else { return }
             notification.unregister()
             module.disconnectNotifications[address] = nil
-            module.fire(.disconnected, device)
+            module.connectedWhenWatchStarted.remove(address)
+            module.deliverClassicEvent(.disconnected, device, address: address)
         }
     }
 
-    private func fire(_ event: HSBluetoothEvent, _ device: IOBluetoothDevice) {
-        _ = watcherCallback?.value?.call(withArguments: [event.rawValue, deviceInfo(device)])
+    private func deliverClassicEvent(_ event: HSBluetoothEvent, _ classic: IOBluetoothDevice, address: String) {
+        // Only make a device object if the module's listeners need one
+        let object = isWatching(event) ? device(for: classic) : existingDevice(address: address)
+        object?.fire(event == .connected ? .connected : .disconnected)
+        if let object, isWatching(event) {
+            emit(event, object)
+        }
     }
 
-    // MARK: - Private
-
-    private func deviceInfo(_ device: IOBluetoothDevice) -> [String: Any] {
-        var info: [String: Any] = [
-            "name": device.name ?? "",
-            "address": device.addressString ?? "",
-            "connected": device.isConnected(),
-            "paired": device.isPaired(),
-            "classOfDevice": Int(device.classOfDevice),
-            "majorClass": Int(device.deviceClassMajor),
-            "minorClass": Int(device.deviceClassMinor),
-            "serviceClasses": Int(device.serviceClassMajor)
-        ]
-        // IOBluetooth only caches an RSSI for classic devices seen in a recent inquiry; it reports
-        // 0 or +127 when it has nothing (BLE peripherals never get one via this API).
-        let rssi = device.rssi()
-        if rssi != 0 && rssi != 127 {
-            info["rssi"] = Int(rssi)
-        }
-        return info
+    /// IOBluetooth delivers its notifications and delegate calls on whatever thread its XPC
+    /// connection to bluetoothd uses, not the main thread, so every one hops to the main actor
+    /// before touching state.
+    nonisolated func onMain(_ body: @escaping @MainActor (HSBluetoothModule) -> Void) {
+        DispatchQueue.main.async { MainActor.assumeIsolated { body(self) } }
     }
 }
