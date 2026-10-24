@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.keycodes - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.keycodes</span>
+</nav>
+<div class="page-header">
+    <h1>hs.keycodes</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Access information about the current keyboard layout and input sources, and respond to changes.</p>
+<h2>Reading the current layout</h2>
+<pre><code class="language-js">console.log(&quot;Layout: &quot; + hs.keycodes.currentLayout())
+console.log(&quot;Source ID: &quot; + hs.keycodes.currentSourceID())
+</code></pre>
+<h2>Key code mapping</h2>
+<pre><code class="language-js">// Look up a keycode by name
+const code = hs.keycodes.map[&quot;a&quot;]    // e.g. 0 on ANSI US
+// Look up a name by keycode
+const name = hs.keycodes.map[&quot;0&quot;]   // e.g. &quot;a&quot;
+</code></pre>
+<h2>Switching layouts</h2>
+<pre><code class="language-js">hs.keycodes.setLayout(&quot;British&quot;)
+</code></pre>
+<h2>Watching for input source changes</h2>
+<pre><code class="language-js">hs.keycodes.addWatcher(() =&gt; {
+    console.log(&quot;Switched to: &quot; + hs.keycodes.currentLayout())
+})
+</code></pre>
+</div>
+
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="map">
+        <h3><a href="#map">hs.keycodes.map</a></h3>
+        <div class="prop-type">{[key: string]: any}</div>
+        <div class="description">A bidirectional mapping between key names and their macOS virtual key codes.
+Entries exist for both directions: look up a name to get its integer keycode, or look
+up a keycode (as a string) to get the key name. The map is rebuilt automatically
+whenever the keyboard input source changes.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L68" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:68</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="currentLayout">
+        <h3><a href="#currentLayout">hs.keycodes.currentLayout() -> string</a></h3>
+
+        <div class="description">Returns the localized name of the current keyboard layout.
+Uses the base keyboard layout, which is the underlying layout even when an input
+method (such as a CJK input method) is also active.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.keycodes.currentLayout() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The display name of the active layout (e.g. `&quot;U.S.&quot;`, `&quot;British&quot;`), or `null`.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(&quot;Layout: &quot; + hs.keycodes.currentLayout())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L81" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:81</a>
+        </div>
+    </div>
+    <div class="method" id="currentMethod">
+        <h3><a href="#currentMethod">hs.keycodes.currentMethod() -> string</a></h3>
+
+        <div class="description">Returns the localized name of the active input method, or `null` if none is active.
+Input methods are distinct from keyboard layouts. They provide complex character
+composition such as CJK input. Returns `null` when using a plain keyboard layout
+with no input method overlay.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.keycodes.currentMethod() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The display name of the active input method (e.g. `&quot;Hiragana&quot;`), or `null`.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const m = hs.keycodes.currentMethod()
+if (m) console.log(&quot;Input method: &quot; + m)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L94" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:94</a>
+        </div>
+    </div>
+    <div class="method" id="currentSourceID">
+        <h3><a href="#currentSourceID">hs.keycodes.currentSourceID() -> string</a></h3>
+
+        <div class="description">Returns the reverse-DNS identifier of the currently selected keyboard input source.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.keycodes.currentSourceID() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">A string such as `&quot;com.apple.keylayout.US&quot;`, or `null` if unavailable.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(&quot;Source ID: &quot; + hs.keycodes.currentSourceID())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L103" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:103</a>
+        </div>
+    </div>
+    <div class="method" id="layouts">
+        <h3><a href="#layouts">hs.keycodes.layouts() -> string[]</a></h3>
+
+        <div class="description">Returns the localized names of all currently enabled keyboard layouts.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.keycodes.layouts() -> string[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string[]</div>
+        <div class="return-desc">An array of layout name strings (e.g. `[&quot;U.S.&quot;, &quot;British&quot;, &quot;French&quot;]`).</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.keycodes.layouts().forEach(l =&gt; console.log(l))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L114" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:114</a>
+        </div>
+    </div>
+    <div class="method" id="methods">
+        <h3><a href="#methods">hs.keycodes.methods() -> string[]</a></h3>
+
+        <div class="description">Returns the localized names of all currently enabled input methods.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.keycodes.methods() -> string[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string[]</div>
+        <div class="return-desc">An array of input method name strings. May be empty if none are enabled.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.keycodes.methods().forEach(m =&gt; console.log(m))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L123" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:123</a>
+        </div>
+    </div>
+    <div class="method" id="setLayout">
+        <h3><a href="#setLayout">hs.keycodes.setLayout(layoutName) -> boolean</a></h3>
+
+        <div class="description">Switches the active keyboard layout to the one with the given localized name.
+Use `layouts()` to enumerate valid names.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.keycodes.setLayout(layoutName) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">layoutName</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The localized name of the layout to activate (e.g. `&quot;U.S.&quot;`).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the layout was found and selected, `false` otherwise.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">if (!hs.keycodes.setLayout(&quot;U.S.&quot;)) console.log(&quot;Layout not found&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L136" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:136</a>
+        </div>
+    </div>
+    <div class="method" id="setMethod">
+        <h3><a href="#setMethod">hs.keycodes.setMethod(methodName) -> boolean</a></h3>
+
+        <div class="description">Switches the active input method to the one with the given localized name.
+Use `methods()` to enumerate valid names.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.keycodes.setMethod(methodName) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">methodName</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The localized name of the input method to activate.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the method was found and selected, `false` otherwise.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.keycodes.setMethod(&quot;Hiragana&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L147" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:147</a>
+        </div>
+    </div>
+    <div class="method" id="setSourceID">
+        <h3><a href="#setSourceID">hs.keycodes.setSourceID(sourceID) -> boolean</a></h3>
+
+        <div class="description">Switches the active input source to the one with the given reverse-DNS identifier.
+Use `currentSourceID()` to see the current value.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.keycodes.setSourceID(sourceID) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">sourceID</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The input source ID to activate (e.g. `&quot;com.apple.keylayout.British&quot;`).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the source was found and selected, `false` otherwise.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.keycodes.setSourceID(&quot;com.apple.keylayout.British&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L158" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:158</a>
+        </div>
+    </div>
+    <div class="method" id="addWatcher">
+        <h3><a href="#addWatcher">hs.keycodes.addWatcher(listener) -> None</a></h3>
+
+        <div class="description">Registers a listener that fires whenever the keyboard input source changes.
+The listener is called with no arguments. Read `currentLayout()`, `currentSourceID()`,
+or `map` inside the callback to inspect the new state.
+The OS subscription starts lazily on the first listener and is released automatically
+when the last listener is removed via `removeWatcher`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.keycodes.addWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">A function called when the input source changes.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.keycodes.addWatcher(() =&gt; {
+    console.log(&quot;Now using: &quot; + hs.keycodes.currentLayout())
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L176" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:176</a>
+        </div>
+    </div>
+    <div class="method" id="removeWatcher">
+        <h3><a href="#removeWatcher">hs.keycodes.removeWatcher(listener) -> None</a></h3>
+
+        <div class="description">Removes a previously registered input source change listener.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.keycodes.removeWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">The function originally passed to `addWatcher`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const handler = () =&gt; console.log(&quot;changed&quot;)
+hs.keycodes.addWatcher(handler)
+hs.keycodes.removeWatcher(handler)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.keycodes/HSKeycodesModule.swift#L187" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift:187</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.keycodes');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

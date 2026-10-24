@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.canvas - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="canvas-guide.html" class="active">hs.canvas</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.canvas</span>
+</nav>
+<div class="page-header">
+    <h1>hs.canvas</h1>
+    <span class="page-badge">Guide</span>
+</div>
+
+<div class="guide-content"><p><code>hs.canvas</code> is a low-level, absolutely-positioned drawing surface — the tool to reach for
+when you need a shape, an icon, or a piece of text pinned to an exact screen coordinate,
+independent of any layout. It mirrors Hammerspoon 1&#39;s <code>hs.canvas</code> closely: a canvas is a
+window, and its contents are a plain array of JavaScript objects (mirroring v1&#39;s Lua
+tables) — rectangles, circles, arcs, text, images, even other canvases — each with a <code>type</code>
+and whatever properties that type understands. There&#39;s no view hierarchy and no reactive
+state; you build the array, hand it to <code>appendElements()</code>, and redraw by mutating it.</p>
+<p>This is a different tool from <code>hs.ui</code>, which is a SwiftUI-based, flow-layout builder for
+genuinely app-like interfaces (buttons, forms, stacks that reflow). Reach for <code>hs.canvas</code>
+instead when you need absolute positioning independent of any layout; clipped or composited
+shapes (the build/clip pipeline below); direct control of the window&#39;s level, Spaces
+behavior, or click-through; or a shape vocabulary — arcs, gradients, blend modes, bezier
+paths — that <code>hs.ui</code> doesn&#39;t have.</p>
+<p>Because almost all of a canvas&#39;s configuration lives in these element dictionaries rather
+than in method signatures, it doesn&#39;t lend itself to the same inline documentation the rest
+of Hammerspoon 2 gets from JSExport doc comments — see the
+<a href="HSCanvas.html">full <code>HSCanvas</code> method reference</a> for everything that <em>is</em> a method (window
+lifecycle, showing/hiding, mouse callbacks, element mutation, and so on). This guide covers
+the other half: what an element dictionary can actually contain, then a series of worked
+examples combining several of them.</p>
+<h2 id="coordinate-systems--read-this-first">Coordinate systems — read this first</h2>
+<p>A canvas&#39;s <strong>window position</strong> (<code>hs.canvas.create({x, y, w, h})</code>, and any later <code>x</code>/<code>y</code> you
+compare it against, e.g. from <code>hs.screen</code>) uses unflipped AppKit screen coordinates:
+<code>y = 0</code> is the <em>bottom</em> of the screen, and <code>y</code> increases upward. This matches <code>hs.ui.window</code>.</p>
+<p>But <strong>element content</strong> positioned <em>inside</em> a canvas — every <code>frame</code>, <code>center</code>, and
+<code>coordinates</code> value you pass to <code>appendElements()</code> and friends — is drawn top-down:
+<code>y = 0</code> is the <em>top</em> of the canvas, and <code>y</code> increases downward. These two coordinate senses
+are independent of each other and easy to conflate, especially when a script computes an
+element&#39;s position from the same screen geometry it used for the window&#39;s own placement. If
+a shape appears vertically mirrored from where you expect, this mismatch is the first thing
+to check.</p>
+<p>Most numeric position/size values — <code>frame</code>, <code>center</code>, <code>radius</code>, and the <code>x</code>/<code>y</code> of each
+<code>segments</code>/<code>points</code> coordinate — also accept a percentage string like <code>&quot;50%&quot;</code>, resolved
+against the canvas&#39;s own size at render time, instead of a fixed number.</p>
+<h2 id="the-canvas-object-briefly">The canvas object, briefly</h2>
+<p>Create one with <code>hs.canvas.create({x, y, w, h})</code>, add content with <code>.appendElements([...])</code>,
+and make it visible with <code>.show()</code>:</p>
+<pre><code class="language-js">const c = hs.canvas.create({x: 100, y: 100, w: 300, h: 200})
+c.appendElements([
+    { type: &quot;rectangle&quot;, action: &quot;fill&quot;, fillColor: { red: 0.2, green: 0.5, blue: 0.9, alpha: 1 } },
+])
+c.show()
+</code></pre>
+<p>A canvas starts fully transparent — there&#39;s no window-level &quot;background color&quot;, by design
+(<code>hs.canvas</code> is meant for compositing shapes over whatever&#39;s beneath it, e.g. a screen
+overlay). If you want an opaque background, draw one yourself as the first element: a
+full-frame <code>rectangle</code> with <code>action: &quot;fill&quot;</code>.</p>
+<p>Everything about <em>managing</em> a canvas once it exists — showing/hiding/destroying it, moving
+or resizing its window, reading or mutating individual elements after the fact
+(<code>setElementAttribute()</code>, <code>elementBounds()</code>, <code>minimumTextSize()</code>...), mouse and drag
+callbacks, level/Spaces behavior, per-element and whole-canvas transforms — is a regular
+method with its own doc comment, so it&#39;s already covered in the
+<a href="HSCanvas.html"><code>HSCanvas</code> reference</a>. What isn&#39;t covered there is the shape of the element
+dictionaries themselves — that&#39;s the rest of this guide.</p>
+<h2 id="the-element-pipeline">The element pipeline</h2>
+<p>Every element in the array <code>appendElements()</code> takes is processed in order, and every element
+shares a few properties regardless of its <code>type</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Applies to</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>type</code></td>
+<td>string</td>
+<td>every element</td>
+<td>required — see the <a href="#element-type-reference">type reference</a> below</td>
+</tr>
+<tr>
+<td><code>action</code></td>
+<td>string</td>
+<td>every element except <code>resetClip</code></td>
+<td><code>&quot;fill&quot;</code>, <code>&quot;stroke&quot;</code>, <code>&quot;strokeAndFill&quot;</code> (default), <code>&quot;build&quot;</code>, <code>&quot;clip&quot;</code>, or <code>&quot;skip&quot;</code> — see <a href="#the-action-pipeline-fill-stroke-build-clip-skip-resetclip">below</a></td>
+</tr>
+<tr>
+<td><code>compositeRule</code></td>
+<td>string</td>
+<td>every element except <code>resetClip</code></td>
+<td>a blend mode name for this element only — see <a href="#blend-modes-compositerule">Blend modes</a></td>
+</tr>
+<tr>
+<td><code>id</code></td>
+<td>any</td>
+<td>every element</td>
+<td>not read by rendering at all — your own bookkeeping value, delivered back by mouse-tracking callbacks and readable via <code>canvasElements()</code></td>
+</tr>
+<tr>
+<td><code>trackMouseDown</code>, <code>trackMouseUp</code>, <code>trackMouseEnterExit</code>, <code>trackMouseMove</code></td>
+<td>boolean</td>
+<td>every element</td>
+<td>opts this element into mouse tracking — see <a href="HSCanvas.html"><code>HSCanvas.mouseCallback()</code></a></td>
+</tr>
+<tr>
+<td><code>rotation</code> + <code>rotationPoint</code></td>
+<td>number (degrees) + <code>{x, y}</code></td>
+<td>every element</td>
+<td>rotate about <code>rotationPoint</code>, or the element&#39;s own bounding-box center if omitted</td>
+</tr>
+<tr>
+<td><code>transformation</code></td>
+<td><code>{m11, m12, m21, m22, tX, tY}</code></td>
+<td>every element</td>
+<td>a raw affine matrix; takes precedence over <code>rotation</code> if both are set</td>
+</tr>
+<tr>
+<td><code>windingRule</code></td>
+<td>string</td>
+<td><code>rectangle</code>, <code>circle</code>, <code>oval</code>, <code>arc</code>, <code>ellipticalArc</code>, <code>segments</code>, <code>points</code></td>
+<td><code>&quot;nonZero&quot;</code> (default) or <code>&quot;evenOdd&quot;</code> — only matters once <code>build</code> is combining more than one shape&#39;s path together, see below</td>
+</tr>
+</tbody></table>
+<h3 id="the-action-pipeline-fill-stroke-build-clip-skip-resetclip">The action pipeline: fill, stroke, build, clip, skip, resetClip</h3>
+<p><code>action</code> defaults to <code>&quot;strokeAndFill&quot;</code>, and for most elements that&#39;s all you need. The other
+four values exist for compositing shapes together:</p>
+<ul>
+<li><strong><code>build</code></strong> doesn&#39;t draw anything. It appends its shape to a pending compound path that
+keeps growing until a non-<code>build</code> action (<code>fill</code>/<code>stroke</code>/<code>clip</code>) consumes it.</li>
+<li><strong><code>clip</code></strong> intersects the current drawing region with its shape (combined with any pending
+<code>build</code> path), narrowing where <em>later</em> elements are allowed to draw. This accumulates
+against whatever&#39;s already clipped — it&#39;s not a fresh clip each time.</li>
+<li><strong><code>resetClip</code></strong> (a <code>type</code> on its own, not an <code>action</code> — see the <a href="#resetclip">reference</a>
+below) jumps back to the fully unclipped state from the top of the element list. It&#39;s not
+a stack pop: it discards <em>every</em> clip applied so far, not just the most recent one. It&#39;s
+also the one element that ignores <code>action</code>/<code>compositeRule</code>/<code>rotation</code>/<code>transformation</code>
+entirely, since there&#39;s nothing for them to apply to.</li>
+<li><strong><code>skip</code></strong> hides the element completely — useful for toggling an element off with
+<code>setElementAttribute()</code> without removing it from the list.</li>
+</ul>
+<p>Combining <code>build</code> + <code>clip</code> with <code>reversePath: true</code> on a <code>circle</code> (see the
+<a href="#circle"><code>circle</code> reference</a>) is how you punch a hole in a shape — the technique behind a
+true rounded-corner mask, shown in full in <a href="#a-rounded-screen-corner-overlay">the first demo below</a>.
+The same <code>build</code>-then-combine mechanism, with <code>windingRule: &quot;evenOdd&quot;</code> instead of <code>clip</code>,
+turns two same-winding circles into a donut (a filled ring) instead of a solid disc — the
+inner circle&#39;s <em>fill</em> is where you set <code>windingRule</code>, not the outer one&#39;s <code>build</code>.</p>
+<h3 id="colors">Colors</h3>
+<p>Every color-valued property (<code>fillColor</code>, <code>strokeColor</code>, <code>textColor</code>, and the two gradient
+color lists below) takes a plain <code>{red, green, blue, alpha}</code> object, each component
+<code>0.0</code>–<code>1.0</code> — <strong>not</strong> the <code>HSColor</code> reactive type <code>hs.ui</code> uses elsewhere in Hammerspoon 2.
+Any component you omit defaults to <code>0</code>, <strong>except <code>alpha</code>, which defaults to <code>1</code></strong> — so
+<code>{ alpha: 1 }</code> alone means <em>opaque black</em>, not &quot;no color.&quot; This is an easy trap (it once
+produced a genuinely invisible test case during this module&#39;s own development), so it&#39;s
+worth committing to memory.</p>
+<h3 id="blend-modes-compositerule">Blend modes (compositeRule)</h3>
+<p><code>compositeRule</code> accepts any of: <code>normal</code>, <code>sourceOver</code>, <code>multiply</code>, <code>screen</code>, <code>overlay</code>,
+<code>darken</code>, <code>lighten</code>, <code>colorDodge</code>, <code>colorBurn</code>, <code>softLight</code>, <code>hardLight</code>, <code>difference</code>,
+<code>exclusion</code>, <code>hue</code>, <code>saturation</code>, <code>color</code>, <code>luminosity</code>, <code>clear</code>, <code>copy</code>, <code>sourceIn</code>,
+<code>sourceOut</code>, <code>sourceAtop</code>, <code>destinationOver</code>, <code>destinationIn</code>, <code>destinationOut</code>,
+<code>destinationAtop</code>, <code>xor</code>, <code>plusDarker</code>, <code>plusLighter</code>. The same names are exposed as
+<code>hs.canvas.compositeTypes.&lt;name&gt;</code>, purely so you can reference them without typo risk:</p>
+<pre><code class="language-js">{ type: &quot;circle&quot;, action: &quot;fill&quot;, compositeRule: hs.canvas.compositeTypes.multiply, fillColor: { blue: 1, alpha: 1 } }
+</code></pre>
+<p>It applies to the one element that sets it — it doesn&#39;t leak onto the elements drawn after
+it, even though earlier versions of this module had a bug where it briefly did.</p>
+<h3 id="gradients">Gradients</h3>
+<p>Any element that takes <code>fillColor</code> can use a gradient instead:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Applies to</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>fillGradient</code></td>
+<td><code>&quot;linear&quot;</code> or <code>&quot;radial&quot;</code></td>
+<td>switches the fill from a solid color to a gradient</td>
+</tr>
+<tr>
+<td><code>fillGradientColors</code></td>
+<td>array of color dicts</td>
+<td>at least two stops, evenly spaced</td>
+</tr>
+<tr>
+<td><code>fillGradientAngle</code></td>
+<td><code>linear</code> only</td>
+<td>degrees, default <code>0</code></td>
+</tr>
+<tr>
+<td><code>fillGradientCenter</code></td>
+<td><code>radial</code> only</td>
+<td><code>{x, y}</code>, defaults to the shape&#39;s own bounding-box center</td>
+</tr>
+</tbody></table>
+<pre><code class="language-js">{ type: &quot;rectangle&quot;, action: &quot;fill&quot;, fillGradient: &quot;linear&quot;, fillGradientAngle: 45,
+  fillGradientColors: [{ red: 1, alpha: 1 }, { blue: 1, alpha: 1 }] }
+</code></pre>
+<h2 id="element-type-reference">Element type reference</h2>
+<h3 id="rectangle">rectangle</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>frame</code></td>
+<td>the whole canvas</td>
+<td><code>{x, y, w, h}</code></td>
+</tr>
+<tr>
+<td><code>roundedRectRadii</code></td>
+<td>none (square corners)</td>
+<td>corner radius, applied to all four corners</td>
+</tr>
+</tbody></table>
+<h3 id="circle">circle</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>center</code></td>
+<td>the canvas&#39;s own center</td>
+<td><code>{x, y}</code></td>
+</tr>
+<tr>
+<td><code>radius</code></td>
+<td>half the canvas&#39;s shorter side</td>
+<td></td>
+</tr>
+<tr>
+<td><code>reversePath</code></td>
+<td><code>false</code></td>
+<td>reverses the path&#39;s winding direction — combine with <code>build</code> + <code>clip</code> to punch a hole (see <a href="#the-action-pipeline-fill-stroke-build-clip-skip-resetclip">the action pipeline</a>)</td>
+</tr>
+</tbody></table>
+<h3 id="oval">oval</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>frame</code></td>
+<td>the whole canvas</td>
+<td><code>{x, y, w, h}</code> — the oval is inscribed in this rectangle</td>
+</tr>
+</tbody></table>
+<h3 id="arc">arc</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>center</code></td>
+<td>the canvas&#39;s own center</td>
+<td><code>{x, y}</code></td>
+</tr>
+<tr>
+<td><code>radius</code></td>
+<td>half the canvas&#39;s shorter side</td>
+<td></td>
+</tr>
+<tr>
+<td><code>startAngle</code></td>
+<td><code>0</code></td>
+<td>degrees</td>
+</tr>
+<tr>
+<td><code>endAngle</code></td>
+<td><code>360</code></td>
+<td>degrees</td>
+</tr>
+<tr>
+<td><code>arcClockwise</code></td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>arcRadii</code></td>
+<td><code>false</code></td>
+<td>when <code>true</code>, also draws the two radius lines from the center to the arc&#39;s endpoints — a &quot;pie slice&quot; outline instead of a bare curve</td>
+</tr>
+</tbody></table>
+<h3 id="ellipticalarc">ellipticalArc</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>frame</code></td>
+<td>the whole canvas</td>
+<td><code>{x, y, w, h}</code> — unlike <code>arc</code>, the two axes can differ, giving a non-circular arc</td>
+</tr>
+<tr>
+<td><code>startAngle</code></td>
+<td><code>0</code></td>
+<td>degrees</td>
+</tr>
+<tr>
+<td><code>endAngle</code></td>
+<td><code>360</code></td>
+<td>degrees</td>
+</tr>
+<tr>
+<td><code>arcClockwise</code></td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="segments">segments</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>coordinates</code></td>
+<td><em>(required)</em></td>
+<td>array of <code>{x, y}</code> points, connected in order</td>
+</tr>
+<tr>
+<td><code>closed</code></td>
+<td><code>false</code></td>
+<td>connects the last point back to the first</td>
+</tr>
+</tbody></table>
+<p>Any coordinate after the first can include <code>c1x</code>/<code>c1y</code>/<code>c2x</code>/<code>c2y</code> to curve <em>into</em> that point
+from the previous one (a cubic Bézier) instead of drawing a straight line:</p>
+<pre><code class="language-js">{ type: &quot;segments&quot;, action: &quot;stroke&quot;, strokeColor: { alpha: 1 },
+  coordinates: [
+      { x: 0, y: 50 },
+      { x: 100, y: 50, c1x: 30, c1y: 0, c2x: 70, c2y: 0 },  // curves upward between the two points
+  ] }
+</code></pre>
+<h3 id="points">points</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>coordinates</code></td>
+<td><em>(required)</em></td>
+<td>array of <code>{x, y}</code> — each becomes a filled dot, fixed at a 2pt radius (not configurable)</td>
+</tr>
+</tbody></table>
+<h3 id="text">text</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>text</code></td>
+<td><em>(required)</em></td>
+<td>the string to render; <code>\n</code> produces multiple lines</td>
+</tr>
+<tr>
+<td><code>frame</code></td>
+<td>the whole canvas</td>
+<td><code>{x, y, w, h}</code> — also a real clip boundary: text that doesn&#39;t fit is wrapped or truncated per <code>textLineBreak</code>, not left to silently overflow</td>
+</tr>
+<tr>
+<td><code>textSize</code></td>
+<td><code>27.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>textColor</code></td>
+<td>opaque black</td>
+<td></td>
+</tr>
+<tr>
+<td><code>textFont</code></td>
+<td>the system font</td>
+<td>a custom font&#39;s PostScript name (not its display name), e.g. <code>&quot;Menlo-Bold&quot;</code>; an unresolvable name logs a warning and falls back to the system font. Overrides <code>textWeight</code>/<code>textDesign</code> entirely when set</td>
+</tr>
+<tr>
+<td><code>textWeight</code></td>
+<td><code>regular</code></td>
+<td>one of <code>thin</code>, <code>ultraLight</code>, <code>light</code>, <code>regular</code>, <code>medium</code>, <code>semibold</code>, <code>bold</code>, <code>heavy</code>, <code>black</code>; ignored if <code>textFont</code> is set</td>
+</tr>
+<tr>
+<td><code>textDesign</code></td>
+<td>the system default</td>
+<td><code>monospaced</code>, <code>rounded</code>, or <code>serif</code>; ignored if <code>textFont</code> is set</td>
+</tr>
+<tr>
+<td><code>textItalic</code></td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>textAlignment</code></td>
+<td><code>natural</code></td>
+<td><code>left</code>, <code>right</code>, <code>center</code>, <code>justified</code>, or <code>natural</code>. <code>natural</code>/<code>justified</code> resolve against the text&#39;s own writing direction — for right-to-left scripts (Hebrew, Arabic, ...), that means flush with the frame&#39;s <em>right</em> edge, not the left, the way it does for left-to-right text. <code>left</code>/<code>right</code>/<code>center</code> are always literal, regardless of script</td>
+</tr>
+<tr>
+<td><code>textLineBreak</code></td>
+<td><code>wordWrap</code></td>
+<td><code>wordWrap</code>, <code>charWrap</code>, <code>clip</code>, <code>truncateHead</code>, <code>truncateMiddle</code>, <code>truncateTail</code> — <code>wordWrap</code>/<code>charWrap</code> allow multiple lines; the rest keep the text to one line, either clipping it or inserting <code>…</code></td>
+</tr>
+</tbody></table>
+<p><code>HSCanvas.minimumTextSize(index, text)</code> measures how much space a string would need using an
+existing text element&#39;s font attributes, without changing what&#39;s on screen — handy for
+sizing a <code>frame</code> to fit before setting it.</p>
+<h3 id="image">image</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>image</code></td>
+<td><em>(required)</em></td>
+<td>an <code>HSImage</code> — see <a href="HSImage.html"><code>HSImage.fromPath()</code></a> and friends</td>
+</tr>
+<tr>
+<td><code>frame</code></td>
+<td>the whole canvas</td>
+<td><code>{x, y, w, h}</code> — also a real clip boundary, same as <code>text</code>&#39;s</td>
+</tr>
+<tr>
+<td><code>imageAlpha</code></td>
+<td><code>1.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>imageScaling</code></td>
+<td><code>scaleProportionally</code></td>
+<td><code>none</code> (native size), <code>scaleToFit</code> (stretches to fill <code>frame</code>, distorting aspect ratio), <code>scaleProportionally</code> (scales up <em>or</em> down to fit, preserving aspect ratio), <code>shrinkToFit</code> (like proportional, but never enlarges)</td>
+</tr>
+<tr>
+<td><code>imageAlignment</code></td>
+<td><code>center</code></td>
+<td><code>center</code>, <code>top</code>, <code>bottom</code>, <code>left</code>, <code>right</code>, <code>topLeft</code>, <code>topRight</code>, <code>bottomLeft</code>, <code>bottomRight</code> — where the (possibly smaller, after scaling) image sits within <code>frame</code></td>
+</tr>
+</tbody></table>
+<p><code>HSCanvas.imageFromCanvas()</code> renders a canvas&#39;s current contents to an <code>HSImage</code>, which you
+can then feed straight back into an <code>image</code> element (on this canvas or another) — see the
+<a href="#an-image-badge">image badge demo</a> below.</p>
+<h3 id="canvas">canvas</h3>
+<p>Embeds another, already-created <code>HSCanvas</code> as a nested element — its own elements render
+inside this one&#39;s, transformed along with it.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>canvas</code></td>
+<td><em>(required)</em></td>
+<td>another <code>HSCanvas</code> object</td>
+</tr>
+<tr>
+<td><code>frame</code></td>
+<td>the whole canvas</td>
+<td><code>{x, y, w, h}</code></td>
+</tr>
+<tr>
+<td><code>canvasAlpha</code></td>
+<td><code>1.0</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>Nesting is capped at 8 levels deep, to guard against a canvas that (directly or indirectly)
+embeds itself.</p>
+<h3 id="resetclip">resetClip</h3>
+<p>No properties beyond <code>type: &quot;resetClip&quot;</code> — see <a href="#the-action-pipeline-fill-stroke-build-clip-skip-resetclip">the action pipeline</a>
+above for what it does.</p>
+<h2 id="demos">Demos</h2>
+<h3 id="a-rounded-screen-corner-overlay">A rounded screen corner overlay</h3>
+<p>The canonical <code>build</code>/<code>clip</code>/<code>resetClip</code> example — a tiny canvas sits over a screen corner,
+with a circle punching a hole out of an opaque square via reversed-winding cancellation,
+leaving only a curved sliver that masks the physical corner:</p>
+<pre><code class="language-js">const radius = 12
+const corner = hs.canvas.create({x: 0, y: 0, w: radius, h: radius})
+corner.appendElements([
+    { action: &quot;build&quot;, type: &quot;rectangle&quot; },
+    { action: &quot;clip&quot;, type: &quot;circle&quot;, center: {x: radius, y: radius}, radius: radius, reversePath: true },
+    { action: &quot;fill&quot;, type: &quot;rectangle&quot;, fillColor: { alpha: 1 } },
+    { type: &quot;resetClip&quot; },
+])
+corner.levelValue(hs.canvas.windowLevels.screenSaver + 1)
+corner.behavior(&quot;canJoinAllSpaces&quot;)
+corner.ignoreMouseEvents(true)  // purely decorative -- never intercept clicks meant for what&#39;s underneath
+corner.show()
+</code></pre>
+<h3 id="a-labeled-gauge">A labeled gauge</h3>
+<p>Combines a gradient-filled arc, a pie-slice outline, and custom-font text to build a small
+&quot;battery&quot;-style readout:</p>
+<pre><code class="language-js">const level = 0.72  // 0.0-1.0
+const c = hs.canvas.create({x: 100, y: 100, w: 160, h: 160})
+c.appendElements([
+    // Track: a full circle in a muted color, stroked only.
+    { type: &quot;circle&quot;, action: &quot;stroke&quot;, center: {x: 80, y: 80}, radius: 60,
+      strokeColor: { red: 0.3, green: 0.3, blue: 0.3, alpha: 1 }, strokeWidth: 10 },
+
+    // Fill: a pie slice from the top, sized to `level`, colored by a gradient.
+    { type: &quot;arc&quot;, action: &quot;fill&quot;, center: {x: 80, y: 80}, radius: 60,
+      startAngle: -90, endAngle: -90 + level * 360,
+      fillGradient: &quot;linear&quot;, fillGradientAngle: 90,
+      fillGradientColors: [{ green: 1, alpha: 1 }, { red: 0.2, green: 0.8, blue: 1, alpha: 1 }] },
+
+    // Percentage, centered in the middle of the ring.
+    { type: &quot;text&quot;, text: Math.round(level * 100) + &quot;%&quot;,
+      frame: {x: 0, y: 65, w: 160, h: 30}, textSize: 22, textWeight: &quot;bold&quot;,
+      textAlignment: &quot;center&quot;, textColor: { alpha: 1 } },
+])
+c.show()
+</code></pre>
+<h3 id="an-image-badge">An image badge</h3>
+<p><code>imageScaling</code>/<code>imageAlignment</code> combined with a rounded backdrop and a text label —
+<code>imageFromCanvas()</code> then snapshots the whole thing into a reusable <code>HSImage</code>:</p>
+<pre><code class="language-js">const icon = HSImage.fromPath(&quot;/path/to/icon.png&quot;)
+const c = hs.canvas.create({x: 300, y: 100, w: 160, h: 60})
+c.appendElements([
+    { type: &quot;rectangle&quot;, action: &quot;fill&quot;, roundedRectRadii: 10, fillColor: { red: 0.1, green: 0.1, blue: 0.12, alpha: 1 } },
+    { type: &quot;image&quot;, image: icon, frame: {x: 8, y: 8, w: 44, h: 44}, imageScaling: &quot;scaleProportionally&quot;, imageAlignment: &quot;center&quot; },
+    { type: &quot;text&quot;, text: &quot;Connected&quot;, frame: {x: 60, y: 20, w: 90, h: 20}, textSize: 15, textColor: { alpha: 1 } },
+])
+c.show()
+
+const badgeImage = c.imageFromCanvas()  // reuse this badge as an image element elsewhere
+</code></pre>
+<h3 id="an-interactive-hover-tooltip">An interactive hover tooltip</h3>
+<p>A dot that reveals a label on hover, using <code>trackMouseEnterExit</code>, <code>mouseCallback()</code>, and
+<code>setElementAttribute()</code> to mutate elements already on screen rather than rebuilding them:</p>
+<pre><code class="language-js">const c = hs.canvas.create({x: 500, y: 100, w: 200, h: 80})
+c.appendElements([
+    { type: &quot;circle&quot;, action: &quot;fill&quot;, center: {x: 30, y: 40}, radius: 12,
+      fillColor: { red: 0.9, green: 0.3, blue: 0.4, alpha: 1 },
+      trackMouseEnterExit: true, id: &quot;dot&quot; },
+    { type: &quot;text&quot;, text: &quot;&quot;, frame: {x: 55, y: 30, w: 140, h: 20},
+      textSize: 13, textColor: { alpha: 0 }, id: &quot;tooltip&quot; },  // starts invisible
+])
+
+function indexOf(id) {
+    return c.canvasElements().findIndex((el) =&gt; el.id === id)
+}
+
+c.mouseCallback((canvas, message, id) =&gt; {
+    if (id !== &quot;dot&quot;) return
+    const tooltipIndex = indexOf(&quot;tooltip&quot;)
+    const visible = message === &quot;mouseEnter&quot;
+    canvas.setElementAttribute(tooltipIndex, &quot;text&quot;, visible ? &quot;That&#39;s a dot!&quot; : &quot;&quot;)
+    canvas.setElementAttribute(tooltipIndex, &quot;textColor&quot;, { alpha: visible ? 1 : 0 })
+})
+
+c.show()
+</code></pre>
+<h2 id="where-to-go-from-here">Where to go from here</h2>
+<p>The <a href="getting-started.html">Getting Started guide</a> covers hotkeys, timers, watchers, and
+<code>hs.ui</code> — the rest of what a config typically needs alongside <code>hs.canvas</code>. The
+<a href="HSCanvas.html"><code>HSCanvas</code> API reference</a> covers every method (window/Spaces control,
+element mutation, mouse and drag callbacks, transforms, <code>duplicate()</code>, <code>imageFromCanvas()</code>)
+in full. If you&#39;re packaging something built with <code>hs.canvas</code> to share with others, see the
+<a href="spoons-guide.html">Spoons guide</a>.</p>
+</div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('canvas-guide');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
