@@ -370,13 +370,18 @@ struct HSWindowIntegrationTests {
             #expect(isStacked([requestedID, coverID, behindID]),
                     "the other TextEdit window should have stayed behind Preview")
 
-            let focusStates = harness.evalString("""
-                hs.application.matchingBundleID('\(Self.textEditID)').allWindows
-                    .filter(w => w.title && w.title.indexOf('\(prefix)') === 0)
-                    .map(w => w.title.indexOf('\(prefix)-requested') === 0 ? 'requested=' + w.isFocused : 'behind=' + w.isFocused)
-                    .sort()
-                    .join(',')
-                """)
+            // AXFocusedWindow can update after the window comes to the front.
+            var focusStates: String?
+            _ = await waitUntil {
+                focusStates = harness.evalString("""
+                    hs.application.matchingBundleID('\(Self.textEditID)').allWindows
+                        .filter(w => w.title && w.title.indexOf('\(prefix)') === 0)
+                        .map(w => w.title.indexOf('\(prefix)-requested') === 0 ? 'requested=' + w.isFocused : 'behind=' + w.isFocused)
+                        .sort()
+                        .join(',')
+                    """)
+                return focusStates == "behind=false,requested=true"
+            }
             #expect(!harness.hasException)
             #expect(focusStates == "behind=false,requested=true")
         }
