@@ -376,8 +376,12 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     }
 
     @objc var isFocused: Bool {
-        let focused: Bool? = try? element.attribute(.focused)
-        return focused ?? false
+        guard NSWorkspace.shared.frontmostApplication?.processIdentifier == app.processIdentifier,
+              let axApp = Application(app),
+              let focused: UIElement = try? axApp.attribute(.focusedWindow) else {
+            return false
+        }
+        return CFEqual(focused.element, element.element)
     }
 
     @objc var isFullscreen: Bool {
