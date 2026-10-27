@@ -399,12 +399,11 @@ extension HSWindowIntegrationTests {
         private static let mainTitle = "Hammerspoon 2 Test App"
 
         /// Polls `condition` until it holds or `timeout` elapses.
-        private func waitUntil(timeout: TimeInterval = 5.0, interval: Duration = .milliseconds(100),
-                               _ condition: () -> Bool) async -> Bool {
+        private func waitUntil(timeout: TimeInterval = 5.0, _ condition: () -> Bool) async -> Bool {
             let deadline = Date().addingTimeInterval(timeout)
             while Date() < deadline {
                 if condition() { return true }
-                try? await Task.sleep(for: interval)
+                try? await Task.sleep(for: .milliseconds(100))
             }
             return condition()
         }
@@ -426,14 +425,19 @@ extension HSWindowIntegrationTests {
             try #require(opened, "the test app did not open \(count) extra windows")
         }
 
-        /// Makes the window titled `title` the app's main window, then brings `cover` to the front,
-        /// so that `app` is in the background with that window as its main window.
-        private func sendToBackground(_ app: NSRunningApplication, withMain title: String,
-                                      behind cover: NSRunningApplication) async throws {
+        /// Brings `app` to the front with the window titled `title` as its main window.
+        private func bringToFront(_ app: NSRunningApplication, withMain title: String) async throws {
             #expect(app.setFrontmost(allWindows: false))
             #expect(try #require(window(titled: title, in: app)).becomeMain())
             let isMain = await waitUntil { app.isActive && focusedTitle(of: app) == title }
             try #require(isMain, "\(title) did not become the test app's main window")
+        }
+
+        /// Makes the window titled `title` the app's main window, then brings `cover` to the front,
+        /// so that `app` is in the background with that window as its main window.
+        private func sendToBackground(_ app: NSRunningApplication, withMain title: String,
+                                      behind cover: NSRunningApplication) async throws {
+            try await bringToFront(app, withMain: title)
             #expect(cover.setFrontmost(allWindows: false))
             let inBackground = await waitUntil { cover.isActive && !app.isActive }
             try #require(inBackground, "the second copy of the test app did not come to the front")
@@ -477,18 +481,14 @@ extension HSWindowIntegrationTests {
         func testFocusReassertionYieldsToNewerChoice() async throws {
             let app = try #require(await TestAppControl.launch(detail: "Another window is chosen right after focus(); it must stay in front"))
             defer { app.terminate() }
-            let cover = try #require(await TestAppControl.launch(detail: "Covers the other copy"))
-            defer { cover.terminate() }
 
+            // The app starts in front, so nothing has to settle between focus() and the newer
+            // choice below, and that choice reliably lands before focus()'s re-assertion.
             try await openWindows(2, in: app)
-            try await sendToBackground(app, withMain: "Test window 2", behind: cover)
+            try await bringToFront(app, withMain: "Test window 2")
 
             #expect(focusFromJS("Test window 1", in: app) == true)
-
-            // Choose a third window (neither the requested one nor the previous main window)
-            // before focus() re-asserts its choice.
-            let active = await waitUntil(interval: .milliseconds(10)) { app.isActive }
-            try #require(active, "focus() did not bring the test app to the front")
+            // Choose a third window: neither the requested one nor the previous main window.
             #expect(try #require(window(titled: Self.mainTitle, in: app)).becomeMain())
 
             try await Task.sleep(for: .seconds(1))
