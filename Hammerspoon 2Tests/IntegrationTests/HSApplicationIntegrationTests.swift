@@ -773,6 +773,40 @@ struct HSApplicationTests {
             }
         }
 
+        @Test("didActivate listener receives the activated application, with its name")
+        func testDidActivateArgument() async {
+            var launched: NSRunningApplication?
+            launched = await TestAppControl.launch(detail: "Activates this app; the didActivate listener must get it, with its name")
+            guard let app = launched else { return }
+
+            let harness = makeHarness()
+            harness.eval("""
+            var _daApp = undefined;
+            var _daFn = function(app) {
+                if (app && app.pid === \(app.processIdentifier)) { _daApp = app; }
+            };
+            hs.application.on('didActivate', _daFn);
+        """)
+            defer {
+                harness.eval("hs.application.off('didActivate', _daFn)")
+                launched?.terminate()
+            }
+
+            NSRunningApplication.current.activate(options: [])
+            try? await Task.sleep(for: .milliseconds(300))
+            app.activate(options: [])
+
+            let received = await harness.waitForAsync(timeout: 5.0) {
+                harness.eval("_daApp !== undefined") as? Bool == true
+            }
+            #expect(received, "the event did not arrive")
+            if received {
+                harness.expectTrue("typeof _daApp.name === 'string' && _daApp.name.length > 0")
+                harness.expectEqual("_daApp.name", app.localizedName ?? "")
+                harness.expectEqual("_daApp.bundleID", "net.tenshu.Hammerspoon-2.TestApp")
+            }
+        }
+
         // MARK: - Multiple listeners
 
         @Test("multiple listeners all receive the didLaunch event")

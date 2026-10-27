@@ -128,7 +128,7 @@ enum NodeUtil {
         let objectConstructor = value.context.objectForKeyedSubscript("Object")
         let keysValue = objectConstructor?.invokeMethod("keys", withArguments: [value])
         let keys = (keysValue?.toArray() as? [String]) ?? []
-        guard !keys.isEmpty else { return "\(prefix){}" }
+        guard !keys.isEmpty else { return nativeDescription(value) ?? "\(prefix){}" }
         let entries = keys.map { key -> String in
             "\(formatKey(key)): \(formatProperty(value, key: key, depth: depth - 1, objectConstructor: objectConstructor))"
         }
@@ -153,10 +153,23 @@ enum NodeUtil {
         return format(value.objectForKeyedSubscript(key), depth: depth)
     }
 
+    /// A JSExport-bridged native object (an `HSApplication`, a module, ...) keeps its properties
+    /// as accessors on its prototype, so it has no own keys and would otherwise render as an
+    /// unhelpful `{}`. Show its own description instead, which for `HSTypeAPI` types is their
+    /// `toString()`. Only called for objects with no own keys: `toObject()` deep-converts a plain
+    /// JS object to an `NSDictionary`, which would read (and so run) its getters.
+    private static func nativeDescription(_ value: JSValue) -> String? {
+        guard let native = value.toObject() as? NSObject, !(native is NSDictionary) else { return nil }
+        return native.description
+    }
+
     private static func constructorPrefix(_ value: JSValue) -> String {
+        // A JSExport-bridged constructor is a plain object with no `name`, so check it's really
+        // a string rather than letting `toString()` turn undefined into "undefined"
         guard
-            let name = value.objectForKeyedSubscript("constructor")?
-                .objectForKeyedSubscript("name")?.toString(),
+            let nameValue = value.objectForKeyedSubscript("constructor")?.objectForKeyedSubscript("name"),
+            nameValue.isString,
+            let name = nameValue.toString(),
             !name.isEmpty, name != "Object"
         else { return "" }
         return "\(name) "
