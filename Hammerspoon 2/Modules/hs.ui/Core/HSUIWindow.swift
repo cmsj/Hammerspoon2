@@ -201,7 +201,7 @@ import SwiftUI
 
     /// Set the text shown in the window's title bar
     ///
-    /// Only visible when `.titled(true)` is set (the default).
+    /// Only visible when `.titled(true)` is set (the default). Can be called before or after `show()`.
     ///
     /// - Parameter text: The title bar text
     /// - Returns: Self for chaining
@@ -223,6 +223,8 @@ import SwiftUI
     /// - `"status"` — status bar level
     /// - `"popUpMenu"` — pop-up menu level
     ///
+    /// Can be called before or after `show()`.
+    ///
     /// - Parameter name: {'"normal"' | '"floating"' | '"screenSaver"' | '"dock"' | '"status"' | '"popUpMenu"'} The level name
     /// - Returns: Self for chaining
     /// - Example:
@@ -231,6 +233,56 @@ import SwiftUI
     ///     .level("floating").show()
     /// ```
     @objc func level(_ name: String) -> HSUIWindow
+
+    /// Set how the window behaves with Spaces, fullscreen apps and window cycling, from a single behavior name
+    ///
+    /// The names (which map to `NSWindow.CollectionBehavior`) are:
+    /// - `"default"` — the system default
+    /// - `"canJoinAllSpaces"` — appears on every Space
+    /// - `"moveToActiveSpace"` — moves to the active Space when shown
+    /// - `"managed"` — participates in Spaces and Exposé (the default for normal windows)
+    /// - `"transient"` — floats in Spaces and is hidden by Exposé
+    /// - `"stationary"` — unaffected by Exposé
+    /// - `"participatesInCycle"` / `"ignoresCycle"` — whether ⌘` cycles to the window
+    /// - `"fullScreenPrimary"` / `"fullScreenAuxiliary"` / `"fullScreenNone"` — how the window relates to fullscreen apps;
+    ///   `"fullScreenAuxiliary"` lets it appear over another app's fullscreen Space
+    /// - `"fullScreenAllowsTiling"` / `"fullScreenDisallowsTiling"` — whether it can be tiled in fullscreen
+    ///
+    /// Use `behaviorList()` to combine several. An unknown name is logged and leaves the behavior unchanged.
+    /// Can be called before or after `show()`.
+    ///
+    /// - Parameter name: {"default" | "canJoinAllSpaces" | "moveToActiveSpace" | "managed" | "transient" | "stationary" | "participatesInCycle" | "ignoresCycle" | "fullScreenPrimary" | "fullScreenAuxiliary" | "fullScreenNone" | "fullScreenAllowsTiling" | "fullScreenDisallowsTiling"} The behavior name
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// hs.ui.window({x: 100, y: 100, w: 400, h: 200})
+    ///     .behavior("canJoinAllSpaces")
+    ///     .text("On every Space")
+    ///     .show()
+    /// ```
+    @objc func behavior(_ name: String) -> HSUIWindow
+
+    /// Set how the window behaves with Spaces, fullscreen apps and window cycling, from a combination of behavior names
+    ///
+    /// See `behavior()` for the names. Some can't be combined, because AppKit treats them as mutually exclusive:
+    /// `"canJoinAllSpaces"` with `"moveToActiveSpace"`; any two of `"managed"`, `"transient"` and `"stationary"`;
+    /// `"participatesInCycle"` with `"ignoresCycle"`; any two of the `"fullScreen…"` Primary/Auxiliary/None names;
+    /// and `"fullScreenAllowsTiling"` with `"fullScreenDisallowsTiling"`. Combining them throws, leaving the
+    /// behavior unchanged. Unknown names are logged and ignored. Can be called before or after `show()`.
+    ///
+    /// - Parameter names: {string[]} The behavior names to combine, or an empty array for the system default
+    /// - Returns: Self for chaining
+    /// - Throws: true
+    /// - Example:
+    /// ```js
+    /// // An alert that appears above everything, including fullscreen apps, on every Space
+    /// hs.ui.window({x: 100, y: 100, w: 400, h: 200})
+    ///     .level("screenSaver")
+    ///     .behaviorList(["canJoinAllSpaces", "fullScreenAuxiliary"])
+    ///     .text("Meeting starts now")
+    ///     .show()
+    /// ```
+    @objc func behaviorList(_ names: [String]) -> HSUIWindow
 
     /// Set the window's background color
     /// - Parameter colorValue: {string | HSColor} A hex color string (e.g. "#FF0000") or an HSColor object
@@ -446,6 +498,7 @@ import SwiftUI
     private var isResizable: Bool = true
     private var windowTitleText: String = ""
     private var windowLevelName: String = "normal"
+    private var windowBehavior: NSWindow.CollectionBehavior = []
 
     // Lifecycle callbacks
     private var showCallback: JSCallback?
@@ -547,6 +600,7 @@ import SwiftUI
         window.isOpaque = false
         window.backgroundColor = NSColor(windowBackgroundColor)
         window.level = resolvedLevel()
+        window.collectionBehavior = windowBehavior
         window.isReleasedWhenClosed = false
         window.delegate = self
         if !windowTitleText.isEmpty {
@@ -646,8 +700,36 @@ import SwiftUI
     @objc func closable(_ show: Bool) -> HSUIWindow { isClosable = show; return self }
     @objc func miniaturizable(_ show: Bool) -> HSUIWindow { isMiniaturizable = show; return self }
     @objc func allowResize(_ enable: Bool) -> HSUIWindow { isResizable = enable; return self }
-    @objc func windowTitle(_ text: String) -> HSUIWindow { windowTitleText = text; return self }
-    @objc func level(_ name: String) -> HSUIWindow { windowLevelName = name; return self }
+    @objc func windowTitle(_ text: String) -> HSUIWindow {
+        windowTitleText = text
+        nsWindow?.title = text
+        return self
+    }
+
+    @objc func level(_ name: String) -> HSUIWindow {
+        windowLevelName = name
+        nsWindow?.level = resolvedLevel()
+        return self
+    }
+
+    @objc func behavior(_ name: String) -> HSUIWindow {
+        guard let value = WindowCollectionBehavior.named[name] else {
+            AKWarning("hs.ui.window: Unknown window behavior '\(name)'")
+            return self
+        }
+        return setBehavior(value)
+    }
+
+    @objc func behaviorList(_ names: [String]) -> HSUIWindow {
+        setBehavior(WindowCollectionBehavior.combining(names, caller: "hs.ui.window"))
+    }
+
+    private func setBehavior(_ behavior: NSWindow.CollectionBehavior) -> HSUIWindow {
+        guard WindowCollectionBehavior.validate(behavior, caller: "hs.ui.window") else { return self }
+        windowBehavior = behavior
+        nsWindow?.collectionBehavior = behavior
+        return self
+    }
 
     private func resolvedStyleMask() -> NSWindow.StyleMask {
         guard isTitled else { return [.borderless] }

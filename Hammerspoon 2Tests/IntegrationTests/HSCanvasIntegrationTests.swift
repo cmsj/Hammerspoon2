@@ -248,6 +248,53 @@ struct HSCanvasTests {
             #expect(harness.evalTypeOf("result") == "object")
         }
 
+        @Test("behaviorList() applies the combined behavior to a shown window")
+        @MainActor
+        func behaviorListAppliesToWindow() throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var c = hs.canvas.create({x: 0, y: 0, w: 50, h: 50}).show()
+                c.behaviorList(["canJoinAllSpaces", "stationary"])
+                void 0
+                """)
+            let canvas = try #require(harness.evalValue("c")?.toObjectOf(HSCanvas.self) as? HSCanvas)
+            #expect(canvas.windowCollectionBehavior == [.canJoinAllSpaces, .stationary])
+            #expect(!harness.hasException)
+            harness.eval("c.destroy()")
+        }
+
+        // canJoinAllSpaces + moveToActiveSpace makes AppKit raise an uncaught
+        // NSInternalInconsistencyException, so without the check this test would crash the runner
+        @Test("behaviorList() and behaviorValue() throw for mutually exclusive behaviors and keep the old one")
+        @MainActor
+        func conflictingBehaviorsThrow() throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var c = hs.canvas.create({x: 0, y: 0, w: 50, h: 50}).show()
+                c.behavior("stationary")
+                var listError = null
+                try { c.behaviorList(["canJoinAllSpaces", "moveToActiveSpace"]) } catch (e) { listError = e.message }
+                var valueError = null
+                var b = hs.canvas.windowBehaviors
+                try { c.behaviorValue(b.canJoinAllSpaces | b.moveToActiveSpace) } catch (e) { valueError = e.message }
+                void 0
+                """)
+            #expect(!harness.hasException)
+            #expect(harness.evalString("listError")?.contains("'canJoinAllSpaces' and 'moveToActiveSpace' cannot be combined") == true)
+            #expect(harness.evalString("valueError")?.contains("cannot be combined") == true)
+            let canvas = try #require(harness.evalValue("c")?.toObjectOf(HSCanvas.self) as? HSCanvas)
+            #expect(canvas.windowCollectionBehavior == [.stationary])
+            harness.eval("c.destroy()")
+        }
+
+        @Test("behaviorValue() with a negative bitmask throws instead of trapping")
+        @MainActor
+        func negativeBehaviorValueThrows() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.canvas.create({x: 0, y: 0, w: 50, h: 50}); c.behaviorValue(-1)")
+            harness.expectException()
+        }
+
         @Test("clickActivating() and ignoreMouseEvents() chain without throwing")
         @MainActor
         func clickThroughChaining() {

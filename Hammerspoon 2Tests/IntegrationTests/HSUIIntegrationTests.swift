@@ -372,6 +372,127 @@ struct HSUITests {
         }
     }
 
+    @Suite("HSUIWindow behavior(), behaviorList() and live setters")
+    struct HSUIWindowBehaviorTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSUIModule.self, as: "ui")
+            return harness
+        }
+
+        private func nsWindow(_ harness: JSTestHarness) throws -> NSWindow {
+            let win = try #require(harness.evalValue("w")?.toObjectOf(HSUIWindow.self) as? HSUIWindow)
+            return try #require(NSApp.windows.first { ($0.delegate as AnyObject?) === win })
+        }
+
+        @Test("behaviorList() set before show() is applied to the window")
+        func testBehaviorListBeforeShow() throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .behaviorList(["canJoinAllSpaces", "fullScreenAuxiliary"])
+                    .text("Test")
+                w.show()
+                void 0
+            """)
+            #expect(try nsWindow(harness).collectionBehavior == [.canJoinAllSpaces, .fullScreenAuxiliary])
+            #expect(!harness.hasException)
+            harness.eval("w.destroy()")
+        }
+
+        @Test("behaviorList() called after show() updates the window")
+        func testBehaviorListAfterShow() throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100}).text("Test")
+                w.show()
+                w.behaviorList(["stationary", "ignoresCycle"])
+                void 0
+            """)
+            #expect(try nsWindow(harness).collectionBehavior == [.stationary, .ignoresCycle])
+            #expect(!harness.hasException)
+            harness.eval("w.destroy()")
+        }
+
+        @Test("behaviorList() ignores unknown names and chains")
+        func testBehaviorListIgnoresUnknownNames() throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                var chained = w.behaviorList(["nonsense", "transient"]).text("Test")
+                w.show()
+                void 0
+            """)
+            #expect(harness.evalTypeOf("chained") == "object")
+            #expect(try nsWindow(harness).collectionBehavior == [.transient])
+            #expect(!harness.hasException)
+            harness.eval("w.destroy()")
+        }
+
+        @Test("behavior() replaces the behavior with a single name, and ignores unknown names")
+        func testBehaviorSingleName() throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100}).text("Test")
+                w.show()
+                w.behaviorList(["stationary", "ignoresCycle"])
+                var chained = w.behavior("canJoinAllSpaces").behavior("nonsense")
+                void 0
+            """)
+            #expect(harness.evalTypeOf("chained") == "object")
+            #expect(try nsWindow(harness).collectionBehavior == [.canJoinAllSpaces])
+            harness.eval("w.behavior('default')")
+            #expect(try nsWindow(harness).collectionBehavior == [])
+            #expect(!harness.hasException)
+            harness.eval("w.destroy()")
+        }
+
+        // canJoinAllSpaces + moveToActiveSpace makes AppKit raise an uncaught
+        // NSInternalInconsistencyException, so without the check this test would crash the runner
+        @Test("behaviorList() throws for mutually exclusive behaviors and keeps the old one",
+              arguments: [
+                ["canJoinAllSpaces", "moveToActiveSpace"],
+                ["managed", "stationary"],
+                ["participatesInCycle", "ignoresCycle"],
+                ["fullScreenPrimary", "fullScreenAuxiliary"],
+                ["fullScreenAllowsTiling", "fullScreenDisallowsTiling"],
+              ])
+        func testConflictingBehaviorsThrow(names: [String]) throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100}).text("Test").behavior("transient")
+                var beforeShowError = null
+                try { w.behaviorList(\(names)) } catch (e) { beforeShowError = e.message }
+                w.show()
+                var afterShowError = null
+                try { w.behaviorList(\(names)) } catch (e) { afterShowError = e.message }
+                void 0
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalString("beforeShowError")?.contains("cannot be combined") == true)
+            #expect(harness.evalString("afterShowError")?.contains("cannot be combined") == true)
+            #expect(try nsWindow(harness).collectionBehavior == [.transient])
+            harness.eval("w.destroy()")
+        }
+
+        @Test("level() and windowTitle() called after show() update the window")
+        func testLevelAndTitleAfterShow() throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100}).text("Test")
+                w.show()
+                w.level("screenSaver").windowTitle("Updated")
+                void 0
+            """)
+            let window = try nsWindow(harness)
+            #expect(window.level == .screenSaver)
+            #expect(window.title == "Updated")
+            #expect(!harness.hasException)
+            harness.eval("w.destroy()")
+        }
+    }
+
     // MARK: - Suite 3: HSVideo loop() queue management
     //
     // Regression coverage for a bug where loop(false) unconditionally reset the
