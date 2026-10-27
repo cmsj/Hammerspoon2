@@ -855,6 +855,8 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Hammerspoon 2 requires automation permissions to control other apps.";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Hammerspoon 2 requires camera permissions for various modules to function correctly";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "©2025 by its authors. Released under MIT License.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Hammerspoon 2 requires local network permissions for various modules to function correctly";
@@ -863,6 +865,8 @@
 				INFOPLIST_KEY_NSLocationUsageDescription = "Hammerspoon 2 requires location permissions for hs.location and hs.wifi";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Hammerspoon 2 requires location permissions for hs.location and hs.wifi";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Hammerspoon 2 requires microphone permissions for various modules to function correctly";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Hammerspoon 2 requires reminders permissions for user scripts to function correctly";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "Hammerspoon 2 requires reminders permissions for user scripts to function correctly";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -915,6 +919,8 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Hammerspoon 2 requires automation permissions to control other apps.";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Hammerspoon 2 requires camera permissions for various modules to function correctly";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "©2025 by its authors. Released under MIT License.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Hammerspoon 2 requires local network permissions for various modules to function correctly";
@@ -923,6 +929,8 @@
 				INFOPLIST_KEY_NSLocationUsageDescription = "Hammerspoon 2 requires location permissions for hs.location and hs.wifi";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Hammerspoon 2 requires location permissions for hs.location and hs.wifi";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Hammerspoon 2 requires microphone permissions for various modules to function correctly";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Hammerspoon 2 requires reminders permissions for user scripts to function correctly";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "Hammerspoon 2 requires reminders permissions for user scripts to function correctly";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
