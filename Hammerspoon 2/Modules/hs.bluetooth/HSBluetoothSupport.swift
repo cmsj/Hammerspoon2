@@ -145,15 +145,29 @@ struct HSBluetoothBatteryLevels {
         return levels
     }
 
+    /// The IORegistry's battery levels by address, and when they were read. Reading them walks the
+    /// registry, so a script asking for several devices' levels at once only does it once.
+    private static var registrySnapshot: (date: Date, levels: [String: Int])?
+
     /// `BatteryPercent` of the AppleDeviceManagementHIDEventService whose `DeviceAddress` matches
     private static func registryBatteryPercent(forAddress address: String) -> Int? {
+        if let snapshot = registrySnapshot, Date().timeIntervalSince(snapshot.date) < 2 {
+            return snapshot.levels[address]
+        }
+        let levels = readRegistryBatteryPercents()
+        registrySnapshot = (Date(), levels)
+        return levels[address]
+    }
+
+    private static func readRegistryBatteryPercents() -> [String: Int] {
         var iterator: io_iterator_t = 0
         guard let matching = unsafe IOServiceMatching("AppleDeviceManagementHIDEventService"),
               unsafe IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == KERN_SUCCESS else {
-            return nil
+            return [:]
         }
         defer { IOObjectRelease(iterator) }
 
+        var levels: [String: Int] = [:]
         var service = IOIteratorNext(iterator)
         while service != 0 {
             defer {
@@ -162,18 +176,24 @@ struct HSBluetoothBatteryLevels {
             }
             let serviceAddress = unsafe IORegistryEntryCreateCFProperty(service, "DeviceAddress" as CFString, kCFAllocatorDefault, 0)?
                 .takeRetainedValue() as? String
-            guard let serviceAddress, HSBluetoothAddress.normalize(serviceAddress) == address else { continue }
+            guard let address = serviceAddress.flatMap(HSBluetoothAddress.normalize) else { continue }
             let percent = unsafe IORegistryEntryCreateCFProperty(service, "BatteryPercent" as CFString, kCFAllocatorDefault, 0)?
                 .takeRetainedValue() as? Int
-            if let percent, percent > 0 { return percent }
+            if let percent, percent > 0 { levels[address] = percent }
         }
-        return nil
+        return levels
     }
 
     /// Calls a private `-(uint8_t)batteryPercentXxx` method, if this macOS has it. 0 means unknown.
     private static func privatePercent(_ device: IOBluetoothDevice, _ name: String) -> Int? {
         let selector = NSSelectorFromString(name)
-        guard device.responds(to: selector) else { return nil }
+        // Called through a function pointer of exactly this type, so the method must still return
+        // an unsigned char ("C") and take no arguments: a changed signature means skipping it,
+        // not reading garbage
+        guard device.responds(to: selector),
+              let method = class_getInstanceMethod(type(of: device), selector),
+              let encoding = method_getTypeEncoding(method).map({ String(cString: $0) }),
+              encoding.hasPrefix("C"), method_getNumberOfArguments(method) == 2 else { return nil }
         typealias Getter = @convention(c) (AnyObject, Selector) -> UInt8
         let getter = unsafe unsafeBitCast(device.method(for: selector), to: Getter.self)
         let percent = Int(getter(device, selector))

@@ -6,8 +6,8 @@
 "use strict";
 
 // Each event has its own native source: IOBluetooth's connection notifications for
-// 'connected'/'disconnected', CoreBluetooth's power state for 'powerChanged', and scan() for
-// 'discovered'. So this uses KeyedLazyWatcherEmitter (see Engine/engine.js), which starts and
+// 'connected'/'disconnected', CoreBluetooth's power state for 'powerChanged', and scan()'s BLE
+// discoveries for 'discovered'. So this uses KeyedLazyWatcherEmitter (see Engine/engine.js), which starts and
 // stops each one only while that event has listeners.
 hs.bluetooth._watcherEmitter = new KeyedLazyWatcherEmitter("hs.bluetooth", function(event) {
     return hs.bluetooth._addWatcher(event, (arg) => {
@@ -20,12 +20,12 @@ hs.bluetooth._watcherEmitter = new KeyedLazyWatcherEmitter("hs.bluetooth", funct
 /// Register a listener for Bluetooth events.
 ///
 /// Listeners receive:
-///  - `"connected"`, `"disconnected"`: the `HSBluetoothDevice` that connected or disconnected. This covers every device macOS connects, and BLE peripherals Hammerspoon connects with `connect()`. macOS doesn't report other apps' BLE connections.
+///  - `"connected"`, `"disconnected"`: the `HSBluetoothDevice` that macOS connected or disconnected. For Hammerspoon's own connections to BLE peripherals, listen on the `HSBluetoothPeripheral` instead.
 ///  - `"powerChanged"`: `true` when Bluetooth is turned on, `false` when it's turned off
-///  - `"discovered"`: each `HSBluetoothDevice` found while `hs.bluetooth.scan()` runs
+///  - `"discovered"`: each `HSBluetoothPeripheral` found while `hs.bluetooth.scan()` runs
 /// Parameters:
 ///  - event: {"connected" | "disconnected" | "powerChanged" | "discovered"} The event to listen for
-///  - listener: {(arg: HSBluetoothDevice | boolean) => void} Called with the event's device, or for `"powerChanged"` the new power state
+///  - listener: {(arg: HSBluetoothDevice | HSBluetoothPeripheral | boolean) => void} Called with the event's device or peripheral, or for `"powerChanged"` the new power state
 /// Throws: true
 /// Example:
 /// ```js
@@ -44,7 +44,7 @@ hs.bluetooth.on = function(event, listener) {
 /// Remove a previously registered Bluetooth event listener.
 /// Parameters:
 ///  - event: {"connected" | "disconnected" | "powerChanged" | "discovered"} The event the listener was registered for
-///  - listener: {(arg: HSBluetoothDevice | boolean) => void} The function originally passed to `on`
+///  - listener: {(arg: HSBluetoothDevice | HSBluetoothPeripheral | boolean) => void} The function originally passed to `on`
 /// Example:
 /// ```js
 /// const onConnected = device => console.log(device.name)
@@ -59,7 +59,7 @@ hs.bluetooth.off = function(event, listener) {
 /// Register a listener that fires at most once for a Bluetooth event.
 /// Parameters:
 ///  - event: {"connected" | "disconnected" | "powerChanged" | "discovered"} The event to listen for
-///  - listener: {(arg: HSBluetoothDevice | boolean) => void} Called the next time the event occurs, then automatically removed
+///  - listener: {(arg: HSBluetoothDevice | HSBluetoothPeripheral | boolean) => void} Called the next time the event occurs, then automatically removed
 /// Throws: true
 /// Example:
 /// ```js
@@ -73,15 +73,17 @@ hs.bluetooth.once = function(event, listener) {
     hs.bluetooth._watcherEmitter.once(event, listener);
 };
 
-// Factory for per-device emitters; called lazily from Swift on a device's first on()/once().
-// A device's events all come through one native callback, so this is a plain LazyWatcherEmitter.
+// Factory for the emitters of HSBluetoothDevice and HSBluetoothPeripheral objects; called lazily
+// from Swift on an object's first on()/once(). An object's events all come through one native
+// callback, so this is a plain LazyWatcherEmitter.
 /// SKIP_DOCS
-hs.bluetooth._makeDeviceEmitter = function(device) {
-    return new LazyWatcherEmitter("hs.bluetooth device", function() {
-        return device._addWatcher((event, ...args) => {
-            device._watcherEmitter.emit(event, ...args);
+hs.bluetooth._makeObjectEmitter = function(object) {
+    const label = object.typeName === "HSBluetoothPeripheral" ? "hs.bluetooth peripheral" : "hs.bluetooth device";
+    return new LazyWatcherEmitter(label, function() {
+        return object._addWatcher((event, ...args) => {
+            object._watcherEmitter.emit(event, ...args);
         });
     }, function() {
-        device._removeWatcher();
-    }, device._eventNames);
+        object._removeWatcher();
+    }, object._eventNames);
 };

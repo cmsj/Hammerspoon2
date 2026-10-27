@@ -7,19 +7,18 @@ import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
 import IOBluetooth
-import CoreBluetooth
 
 // MARK: - JavaScript API
 
-/// A Bluetooth device: one paired with this Mac, or one found nearby by `hs.bluetooth.scan()`.
+/// A Bluetooth device macOS knows: one paired with this Mac, or one found by `hs.bluetooth.inquiry()`.
 ///
-/// Obtain devices from the ``hs.bluetooth`` module; do not instantiate them directly. The same
-/// device is returned as the same object for as long as you hold on to it.
+/// Obtain devices from the ``hs.bluetooth`` module; do not instantiate them directly. A device is
+/// identified by its `address`, and the same device is returned as the same object for as long as
+/// you hold on to it.
 ///
-/// A device macOS knows from pairing has an `address`. A Bluetooth Low Energy (BLE) peripheral
-/// found by a scan has an `identifier` instead: macOS doesn't reveal BLE addresses, and the
-/// identifier is a UUID that is only stable on this Mac. A paired device that also speaks BLE gains
-/// an `identifier` the first time you use one of the GATT methods on it while it's connected.
+/// Bluetooth Low Energy (BLE) peripherals found by `hs.bluetooth.scan()` are `HSBluetoothPeripheral`
+/// objects instead. A paired device that also speaks BLE can give you its peripheral with
+/// `lowEnergyPeripheral()`, e.g. to read its GATT characteristics.
 ///
 /// ## Battery levels
 ///
@@ -27,16 +26,6 @@ import CoreBluetooth
 /// hs.bluetooth.connectedDevices().forEach(d => {
 ///     if (d.batteryLevel !== null) console.log(d.name + ": " + d.batteryLevel + "%")
 /// })
-/// ```
-///
-/// ## Reading and writing GATT characteristics
-///
-/// ```javascript
-/// const [sensor] = await hs.bluetooth.scan({ seconds: 5, services: ["181A"] })
-/// await sensor.connect()
-/// const bytes = await sensor.readValue("181A", "2A6E")
-/// await sensor.subscribe("181A", "2A6E")
-/// sensor.on("value", (service, characteristic, value) => console.log(characteristic + ": " + value))
 /// ```
 @objc protocol HSBluetoothDeviceAPI: HSTypeAPI, JSExport {
     /// The type name for JavaScript introspection. Always `"HSBluetoothDevice"`.
@@ -49,20 +38,12 @@ import CoreBluetooth
     /// ```
     @objc var name: String? { get }
 
-    /// The device's Bluetooth address (`xx-xx-xx-xx-xx-xx`), or `null` for a BLE peripheral, whose address macOS doesn't reveal.
+    /// The device's Bluetooth address, in the form `xx-xx-xx-xx-xx-xx`.
     /// - Example:
     /// ```js
     /// console.log(hs.bluetooth.pairedDevices()[0].address)
     /// ```
-    @objc var address: String? { get }
-
-    /// The CoreBluetooth identifier (a UUID) of the device's BLE side, or `null` if Hammerspoon hasn't talked to it over BLE. It is stable on this Mac, but differs between Macs.
-    /// - Example:
-    /// ```js
-    /// const nearby = await hs.bluetooth.scan()
-    /// nearby.forEach(d => console.log(d.identifier))
-    /// ```
-    @objc var identifier: String? { get }
+    @objc var address: String { get }
 
     /// Whether the device is paired with this Mac.
     /// - Example:
@@ -71,7 +52,7 @@ import CoreBluetooth
     /// ```
     @objc var isPaired: Bool { get }
 
-    /// Whether the device is currently connected, either to macOS or to Hammerspoon over BLE.
+    /// Whether macOS currently has the device connected.
     /// - Example:
     /// ```js
     /// if (headphones.isConnected) console.log("Headphones are connected")
@@ -85,72 +66,58 @@ import CoreBluetooth
     /// ```
     @objc var isFavorite: Bool { get }
 
-    /// The device's raw Bluetooth Class of Device value, or `null` for a BLE peripheral.
+    /// The device's raw Bluetooth Class of Device value.
     /// - Example:
     /// ```js
     /// console.log(device.classOfDevice)
     /// ```
-    @objc var classOfDevice: NSNumber? { get }
+    @objc var classOfDevice: Int { get }
 
-    /// The major device class (e.g. `5` for peripherals such as keyboards and mice), or `null` for a BLE peripheral.
+    /// The major device class, e.g. `4` for audio devices or `5` for peripherals such as keyboards and mice.
     /// - Example:
     /// ```js
     /// const peripherals = hs.bluetooth.pairedDevices().filter(d => d.majorClass === 5)
     /// ```
-    @objc var majorClass: NSNumber? { get }
+    @objc var majorClass: Int { get }
 
-    /// The minor device class, whose meaning depends on `majorClass`, or `null` for a BLE peripheral.
+    /// The minor device class, whose meaning depends on `majorClass`.
     /// - Example:
     /// ```js
     /// console.log(device.minorClass)
     /// ```
-    @objc var minorClass: NSNumber? { get }
+    @objc var minorClass: Int { get }
 
-    /// The major service classes the device advertises, as a bitmask, or `null` for a BLE peripheral.
+    /// The major service classes the device advertises, as a bitmask.
     /// - Example:
     /// ```js
     /// console.log(device.serviceClasses)
     /// ```
-    @objc var serviceClasses: NSNumber? { get }
+    @objc var serviceClasses: Int { get }
 
-    /// The names of the device's classic Bluetooth (SDP) services, e.g. `["Audio Sink", "AVRCP Controller"]`. Empty for a BLE peripheral; use `discoverServices()` for its GATT services.
+    /// The names of the device's classic Bluetooth (SDP) services, e.g. `["Audio Sink", "AVRCP Controller"]`.
     /// - Example:
     /// ```js
     /// console.log(device.serviceNames.join(", "))
     /// ```
     @objc var serviceNames: [String] { get }
 
-    /// The last known signal strength in dBm, or `null` if there is none.
-    ///
-    /// It is updated by `hs.bluetooth.scan()` and `readRSSI()`. Call `readRSSI()` for a fresh reading from a connected device.
+    /// The signal strength in dBm that macOS last measured for the device, or `null` if there is none. Call `readRSSI()` for a fresh reading from a connected device.
     /// - Example:
     /// ```js
-    /// const nearby = await hs.bluetooth.scan()
-    /// nearby.forEach(d => console.log(d.name + " " + d.rssi + " dBm"))
+    /// console.log(device.name + " " + device.rssi + " dBm")
     /// ```
     @objc var rssi: NSNumber? { get }
 
-    /// When the device was last seen, in Unix seconds: in a scan, or when it was last connected. `null` if unknown.
+    /// When the device was last used or found by an inquiry, in Unix seconds, or `null` if unknown.
     /// - Example:
     /// ```js
     /// console.log(new Date(device.lastSeen * 1000))
     /// ```
     @objc var lastSeen: NSNumber? { get }
 
-    /// The device's last advertisement, if it was found by a BLE scan, otherwise `null`.
+    /// The device's battery level as a percentage, or `null` if macOS doesn't know it.
     ///
-    /// The object has `localName` (string or `null`), `isConnectable` (boolean or `null`), `txPower` (number or `null`), `serviceUUIDs` (string[]), `manufacturerData` (Uint8Array or `null`) and `serviceData` (an object mapping service UUIDs to Uint8Array).
-    /// - Example:
-    /// ```js
-    /// const nearby = await hs.bluetooth.scan()
-    /// nearby.filter(d => d.advertisement.manufacturerData)
-    ///       .forEach(d => console.log(d.identifier + " " + d.advertisement.manufacturerData))
-    /// ```
-    @objc var advertisement: JSValue? { get }
-
-    /// The device's battery level as a percentage, or `null` if unknown.
-    ///
-    /// For Apple's Magic accessories this comes from the system, and for AirPods and Beats from what macOS last heard from them. For earbuds it is the lower of the two buds; see `batteryLevels` for each one. For other BLE devices it is the last value read by `readBatteryLevel()`.
+    /// This is what macOS itself reports: for Apple's Magic accessories from the system, and for AirPods and Beats from what macOS last heard from them. For earbuds it is the lower of the two buds; see `batteryLevels` for each one. For a device that reports its battery over BLE instead, read it with `lowEnergyPeripheral()` and `readBatteryLevel()`.
     /// - Example:
     /// ```js
     /// hs.bluetooth.connectedDevices()
@@ -169,20 +136,7 @@ import CoreBluetooth
     /// ```
     @objc var batteryLevels: [String: Int]? { get }
 
-    /// Reads the device's battery level, asking the device itself over BLE when macOS doesn't already know it.
-    ///
-    /// The device must be connected for the BLE read. Paired devices that macOS has connected are read without any extra steps; a BLE peripheral needs `connect()` first.
-    /// - Returns: {Promise<number | null>} A Promise resolving to the battery percentage, or `null` if the device doesn't report one
-    /// - Example:
-    /// ```js
-    /// const level = await device.readBatteryLevel()
-    /// console.log(device.name + ": " + level + "%")
-    /// ```
-    @objc func readBatteryLevel() -> JSPromise?
-
-    /// Connects to the device.
-    ///
-    /// A paired device is connected the same way macOS would, e.g. so headphones become available as an audio device. A BLE peripheral is connected to Hammerspoon, so its GATT services can be used; it stays connected until `disconnect()` is called, even if you drop your reference to it.
+    /// Connects the device to the Mac, the same way macOS would, e.g. so headphones become available as an audio device.
     /// - Returns: {Promise<HSBluetoothDevice>} A Promise resolving to this device once it's connected, or rejecting if the connection fails or takes longer than 20 seconds
     /// - Example:
     /// ```js
@@ -191,9 +145,7 @@ import CoreBluetooth
     /// ```
     @objc func connect() -> JSPromise?
 
-    /// Disconnects from the device.
-    ///
-    /// A paired device is disconnected from the Mac. A BLE peripheral is disconnected from Hammerspoon; if macOS has its own connection to it, that connection stays.
+    /// Disconnects the device from the Mac. This ends macOS's own connection, not just Hammerspoon's, as if you had disconnected it in System Settings.
     /// - Returns: {Promise<HSBluetoothDevice>} A Promise resolving to this device once it's disconnected
     /// - Example:
     /// ```js
@@ -209,85 +161,27 @@ import CoreBluetooth
     /// ```
     @objc func readRSSI() -> JSPromise?
 
-    /// Discovers the GATT services of a connected BLE device.
-    /// - Returns: {Promise<string[]>} A Promise resolving to the UUIDs of the device's services, e.g. `["180A", "180F"]`
-    /// - Example:
-    /// ```js
-    /// await sensor.connect()
-    /// console.log((await sensor.discoverServices()).join(", "))
-    /// ```
-    @objc func discoverServices() -> JSPromise?
-
-    /// Discovers the characteristics of one of a connected BLE device's GATT services.
-    /// - Parameter service: The service UUID: 16-bit (`"180F"`), 32-bit, or 128-bit
-    /// - Returns: {Promise<{uuid: string, properties: string[], isNotifying: boolean}[]>} A Promise resolving to the service's characteristics. `properties` lists what each supports: `"read"`, `"write"`, `"writeWithoutResponse"`, `"notify"`, `"indicate"`, `"broadcast"`, `"authenticatedSignedWrites"` and `"extendedProperties"`
-    /// - Example:
-    /// ```js
-    /// const chars = await sensor.discoverCharacteristics("180F")
-    /// chars.forEach(c => console.log(c.uuid + ": " + c.properties.join(", ")))
-    /// ```
-    @objc func discoverCharacteristics(_ service: String) -> JSPromise?
-
-    /// Reads the value of a GATT characteristic.
+    /// Finds the BLE peripheral of a connected device that also speaks Bluetooth Low Energy, such as a Magic Keyboard or a heart-rate strap, so you can use its GATT services.
     ///
-    /// The service and characteristic are discovered first if needed. A paired device that macOS has connected can be read directly; a BLE peripheral needs `connect()` first.
-    /// - Parameters:
-    ///   - service: The service UUID, e.g. `"180F"`
-    ///   - characteristic: The characteristic UUID, e.g. `"2A19"`
-    /// - Returns: {Promise<Uint8Array>} A Promise resolving to the characteristic's value
+    /// macOS doesn't link a paired device to its BLE side, so this looks for the BLE peripheral connected to the Mac with the same name. It rejects rather than guess if several have that name, and resolves to `null` if none does (e.g. the device doesn't use BLE, or it was renamed after pairing). The peripheral still needs `connect()` before its GATT methods can be used.
+    /// - Returns: {Promise<HSBluetoothPeripheral | null>} A Promise resolving to the device's peripheral, or `null` if it has none. Rejects if the device isn't connected, several peripherals match, or Bluetooth is unavailable
     /// - Example:
     /// ```js
-    /// const value = await device.readValue("180F", "2A19")
-    /// console.log("Battery: " + value[0] + "%")
+    /// const keyboard = hs.bluetooth.connectedDevices().find(d => d.name === "Magic Keyboard")
+    /// const peripheral = await keyboard.lowEnergyPeripheral()
+    /// if (peripheral) {
+    ///     await peripheral.connect()
+    ///     console.log(await peripheral.discoverServices())
+    /// }
     /// ```
-    @objc func readValue(_ service: String, _ characteristic: String) -> JSPromise?
-
-    /// Writes the value of a GATT characteristic.
-    /// - Parameters:
-    ///   - service: The service UUID
-    ///   - characteristic: The characteristic UUID
-    ///   - value: {Uint8Array | ArrayBuffer | number[] | string} The bytes to write. A string is written as UTF-8
-    ///   - withoutResponse?: If `true`, write without asking the device to confirm it. Defaults to `false`
-    /// - Returns: {Promise<void>} A Promise resolving once the device has accepted the write (or, without a response, once it has been sent)
-    /// - Example:
-    /// ```js
-    /// await lamp.writeValue("FFE5", "FFE9", [0x56, 0xFF, 0x00, 0x00, 0x00, 0xF0, 0xAA])
-    /// ```
-    @objc func writeValue(_ service: String, _ characteristic: String, _ value: JSValue, _ withoutResponse: Bool) -> JSPromise?
-
-    /// Subscribes to a GATT characteristic, so each new value is delivered as a `"value"` event (see `on()`).
-    /// - Parameters:
-    ///   - service: The service UUID
-    ///   - characteristic: The characteristic UUID, which must support `"notify"` or `"indicate"`
-    /// - Returns: {Promise<void>} A Promise resolving once the device has started sending values
-    /// - Example:
-    /// ```js
-    /// heartStrap.on("value", (service, characteristic, value) => console.log("Heart rate: " + value[1]))
-    /// await heartStrap.subscribe("180D", "2A37")
-    /// ```
-    @objc func subscribe(_ service: String, _ characteristic: String) -> JSPromise?
-
-    /// Stops a subscription started by `subscribe()`.
-    /// - Parameters:
-    ///   - service: The service UUID
-    ///   - characteristic: The characteristic UUID
-    /// - Returns: {Promise<void>} A Promise resolving once the device has stopped sending values
-    /// - Example:
-    /// ```js
-    /// await heartStrap.unsubscribe("180D", "2A37")
-    /// ```
-    @objc func unsubscribe(_ service: String, _ characteristic: String) -> JSPromise?
+    @objc func lowEnergyPeripheral() -> JSPromise?
 
     /// Register a listener for this device's events.
     ///
-    /// Listeners receive:
-    ///  - `"connected"`, `"disconnected"`: no arguments
-    ///  - `"value"`: `(service, characteristic, value)`, the UUIDs and the new value (a Uint8Array) of a characteristic you subscribed to. While subscribed, values fetched by `readValue()` arrive here too
-    ///
-    /// A device with listeners keeps working after you drop your reference to it.
+    /// Listeners for `"connected"` and `"disconnected"` are called with no arguments whenever macOS connects or disconnects the device. A device with listeners keeps working after you drop your reference to it.
     /// - Parameters:
-    ///   - event: {"connected" | "disconnected" | "value"} The event to listen for
-    ///   - listener: {(service?: string, characteristic?: string, value?: Uint8Array) => void} Called when the event occurs
+    ///   - event: {"connected" | "disconnected"} The event to listen for
+    ///   - listener: {() => void} Called when the event occurs
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -301,7 +195,7 @@ import CoreBluetooth
 
     /// Remove a previously registered listener for this device's events.
     /// - Parameters:
-    ///   - event: {"connected" | "disconnected" | "value"} The event the listener was registered for
+    ///   - event: {"connected" | "disconnected"} The event the listener was registered for
     ///   - listener: The function originally passed to `on`
     /// - Example:
     /// ```js
@@ -311,8 +205,8 @@ import CoreBluetooth
 
     /// Register a listener that fires at most once for one of this device's events.
     /// - Parameters:
-    ///   - event: {"connected" | "disconnected" | "value"} The event to listen for
-    ///   - listener: {(service?: string, characteristic?: string, value?: Uint8Array) => void} Called once, then automatically removed
+    ///   - event: {"connected" | "disconnected"} The event to listen for
+    ///   - listener: {() => void} Called once, then automatically removed
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -339,7 +233,7 @@ import CoreBluetooth
     /// Returns a plain object describing this device, for JSON serialisation
     ///
     /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
-    /// - Returns: An object with the device's `name`, `address`, `identifier`, `isPaired`, `isConnected`, `rssi`, `batteryLevel`, `batteryLevels`, `majorClass` and `minorClass`
+    /// - Returns: An object with the device's `name`, `address`, `isPaired`, `isConnected`, `rssi`, `batteryLevel`, `batteryLevels`, `majorClass` and `minorClass`
     /// - Example:
     /// ```js
     /// console.log(JSON.stringify(hs.bluetooth.pairedDevices(), null, 2))
@@ -351,83 +245,7 @@ import CoreBluetooth
 
 /// Events emitted by a single HSBluetoothDevice's watcher
 nonisolated enum HSBluetoothDeviceEvent: String, HSEventName {
-    case connected, disconnected, value
-}
-
-/// What CoreBluetooth has told us about one BLE peripheral. The module keeps one per peripheral
-/// it has seen, so the latest advertisement and readings survive the device object being
-/// garbage collected and recreated.
-final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
-    struct Advertisement {
-        var localName: String?
-        var isConnectable: Bool?
-        var txPower: Int?
-        var serviceUUIDs: [String] = []
-        var manufacturerData: Data?
-        var serviceData: [String: Data] = [:]
-
-        init(_ data: [String: Any]) {
-            localName = data[CBAdvertisementDataLocalNameKey] as? String
-            isConnectable = (data[CBAdvertisementDataIsConnectable] as? NSNumber)?.boolValue
-            txPower = (data[CBAdvertisementDataTxPowerLevelKey] as? NSNumber)?.intValue
-            serviceUUIDs = (data[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []).map(\.uuidString)
-            manufacturerData = data[CBAdvertisementDataManufacturerDataKey] as? Data
-            for (uuid, value) in data[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data] ?? [:] {
-                serviceData[uuid.uuidString] = value
-            }
-        }
-    }
-
-    let peripheral: CBPeripheral
-    var advertisement: Advertisement?
-    var rssi: Int?
-    var lastSeen: Date?
-    var batteryLevel: Int?
-
-    /// The device objects using this peripheral. Usually one, but a scan can make an object for
-    /// a paired device's BLE side before `pairedDevices()` makes the paired one, so every
-    /// CoreBluetooth callback goes to each of them.
-    private let owners = NSHashTable<HSBluetoothDevice>.weakObjects()
-
-    init(peripheral: CBPeripheral) {
-        self.peripheral = peripheral
-        super.init()
-        peripheral.delegate = self
-    }
-
-    func addOwner(_ device: HSBluetoothDevice) { owners.add(device) }
-    func removeOwner(_ device: HSBluetoothDevice) { owners.remove(device) }
-    var allOwners: [HSBluetoothDevice] { owners.allObjects }
-
-    // MARK: - CBPeripheralDelegate (delivered on the main queue, see HSBluetoothModule.makeCentral)
-
-    private nonisolated func forEachOwner(_ body: (HSBluetoothDevice) -> Void) {
-        MainActor.assumeIsolated { allOwners }.forEach(body)
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        forEachOwner { $0.peripheral(peripheral, didDiscoverServices: error) }
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        forEachOwner { $0.peripheral(peripheral, didDiscoverCharacteristicsFor: service, error: error) }
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        forEachOwner { $0.peripheral(peripheral, didUpdateValueFor: characteristic, error: error) }
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-        forEachOwner { $0.peripheral(peripheral, didWriteValueFor: characteristic, error: error) }
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-        forEachOwner { $0.peripheral(peripheral, didUpdateNotificationStateFor: characteristic, error: error) }
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
-        forEachOwner { $0.peripheral(peripheral, didReadRSSI: RSSI, error: error) }
-    }
+    case connected, disconnected
 }
 
 @_documentation(visibility: private)
@@ -438,29 +256,8 @@ final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
     private weak var module: HSBluetoothModule?
     private weak var tracker: HSObjectTracker<HSBluetoothDevice>?
 
-    /// The device as macOS knows it from pairing (or a classic inquiry), if it does
-    let classic: IOBluetoothDevice?
-    /// The device's BLE side, once Hammerspoon has seen it through CoreBluetooth
-    private(set) var record: BluetoothPeripheralRecord? {
-        didSet {
-            oldValue?.removeOwner(self)
-            record?.addOwner(self)
-        }
-    }
-
-    /// How Hammerspoon holds a CoreBluetooth connection to the peripheral, if it does
-    private enum CBConnection {
-        /// Opened by `connect()`. This is real activity: the device stays connected until
-        /// `disconnect()`, so the object is kept alive.
-        case explicit
-        /// Opened to use GATT on a device macOS has already connected. It rides on the system's
-        /// own connection, so dropping it has no visible effect and doesn't keep the object alive.
-        case attached
-    }
-    private var cbConnection: CBConnection? {
-        didSet { updateActivity() }
-    }
-    private var pendingConnection: CBConnection?
+    let classic: any HSClassicBluetoothDevice
+    @objc let address: String
 
     /// JS-facing operations in flight. Each one keeps the object alive until its Promise settles.
     private var operations = 0 {
@@ -479,149 +276,72 @@ final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
     /// Whether anything is listening for this device's events
     var isWatching: Bool { watcherCallback != nil }
 
+    private let requests = HSBluetoothRequests()
+
     /// Set by destroy(), after which no Promise is settled: the JSContext is going away
     private var isDestroyed = false
 
-    init(module: HSBluetoothModule, tracker: HSObjectTracker<HSBluetoothDevice>,
-         classic: IOBluetoothDevice?, record: BluetoothPeripheralRecord?) {
+    init(module: HSBluetoothModule, tracker: HSObjectTracker<HSBluetoothDevice>, classic: any HSClassicBluetoothDevice, address: String) {
         self.module = module
         self.tracker = tracker
         self.classic = classic
-        self.record = record
+        self.address = address
         super.init()
-        record?.addOwner(self)
     }
 
     isolated deinit {
         destroy()
-        AKGarbage("Deinit of HSBluetoothDevice: \(name ?? "unnamed")")
+        AKGarbage("Deinit of HSBluetoothDevice: \(address)")
     }
 
     func destroy() {
         isDestroyed = true
         _removeWatcher()
-        failAllWaiters(HSBluetoothError("Hammerspoon is shutting down"))
-        record?.removeOwner(self)
-        // Another object for the same device may still be using the connection
-        if holdsConnection, let record, !record.allOwners.contains(where: \.holdsConnection) {
-            module?.existingCentral?.cancelPeripheralConnection(record.peripheral)
-        }
-        pendingConnection = nil
-        cbConnection = nil
+        requests.close(HSBluetoothError("Hammerspoon is shutting down"))
     }
 
-    /// Whether this object has opened, or is opening, a CoreBluetooth connection to the peripheral
-    var holdsConnection: Bool { cbConnection != nil || pendingConnection != nil }
-
     private func updateActivity() {
-        let held = cbConnection == .explicit || isWatching
-        tracker?.setActive(self, held || operations > 0, finishesOnItsOwn: !held)
+        tracker?.setActive(self, isWatching || operations > 0, finishesOnItsOwn: !isWatching)
     }
 
     @objc func toString() -> String {
-        "<\(typeName): \(name ?? "unnamed") (\(address ?? identifier ?? "unknown"))>"
+        "<\(typeName): \(name ?? "unnamed") (\(address))>"
     }
 
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
 
-    // MARK: - Identity
+    // MARK: - Properties
 
-    @objc var name: String? {
-        classic?.name ?? record?.peripheral.name ?? record?.advertisement?.localName
-    }
-
-    @objc var address: String? {
-        classic?.addressString.flatMap(HSBluetoothAddress.normalize)
-    }
-
-    @objc var identifier: String? {
-        record?.peripheral.identifier.uuidString
-    }
-
-    /// Attaches the BLE side of a paired device, once it has been found
-    func attach(_ record: BluetoothPeripheralRecord) {
-        guard self.record == nil else { return }
-        self.record = record
-    }
-
-    // MARK: - State
-
-    @objc var isPaired: Bool { classic?.isPaired() ?? false }
-
-    @objc var isConnected: Bool {
-        (classic?.isConnected() ?? false) || record?.peripheral.state == .connected
-    }
-
-    @objc var isFavorite: Bool { classic?.isFavorite() ?? false }
-
-    @objc var classOfDevice: NSNumber? { classic.map { NSNumber(value: $0.classOfDevice) } }
-    @objc var majorClass: NSNumber? { classic.map { NSNumber(value: $0.deviceClassMajor) } }
-    @objc var minorClass: NSNumber? { classic.map { NSNumber(value: $0.deviceClassMinor) } }
-    @objc var serviceClasses: NSNumber? { classic.map { NSNumber(value: $0.serviceClassMajor) } }
-
-    @objc var serviceNames: [String] {
-        (classic?.services as? [IOBluetoothSDPServiceRecord] ?? []).compactMap { $0.getServiceName() }
-    }
-
-    @objc var rssi: NSNumber? {
-        if let rssi = record?.rssi { return NSNumber(value: rssi) }
-        // IOBluetooth caches a reading for classic devices found by an inquiry, and reports 0 or
-        // +127 when it has none
-        guard let rssi = classic?.rssi(), rssi != 0, rssi != 127 else { return nil }
-        return NSNumber(value: rssi)
-    }
-
-    @objc var lastSeen: NSNumber? {
-        let date = [record?.lastSeen, classic?.recentAccessDate(), classic?.getLastInquiryUpdate()]
-            .compactMap { $0 }
-            .max()
-        return date.map { NSNumber(value: $0.timeIntervalSince1970) }
-    }
-
-    @objc var advertisement: JSValue? {
-        guard let ad = record?.advertisement, let context = JSContext.current() else { return nil }
-        let object = JSValue(newObjectIn: context)
-        func orNull(_ value: Any?) -> Any { value ?? JSValue(nullIn: context) as Any }
-        object?.setValue(orNull(ad.localName), forProperty: "localName")
-        object?.setValue(orNull(ad.isConnectable), forProperty: "isConnectable")
-        object?.setValue(orNull(ad.txPower), forProperty: "txPower")
-        object?.setValue(ad.serviceUUIDs, forProperty: "serviceUUIDs")
-        object?.setValue(orNull(ad.manufacturerData.flatMap { context.makeUint8Array($0) }), forProperty: "manufacturerData")
-        let serviceData = JSValue(newObjectIn: context)
-        for (uuid, data) in ad.serviceData {
-            serviceData?.setValue(orNull(context.makeUint8Array(data)), forProperty: uuid)
-        }
-        object?.setValue(serviceData, forProperty: "serviceData")
-        return object
-    }
-
-    private var systemBatteryLevels: HSBluetoothBatteryLevels? {
-        classic.map(HSBluetoothBatteryLevels.read)
-    }
-
-    @objc var batteryLevel: NSNumber? {
-        (systemBatteryLevels?.overall ?? record?.batteryLevel).map { NSNumber(value: $0) }
-    }
-
-    @objc var batteryLevels: [String: Int]? {
-        systemBatteryLevels?.components
-    }
+    @objc var name: String? { classic.name }
+    @objc var isPaired: Bool { classic.isPaired }
+    @objc var isConnected: Bool { classic.isConnected }
+    @objc var isFavorite: Bool { classic.isFavorite }
+    @objc var classOfDevice: Int { classic.classOfDevice }
+    @objc var majorClass: Int { classic.majorClass }
+    @objc var minorClass: Int { classic.minorClass }
+    @objc var serviceClasses: Int { classic.serviceClasses }
+    @objc var serviceNames: [String] { classic.serviceNames }
+    @objc var rssi: NSNumber? { classic.lastRSSI.map { NSNumber(value: $0) } }
+    @objc var lastSeen: NSNumber? { classic.lastSeen.map { NSNumber(value: $0.timeIntervalSince1970) } }
+    @objc var batteryLevel: NSNumber? { classic.batteryLevels.overall.map { NSNumber(value: $0) } }
+    @objc var batteryLevels: [String: Int]? { classic.batteryLevels.components }
 
     @objc func toJSON() -> [String: Any] {
         func orNull(_ value: Any?) -> Any { value ?? NSNull() }
+        // Read once: each read asks the system
+        let battery = classic.batteryLevels
         return [
             "name": orNull(name),
-            "address": orNull(address),
-            "identifier": orNull(identifier),
+            "address": address,
             "isPaired": isPaired,
             "isConnected": isConnected,
             "rssi": orNull(rssi),
-            "batteryLevel": orNull(batteryLevel),
-            "batteryLevels": orNull(batteryLevels),
-            "majorClass": orNull(majorClass),
-            "minorClass": orNull(minorClass),
+            "batteryLevel": orNull(battery.overall),
+            "batteryLevels": orNull(battery.components),
+            "majorClass": majorClass,
+            "minorClass": minorClass,
         ]
     }
 
@@ -629,14 +349,14 @@ final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
 
     /// Runs a JS-facing asynchronous operation, settling its Promise with the result. The object
     /// stays alive (active in its tracker) until the operation finishes.
-    private func perform(_ method: String, _ body: @escaping @MainActor (JSContext) async throws -> Any?) -> JSPromise? {
+    private func perform(_ method: String, _ body: @escaping @MainActor () async throws -> Any?) -> JSPromise? {
         guard let context = JSContext.current() else { return nil }
         return wrapAsyncInJSPromise(in: context) { [self] holder in
             operations += 1
             Task {
                 defer { operations -= 1 }
                 do {
-                    let result = try await body(context)
+                    let result = try await body()
                     if !isDestroyed { holder.resolveWith(result) }
                 } catch {
                     if !isDestroyed { holder.rejectWithMessage("hs.bluetooth device.\(method)(): \(error.localizedDescription)") }
@@ -645,477 +365,56 @@ final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
         }
     }
 
-    @objc func readBatteryLevel() -> JSPromise? {
-        perform("readBatteryLevel") { _ in
-            if let level = self.systemBatteryLevels?.overall { return level }
-            guard self.canUseGATT else { return self.record?.batteryLevel }
-            do {
-                let level = try await self.characteristic(HSBluetoothUUID.batteryService, HSBluetoothUUID.batteryLevel)
-                try await self.read(level)
-                return self.record?.batteryLevel
-            } catch {
-                // A device without a battery service simply has no level to report
-                AKDebug("hs.bluetooth: no BLE battery level for \(self.toString()): \(error.localizedDescription)")
-                return self.record?.batteryLevel
-            }
-        }
-    }
-
     @objc func connect() -> JSPromise? {
-        perform("connect") { _ in
-            if let classic = self.classic {
-                try await self.connectClassic(classic)
-            } else if let record = self.record {
-                try await self.connectLE(record, as: .explicit)
-            } else {
-                throw HSBluetoothError("this device can't be connected to")
+        perform("connect") {
+            guard !self.classic.isConnected else { return self }
+            try await self.requests.wait(for: "connect", timeout: .seconds(20)) {
+                try self.classic.openConnection { [weak self] status in
+                    self?.requests.settle("connect", status == kIOReturnSuccess ? nil : HSBluetoothError.forIOReturn(status, "Connecting"))
+                }
             }
             return self
         }
     }
 
     @objc func disconnect() -> JSPromise? {
-        perform("disconnect") { _ in
-            if let classic = self.classic {
-                // Drop Hammerspoon's own BLE attachment, then the system's connection
-                if let record = self.record, self.cbConnection != nil {
-                    self.module?.existingCentral?.cancelPeripheralConnection(record.peripheral)
-                }
-                if classic.isConnected() {
-                    let status = classic.closeConnection()
-                    guard status == kIOReturnSuccess else { throw HSBluetoothError.forIOReturn(status, "Closing the connection") }
-                }
-            } else if let record = self.record, record.peripheral.state != .disconnected {
-                let central = try await self.requireCentral()
-                try await self.wait(for: Key.disconnect) {
-                    central.cancelPeripheralConnection(record.peripheral)
-                }
+        perform("disconnect") {
+            if self.classic.isConnected {
+                let status = self.classic.closeConnection()
+                guard status == kIOReturnSuccess else { throw HSBluetoothError.forIOReturn(status, "Closing the connection") }
             }
             return self
         }
     }
 
     @objc func readRSSI() -> JSPromise? {
-        perform("readRSSI") { _ in
-            if let classic = self.classic, classic.isConnected() {
-                let rssi = classic.rawRSSI()
-                guard rssi != 127 else { throw HSBluetoothError("the device has no signal strength reading") }
-                return Int(rssi)
+        perform("readRSSI") {
+            guard self.classic.isConnected else { throw HSBluetoothError("the device is not connected") }
+            guard let rssi = self.classic.currentRSSI() else { throw HSBluetoothError("the device has no signal strength reading") }
+            return rssi
+        }
+    }
+
+    @objc func lowEnergyPeripheral() -> JSPromise? {
+        perform("lowEnergyPeripheral") {
+            guard self.classic.isConnected else { throw HSBluetoothError("the device is not connected") }
+            guard let name = self.classic.name, let module = self.module else { return nil }
+            let matches = try await module.systemConnectedPeripherals(named: name)
+            guard matches.count <= 1 else {
+                throw HSBluetoothError("\(matches.count) connected BLE peripherals are named '\(name)', so which is this device can't be told")
             }
-            guard let record = self.record, self.cbConnection != nil else {
-                throw HSBluetoothError("the device is not connected, call connect() first")
-            }
-            try await self.wait(for: Key.rssi) { record.peripheral.readRSSI() }
-            return record.rssi
+            return matches.first.map(module.peripheral(for:))
         }
     }
 
-    @objc func discoverServices() -> JSPromise? {
-        perform("discoverServices") { _ in
-            let peripheral = try await self.gattPeripheral()
-            try await self.wait(for: Key.services) { peripheral.discoverServices(nil) }
-            return (peripheral.services ?? []).map(\.uuid.uuidString)
-        }
-    }
+    // MARK: - Watcher
 
-    @objc func discoverCharacteristics(_ service: String) -> JSPromise? {
-        perform("discoverCharacteristics") { _ in
-            let uuid = try Self.parseUUID(service)
-            let peripheral = try await self.gattPeripheral()
-            let found = try await self.service(uuid, on: peripheral)
-            try await self.wait(for: Key.characteristics(found)) { peripheral.discoverCharacteristics(nil, for: found) }
-            return (found.characteristics ?? []).map { characteristic -> [String: Any] in
-                [
-                    "uuid": characteristic.uuid.uuidString,
-                    "properties": characteristic.properties.names,
-                    "isNotifying": characteristic.isNotifying,
-                ]
-            }
-        }
-    }
-
-    @objc func readValue(_ service: String, _ characteristic: String) -> JSPromise? {
-        perform("readValue") { context in
-            let found = try await self.characteristic(try Self.parseUUID(service), try Self.parseUUID(characteristic))
-            try await self.read(found)
-            return context.makeUint8Array(found.value ?? Data())
-        }
-    }
-
-    @objc func writeValue(_ service: String, _ characteristic: String, _ value: JSValue, _ withoutResponse: Bool) -> JSPromise? {
-        // Converted now, while the value is certainly still what the caller passed
-        let bytes = Self.bytes(from: value)
-        return perform("writeValue") { _ in
-            guard let bytes else {
-                throw HSBluetoothError("value must be a Uint8Array, an ArrayBuffer, an array of numbers from 0 to 255, or a string")
-            }
-            let found = try await self.characteristic(try Self.parseUUID(service), try Self.parseUUID(characteristic))
-            if withoutResponse {
-                try Self.connectedPeripheral(of: found).writeValue(bytes, for: found, type: .withoutResponse)
-            } else {
-                try await self.serially(Key.write(found)) {
-                    let peripheral = try Self.connectedPeripheral(of: found)
-                    try await self.wait(for: Key.write(found)) {
-                        peripheral.writeValue(bytes, for: found, type: .withResponse)
-                    }
-                }
-            }
-            return nil
-        }
-    }
-
-    @objc func subscribe(_ service: String, _ characteristic: String) -> JSPromise? {
-        perform("subscribe") { _ in
-            try await self.setNotifying(true, service, characteristic)
-            return nil
-        }
-    }
-
-    @objc func unsubscribe(_ service: String, _ characteristic: String) -> JSPromise? {
-        perform("unsubscribe") { _ in
-            try await self.setNotifying(false, service, characteristic)
-            return nil
-        }
-    }
-
-    // MARK: - Connecting
-
-    private func connectClassic(_ classic: IOBluetoothDevice) async throws {
-        guard !classic.isConnected() else { return }
-        try await wait(for: Key.connect, timeout: .seconds(20)) {
-            // Completes asynchronously, in connectionComplete(_:status:)
-            let status = classic.openConnection(self)
-            guard status == kIOReturnSuccess else { throw HSBluetoothError.forIOReturn(status, "Opening the connection") }
-        }
-    }
-
-    private func connectLE(_ record: BluetoothPeripheralRecord, as kind: CBConnection) async throws {
-        let central = try await requireCentral()
-        // Already connected through Hammerspoon's central, perhaps by another object for the same device
-        if record.peripheral.state == .connected {
-            if kind == .explicit || cbConnection == nil { cbConnection = kind }
-            return
-        }
-        do {
-            try await wait(for: Key.connect, timeout: .seconds(20)) {
-                pendingConnection = kind
-                central.connect(record.peripheral)
-            }
-        } catch {
-            // A connection CoreBluetooth never completes stays pending forever unless cancelled
-            if record.peripheral.state != .connected {
-                pendingConnection = nil
-                central.cancelPeripheralConnection(record.peripheral)
-            }
-            throw error
-        }
-    }
-
-    private func requireCentral() async throws -> CBCentralManager {
-        guard let module else { throw HSBluetoothError("hs.bluetooth is no longer loaded") }
-        return try await module.readyCentral()
-    }
-
-    /// Called by IOBluetooth when `openConnection(_:)` finishes
-    @objc(connectionComplete:status:) nonisolated func connectionComplete(_ device: IOBluetoothDevice, status: IOReturn) {
-        DispatchQueue.main.async {
-            MainActor.assumeIsolated {
-                self.settle(Key.connect, status == kIOReturnSuccess ? nil : HSBluetoothError.forIOReturn(status, "Connecting"))
-            }
-        }
-    }
-
-    // The module's CoreBluetooth delegate routes these here
-
-    func peripheralDidConnect() {
-        cbConnection = pendingConnection ?? .attached
-        pendingConnection = nil
-        record?.lastSeen = Date()
-        settle(Key.connect, nil)
-        // A paired device's own connection events come from IOBluetooth
-        if classic == nil {
-            fire(.connected)
-            module?.deliverLowEnergyEvent(.connected, self)
-        }
-    }
-
-    func peripheralDidFailToConnect(_ error: Error?) {
-        pendingConnection = nil
-        settle(Key.connect, HSBluetoothError(error?.localizedDescription ?? "the connection failed"))
-    }
-
-    func peripheralDidDisconnect(_ error: Error?) {
-        let wasConnected = cbConnection != nil
-        cbConnection = nil
-        pendingConnection = nil
-        settle(Key.disconnect, nil)
-        failAllWaiters(HSBluetoothError(error.map { "the device disconnected: \($0.localizedDescription)" } ?? "the device disconnected"))
-        if wasConnected && classic == nil {
-            fire(.disconnected)
-            module?.deliverLowEnergyEvent(.disconnected, self)
-        }
-    }
-
-    // MARK: - GATT
-
-    /// Whether GATT operations can work right now, without the user connecting first
-    private var canUseGATT: Bool {
-        cbConnection != nil || (classic?.isConnected() ?? false)
-    }
-
-    /// The peripheral to use for GATT operations, connected through CoreBluetooth. A paired device
-    /// that macOS has connected is attached automatically; a BLE peripheral must be connected first.
-    private func gattPeripheral() async throws -> CBPeripheral {
-        if record == nil, let classic, classic.isConnected(), let name = classic.name, let module {
-            if let found = try await module.connectedPeripheralRecord(named: name) {
-                attach(found)
-            }
-        }
-        guard let record else {
-            throw HSBluetoothError(classic?.isConnected() ?? false
-                                   ? "the device offers no Bluetooth LE services"
-                                   : "the device is not connected, call connect() first")
-        }
-        if cbConnection == nil {
-            guard classic?.isConnected() ?? false else {
-                throw HSBluetoothError("the device is not connected, call connect() first")
-            }
-            try await connectLE(record, as: .attached)
-        }
-        return record.peripheral
-    }
-
-    private func service(_ uuid: CBUUID, on peripheral: CBPeripheral) async throws -> CBService {
-        if let found = peripheral.services?.first(where: { $0.uuid == uuid }) { return found }
-        try await wait(for: Key.services) { peripheral.discoverServices(nil) }
-        guard let found = peripheral.services?.first(where: { $0.uuid == uuid }) else {
-            throw HSBluetoothError("the device has no service \(uuid.uuidString)")
-        }
-        return found
-    }
-
-    private func characteristic(_ serviceUUID: CBUUID, _ uuid: CBUUID) async throws -> CBCharacteristic {
-        let peripheral = try await gattPeripheral()
-        let found = try await service(serviceUUID, on: peripheral)
-        if let characteristic = found.characteristics?.first(where: { $0.uuid == uuid }) { return characteristic }
-        try await wait(for: Key.characteristics(found)) { peripheral.discoverCharacteristics(nil, for: found) }
-        guard let characteristic = found.characteristics?.first(where: { $0.uuid == uuid }) else {
-            throw HSBluetoothError("service \(serviceUUID.uuidString) has no characteristic \(uuid.uuidString)")
-        }
-        return characteristic
-    }
-
-    private func read(_ characteristic: CBCharacteristic) async throws {
-        guard let peripheral = characteristic.service?.peripheral else { throw HSBluetoothError("the device is no longer available") }
-        try await wait(for: Key.read(characteristic)) { peripheral.readValue(for: characteristic) }
-    }
-
-    private func setNotifying(_ enabled: Bool, _ service: String, _ characteristic: String) async throws {
-        let found = try await self.characteristic(try Self.parseUUID(service), try Self.parseUUID(characteristic))
-        guard !enabled || found.properties.contains(.notify) || found.properties.contains(.indicate) else {
-            throw HSBluetoothError("characteristic \(found.uuid.uuidString) doesn't support notifications")
-        }
-        // isNotifying only changes when a request finishes, so it's checked once earlier ones have
-        try await serially(Key.notify(found)) {
-            guard found.isNotifying != enabled else { return }
-            let peripheral = try Self.connectedPeripheral(of: found)
-            try await self.wait(for: Key.notify(found)) { peripheral.setNotifyValue(enabled, for: found) }
-        }
-    }
-
-    /// The peripheral a characteristic belongs to, checked again by queued requests: the device
-    /// may have disconnected while they waited their turn
-    private static func connectedPeripheral(of characteristic: CBCharacteristic) throws -> CBPeripheral {
-        guard let peripheral = characteristic.service?.peripheral else { throw HSBluetoothError("the device is no longer available") }
-        guard peripheral.state == .connected else { throw HSBluetoothError("the device disconnected") }
-        return peripheral
-    }
-
-    private static func parseUUID(_ string: String) throws -> CBUUID {
-        guard let uuid = HSBluetoothUUID.parse(string) else {
-            throw HSBluetoothError("'\(string)' is not a valid Bluetooth UUID")
-        }
-        return uuid
-    }
-
-    /// The bytes to write for a JS value, or nil if it isn't something that can be written
-    private static func bytes(from value: JSValue) -> Data? {
-        if let bytes = value.typedArrayBytes { return Data(bytes) }
-        if value.isString { return value.toString().data(using: .utf8) }
-        guard value.isArray, let elements = value.toArray() else { return nil }
-        var bytes: [UInt8] = []
-        for element in elements {
-            guard let number = element as? NSNumber,
-                  let byte = UInt8(exactly: number.doubleValue) else { return nil }
-            bytes.append(byte)
-        }
-        return Data(bytes)
-    }
-
-    // MARK: - CoreBluetooth callbacks, forwarded by the record (on the main queue, see HSBluetoothModule.makeCentral)
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        MainActor.assumeIsolated { settle(Key.services, error) }
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        let key = Key.characteristics(service)
-        MainActor.assumeIsolated { settle(key, error) }
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        // Only Sendable values cross into the main actor (which this already is, see above)
-        let key = Key.read(characteristic)
-        let value = characteristic.value ?? Data()
-        let uuid = characteristic.uuid.uuidString
-        let serviceUUID = characteristic.service?.uuid.uuidString
-        let isBatteryLevel = characteristic.uuid == HSBluetoothUUID.batteryLevel
-        let isNotifying = characteristic.isNotifying
-        MainActor.assumeIsolated {
-            if error == nil, isBatteryLevel, let level = value.first {
-                record?.batteryLevel = Int(level)
-            }
-            // A read's reply and a notification arrive the same way, so while subscribed every
-            // value goes to "value" listeners, whether or not a read is waiting for it too
-            settle(key, error)
-            if error == nil, isNotifying, let serviceUUID {
-                deliverValue(value, service: serviceUUID, characteristic: uuid)
-            }
-        }
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-        let key = Key.write(characteristic)
-        MainActor.assumeIsolated { settle(key, error) }
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-        let key = Key.notify(characteristic)
-        MainActor.assumeIsolated { settle(key, error) }
-    }
-
-    nonisolated func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
-        MainActor.assumeIsolated {
-            if error == nil {
-                record?.rssi = RSSI.intValue
-                record?.lastSeen = Date()
-            }
-            settle(Key.rssi, error)
-        }
-    }
-
-    // MARK: - Waiting for CoreBluetooth and IOBluetooth callbacks
-
-    /// What a pending operation is waiting for. Several callers waiting for the same thing (e.g.
-    /// two reads of one characteristic) share one request and are all settled by its callback.
-    private nonisolated enum Key {
-        static let connect = "connect"
-        static let disconnect = "disconnect"
-        static let rssi = "rssi"
-        static let services = "services"
-        static func characteristics(_ service: CBService) -> String { "characteristics:\(service.uuid.uuidString)" }
-        static func read(_ characteristic: CBCharacteristic) -> String { "read:\(path(characteristic))" }
-        static func write(_ characteristic: CBCharacteristic) -> String { "write:\(path(characteristic))" }
-        static func notify(_ characteristic: CBCharacteristic) -> String { "notify:\(path(characteristic))" }
-        private static func path(_ characteristic: CBCharacteristic) -> String {
-            "\(characteristic.service?.uuid.uuidString ?? "?")/\(characteristic.uuid.uuidString)"
-        }
-    }
-
-    private struct Waiter {
-        let id: UUID
-        let continuation: CheckedContinuation<Void, Error>
-        let timeout: Task<Void, Never>
-    }
-    private var waiters: [String: [Waiter]] = [:]
-
-    /// Waits for the callback that settles `key`, calling `start` to make the request if nothing
-    /// is waiting for it already. Fails if the callback doesn't arrive within `timeout`.
-    private func wait(for key: String, timeout: Duration = .seconds(10), start: () throws -> Void) async throws {
-        guard !isDestroyed else { throw HSBluetoothError("Hammerspoon is shutting down") }
-        let isFirst = waiters[key]?.isEmpty ?? true
-        let id = UUID()
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            let timer = Task { [weak self] in
-                try? await Task.sleep(for: timeout)
-                guard !Task.isCancelled else { return }
-                self?.expire(key, id)
-            }
-            waiters[key, default: []].append(Waiter(id: id, continuation: continuation, timeout: timer))
-            if isFirst {
-                do {
-                    try start()
-                } catch {
-                    settle(key, error)
-                }
-            }
-        }
-    }
-
-    /// The last operation queued in each lane of `serially(_:_:)`
-    private var lanes: [String: Task<Void, Never>] = [:]
-
-    /// Runs `body` once every operation queued earlier in `lane` has finished. Used where
-    /// requests mustn't share one callback the way `wait(for:)` lets them: CoreBluetooth answers a
-    /// characteristic's writes (or notification changes) with one callback that doesn't say
-    /// which request it is for, and each write has its own bytes to send.
-    private func serially(_ lane: String, _ body: @escaping @MainActor () async throws -> Void) async throws {
-        let previous = lanes[lane]
-        let operation = Task {
-            await previous?.value
-            try await body()
-        }
-        let finished = Task { _ = await operation.result }
-        lanes[lane] = finished
-        defer {
-            if lanes[lane] == finished { lanes[lane] = nil }
-        }
-        try await operation.value
-    }
-
-    private func settle(_ key: String, _ error: Error?) {
-        guard let settled = waiters.removeValue(forKey: key) else { return }
-        for waiter in settled {
-            waiter.timeout.cancel()
-            if let error {
-                waiter.continuation.resume(throwing: error)
-            } else {
-                waiter.continuation.resume()
-            }
-        }
-    }
-
-    private func expire(_ key: String, _ id: UUID) {
-        guard let index = waiters[key]?.firstIndex(where: { $0.id == id }),
-              let waiter = waiters[key]?.remove(at: index) else { return }
-        if waiters[key]?.isEmpty ?? false { waiters[key] = nil }
-        waiter.continuation.resume(throwing: HSBluetoothError("the device didn't respond in time"))
-    }
-
-    private func failAllWaiters(_ error: Error) {
-        for key in Array(waiters.keys) {
-            settle(key, error)
-        }
-    }
-
-    // MARK: - Per-device watcher
-
-    /// Lazily creates this device's JS watcher emitter (via the module's `_makeDeviceEmitter`
+    /// Lazily creates this device's JS watcher emitter (via the module's `_makeObjectEmitter`
     /// factory). Returns nil, having set `ctx.exception`, on failure, so on()/once() never return
     /// without registering - same as HSCamera's.
     private func ensureWatcherEmitter(_ ctx: JSContext) -> JSValue? {
         if _watcherEmitter == nil {
-            guard let factory = module?._makeDeviceEmitter, factory.isFunction else {
-                ctx.exception = JSValue(newErrorFromMessage: "hs.bluetooth device: device watcher emitter factory is unavailable", in: ctx)
-                return nil
-            }
-            let emitter = ctx.callCapturingException { factory.call(withArguments: [self]) }
-            guard ctx.exception == nil, let emitter, emitter.isObject else {
-                if ctx.exception == nil {
-                    ctx.exception = JSValue(newErrorFromMessage: "hs.bluetooth device: failed to create device watcher emitter", in: ctx)
-                }
-                return nil
-            }
+            guard let emitter = module?.makeObjectEmitter(for: self, in: ctx) else { return nil }
             _watcherEmitter = emitter
         }
         return _watcherEmitter
@@ -1142,10 +441,10 @@ final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
             AKWarning("hs.bluetooth device._addWatcher(): already watching \(toString()), refusing a second subscription")
             return false
         }
+        // The events come from the module's IOBluetooth notifications, which watcherCallback's
+        // didSet asks for
         watcherCallback = JSCallback(value: listener, owner: self)
-        // A paired device's connect/disconnect events come from the module's IOBluetooth
-        // notifications, which watcherCallback's didSet has just asked for
-        guard classic == nil || module?.isReceivingClassicNotifications == true else {
+        guard module?.isReceivingClassicNotifications == true else {
             AKError("hs.bluetooth device._addWatcher(): failed to register for connection notifications for \(toString())")
             watcherCallback?.detach(from: self)
             watcherCallback = nil
@@ -1165,12 +464,108 @@ final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
     }
 
     /// Delivers one of this device's events to its listeners
-    func fire(_ event: HSBluetoothDeviceEvent, _ arguments: [Any] = []) {
-        _ = watcherCallback?.call(withArguments: [event.rawValue] + arguments)
+    func fire(_ event: HSBluetoothDeviceEvent) {
+        _ = watcherCallback?.call(withArguments: [event.rawValue])
+    }
+}
+
+/// What HSBluetoothDevice needs from IOBluetooth. Tests stand in a fake, since touching a real
+/// IOBluetoothDevice can wait for the user to answer the Bluetooth permission prompt.
+protocol HSClassicBluetoothDevice: AnyObject {
+    var name: String? { get }
+    var isPaired: Bool { get }
+    var isConnected: Bool { get }
+    var isFavorite: Bool { get }
+    var classOfDevice: Int { get }
+    var majorClass: Int { get }
+    var minorClass: Int { get }
+    var serviceClasses: Int { get }
+    var serviceNames: [String] { get }
+    /// The signal strength macOS last measured, if it has one
+    var lastRSSI: Int? { get }
+    /// When the device was last used or found by an inquiry
+    var lastSeen: Date? { get }
+    var batteryLevels: HSBluetoothBatteryLevels { get }
+    /// Measures the signal strength of the connected device, if it can
+    func currentRSSI() -> Int?
+    /// Starts connecting, calling `completion` (on the main actor) when that finishes
+    func openConnection(completion: @escaping @MainActor (IOReturn) -> Void) throws
+    func closeConnection() -> IOReturn
+}
+
+/// A device known to IOBluetooth
+final class IOBluetoothClassicDevice: HSClassicBluetoothDevice {
+    let device: IOBluetoothDevice
+
+    init(_ device: IOBluetoothDevice) {
+        self.device = device
     }
 
-    private func deliverValue(_ value: Data, service: String, characteristic: String) {
-        guard let context = watcherCallback?.value?.context, let bytes = context.makeUint8Array(value) else { return }
-        fire(.value, [service, characteristic, bytes])
+    var name: String? { device.name }
+    var isPaired: Bool { device.isPaired() }
+    var isConnected: Bool { device.isConnected() }
+    var isFavorite: Bool { device.isFavorite() }
+    var classOfDevice: Int { Int(device.classOfDevice) }
+    var majorClass: Int { Int(device.deviceClassMajor) }
+    var minorClass: Int { Int(device.deviceClassMinor) }
+    var serviceClasses: Int { Int(device.serviceClassMajor) }
+
+    var serviceNames: [String] {
+        (device.services as? [IOBluetoothSDPServiceRecord] ?? []).compactMap { $0.getServiceName() }
+    }
+
+    var lastRSSI: Int? {
+        // IOBluetooth reports 0 or +127 when it has no reading
+        let rssi = device.rssi()
+        return rssi == 0 || rssi == 127 ? nil : Int(rssi)
+    }
+
+    var lastSeen: Date? {
+        [device.recentAccessDate(), device.getLastInquiryUpdate()].compactMap { $0 }.max()
+    }
+
+    var batteryLevels: HSBluetoothBatteryLevels { HSBluetoothBatteryLevels.read(device) }
+
+    func currentRSSI() -> Int? {
+        let rssi = device.rawRSSI()
+        return rssi == 127 ? nil : Int(rssi)
+    }
+
+    func openConnection(completion: @escaping @MainActor (IOReturn) -> Void) throws {
+        try ClassicConnectionRequest.open(device, completion: completion)
+    }
+
+    func closeConnection() -> IOReturn {
+        device.closeConnection()
+    }
+}
+
+/// The target of one `IOBluetoothDevice.openConnection(_:)`. IOBluetooth doesn't document
+/// whether it retains the target until `connectionComplete:status:` arrives, so each request
+/// keeps itself alive until then, even after the caller has stopped waiting for it.
+private final class ClassicConnectionRequest: NSObject {
+    private static var pending: Set<ClassicConnectionRequest> = []
+    private let completion: @MainActor (IOReturn) -> Void
+
+    private init(completion: @escaping @MainActor (IOReturn) -> Void) {
+        self.completion = completion
+    }
+
+    /// Starts connecting `device`, calling `completion` (on the main actor) when it finishes
+    static func open(_ device: IOBluetoothDevice, completion: @escaping @MainActor (IOReturn) -> Void) throws {
+        let request = ClassicConnectionRequest(completion: completion)
+        let status = device.openConnection(request)
+        guard status == kIOReturnSuccess else { throw HSBluetoothError.forIOReturn(status, "Opening the connection") }
+        pending.insert(request)
+    }
+
+    /// Called by IOBluetooth, on whatever thread its connection to bluetoothd uses
+    @objc(connectionComplete:status:) nonisolated func connectionComplete(_ device: IOBluetoothDevice, status: IOReturn) {
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                Self.pending.remove(self)
+                self.completion(status)
+            }
+        }
     }
 }

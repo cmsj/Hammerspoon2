@@ -5,54 +5,52 @@
 
 import Foundation
 import JavaScriptCore
-import IOBluetooth
 import CoreBluetooth
 
 /// A scan started by `hs.bluetooth.scan()`, until it resolves
 @MainActor
 final class BluetoothScan {
     let holder: JSPromiseHolder
-    let includesLowEnergy: Bool
-    let includesClassic: Bool
     let allowsDuplicates: Bool
     var timer: Timer?
-    /// The devices found, in the order they were found: `le:<identifier>` or a classic address.
-    /// Keys rather than objects, so a device the user drops during the scan can be collected (and
-    /// is simply recreated when the scan resolves).
-    private(set) var found: [String] = []
-    private var seen: Set<String> = []
+    /// The peripherals found, in the order they were found. Identifiers rather than objects, so a
+    /// peripheral the user drops during the scan can be collected (and is simply recreated when
+    /// the scan resolves).
+    private(set) var found: [UUID] = []
+    private var seen: Set<UUID> = []
 
-    init(holder: JSPromiseHolder, includesLowEnergy: Bool, includesClassic: Bool, allowsDuplicates: Bool) {
+    init(holder: JSPromiseHolder, allowsDuplicates: Bool) {
         self.holder = holder
-        self.includesLowEnergy = includesLowEnergy
-        self.includesClassic = includesClassic
         self.allowsDuplicates = allowsDuplicates
     }
 
     /// Records a sighting, returning whether `'discovered'` listeners should hear about it
-    func record(_ key: String) -> Bool {
-        guard seen.insert(key).inserted else { return allowsDuplicates }
-        found.append(key)
+    func record(_ identifier: UUID) -> Bool {
+        guard seen.insert(identifier).inserted else { return allowsDuplicates }
+        found.append(identifier)
         return true
     }
-
-    static func key(for identifier: UUID) -> String { "le:\(identifier.uuidString)" }
 }
 
-extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryDelegate {
+extension HSBluetoothModule: CBCentralManagerDelegate {
 
     // MARK: - The CoreBluetooth central
 
     /// The central, if CoreBluetooth has been started
     var existingCentral: CBCentralManager? { central }
 
+    /// How long `readyCentral()` waits for CoreBluetooth to start, which includes the user
+    /// answering the permission prompt the first time
+    static let readyTimeout: Duration = .seconds(60)
+
     /// Starts CoreBluetooth if it isn't running yet. The first time, this is what makes macOS ask
     /// for Bluetooth permission.
     @discardableResult
     func makeCentral() -> CBCentralManager {
         if let central { return central }
-        // Delivered on the main queue, which the delegate methods here and in HSBluetoothDevice
-        // rely on. No power alert: Bluetooth being off is reported to the caller instead.
+        // Delivered on the main queue, which the delegate methods here and in
+        // HSBluetoothPeripheral rely on. No power alert: Bluetooth being off is reported to the
+        // caller instead.
         let central = CBCentralManager(delegate: self, queue: .main,
                                        options: [CBCentralManagerOptionShowPowerAlertKey: false])
         self.central = central
@@ -61,13 +59,15 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
     }
 
     /// The central, once it's powered on. Waits while CoreBluetooth starts up (and while the user
-    /// answers the permission prompt), and fails if Bluetooth is off, not allowed or unsupported.
+    /// answers the permission prompt), and fails if Bluetooth is off, not allowed or unsupported,
+    /// or isn't ready within `readyTimeout`.
     func readyCentral() async throws -> CBCentralManager {
         let central = makeCentral()
-        if central.state == .poweredOn { return central }
-        if let error = HSBluetoothError.forState(central.state) { throw error }
-        try await withCheckedThrowingContinuation { readyWaiters.append($0) }
-        // Resumed only once the central is powered on
+        if central.state != .poweredOn {
+            if let error = HSBluetoothError.forState(central.state) { throw error }
+            try await centralRequests.wait(for: CentralKey.ready, timeout: Self.readyTimeout,
+                                           timeoutError: HSBluetoothError("Bluetooth didn't become ready in time; is the permission prompt still waiting for an answer?")) {}
+        }
         guard let ready = self.central, ready.state == .poweredOn else {
             throw HSBluetoothError("Bluetooth is unavailable")
         }
@@ -75,9 +75,7 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
     }
 
     func shutdownCentral() {
-        let waiters = readyWaiters
-        readyWaiters.removeAll()
-        waiters.forEach { $0.resume(throwing: HSBluetoothError("Hammerspoon is shutting down")) }
+        centralRequests.close(HSBluetoothError("Hammerspoon is shutting down"))
         if central?.state == .poweredOn {
             central?.stopScan()
         }
@@ -95,23 +93,27 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
         return record
     }
 
-    /// Finds the BLE side of a paired device that macOS has connected. CoreBluetooth doesn't
-    /// reveal addresses, so this matches on the device's name among the LE peripherals connected
-    /// to the system.
-    func connectedPeripheralRecord(named name: String) async throws -> BluetoothPeripheralRecord? {
+    /// The BLE peripherals connected to the Mac (by macOS or any app) with this name. CoreBluetooth
+    /// doesn't reveal addresses, so a name is all that links a paired device to its BLE side.
+    func systemConnectedPeripherals(named name: String) async throws -> [BluetoothPeripheralRecord] {
         let central = try await readyCentral()
-        let connected = central.retrieveConnectedPeripherals(withServices: HSBluetoothUUID.commonAccessoryServices)
-        return connected.first { $0.name == name }.map(record(for:))
+        return central.retrieveConnectedPeripherals(withServices: HSBluetoothUUID.commonAccessoryServices)
+            .filter { $0.name == name }
+            .map(record(for:))
     }
 
-    /// Drops records of peripherals not seen for a while and not used by any device object, so
-    /// long or repeated scans (where phones keep changing their identifiers) don't grow forever
-    private func pruneRecords() {
+    /// Drops records of peripherals not seen for a while and not used by any object, so long or
+    /// repeated scans (where phones keep changing their identifiers) don't grow forever
+    func pruneRecords() {
         let cutoff = Date().addingTimeInterval(-30 * 60)
-        let inUse = Set(devices.allObjects.compactMap { $0.record?.peripheral.identifier })
+        let inUse = Set(peripherals.allObjects.map(\.record.peripheral.identifier))
         peripheralRecords = peripheralRecords.filter { identifier, record in
             inUse.contains(identifier) || (record.lastSeen ?? .distantPast) > cutoff
         }
+    }
+
+    private nonisolated enum CentralKey {
+        static let ready = "ready"
     }
 
     // MARK: - Power
@@ -146,27 +148,19 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
             let state = central.state
             AKDebug("hs.bluetooth: CoreBluetooth state is \(state.rawValue)")
 
-            if state == .poweredOn || HSBluetoothError.forState(state) != nil {
-                let waiters = readyWaiters
-                readyWaiters.removeAll()
-                for waiter in waiters {
-                    if let error = HSBluetoothError.forState(state) {
-                        waiter.resume(throwing: error)
-                    } else {
-                        waiter.resume()
-                    }
-                }
+            if state == .poweredOn {
+                centralRequests.settle(CentralKey.ready, nil)
+            } else if let error = HSBluetoothError.forState(state) {
+                centralRequests.settle(CentralKey.ready, error)
             }
 
             if state != .poweredOn {
                 // Every connection and the scan have ended, without their own callbacks
                 let error = HSBluetoothError.forState(state) ?? HSBluetoothError("Bluetooth was reset")
-                for device in devices.allObjects where device.record != nil {
-                    device.peripheralDidDisconnect(error)
+                for peripheral in peripherals.allObjects {
+                    peripheral.peripheralDidDisconnect(error)
                 }
-                if let scan = activeScan, scan.includesLowEnergy, !scan.includesClassic {
-                    endScan(error)
-                }
+                endScan(error)
             }
 
             let nowPowered: Bool? = state == .poweredOn ? true : (state == .poweredOff ? false : nil)
@@ -196,8 +190,8 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
                 record.rssi = rssi
             }
             record.lastSeen = Date()
-            if scan.record(BluetoothScan.key(for: peripheral.identifier)), isWatching(.discovered) {
-                emit(.discovered, device(for: record))
+            if scan.record(peripheral.identifier), isWatching(.discovered) {
+                emit(.discovered, self.peripheral(for: record))
             }
         }
     }
@@ -205,21 +199,21 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
     nonisolated func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         let identifier = peripheral.identifier
         MainActor.assumeIsolated {
-            for device in existingDevices(identifier: identifier) { device.peripheralDidConnect() }
+            existingPeripheral(identifier: identifier)?.peripheralDidConnect()
         }
     }
 
     nonisolated func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         let identifier = peripheral.identifier
         MainActor.assumeIsolated {
-            for device in existingDevices(identifier: identifier) { device.peripheralDidFailToConnect(error) }
+            existingPeripheral(identifier: identifier)?.peripheralDidFailToConnect(error)
         }
     }
 
     nonisolated func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         let identifier = peripheral.identifier
         MainActor.assumeIsolated {
-            for device in existingDevices(identifier: identifier) { device.peripheralDidDisconnect(error) }
+            existingPeripheral(identifier: identifier)?.peripheralDidDisconnect(error)
         }
     }
 
@@ -235,9 +229,6 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
         let options = options ?? [:]
         let seconds = (options["seconds"] as? NSNumber)?.doubleValue ?? 10
         guard seconds.isFinite, seconds > 0 else { return reject("seconds must be a positive number") }
-        let lowEnergy = options["lowEnergy"] as? Bool ?? true
-        let classic = options["classic"] as? Bool ?? false
-        guard lowEnergy || classic else { return reject("lowEnergy and classic can't both be false") }
         var services: [CBUUID] = []
         if let requested = options["services"] {
             guard let strings = requested as? [String] else { return reject("services must be an array of UUID strings") }
@@ -249,45 +240,28 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
         let allowDuplicates = options["allowDuplicates"] as? Bool ?? false
 
         return wrapAsyncInJSPromise(in: context) { [self] holder in
-            let scan = BluetoothScan(holder: holder, includesLowEnergy: lowEnergy, includesClassic: classic,
-                                     allowsDuplicates: allowDuplicates)
+            let scan = BluetoothScan(holder: holder, allowsDuplicates: allowDuplicates)
             activeScan = scan
             pruneRecords()
 
-            // The countdown starts once BLE is ready, so time spent answering the Bluetooth
-            // permission prompt doesn't use up the scan
-            @MainActor func startCountdown() {
-                scan.timer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { [weak self, weak scan] _ in
-                    MainActor.assumeIsolated {
-                        guard let self, let scan, self.activeScan === scan else { return }
-                        self.endScan(nil)
-                    }
-                }
-            }
-
-            if classic {
-                startInquiry(seconds: seconds)
-            }
-            if !lowEnergy {
-                startCountdown()
-            } else {
-                Task {
-                    do {
-                        let central = try await readyCentral()
-                        guard activeScan === scan else { return }
-                        startCountdown()
-                        central.scanForPeripherals(withServices: services.isEmpty ? nil : services,
-                                                   options: [CBCentralManagerScanOptionAllowDuplicatesKey: allowDuplicates])
-                        AKDebug("hs.bluetooth.scan(): scanning for BLE peripherals")
-                    } catch {
-                        guard activeScan === scan else { return }
-                        if classic {
-                            startCountdown()
-                            AKWarning("hs.bluetooth.scan(): only scanning for classic devices: \(error.localizedDescription)")
-                        } else {
-                            endScan(error as? HSBluetoothError ?? HSBluetoothError(error.localizedDescription))
+            Task {
+                do {
+                    let central = try await readyCentral()
+                    guard activeScan === scan else { return }
+                    // The countdown starts now, so time spent answering the permission prompt
+                    // doesn't use up the scan
+                    scan.timer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { [weak self, weak scan] _ in
+                        MainActor.assumeIsolated {
+                            guard let self, let scan, self.activeScan === scan else { return }
+                            self.endScan(nil)
                         }
                     }
+                    central.scanForPeripherals(withServices: services.isEmpty ? nil : services,
+                                               options: [CBCentralManagerScanOptionAllowDuplicatesKey: allowDuplicates])
+                    AKDebug("hs.bluetooth.scan(): scanning for BLE peripherals")
+                } catch {
+                    guard activeScan === scan else { return }
+                    endScan(error as? HSBluetoothError ?? HSBluetoothError(error.localizedDescription))
                 }
             }
         }
@@ -302,90 +276,15 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
         guard let scan = activeScan else { return }
         activeScan = nil
         scan.timer?.invalidate()
-        if scan.includesLowEnergy, central?.state == .poweredOn {
+        if central?.state == .poweredOn {
             central?.stopScan()
         }
-        stopInquiry()
         guard settlingPromise else { return }
         if let error {
             scan.holder.rejectWithMessage("hs.bluetooth.scan(): \(error.message)")
         } else {
-            scan.holder.resolveWith(scan.found.compactMap(scannedDevice))
-        }
-    }
-
-    private func scannedDevice(_ key: String) -> HSBluetoothDevice? {
-        if key.hasPrefix("le:") {
-            guard let uuid = UUID(uuidString: String(key.dropFirst(3))), let record = peripheralRecords[uuid] else { return nil }
-            return device(for: record)
-        }
-        return IOBluetoothDevice(addressString: key).map(device(for:))
-    }
-
-    // MARK: - Classic inquiry
-
-    private func startInquiry(seconds: Double) {
-        guard let inquiry = IOBluetoothDeviceInquiry(delegate: self) else {
-            AKError("hs.bluetooth.scan(): could not create a classic Bluetooth inquiry")
-            if activeScan?.includesLowEnergy == false {
-                endScan(HSBluetoothError("classic Bluetooth scanning is unavailable"))
-            }
-            return
-        }
-        // Clamped before converting: Int(_:) traps on a Double too large for it
-        inquiry.inquiryLength = UInt8(min(seconds, 255).rounded(.up))
-        inquiry.updateNewDeviceNames = true
-        let status = inquiry.start()
-        guard status == kIOReturnSuccess else {
-            AKError("hs.bluetooth.scan(): failed to start a classic Bluetooth inquiry (IOReturn \(status))")
-            if activeScan?.includesLowEnergy == false {
-                endScan(HSBluetoothError.forIOReturn(status, "Starting the classic Bluetooth scan"))
-            }
-            return
-        }
-        self.inquiry = inquiry
-    }
-
-    private func stopInquiry() {
-        guard let inquiry else { return }
-        self.inquiry = nil
-        // The delegate is unretained, so clear it before this module can go away
-        unsafe inquiry.delegate = nil
-        inquiry.stop()
-    }
-
-    nonisolated func deviceInquiryDeviceFound(_ sender: IOBluetoothDeviceInquiry!, device: IOBluetoothDevice!) {
-        nonisolated(unsafe) let unsafeSender = sender
-        nonisolated(unsafe) let unsafeDevice = device
-        onMain { module in
-            let (sender, device) = unsafe (unsafeSender, unsafeDevice)
-            guard let sender, sender === module.inquiry, let scan = module.activeScan,
-                  let device, let address = device.addressString.flatMap(HSBluetoothAddress.normalize) else { return }
-            if scan.record(address), module.isWatching(.discovered) {
-                module.emit(.discovered, module.device(for: device))
-            }
-        }
-    }
-
-    nonisolated func deviceInquiryComplete(_ sender: IOBluetoothDeviceInquiry!, error: IOReturn, aborted: Bool) {
-        nonisolated(unsafe) let unsafeSender = sender
-        onMain { module in
-            let sender = unsafe unsafeSender
-            // An inquiry stopped by endScan() has already been forgotten
-            guard let sender, sender === module.inquiry else { return }
-            module.inquiry = nil
-            guard let scan = module.activeScan else { return }
-            if error != kIOReturnSuccess || aborted {
-                let reason = aborted ? HSBluetoothError("the classic Bluetooth scan was aborted")
-                                     : HSBluetoothError.forIOReturn(error, "The classic Bluetooth scan")
-                AKWarning("hs.bluetooth.scan(): \(reason.message)")
-                if !scan.includesLowEnergy {
-                    module.endScan(reason)
-                }
-            } else if !scan.includesLowEnergy {
-                // The inquiry ran its full length, which is the scan's length rounded up
-                module.endScan(nil)
-            }
+            let found = scan.found.compactMap { peripheralRecords[$0] }.map(peripheral(for:))
+            scan.holder.resolveWith(found)
         }
     }
 }
