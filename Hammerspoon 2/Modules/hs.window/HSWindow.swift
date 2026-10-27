@@ -381,7 +381,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
               let focused: UIElement = try? axApp.attribute(.focusedWindow) else {
             return false
         }
-        return CFEqual(focused.element, element.element)
+        return focused == element
     }
 
     @objc var isFullscreen: Bool {
