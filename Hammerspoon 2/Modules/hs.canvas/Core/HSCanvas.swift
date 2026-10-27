@@ -183,8 +183,13 @@ import SwiftUI
     @objc func behavior(_ name: String) -> HSCanvas
 
     /// Set the window's Spaces/Exposé collection behavior to a combination of named behaviors
+    ///
+    /// Throws if the behavior combines flags AppKit treats as mutually exclusive (e.g.
+    /// `canJoinAllSpaces` with `moveToActiveSpace`), leaving the current behavior unchanged.
+    /// Unknown names are logged and ignored.
     /// - Parameter names: {string[]} Behavior names from `hs.canvas.windowBehaviors`, combined together
     /// - Returns: Self for chaining
+    /// - Throws: true
     /// - Example:
     /// ```js
     /// c.behaviorList(["canJoinAllSpaces", "stationary"])
@@ -192,8 +197,16 @@ import SwiftUI
     @objc func behaviorList(_ names: [String]) -> HSCanvas
 
     /// Set the window's Spaces/Exposé collection behavior to a raw bitmask
+    ///
+    /// Throws if the behavior combines flags AppKit treats as mutually exclusive (e.g.
+    /// `canJoinAllSpaces` with `moveToActiveSpace`), leaving the current behavior unchanged.
     /// - Parameter value: A raw `NSWindow.CollectionBehavior` bitmask
     /// - Returns: Self for chaining
+    /// - Throws: true
+    /// - Example:
+    /// ```js
+    /// c.behaviorValue(hs.canvas.windowBehaviors.canJoinAllSpaces | hs.canvas.windowBehaviors.stationary)
+    /// ```
     @objc func behaviorValue(_ value: Int) -> HSCanvas
 
     /// Set whether clicking the canvas activates the Hammerspoon app
@@ -494,6 +507,9 @@ import SwiftUI
     /// The window's actual alphaValue, for tests -- not exposed to JS.
     var windowAlphaValue: CGFloat? { nsWindow?.alphaValue }
 
+    /// The window's actual collectionBehavior, for tests -- not exposed to JS.
+    var windowCollectionBehavior: NSWindow.CollectionBehavior? { nsWindow?.collectionBehavior }
+
     private var windowLevelRaw: Int?
     private var windowBehaviorRaw: NSWindow.CollectionBehavior = []
     private var isClickActivating = true
@@ -791,32 +807,25 @@ import SwiftUI
     }
 
     @objc func behavior(_ name: String) -> HSCanvas {
-        if let raw = HSCanvasModule.windowBehaviorValues[name] {
-            windowBehaviorRaw = NSWindow.CollectionBehavior(rawValue: UInt(raw))
-        } else {
+        guard let value = WindowCollectionBehavior.named[name] else {
             AKWarning("hs.canvas: Unknown window behavior '\(name)'")
+            return self
         }
-        nsWindow?.collectionBehavior = windowBehaviorRaw
-        return self
+        return setBehavior(value)
     }
 
     @objc func behaviorList(_ names: [String]) -> HSCanvas {
-        var combined: UInt = 0
-        for name in names {
-            if let raw = HSCanvasModule.windowBehaviorValues[name] {
-                combined |= UInt(raw)
-            } else {
-                AKWarning("hs.canvas: Unknown window behavior '\(name)'")
-            }
-        }
-        windowBehaviorRaw = NSWindow.CollectionBehavior(rawValue: combined)
-        nsWindow?.collectionBehavior = windowBehaviorRaw
-        return self
+        setBehavior(WindowCollectionBehavior.combining(names, caller: "hs.canvas"))
     }
 
     @objc func behaviorValue(_ value: Int) -> HSCanvas {
-        windowBehaviorRaw = NSWindow.CollectionBehavior(rawValue: UInt(value))
-        nsWindow?.collectionBehavior = windowBehaviorRaw
+        setBehavior(NSWindow.CollectionBehavior(rawValue: UInt(bitPattern: value)))
+    }
+
+    private func setBehavior(_ behavior: NSWindow.CollectionBehavior) -> HSCanvas {
+        guard WindowCollectionBehavior.validate(behavior, caller: "hs.canvas") else { return self }
+        windowBehaviorRaw = behavior
+        nsWindow?.collectionBehavior = behavior
         return self
     }
 
