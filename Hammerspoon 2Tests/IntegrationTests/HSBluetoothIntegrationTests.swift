@@ -555,6 +555,32 @@ struct HSBluetoothTests {
             #expect(log.count == 1)
         }
 
+        @Test("Operations nested in a second lane keep the order of their outer lane")
+        func testNestedLanesKeepOrder() async throws {
+            let requests = HSBluetoothRequests()
+            let log = Log()
+            // Like a write without a response (which also waits for the shared send queue)
+            // followed by a write with a response to the same characteristic
+            let first = Task {
+                try await requests.serially("write:x") {
+                    try await requests.serially("sendQueue") {
+                        try await requests.wait(for: "room", timeout: .seconds(5)) {}
+                        log.entries.append("first")
+                    }
+                }
+            }
+            await settleTasks()
+            let second = Task {
+                try await requests.serially("write:x") { log.entries.append("second") }
+            }
+            await settleTasks()
+            #expect(log.entries.isEmpty, "the later write must wait for the earlier one")
+            requests.settle("room", nil)
+            try await first.value
+            try await second.value
+            #expect(log.entries == ["first", "second"])
+        }
+
         @Test("Different lanes don't wait for each other")
         func testIndependentLanes() async throws {
             let requests = HSBluetoothRequests()

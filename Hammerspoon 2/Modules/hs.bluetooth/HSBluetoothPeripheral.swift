@@ -530,12 +530,14 @@ final class BluetoothPeripheralRecord {
                 throw HSBluetoothError("value must be a Uint8Array, an ArrayBuffer, an array of numbers from 0 to 255, or a string")
             }
             let found = try await self.characteristic(try Self.parseUUID(service), try Self.parseUUID(characteristic))
-            if withoutResponse {
-                try await self.writeWithoutResponse(bytes, to: found)
-            } else {
-                // One at a time: CoreBluetooth's callback doesn't say which write it confirms
-                try await self.requests.serially(Key.write(found)) {
-                    try self.requireConnection()
+            // Every write to a characteristic, with or without a response, goes through its lane,
+            // so they're sent in the order they were made. With a response, also because
+            // CoreBluetooth's callback doesn't say which write it confirms.
+            try await self.requests.serially(Key.write(found)) {
+                try self.requireConnection()
+                if withoutResponse {
+                    try await self.writeWithoutResponse(bytes, to: found)
+                } else {
                     try await self.requests.wait(for: Key.write(found), timeout: Self.gattTimeout) {
                         self.peripheral.writeValue(bytes, for: found, type: .withResponse)
                     }
@@ -636,8 +638,9 @@ final class BluetoothPeripheralRecord {
     }
 
     /// Writes without a response, waiting first for room in CoreBluetooth's send queue, so a
-    /// burst of writes isn't silently dropped. In order, one at a time across the peripheral,
-    /// since the queue is the peripheral's.
+    /// burst of writes isn't silently dropped. One at a time across the peripheral, since the
+    /// queue is the peripheral's. Called within the characteristic's write lane, which keeps
+    /// the order of its writes; this lane is only ever entered from there, so they can't deadlock.
     private func writeWithoutResponse(_ bytes: Data, to characteristic: CBCharacteristic) async throws {
         try await requests.serially(Key.writeWithoutResponse) {
             try self.requireConnection()
