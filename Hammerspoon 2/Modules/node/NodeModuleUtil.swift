@@ -156,9 +156,20 @@ enum NodeUtil {
     /// A JSExport-bridged native object (an `HSApplication`, a module, ...) keeps its properties
     /// as accessors on its prototype, so it has no own keys and would otherwise render as an
     /// unhelpful `{}`. Show its own description instead, which for `HSTypeAPI` types is their
-    /// `toString()`. Only called for objects with no own keys: `toObject()` deep-converts a plain
-    /// JS object to an `NSDictionary`, which would read (and so run) its getters.
+    /// `toString()`.
     private static func nativeDescription(_ value: JSValue) -> String? {
+        // `toObject()` converts a plain JS object to an `NSDictionary` by reading every property
+        // for-in would visit, including inherited ones, which runs their getters. Only call it
+        // when there are none, so it has nothing to read. Native wrappers' prototype accessors
+        // aren't enumerable, so they still get through.
+        guard
+            let ctx = value.context?.jsGlobalContextRef,
+            let object = JSValueToObject(ctx, value.jsValueRef, nil)
+        else { return nil }
+        let names = JSObjectCopyPropertyNames(ctx, object)
+        defer { JSPropertyNameArrayRelease(names) }
+        guard JSPropertyNameArrayGetCount(names) == 0 else { return nil }
+
         guard let native = value.toObject() as? NSObject, !(native is NSDictionary) else { return nil }
         return native.description
     }

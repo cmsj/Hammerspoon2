@@ -56,6 +56,20 @@ struct NodeUtilInspectTests {
         #expect(try inspect("({ a: 'x' })", in: harness) == "{ a: 'x' }")
     }
 
+    @Test("inspecting an object with no own keys doesn't run inherited or non-enumerable getters")
+    func emptyObjectGettersNotInvoked() throws {
+        let harness = JSTestHarness()
+        harness.eval("var _getterCalls = 0;")
+
+        _ = try inspect("Object.create({ get inherited() { _getterCalls++; return 1; } })", in: harness)
+        _ = try inspect("""
+            Object.defineProperty({}, 'hidden', { get() { _getterCalls++; return 1; }, enumerable: false })
+            """, in: harness)
+        _ = try inspect("class Foo { get x() { _getterCalls++; return 1; } }; new Foo()", in: harness)
+
+        harness.expectEqual("_getterCalls", 0)
+    }
+
     @Test("an object whose constructor has no string name gets no prefix")
     func constructorWithoutName() throws {
         let harness = JSTestHarness()
