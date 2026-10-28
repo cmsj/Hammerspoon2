@@ -209,6 +209,12 @@ struct Hammerspoon_2App: App {
             // whenever it opens the app, e.g. for a hammerspoon2:// URL or `open -a` (#316)
             NSApplication.shared.setActivationPolicy(settingsManager.dockMenuBehaviour.activationPolicy)
         }
+        .onChange(of: settingsManager.hasCompletedOnboarding, initial: true) {
+            if !settingsManager.hasCompletedOnboarding {
+                NSApplication.shared.activate(ignoringOtherApps: true)
+                openWindow(id: "onboarding")
+            }
+        }
 
         Window("Console", id: "console") {
             ConsoleView()
