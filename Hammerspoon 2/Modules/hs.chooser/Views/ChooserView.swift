@@ -14,6 +14,8 @@ struct ChooserView: View {
     let onSelect: (Int?) -> Void
 
     @FocusState private var searchFocused: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var scrollPhase: ScrollPhase = .idle
 
     var body: some View {
         VStack(spacing: 0) {
@@ -81,7 +83,7 @@ struct ChooserView: View {
                         ChooserRowView(
                             viewModel: viewModel,
                             item: item,
-                            isSelected: index == viewModel.selectedIndex,
+                            isSelected: index == viewModel.highlightedIndex,
                             shortcutDigit: index < 10 ? (index + 1) % 10 : nil
                         )
                         .id(item.id)
@@ -99,9 +101,43 @@ struct ChooserView: View {
                 }
             }
             .frame(height: CGFloat(visibleCount) * viewModel.rowHeight)
+            .onScrollPhaseChange { oldPhase, newPhase in
+                scrollPhase = newPhase
+                // A Page Up/Down or Home/End scroll has finished: move the highlight onto the new row.
+                if oldPhase == .animating && newPhase == .idle {
+                    viewModel.highlightedIndex = viewModel.selectedIndex
+                }
+            }
             .onChange(of: viewModel.selectedIndex) { _, newIndex in
-                guard newIndex < viewModel.filteredChoices.count else { return }
-                proxy.scrollTo(viewModel.filteredChoices[newIndex].id, anchor: .center)
+                let animated = viewModel.animateNextScroll && !reduceMotion
+                viewModel.animateNextScroll = false
+                guard newIndex < viewModel.filteredChoices.count else {
+                    viewModel.highlightedIndex = newIndex
+                    return
+                }
+                let id = viewModel.filteredChoices[newIndex].id
+                if animated {
+                    // Scroll first, then move the highlight, so it lands on the new row
+                    // rather than jumping there and riding along with the scroll. The
+                    // highlight is moved by onScrollPhaseChange when the scroll ends;
+                    // withAnimation's completion can't be used, because it fires
+                    // immediately — the scroll is driven by AppKit, not by SwiftUI.
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        proxy.scrollTo(id, anchor: .center)
+                    }
+                    // If the list is already where it needs to be (e.g. paging down to the
+                    // last row while it's already in view), nothing scrolls and the phase
+                    // never changes, so highlight the row directly.
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(50))
+                        if scrollPhase != .animating && viewModel.selectedIndex == newIndex {
+                            viewModel.highlightedIndex = newIndex
+                        }
+                    }
+                } else {
+                    proxy.scrollTo(id, anchor: .center)
+                    viewModel.highlightedIndex = newIndex
+                }
             }
         }
     }

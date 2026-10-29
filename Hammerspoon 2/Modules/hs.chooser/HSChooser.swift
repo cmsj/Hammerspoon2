@@ -38,6 +38,8 @@ import SwiftUI
 /// - **Escape** — dismiss (calls `onSelect` with `null`)
 /// - **↑ / ↓** — move through results
 /// - **Ctrl-N / Ctrl-P** — move through results (alternative to ↑ / ↓)
+/// - **Page Up / Page Down** (or **Fn-↑ / Fn-↓**) — move through results a page (`visibleRows` rows) at a time
+/// - **Home / End** (or **Fn-← / Fn-→**) — jump to the first / last result
 /// - **Cmd-1 ... Cmd-9, Cmd-0** — instantly select one of the first ten results
 @objc protocol HSChooserAPI: HSTypeAPI, JSExport {
 
@@ -746,24 +748,28 @@ import SwiftUI
 
         switch keyCode {
         case 125: // kVK_DownArrow
-            if viewModel.selectedIndex < viewModel.filteredChoices.count - 1 {
-                viewModel.selectedIndex += 1
-            }
+            viewModel.moveSelection(by: 1)
             return true
         case 126: // kVK_UpArrow
-            if viewModel.selectedIndex > 0 {
-                viewModel.selectedIndex -= 1
-            }
+            viewModel.moveSelection(by: -1)
+            return true
+        case 121: // kVK_PageDown (also Fn-↓ on laptop keyboards)
+            viewModel.moveSelection(by: viewModel.pageSize)
+            return true
+        case 116: // kVK_PageUp (also Fn-↑ on laptop keyboards)
+            viewModel.moveSelection(by: -viewModel.pageSize)
+            return true
+        case 115: // kVK_Home (also Fn-← on laptop keyboards)
+            viewModel.moveSelection(to: 0)
+            return true
+        case 119: // kVK_End (also Fn-→ on laptop keyboards)
+            viewModel.moveSelection(to: viewModel.filteredChoices.count - 1)
             return true
         case _ where modifierFlags == .control && Int(keyCode) == keyCodes.keyCode(forName: "n"): // Ctrl-N: next row
-            if viewModel.selectedIndex < viewModel.filteredChoices.count - 1 {
-                viewModel.selectedIndex += 1
-            }
+            viewModel.moveSelection(by: 1)
             return true
         case _ where modifierFlags == .control && Int(keyCode) == keyCodes.keyCode(forName: "p"): // Ctrl-P: previous row
-            if viewModel.selectedIndex > 0 {
-                viewModel.selectedIndex -= 1
-            }
+            viewModel.moveSelection(by: -1)
             return true
         case 53: // kVK_Escape
             handleSelection(nil)

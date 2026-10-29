@@ -731,6 +731,99 @@ struct HSChooserTests {
         }
     }
 
+    // MARK: - Keyboard navigation
+
+    @Suite("hs.chooser keyboard navigation tests")
+    @MainActor
+    struct HSChooserKeyboardNavigationTests {
+
+        private func makeViewModel(rows: Int, visibleRows: Int = 10, selectedIndex: Int = 0) -> ChooserViewModel {
+            let viewModel = ChooserViewModel()
+            viewModel.filteredChoices = (0..<rows).map { index in
+                ChooserItem(id: UUID(), text: "Row \(index)", subText: nil, image: nil,
+                            isValid: true, extra: [:], contextMenuItems: [])
+            }
+            viewModel.visibleRows = visibleRows
+            viewModel.selectedIndex = selectedIndex
+            return viewModel
+        }
+
+        @Test("Page size is one screenful of rows, and never less than one", arguments: [
+            (visibleRows: 10, expected: 10),
+            (visibleRows: 4, expected: 4),
+            (visibleRows: 0, expected: 1),
+            (visibleRows: -3, expected: 1),
+        ])
+        func testPageSize(visibleRows: Int, expected: Int) {
+            #expect(makeViewModel(rows: 50, visibleRows: visibleRows).pageSize == expected)
+        }
+
+        @Test("Moving the selection clamps to the first and last rows", arguments: [
+            (start: 0, offset: 10, expected: 10),
+            (start: 10, offset: -10, expected: 0),
+            (start: 45, offset: 10, expected: 49),
+            (start: 3, offset: -10, expected: 0),
+            (start: 49, offset: 1, expected: 49),
+            (start: 0, offset: -1, expected: 0),
+        ])
+        func testMoveSelectionClamps(start: Int, offset: Int, expected: Int) {
+            let viewModel = makeViewModel(rows: 50, selectedIndex: start)
+            viewModel.moveSelection(by: offset)
+            #expect(viewModel.selectedIndex == expected)
+        }
+
+        @Test("Moving the selection to a row clamps to the first and last rows", arguments: [
+            (start: 25, target: 0, expected: 0),
+            (start: 25, target: 49, expected: 49),
+            (start: 25, target: 100, expected: 49),
+            (start: 25, target: -1, expected: 0),
+        ])
+        func testMoveSelectionToClamps(start: Int, target: Int, expected: Int) {
+            let viewModel = makeViewModel(rows: 50, selectedIndex: start)
+            viewModel.moveSelection(to: target)
+            #expect(viewModel.selectedIndex == expected)
+        }
+
+        @Test("Jumping to the first or last row from next door is a single-row move")
+        func testMoveSelectionToAdjacentRowHighlightsImmediately() {
+            let viewModel = makeViewModel(rows: 50, selectedIndex: 1)
+            viewModel.moveSelection(to: 0)
+            #expect(!viewModel.animateNextScroll)
+            #expect(viewModel.highlightedIndex == 0)
+        }
+
+        @Test("Moving the selection in an empty list stays on row zero")
+        func testMoveSelectionEmptyList() {
+            let viewModel = makeViewModel(rows: 0)
+            viewModel.moveSelection(by: 10)
+            #expect(viewModel.selectedIndex == 0)
+        }
+
+        @Test("Single-row moves scroll instantly and highlight the new row immediately")
+        func testSingleRowMoveHighlightsImmediately() {
+            let viewModel = makeViewModel(rows: 50)
+            viewModel.moveSelection(by: 1)
+            #expect(!viewModel.animateNextScroll)
+            #expect(viewModel.highlightedIndex == 1)
+        }
+
+        @Test("Page moves scroll smoothly and leave the highlight behind until the scroll finishes")
+        func testPageMoveDefersHighlight() {
+            let viewModel = makeViewModel(rows: 50)
+            viewModel.moveSelection(by: viewModel.pageSize)
+            #expect(viewModel.animateNextScroll)
+            #expect(viewModel.selectedIndex == 10, "The logical selection moves straight away")
+            #expect(viewModel.highlightedIndex == 0, "The highlight waits for the view's scroll to finish")
+        }
+
+        @Test("Setting the selection directly highlights the new row immediately")
+        func testDirectSelectionHighlightsImmediately() {
+            let viewModel = makeViewModel(rows: 50)
+            viewModel.selectedIndex = 7
+            #expect(viewModel.highlightedIndex == 7)
+        }
+    }
+
     // MARK: - Memory Leak Tests
 
     @Test("Active HSChooser is released after shutdown")

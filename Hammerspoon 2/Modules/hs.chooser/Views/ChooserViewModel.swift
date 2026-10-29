@@ -38,7 +38,18 @@ struct ChooserItem: Identifiable, Equatable {
 @MainActor
 final class ChooserViewModel {
     var filteredChoices: [ChooserItem] = []
-    var selectedIndex: Int = 0
+    /// The logical selection: what Return, `selectedRow` and friends act on.
+    var selectedIndex: Int = 0 {
+        didSet {
+            // Multi-row moves leave the highlight behind until the list has scrolled to the new
+            // row (see ChooserView); everything else highlights the new row immediately.
+            if !animateNextScroll { highlightedIndex = selectedIndex }
+        }
+    }
+    /// The row drawn as selected. Usually equal to `selectedIndex`, but lags behind it while
+    /// a Page Up/Down or Home/End scroll animation is running, so the highlight doesn't jump
+    /// to the new row and then scroll along with it.
+    var highlightedIndex: Int = 0
     var placeholder: String = "Search..."
     var visibleRows: Int = 10
     var isVisible: Bool = false
@@ -120,6 +131,32 @@ final class ChooserViewModel {
         let titleLine = Self.lineHeight(size: textSize, weight: .medium)
         let subTextLine = Self.lineHeight(size: subTextSize)
         return titleLine + Self.rowContentSpacing + subTextLine + Self.rowVerticalPadding
+    }
+
+    /// Number of rows Page Up / Page Down move the selection by: one screenful of rows.
+    var pageSize: Int { max(1, visibleRows) }
+
+    /// Set when the next selection change should scroll the list smoothly rather than
+    /// jump. Consumed (and cleared) by ChooserView when it scrolls to the new selection,
+    /// which then moves `highlightedIndex` once the scroll has finished.
+    @ObservationIgnored var animateNextScroll = false
+
+    /// Moves the selection by `offset` rows, clamped to the first and last rows.
+    func moveSelection(by offset: Int) {
+        moveSelection(to: selectedIndex + offset)
+    }
+
+    /// Moves the selection to the row at `index`, clamped to the first and last rows.
+    /// Multi-row moves (Page Up/Down, Home/End) scroll smoothly so the user can follow where
+    /// the selection went; single-row moves stay instant so a held arrow key doesn't queue
+    /// up laggy animations.
+    func moveSelection(to index: Int) {
+        let maxIndex = max(0, filteredChoices.count - 1)
+        let newIndex = min(max(0, index), maxIndex)
+        if newIndex != selectedIndex {
+            animateNextScroll = abs(newIndex - selectedIndex) > 1
+            selectedIndex = newIndex
+        }
     }
 
     func expectedHeight() -> CGFloat {
