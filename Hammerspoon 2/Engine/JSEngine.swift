@@ -138,13 +138,13 @@ class JSEngine {
         vm = nil
     }
 
-    /// Logs a warning if `context` is still alive a while after it was deleted. Whatever is
+    /// Logs an error if `context` is still alive a while after it was deleted. Whatever is
     /// keeping it alive leaks it, and its whole JavaScript heap, on every reload.
     private func warnIfNotFreed(_ context: JSContext, id: UUID) {
         Task { [weak context] in
             try? await Task.sleep(for: .seconds(10))
             if context != nil {
-                AKWarning("JSContext \(id) is still alive 10 seconds after it was destroyed, so its memory has leaked")
+                AKError("JSContext \(id) is still alive 10 seconds after it was destroyed. This likely indicates a memory leak, please consider filing an Issue on GitHub.")
             }
         }
     }

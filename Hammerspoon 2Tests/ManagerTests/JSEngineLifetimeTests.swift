@@ -45,13 +45,17 @@ struct JSEngineLifetimeTests {
         let engine = JSEngine(fetchSessionConfiguration: .stubbed)
         defer { engine.shutdown() }
         weak var oldContext: JSContext?
+        var exception: String?
 
-        // `void` + autoreleasepool, so the script's completion value can't keep the context alive
+        // The function returns undefined, and the autoreleasepool drains anything else eval()
+        // returned, so nothing here can keep the context alive
         try autoreleasepool {
             try engine.resetContext()
             oldContext = engine.context
-            engine.eval("void (\(script))")
+            engine.context?.exceptionHandler = { _, value in exception = value?.toString() }
+            engine.eval("(function() {\n\(script)\n})()")
         }
+        try #require(exception == nil, "the script threw \(exception ?? "")")
         if let condition {
             let isMet = await waitUntil { autoreleasepool { engine.eval(condition) as? Bool == true } }
             try #require(isMet, "\(condition) never became true")
