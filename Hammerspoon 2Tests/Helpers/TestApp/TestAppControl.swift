@@ -136,6 +136,15 @@ nonisolated enum TestAppControl {
         send("closeWindows", to: pid)
     }
 
+    /// Has a copy put the window titled `title` back in front just after each time it becomes
+    /// active, as Google Chrome does with its previous main window (#356).
+    /// - Parameters:
+    ///   - title: The window's title
+    ///   - pid: The copy; the suite's copy by default
+    static func revertMainOnActivate(to title: String, in pid: pid_t? = TestAppControl.pid) {
+        send("revertMainOnActivate", to: pid, ["title": title])
+    }
+
     private static func send(_ command: String, to pid: pid_t?, _ arguments: [String: String] = [:]) {
         guard let pid else { return }
         var userInfo = arguments
