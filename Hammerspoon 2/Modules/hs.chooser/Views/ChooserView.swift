@@ -101,10 +101,14 @@ struct ChooserView: View {
                 }
             }
             .frame(height: CGFloat(visibleCount) * viewModel.rowHeight)
-            .onScrollPhaseChange { oldPhase, newPhase in
+            .onScrollPhaseChange { _, newPhase in
                 scrollPhase = newPhase
-                // A Page Up/Down or Home/End scroll has finished: move the highlight onto the new row.
-                if oldPhase == .animating && newPhase == .idle {
+                // Scrolling has stopped, so finish any pending Page Up/Down or Home/End
+                // highlight move. Don't require the previous phase to be .animating: the
+                // user can interrupt the scroll with the trackpad, taking it through
+                // .interacting/.decelerating instead. Outside a page move the two indices
+                // are already equal, so this is a no-op.
+                if newPhase == .idle {
                     viewModel.highlightedIndex = viewModel.selectedIndex
                 }
             }
