@@ -1,13 +1,34 @@
 {
   "fill" : {
     "linear-gradient" : [
-      "display-p3:1.00000,0.95797,0.45234,1.00000",
-      "display-p3:0.65402,0.52803,0.23585,1.00000"
+      "display-p3:0.99316,0.96240,0.66113,1.00000",
+      "display-p3:0.85867,0.61417,0.22443,1.00000"
     ]
   },
   "groups" : [
     {
       "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-srgb:1.00000,0.80000,0.00000,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "Logo.svg",
+          "name" : "Logo",
+          "position" : {
+            "scale" : 1.27,
+            "translation-in-points" : [
+              -16.131915205522716,
+              -21.000000000000057
+            ]
+          }
+        },
         {
           "blend-mode-specializations" : [
             {
@@ -55,6 +76,7 @@
               "value" : true
             }
           ],
+          "hidden" : true,
           "image-name" : "Original Logo.svg",
           "name" : "Original Logo",
           "position" : {
@@ -93,6 +115,7 @@
             }
           ],
           "glass" : false,
+          "hidden" : true,
           "image-name" : "2 2.svg",
           "name" : "2 2",
           "position" : {
@@ -100,6 +123,31 @@
             "translation-in-points" : [
               266,
               -222
+            ]
+          }
+        },
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "extended-gray:0.00000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:0.93848,0.78369,0.26587,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "2 4.svg",
+          "name" : "2 4",
+          "position" : {
+            "scale" : 1.14,
+            "translation-in-points" : [
+              253,
+              -221.88563817457464
             ]
           }
         }
@@ -115,9 +163,8 @@
     }
   ],
   "supported-platforms" : {
-    "circles" : [
-      "watchOS"
-    ],
-    "squares" : "shared"
+    "squares" : [
+      "macOS"
+    ]
   }
 }
