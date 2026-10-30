@@ -207,14 +207,48 @@ private enum HSWifiError: LocalizedError {
     @objc func interfaces() -> [String]
 
     /// Returns detailed information about a Wi-Fi interface.
+    ///
+    /// This is safe to call frequently. The interface's cached scan results and its configuration are
+    /// available from `cachedScanResults()` and `configuration()`, which are kept separate because
+    /// fetching them can leak memory inside macOS.
+    ///
+    /// `active` reports whether the interface is in use, and does not need Location Services
+    /// authorization, so it's a way to check that Wi-Fi is connected without that permission.
     /// - Parameter interface?: the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface
-    /// - Returns: a table with keys `interface, active, power, ssid, bssid, security, interfaceMode, activePHYMode, rssi, noise, transmitRate, transmitPower, countryCode, hardwareAddress, wlanChannel, supportedChannels, cachedScanResults, configuration`; or null if the interface doesn't exist. `ssid`/`bssid`/`countryCode`/`wlanChannel` may be absent without Location Services authorization.
+    /// - Returns: a table with keys `interface, active, power, ssid, bssid, security, interfaceMode, activePHYMode, rssi, noise, transmitRate, transmitPower, countryCode, hardwareAddress, wlanChannel, supportedChannels`; or null if the interface doesn't exist. `ssid`/`bssid`/`countryCode`/`wlanChannel` may be absent without Location Services authorization.
     /// - Example:
     /// ```js
     /// const info = hs.wifi.interfaceDetails()
     /// if (info) console.log(info.ssid + " on channel " + info.wlanChannel.number)
     /// ```
     @objc func interfaceDetails(_ interface: String?) -> [String: Any]?
+
+    /// Returns the networks an interface found in its most recent scan, without starting a new scan.
+    ///
+    /// Avoid calling this frequently: it has been seen to leak memory each time macOS refreshes the
+    /// scan cache, so polling it in a long-running configuration can grow Hammerspoon's memory use. Use
+    /// `scanNetworks()` for a fresh scan, or `on('scanCacheUpdated', ...)` to learn when the cache changes.
+    /// - Parameter interface?: the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface
+    /// - Returns: an array of network tables, with the same keys as `scanNetworks()`; or null if the interface doesn't exist
+    /// - Example:
+    /// ```js
+    /// const networks = hs.wifi.cachedScanResults() ?? []
+    /// networks.forEach(n => console.log(n.ssid + " (" + n.rssi + " dBm)"))
+    /// ```
+    @objc func cachedScanResults(_ interface: String?) -> [[String: Any]]?
+
+    /// Returns an interface's configuration: its remembered network profiles and administrator settings.
+    ///
+    /// Avoid calling this frequently: macOS leaks memory on every call, so polling this function in a
+    /// long-running configuration grows Hammerspoon's memory use.
+    /// - Parameter interface?: the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface
+    /// - Returns: a table with keys `rememberJoinedNetworks, requireAdministratorForAssociation, requireAdministratorForIBSSMode, requireAdministratorForPower, networkProfiles`, where `networkProfiles` is an array of tables with keys `ssid, security`; or null if the interface doesn't exist. Profile `ssid`s may be absent without Location Services authorization.
+    /// - Example:
+    /// ```js
+    /// const config = hs.wifi.configuration()
+    /// if (config) console.log(config.networkProfiles.length + " remembered networks")
+    /// ```
+    @objc func configuration(_ interface: String?) -> [String: Any]?
 
     /// Returns the SSID of the network currently joined on an interface.
     /// - Parameter interface?: the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface
@@ -370,8 +404,7 @@ private enum HSWifiError: LocalizedError {
             "security": wifiSecurityString(interface.security()),
             "interfaceMode": wifiInterfaceModeString(interface.interfaceMode()),
             "activePHYMode": wifiPHYModeString(interface.activePHYMode()),
-            "supportedChannels": (interface.supportedWLANChannels() ?? []).map { wifiChannelDictionary($0) },
-            "cachedScanResults": (interface.cachedScanResults() ?? []).map { wifiNetworkInfo(from: $0).dictionary }
+            "supportedChannels": (interface.supportedWLANChannels() ?? []).map { wifiChannelDictionary($0) }
         ]
         details["interface"] = interface.interfaceName
         details["ssid"] = interface.ssid()
@@ -379,10 +412,19 @@ private enum HSWifiError: LocalizedError {
         details["countryCode"] = interface.countryCode()
         details["hardwareAddress"] = interface.hardwareAddress()
         details["wlanChannel"] = wifiChannelDictionary(interface.wlanChannel())
-        if let config = interface.configuration() {
-            details["configuration"] = wifiConfigurationDictionary(config)
-        }
         return details
+    }
+
+    @objc func configuration(_ interfaceName: String?) -> [String: Any]? {
+        // CoreWLAN leaks an internal CWConfiguration on every call to -configuration, which is
+        // why this isn't part of interfaceDetails()
+        guard let config = client.interface(withName: sanitizedOptionalString(interfaceName))?.configuration() else { return nil }
+        return wifiConfigurationDictionary(config)
+    }
+
+    @objc func cachedScanResults(_ interfaceName: String?) -> [[String: Any]]? {
+        guard let interface = client.interface(withName: sanitizedOptionalString(interfaceName)) else { return nil }
+        return (interface.cachedScanResults() ?? []).map { wifiNetworkInfo(from: $0).dictionary }
     }
 
     @objc func currentNetwork(_ interfaceName: String?) -> String? {
