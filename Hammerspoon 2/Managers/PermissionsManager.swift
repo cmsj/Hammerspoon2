@@ -11,6 +11,7 @@ import AVFoundation
 import CoreLocation
 import UserNotifications
 import IOKit.hid
+import CoreBluetooth
 
 @_documentation(visibility: private)
 enum PermissionsState: Int {
@@ -28,6 +29,7 @@ enum PermissionsType: Int, CaseIterable {
     case screencapture
     case location
     case inputMonitoring
+    case bluetooth
 
     var displayName: String {
         switch self {
@@ -38,6 +40,7 @@ enum PermissionsType: Int, CaseIterable {
         case .screencapture:  return "Screen Recording"
         case .location:       return "Location"
         case .inputMonitoring: return "Input Monitoring"
+        case .bluetooth:      return "Bluetooth"
         }
     }
 
@@ -50,6 +53,7 @@ enum PermissionsType: Int, CaseIterable {
         case .screencapture:  return "Allows capturing screen content"
         case .location:       return "Allows accessing this computer's location"
         case .inputMonitoring: return "Allows per-keyboard access to modifier key state and LEDs"
+        case .bluetooth:      return "Allows inspecting, connecting to and scanning for Bluetooth devices"
         }
     }
 
@@ -63,6 +67,7 @@ enum PermissionsType: Int, CaseIterable {
         case .screencapture:  path = "Privacy_ScreenCapture"
         case .location:       path = "Privacy_LocationServices"
         case .inputMonitoring: path = "Privacy_ListenEvent"
+        case .bluetooth:      path = "Privacy_Bluetooth"
         }
         // swiftlint:disable:next force_unwrapping
         return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(path)")!
@@ -77,12 +82,18 @@ class PermissionsManager: NSObject {
     private var locationManager: CLLocationManager?
     private var locationCallback: (@Sendable (Bool) -> Void)?
 
+    // Asking for Bluetooth access means starting CoreBluetooth; this manager exists only until
+    // the user has answered
+    private var bluetoothManager: CBCentralManager?
+    private var bluetoothCallbacks: [@Sendable (Bool) -> Void] = []
+
     // Notification authorization has no synchronous status API, so we cache the last known state.
     // The cache is populated on first check and after every request.
     private var cachedNotificationState: PermissionsState = .unknown
 
     isolated deinit {
         locationManager?.delegate = nil
+        bluetoothManager?.delegate = nil
     }
 
     private func refreshNotificationState() {
@@ -133,6 +144,12 @@ class PermissionsManager: NSObject {
             case kIOHIDAccessTypeDenied:   return .notTrusted
             default:                       return .unknown
             }
+        case .bluetooth:
+            switch CBManager.authorization {
+            case .allowedAlways: return .trusted
+            case .notDetermined: return .unknown
+            default:             return .notTrusted
+            }
         }
     }
 
@@ -154,6 +171,8 @@ class PermissionsManager: NSObject {
             return status == .authorized || status == .authorizedAlways
         case .inputMonitoring:
             return IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) == kIOHIDAccessTypeGranted
+        case .bluetooth:
+            return CBManager.authorization == .allowedAlways
         }
     }
 
@@ -215,6 +234,35 @@ class PermissionsManager: NSObject {
         case .inputMonitoring:
             let granted = IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
             callback?(granted)
+        case .bluetooth:
+            switch CBManager.authorization {
+            case .allowedAlways:
+                callback?(true)
+            case .notDetermined:
+                if let callback { bluetoothCallbacks.append(callback) }
+                if bluetoothManager == nil {
+                    // Creating a manager is what shows the prompt; its first state update
+                    // arrives once the user has answered
+                    bluetoothManager = CBCentralManager(delegate: self, queue: .main,
+                                                        options: [CBCentralManagerOptionShowPowerAlertKey: false])
+                }
+            default:
+                callback?(false)
+            }
+        }
+    }
+}
+
+extension PermissionsManager: CBCentralManagerDelegate {
+    nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        let authorization = CBManager.authorization
+        guard authorization != .notDetermined else { return }
+        MainActor.assumeIsolated {
+            let callbacks = bluetoothCallbacks
+            bluetoothCallbacks.removeAll()
+            bluetoothManager?.delegate = nil
+            bluetoothManager = nil
+            callbacks.forEach { $0(authorization == .allowedAlways) }
         }
     }
 }

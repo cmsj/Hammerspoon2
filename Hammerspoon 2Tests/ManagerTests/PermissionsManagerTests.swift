@@ -15,7 +15,7 @@ struct PermissionsTypeMetadataTests {
 
     @Test("PermissionsType has all expected cases")
     func testAllCasesContents() {
-        let expected: [PermissionsType] = [.accessibility, .camera, .microphone, .notifications, .screencapture, .location, .inputMonitoring]
+        let expected: [PermissionsType] = [.accessibility, .camera, .microphone, .notifications, .screencapture, .location, .inputMonitoring, .bluetooth]
         #expect(PermissionsType.allCases == expected)
     }
 
@@ -54,6 +54,11 @@ struct PermissionsTypeMetadataTests {
     @Test("inputMonitoring displayName is correct")
     func testInputMonitoringDisplayName() {
         #expect(PermissionsType.inputMonitoring.displayName == "Input Monitoring")
+    }
+
+    @Test("bluetooth displayName is correct")
+    func testBluetoothDisplayName() {
+        #expect(PermissionsType.bluetooth.displayName == "Bluetooth")
     }
 
     @Test("All permission types have non-empty displayName")
@@ -111,6 +116,12 @@ struct PermissionsTypeMetadataTests {
     func testInputMonitoringDescription() {
         let desc = PermissionsType.inputMonitoring.permissionDescription.lowercased()
         #expect(desc.contains("keyboard"))
+    }
+
+    @Test("bluetooth description mentions Bluetooth")
+    func testBluetoothDescription() {
+        let desc = PermissionsType.bluetooth.permissionDescription.lowercased()
+        #expect(desc.contains("bluetooth"))
     }
 
     @Test("Each permission type has a unique displayName")

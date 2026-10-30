@@ -855,6 +855,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Hammerspoon 2 requires automation permissions to control other apps.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Hammerspoon 2 requires Bluetooth permissions for hs.bluetooth";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Hammerspoon 2 requires camera permissions for various modules to function correctly";
@@ -919,6 +920,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Hammerspoon 2 requires automation permissions to control other apps.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Hammerspoon 2 requires Bluetooth permissions for hs.bluetooth";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Hammerspoon 2 requires camera permissions for various modules to function correctly";
