@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- sparkle-sign-warning:
+IMPORTANT: This file was signed by Sparkle. Any modifications to this file requires re-signing this file with generate_appcast or sign_update! The signed signature will be embedded at the end of this file.
+--><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+  <channel>
+    <title>Hammerspoon 2</title>
+    <link>https://github.com/cmsj/Hammerspoon2</link>
+    <description>Most recent releases of Hammerspoon 2</description>
+    <language>en</language>
+    <item>
+      <title>Hammerspoon 2 0.0.16</title>
+      <pubDate>Fri, 23 Oct 2026 23:20:03 GMT</pubDate>
+      <sparkle:version>1206</sparkle:version>
+      <sparkle:shortVersionString>0.0.16</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>27.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/cmsj/Hammerspoon2/releases/tag/0.0.16</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<h2 dir="auto">Added</h2>
+<ul dir="auto">
+<li><code class="notranslate">hs.dockicon.setMenu()</code>, which adds extra items to the menu of Hammerspoon's Dock icon, from an array of menu items or a function called each time the menu opens (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5968616740" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/334" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/334/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/334">#334</a>)</li>
+<li><code class="notranslate">hs2 --version</code>, and hs2 now warns at startup if the running Hammerspoon 2 is a different build (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5969086313" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/335" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/335/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/335">#335</a>)</li>
+<li><code class="notranslate">require("node:sqlite")</code>, an implementation of Node's synchronous SQLite API (<code class="notranslate">DatabaseSync</code>/<code class="notranslate">StatementSync</code>) using the SQLite that ships with macOS, replacing v1's <code class="notranslate">hs.sqlite3</code> (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5985255220" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/339" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/339/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/339">#339</a>)</li>
+<li><code class="notranslate">hs.eventtap.keyStroke(mods, key, app)</code> sends a keystroke with modifiers to a specific application, even in the background, without activating it (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6006017607" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/350" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/350/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/350">#350</a>)</li>
+<li><code class="notranslate">hs.eventtap.makeKeyEvent()</code> and <code class="notranslate">hs.eventtap.makeKeyEventWithCode()</code> take an optional array of modifier names (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6006017607" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/350" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/350/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/350">#350</a>)</li>
+</ul>
+<h2 dir="auto">Changed</h2>
+<ul dir="auto">
+<li>Hammerspoon 2 now requires macOS 27 or later (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5962714189" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/330" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/330/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/330">#330</a>)</li>
+<li><code class="notranslate">hs.osascript</code> async scripts now run in parallel, so their promises resolve in completion order; chain them if you need strict ordering (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5962714189" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/330" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/330/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/330">#330</a>)</li>
+<li>The <code class="notranslate">hs.ipc</code> broker now exits shortly after <code class="notranslate">hs.ipc</code> stops or Hammerspoon 2 quits, instead of lingering for a minute (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5969086313" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/335" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/335/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/335">#335</a>)</li>
+<li><code class="notranslate">HSApplication.title</code> has been renamed to <code class="notranslate">HSApplication.name</code> (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5988902728" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/341" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/341/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/341">#341</a>)</li>
+<li><code class="notranslate">HSAXElement.setAttributeValue()</code> and <code class="notranslate">performAction()</code> now throw an <code class="notranslate">Error</code> saying why the Accessibility API refused the change (with the AX error name in <code class="notranslate">err.code</code>), instead of returning <code class="notranslate">false</code> (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6005995471" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/349" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/349/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/349">#349</a>)</li>
+<li><code class="notranslate">HSEventTapEvent.flags</code> can now be set, e.g. <code class="notranslate">event.flags = ["cmd", "shift"]</code> (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6006017607" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/350" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/350/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/350">#350</a>)</li>
+</ul>
+<h2 dir="auto">Fixed</h2>
+<ul dir="auto">
+<li>A slow or stuck <code class="notranslate">hs.osascript</code> script no longer delays every other script until it finishes (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5962714189" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/330" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/330/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/330">#330</a>)</li>
+<li>HSFont.custom() and HSFont.system(size, weight) are now callable under their documented names (they were customSize() and systemWeight()) (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5979312639" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/338" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/338/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/338">#338</a>)</li>
+<li>hs.ui.webview's evalJSResult() and hs.fs.setTags(), addTags() and removeTags() now appear in the documentation (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5979312639" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/338" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/338/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/338">#338</a>)</li>
+<li>After updating Hammerspoon 2, <code class="notranslate">hs.ipc</code> no longer keeps talking to the IPC broker from the previous version (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5969086313" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/335" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/335/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/335">#335</a>)</li>
+<li><code class="notranslate">JSON.stringify()</code> of geometry objects (<code class="notranslate">HSPoint</code>, <code class="notranslate">HSSize</code>, <code class="notranslate">HSRect</code>), <code class="notranslate">HSColor</code>, screens, windows, applications, audio devices, Bonjour services, MIDI devices and OCR results now includes their values instead of producing <code class="notranslate">{}</code> (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5988898696" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/340" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/340/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/340">#340</a>)</li>
+<li><code class="notranslate">setAttributeValue()</code> on an <code class="notranslate">hs.ax</code> element now throws an error naming the expected type (e.g. <code class="notranslate">HSPoint</code> for <code class="notranslate">AXPosition</code>) instead of silently returning false when given the wrong kind of value (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5988971438" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/342" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/342/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/342">#342</a>)</li>
+<li>hs2 no longer mixes its greeting and connection notices into stdout when input is piped or redirected, so its output can be used directly in scripts (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5989167578" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/343" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/343/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/343">#343</a>)</li>
+<li><code class="notranslate">hs.window.allWindows()</code>, <code class="notranslate">hs.window.windowsForApp()</code> and <code class="notranslate">app.allWindows</code> now include windows in native fullscreen and on other Spaces (see the docs for one limitation) (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6006236228" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/351" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/351/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/351">#351</a>)</li>
+<li><code class="notranslate">hs.window.windowsForApp(null)</code> returns an empty array instead of crashing (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6006236228" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/351" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/351/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/351">#351</a>)</li>
+</ul>
+<p dir="auto"><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/cmsj/Hammerspoon2/compare/0.0.15...0.0.16"><tt>0.0.15...0.0.16</tt></a></p>]]></description>
+      <enclosure url="https://github.com/cmsj/Hammerspoon2/releases/download/0.0.16/Hammerspoon-2-0.0.16.zip" length="7547138" type="application/octet-stream" sparkle:edSignature="L+ibgUI/qfrvacvTkSUo+bHR77wVTg6lUhvRUhtjBn4MPzT0FXanLCkwhqU341nfZ6qC273rtPVpGbs2lZZmBA=="></enclosure>
+      <sparkle:deltas>
+        <enclosure url="https://github.com/cmsj/Hammerspoon2/releases/download/0.0.16/Hammerspoon-2-1206-1147.delta" sparkle:deltaFrom="1147" length="618450" type="application/octet-stream" sparkle:edSignature="ImwZowTLitvO2T4Q/Q0TGoBjnRCoujYD9b9+OH1LNIkFhhKdTH5mX5doq8+kMpmaCnJqC5zJ/EzRaQ4I69SMBA=="></enclosure>
+      </sparkle:deltas>
+    </item>
+    <item>
+      <title>Hammerspoon 2 0.0.15</title>
+      <pubDate>Tue, 20 Oct 2026 21:20:14 GMT</pubDate>
+      <sparkle:version>1147</sparkle:version>
+      <sparkle:shortVersionString>0.0.15</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/cmsj/Hammerspoon2/releases/tag/0.0.15</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<h1 dir="auto">Added</h1>
+<ul dir="auto">
+<li>hs.eventtap now supports system key events (volume, brightness, media, etc)</li>
+<li>hs.ui.webview pages can now send messages back into your JS config</li>
+<li>hs.canvas can now fade canvases when showing/hiding/destroying</li>
+<li>App updating is now implemented</li>
+<li>HSAudioDevice objects now support isInUse and jackConnected</li>
+<li>hs.eventtap.isSecureInputEnabled() and secureInputPID()</li>
+</ul>
+<h1 dir="auto">Changed</h1>
+<ul dir="auto">
+<li>Functions/Methods that claim to return null now actually return null instead of undefined</li>
+<li>hs.ax watchers will now be automatically destroyed when the elements they are watching, are destroyed</li>
+<li>hs.ui's show() now orders a window to the front if it is called on an already open window</li>
+<li>hs.httpserver request callback now receives query parameters as an argument</li>
+<li>hs.hashing is now properly documented as hs.hashing rather than hs.hash</li>
+<li>hs.midi can now open individual ports of a multi-port device</li>
+<li>HSImage.copyImage() has been renamed to HSImage.duplicate()</li>
+<li>hs.hotkey modals can now be created without a hotkey</li>
+<li>hs.canvas minimumTextSize() can not be used without an existing element</li>
+<li>HSColor objects can now be created with hex strings, colour names and more.</li>
+<li>hs.canvas roundedRectRadii can now be specified with different X and Y radii</li>
+</ul>
+<h1 dir="auto">Fixed</h1>
+<ul dir="auto">
+<li>hs.ui's show() method no longer recreates the window every time it is called</li>
+<li>hs.canvas' destroy() method now destroys its entire element tree, to avoid slow memory recovery</li>
+</ul>
+<h2 dir="auto">New Contributors</h2>
+<ul dir="auto">
+<li><a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/blagerweij/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/blagerweij">@blagerweij</a> made their first contribution in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5847118357" data-permission-text="Title is private" data-url="https://github.com/cmsj/Hammerspoon2/issues/285" data-hovercard-type="pull_request" data-hovercard-url="/cmsj/Hammerspoon2/pull/285/hovercard" href="https://github.com/cmsj/Hammerspoon2/pull/285">#285</a></li>
+</ul>
+<p dir="auto"><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/cmsj/Hammerspoon2/compare/0.0.14...0.0.15"><tt>0.0.14...0.0.15</tt></a></p>]]></description>
+      <enclosure url="https://github.com/cmsj/Hammerspoon2/releases/download/0.0.15/Hammerspoon-2-0.0.15.zip" length="9332986" type="application/octet-stream" sparkle:edSignature="QUsKy3loLP6G8YkcO6ZhWNVkcuGUFcIhEqbESi2bLAMgTKA++K3PWNafSX/zKGdbHUbEdM90Ct1oUPXhbXTvAw=="></enclosure>
+    </item>
+  </channel>
+</rss><!-- sparkle-signatures:
+edSignature: UE0PtPGJAZfiFUl5J8RLS7IDRKgYUZbzHvWzZ+MDHaHX85RfgcPX/QLyzwTrzlSYGeD96Zj/84S19wj51SnsCA==
+length: 16356
+-->

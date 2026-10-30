@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSUIWindow - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSUIWindow</span>
+</nav>
+<div class="page-header">
+    <h1>HSUIWindow</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><h1>HSUIWindow</h1>
+<p><strong>A custom window with declarative UI building</strong></p>
+<p><code>HSUIWindow</code> allows you to create custom windows with a SwiftUI-like
+declarative syntax. Build interfaces using shapes, text, images, and layout containers.</p>
+<h2>Building UI Elements</h2>
+<ul>
+<li><strong>Shapes</strong>: <code>rectangle()</code>, <code>circle()</code></li>
+<li><strong>Text</strong>: <code>text(content)</code></li>
+<li><strong>Buttons</strong>: <code>button(label)</code> — uses SwiftUI&#39;s native Button for press-state feedback</li>
+<li><strong>Images</strong>: <code>image(imageValue)</code></li>
+<li><strong>Layout</strong>: <code>vstack()</code>, <code>hstack()</code>, <code>zstack()</code>, <code>spacer()</code></li>
+</ul>
+<h2>Modifying Elements</h2>
+<ul>
+<li><strong>Shape modifiers</strong>: <code>fill()</code>, <code>stroke()</code>, <code>strokeWidth()</code>, <code>cornerRadius()</code></li>
+<li><strong>Text modifiers</strong>: <code>font()</code>, <code>foregroundColor()</code></li>
+<li><strong>Image modifiers</strong>: <code>resizable()</code>, <code>aspectRatio(mode)</code></li>
+<li><strong>Layout modifiers</strong>: <code>frame()</code>, <code>opacity()</code>, <code>padding()</code>, <code>spacing()</code></li>
+</ul>
+<h2>Examples</h2>
+<p><strong>Simple window with text and shapes:</strong></p>
+<pre><code class="language-javascript">hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+    .vstack()
+        .spacing(10)
+        .padding(20)
+        .text(&quot;Dashboard&quot;)
+            .font(HSFont.largeTitle())
+            .foregroundColor(&quot;#FFFFFF&quot;)
+        .rectangle()
+            .fill(&quot;#4A90E2&quot;)
+            .cornerRadius(10)
+            .frame({w: &quot;90%&quot;, h: 80})
+    .end()
+    .backgroundColor(&quot;#2C3E50&quot;)
+    .show();
+</code></pre>
+<p><strong>Window with image:</strong></p>
+<pre><code class="language-javascript">const img = HSImage.fromPath(&quot;~/Pictures/photo.jpg&quot;)
+hs.ui.window({x: 100, y: 100, w: 400, h: 300})
+    .vstack()
+        .padding(20)
+        .image(img)
+            .resizable()
+            .aspectRatio(&quot;fit&quot;)
+            .frame({w: 360, h: 240})
+    .end()
+    .show();
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This type has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="show">
+        <h3>
+<a href="#show">show() -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Show the window</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">show() -> HSUIWindow</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L73" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:73</a>
+        </div>
+    </div>
+    <div class="method" id="hide">
+        <h3>
+<a href="#hide">hide() -> None</a>
+        </h3>
+
+        <div class="description">Hide the window (keeps it in memory)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hide() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L76" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:76</a>
+        </div>
+    </div>
+    <div class="method" id="close">
+        <h3>
+<a href="#close">close() -> None</a>
+        </h3>
+
+        <div class="description">Close and destroy the window</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">close() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:79</a>
+        </div>
+    </div>
+    <div class="method" id="titled">
+        <h3>
+<a href="#titled">titled(show) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Show or hide the window&#39;s title bar
+By default windows have a title bar. Pass `false` to create a borderless window.
+`.closable()`, `.miniaturizable()`, and `.allowResize()` only take visual effect
+when the window is titled.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">titled(show) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">show</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `false` to make the window borderless</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">// Borderless floating overlay
+hs.ui.window({x: 100, y: 100, w: 400, h: 300})
+    .titled(false)
+    .level(&quot;floating&quot;)
+    .show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L99" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:99</a>
+        </div>
+    </div>
+    <div class="method" id="closable">
+        <h3>
+<a href="#closable">closable(show) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Show or hide the close button on the window
+Requires `.titled(true)` to be visible. Enabled by default.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">closable(show) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">show</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `false` to hide the close button</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.window({x: 100, y: 100, w: 800, h: 600})
+    .closable(false).show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L112" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:112</a>
+        </div>
+    </div>
+    <div class="method" id="miniaturizable">
+        <h3>
+<a href="#miniaturizable">miniaturizable(show) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Show or hide the miniaturize (yellow) button on the window
+Requires `.titled(true)` to be visible. Enabled by default.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">miniaturizable(show) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">show</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `false` to hide the miniaturize button</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.window({x: 100, y: 100, w: 800, h: 600})
+    .miniaturizable(false).show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L125" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:125</a>
+        </div>
+    </div>
+    <div class="method" id="allowResize">
+        <h3>
+<a href="#allowResize">allowResize(enable) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Allow or prevent the user from resizing the window
+Enabled by default. Only has a visual effect when `.titled(true)` is also set.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">allowResize(enable) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">enable</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `false` to prevent the user from resizing the window</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.window({x: 100, y: 100, w: 800, h: 600})
+    .allowResize(false).show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L138" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:138</a>
+        </div>
+    </div>
+    <div class="method" id="windowTitle">
+        <h3>
+<a href="#windowTitle">windowTitle(text) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set the text shown in the window&#39;s title bar
+Only visible when `.titled(true)` is set (the default).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">windowTitle(text) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">text</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The title bar text</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.window({x: 100, y: 100, w: 800, h: 600})
+    .windowTitle(&quot;My Browser&quot;).show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L151" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:151</a>
+        </div>
+    </div>
+    <div class="method" id="level">
+        <h3>
+<a href="#level">level(name) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set the window stacking level
+Controls where this window sits in the macOS window hierarchy.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">level(name) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The level name</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.window({x: 100, y: 100, w: 800, h: 600})
+    .level(&quot;floating&quot;).show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L171" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:171</a>
+        </div>
+    </div>
+    <div class="method" id="backgroundColor">
+        <h3>
+<a href="#backgroundColor">backgroundColor(colorValue) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set the window&#39;s background color</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">backgroundColor(colorValue) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">colorValue</td>
+                    <td class="param-type">HSColor</td>
+                    <td class="param-desc">Color as an HSColor object</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L176" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:176</a>
+        </div>
+    </div>
+    <div class="method" id="rectangle">
+        <h3>
+<a href="#rectangle">rectangle() -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Add a rectangle shape</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">rectangle() -> HSUIWindow</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining (apply modifiers like `fill()`, `frame()`)</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L182" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:182</a>
+        </div>
+    </div>
+    <div class="method" id="circle">
+        <h3>
+<a href="#circle">circle() -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Add a circle shape</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">circle() -> HSUIWindow</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining (apply modifiers like `fill()`, `frame()`)</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L186" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:186</a>
+        </div>
+    </div>
+    <div class="method" id="text">
+        <h3>
+<a href="#text">text(content) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Add a text element
+or an `HSString` object (from `hs.ui.string()`) for reactive text</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">text(content) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">content</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">The text to display — a plain JS string for static text,</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining (apply modifiers like `font()`, `foregroundColor()`)</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L192" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:192</a>
+        </div>
+    </div>
+    <div class="method" id="image">
+        <h3>
+<a href="#image">image(imageValue) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Add an image element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">image(imageValue) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">imageValue</td>
+                    <td class="param-type">HSImage</td>
+                    <td class="param-desc">Image as HSImage object</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L197" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:197</a>
+        </div>
+    </div>
+    <div class="method" id="button">
+        <h3>
+<a href="#button">button(label) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Add a button element
+or an `HSString` object (from `hs.ui.string()`) for reactive text</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">button(label) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">label</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">The button label — a plain JS string for static text,</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining (apply `.fill()`, `.cornerRadius()`, `.font()`,</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L204" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:204</a>
+        </div>
+    </div>
+    <div class="method" id="vstack">
+        <h3>
+<a href="#vstack">vstack() -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Begin a vertical stack (elements arranged top to bottom)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">vstack() -> HSUIWindow</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining (call `end()` when done)</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L210" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:210</a>
+        </div>
+    </div>
+    <div class="method" id="hstack">
+        <h3>
+<a href="#hstack">hstack() -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Begin a horizontal stack (elements arranged left to right)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hstack() -> HSUIWindow</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining (call `end()` when done)</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L214" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:214</a>
+        </div>
+    </div>
+    <div class="method" id="zstack">
+        <h3>
+<a href="#zstack">zstack() -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Begin a z-stack (overlapping elements)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">zstack() -> HSUIWindow</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining (call `end()` when done)</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L218" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:218</a>
+        </div>
+    </div>
+    <div class="method" id="spacer">
+        <h3>
+<a href="#spacer">spacer() -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Add flexible spacing that expands to fill available space</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">spacer() -> HSUIWindow</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L222" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:222</a>
+        </div>
+    </div>
+    <div class="method" id="webview">
+        <h3>
+<a href="#webview">webview(element) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Embed a web browser element created with `hs.ui.webview()` (macOS 26+)
+The element fills the available space in the window layout.
+Keep a reference to the element to call navigation methods after the window is shown.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">webview(element) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">element</td>
+                    <td class="param-type">UIWebView</td>
+                    <td class="param-desc">A `UIWebView` created via `hs.ui.webview()`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const wv = hs.ui.webview()
+    .toolbar([&quot;back&quot;, &quot;forward&quot;, &quot;reload&quot;, &quot;url&quot;])
+    .loadURL(&quot;https://apple.com&quot;)
+
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    .webview(wv)
+    .show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L242" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:242</a>
+        </div>
+    </div>
+    <div class="method" id="end">
+        <h3>
+<a href="#end">end() -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">End the current layout container</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">end() -> HSUIWindow</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L246" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:246</a>
+        </div>
+    </div>
+    <div class="method" id="fill">
+        <h3>
+<a href="#fill">fill(colorValue) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Fill a shape with a color</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fill(colorValue) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">colorValue</td>
+                    <td class="param-type">HSColor</td>
+                    <td class="param-desc">Color as an HSColor</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L253" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:253</a>
+        </div>
+    </div>
+    <div class="method" id="stroke">
+        <h3>
+<a href="#stroke">stroke(colorValue) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Add a stroke (border) to a shape</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">stroke(colorValue) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">colorValue</td>
+                    <td class="param-type">HSColor</td>
+                    <td class="param-desc">Color as an HSColor</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L258" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:258</a>
+        </div>
+    </div>
+    <div class="method" id="strokeWidth">
+        <h3>
+<a href="#strokeWidth">strokeWidth(width) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set the stroke width</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">strokeWidth(width) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">width</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Width in points</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L263" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:263</a>
+        </div>
+    </div>
+    <div class="method" id="cornerRadius">
+        <h3>
+<a href="#cornerRadius">cornerRadius(radius) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Round the corners of a shape</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">cornerRadius(radius) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">radius</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Corner radius in points</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L268" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:268</a>
+        </div>
+    </div>
+    <div class="method" id="frame">
+        <h3>
+<a href="#frame">frame(dict) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set the frame (size) of an element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">frame(dict) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">dict</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">Dictionary with `w` and/or `h` (can be numbers or percentage strings like &quot;50%&quot;)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L273" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:273</a>
+        </div>
+    </div>
+    <div class="method" id="opacity">
+        <h3>
+<a href="#opacity">opacity(value) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set the opacity of an element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">opacity(value) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Opacity from 0.0 (transparent) to 1.0 (opaque)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L278" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:278</a>
+        </div>
+    </div>
+    <div class="method" id="font">
+        <h3>
+<a href="#font">font(font) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set the font for a text element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">font(font) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">font</td>
+                    <td class="param-type">HSFont</td>
+                    <td class="param-desc">An HSFont object (e.g., `HSFont.title()`)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L285" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:285</a>
+        </div>
+    </div>
+    <div class="method" id="foregroundColor">
+        <h3>
+<a href="#foregroundColor">foregroundColor(colorValue) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set the text color</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">foregroundColor(colorValue) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">colorValue</td>
+                    <td class="param-type">HSColor</td>
+                    <td class="param-desc">Color as HSColor</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L290" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:290</a>
+        </div>
+    </div>
+    <div class="method" id="resizable">
+        <h3>
+<a href="#resizable">resizable() -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Make an image resizable (allows it to scale with frame size)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">resizable() -> HSUIWindow</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L296" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:296</a>
+        </div>
+    </div>
+    <div class="method" id="aspectRatio">
+        <h3>
+<a href="#aspectRatio">aspectRatio(mode) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set the aspect ratio mode for an image</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">aspectRatio(mode) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">mode</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">&quot;fit&quot; (scales to fit within frame) or &quot;fill&quot; (scales to fill frame)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L301" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:301</a>
+        </div>
+    </div>
+    <div class="method" id="padding">
+        <h3>
+<a href="#padding">padding(value) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Add padding around a layout container</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">padding(value) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Padding in points</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L308" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:308</a>
+        </div>
+    </div>
+    <div class="method" id="spacing">
+        <h3>
+<a href="#spacing">spacing(value) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set spacing between elements in a stack</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">spacing(value) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Spacing in points</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L313" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:313</a>
+        </div>
+    </div>
+    <div class="method" id="onClick">
+        <h3>
+<a href="#onClick">onClick(callback) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set a callback to fire when the element is clicked</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">onClick(callback) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">A JavaScript function to call on click</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L320" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:320</a>
+        </div>
+    </div>
+    <div class="method" id="onHover">
+        <h3>
+<a href="#onHover">onHover(callback) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Set a callback to fire when the cursor enters or leaves the element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">onHover(callback) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">A JavaScript function called with `true` when the cursor enters and `false` when it leaves</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L325" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:325</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSUIWindow');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

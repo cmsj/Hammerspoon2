@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <span class="breadcrumb-current">API Reference</span>
+</nav>
+<div class="page-header">
+    <h1 style="font-family: var(--font-sans); font-size: 1.875rem;">Hammerspoon 2 API Documentation</h1>
+    <span class="page-badge">Reference</span>
+</div>
+
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 2rem; line-height: 1.65;">
+    Welcome to the Hammerspoon 2 API reference. Browse modules for top-level functionality, or explore types for object APIs.
+</p>
+
+<h2 class="section-heading">Modules</h2>
+<p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.75rem;">
+    Modules are the main entry points for Hammerspoon functionality, accessible via the <code>hs</code> global.
+</p>
+<div class="grid">
+    <a href="console.html" class="card">
+        <h3>console</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.html" class="card">
+        <h3>hs</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.appinfo.html" class="card">
+        <h3>hs.appinfo</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.application.html" class="card">
+        <h3>hs.application</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.audiodevice.html" class="card">
+        <h3>hs.audiodevice</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.ax.html" class="card">
+        <h3>hs.ax</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.bonjour.html" class="card">
+        <h3>hs.bonjour</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.camera.html" class="card">
+        <h3>hs.camera</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.chooser.html" class="card">
+        <h3>hs.chooser</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.docs.html" class="card">
+        <h3>hs.docs</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.eventtap.html" class="card">
+        <h3>hs.eventtap</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.fs.html" class="card">
+        <h3>hs.fs</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.hash.html" class="card">
+        <h3>hs.hash</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.hotkey.html" class="card">
+        <h3>hs.hotkey</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.http.html" class="card">
+        <h3>hs.http</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.httpserver.html" class="card">
+        <h3>hs.httpserver</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.ipc.html" class="card">
+        <h3>hs.ipc</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.keycodes.html" class="card">
+        <h3>hs.keycodes</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.location.html" class="card">
+        <h3>hs.location</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.menubar.html" class="card">
+        <h3>hs.menubar</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.notify.html" class="card">
+        <h3>hs.notify</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.ocr.html" class="card">
+        <h3>hs.ocr</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.osascript.html" class="card">
+        <h3>hs.osascript</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.pasteboard.html" class="card">
+        <h3>hs.pasteboard</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.permissions.html" class="card">
+        <h3>hs.permissions</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.power.html" class="card">
+        <h3>hs.power</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.screen.html" class="card">
+        <h3>hs.screen</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.spotlight.html" class="card">
+        <h3>hs.spotlight</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.task.html" class="card">
+        <h3>hs.task</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.timer.html" class="card">
+        <h3>hs.timer</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.translation.html" class="card">
+        <h3>hs.translation</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.ui.html" class="card">
+        <h3>hs.ui</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.urlevent.html" class="card">
+        <h3>hs.urlevent</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.usb.html" class="card">
+        <h3>hs.usb</h3>
+        <p> protocols ·  functions</p>
+    </a>
+    <a href="hs.window.html" class="card">
+        <h3>hs.window</h3>
+        <p> protocols ·  functions</p>
+    </a>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.75rem;">
+    Types represent objects that can be created and manipulated in Hammerspoon scripts.
+</p>
+<div class="grid">
+    <a href="HSColor.html" class="card">
+        <h3>HSColor</h3>
+    </a>
+    <a href="HSFont.html" class="card">
+        <h3>HSFont</h3>
+    </a>
+    <a href="HSImage.html" class="card">
+        <h3>HSImage</h3>
+    </a>
+    <a href="HSPoint.html" class="card">
+        <h3>HSPoint</h3>
+    </a>
+    <a href="HSRect.html" class="card">
+        <h3>HSRect</h3>
+    </a>
+    <a href="HSSize.html" class="card">
+        <h3>HSSize</h3>
+    </a>
+    <a href="HSString.html" class="card">
+        <h3>HSString</h3>
+    </a>
+    <a href="HSApplication.html" class="card">
+        <h3>HSApplication</h3>
+    </a>
+    <a href="HSAudioDevice.html" class="card">
+        <h3>HSAudioDevice</h3>
+    </a>
+    <a href="HSAXElement.html" class="card">
+        <h3>HSAXElement</h3>
+    </a>
+    <a href="HSBonjourSearch.html" class="card">
+        <h3>HSBonjourSearch</h3>
+    </a>
+    <a href="HSBonjourService.html" class="card">
+        <h3>HSBonjourService</h3>
+    </a>
+    <a href="HSCamera.html" class="card">
+        <h3>HSCamera</h3>
+    </a>
+    <a href="HSChooser.html" class="card">
+        <h3>HSChooser</h3>
+    </a>
+    <a href="HSEventTap.html" class="card">
+        <h3>HSEventTap</h3>
+    </a>
+    <a href="HSEventTapEvent.html" class="card">
+        <h3>HSEventTapEvent</h3>
+    </a>
+    <a href="HSEventTapHotkey.html" class="card">
+        <h3>HSEventTapHotkey</h3>
+    </a>
+    <a href="HSHotkey.html" class="card">
+        <h3>HSHotkey</h3>
+    </a>
+    <a href="HSHotkeyModal.html" class="card">
+        <h3>HSHotkeyModal</h3>
+    </a>
+    <a href="HSWebSocket.html" class="card">
+        <h3>HSWebSocket</h3>
+    </a>
+    <a href="HSHTTPServer.html" class="card">
+        <h3>HSHTTPServer</h3>
+    </a>
+    <a href="HSWebSocketConnection.html" class="card">
+        <h3>HSWebSocketConnection</h3>
+    </a>
+    <a href="HSLocationWatcher.html" class="card">
+        <h3>HSLocationWatcher</h3>
+    </a>
+    <a href="HSMenuBarItem.html" class="card">
+        <h3>HSMenuBarItem</h3>
+    </a>
+    <a href="HSNotification.html" class="card">
+        <h3>HSNotification</h3>
+    </a>
+    <a href="HSOCRObservation.html" class="card">
+        <h3>HSOCRObservation</h3>
+    </a>
+    <a href="HSOCRResult.html" class="card">
+        <h3>HSOCRResult</h3>
+    </a>
+    <a href="HSScreen.html" class="card">
+        <h3>HSScreen</h3>
+    </a>
+    <a href="HSSpotlightGroup.html" class="card">
+        <h3>HSSpotlightGroup</h3>
+    </a>
+    <a href="HSSpotlightItem.html" class="card">
+        <h3>HSSpotlightItem</h3>
+    </a>
+    <a href="HSSpotlightQuery.html" class="card">
+        <h3>HSSpotlightQuery</h3>
+    </a>
+    <a href="HSTask.html" class="card">
+        <h3>HSTask</h3>
+    </a>
+    <a href="HSTimer.html" class="card">
+        <h3>HSTimer</h3>
+    </a>
+    <a href="HSTranslationSession.html" class="card">
+        <h3>HSTranslationSession</h3>
+    </a>
+    <a href="HSUIWindow.html" class="card">
+        <h3>HSUIWindow</h3>
+    </a>
+    <a href="HSUIAlert.html" class="card">
+        <h3>HSUIAlert</h3>
+    </a>
+    <a href="HSUIDialog.html" class="card">
+        <h3>HSUIDialog</h3>
+    </a>
+    <a href="HSUIFilePicker.html" class="card">
+        <h3>HSUIFilePicker</h3>
+    </a>
+    <a href="HSUITextPrompt.html" class="card">
+        <h3>HSUITextPrompt</h3>
+    </a>
+    <a href="UIWebView.html" class="card">
+        <h3>UIWebView</h3>
+    </a>
+    <a href="HSWindow.html" class="card">
+        <h3>HSWindow</h3>
+    </a>
+</div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('index');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

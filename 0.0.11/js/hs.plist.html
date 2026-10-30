@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.plist - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.plist</span>
+</nav>
+<div class="page-header">
+    <h1>hs.plist</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Module for reading and writing macOS property list (plist) files.</p>
+<p>Property lists are a structured data format used extensively on Apple platforms
+for storing configuration, preferences, and serialized data. This module supports
+both XML and binary plist formats.</p>
+<p>JavaScript ↔ plist type mapping:</p>
+<ul>
+<li>JavaScript strings ↔ plist strings</li>
+<li>JavaScript numbers ↔ plist integers and reals</li>
+<li>JavaScript booleans ↔ plist true/false</li>
+<li>JavaScript arrays ↔ plist arrays</li>
+<li>JavaScript objects ↔ plist dictionaries</li>
+<li>JavaScript null is not supported by the plist format and will cause write operations to fail</li>
+<li>Plist Date and Data values are returned as opaque objects and may not be directly usable in JavaScript</li>
+</ul>
+</div>
+
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="fromFile">
+        <h3><a href="#fromFile">hs.plist.fromFile(path) -> any</a></h3>
+
+        <div class="description">Read a plist file and return its contents as a JavaScript value.
+Supports both XML and binary plist formats. Returns a JavaScript object for
+dictionary-rooted plists, an array for array-rooted plists, or a string or
+number for scalar-rooted plists.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.plist.fromFile(path) -> any</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the plist file</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">any</div>
+        <div class="return-desc">The plist contents, or null if the file could not be read or parsed</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const prefs = hs.plist.fromFile(&quot;/Users/me/Library/Preferences/com.example.app.plist&quot;)
+console.log(prefs.SomeKey)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.plist/HSPlistModule.swift#L42" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.plist/HSPlistModule.swift:42</a>
+        </div>
+    </div>
+    <div class="method" id="fromString">
+        <h3><a href="#fromString">hs.plist.fromString(plistString) -> any</a></h3>
+
+        <div class="description">Read a plist from an XML string and return its contents as a JavaScript value.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.plist.fromString(plistString) -> any</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">plistString</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">An XML plist string</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">any</div>
+        <div class="return-desc">The plist contents, or null if the string could not be parsed</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const xml = &#39;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#39; +
+    &#39;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#39; +
+    &#39;&lt;plist version=&quot;1.0&quot;&gt;&lt;dict&gt;&lt;key&gt;Name&lt;/key&gt;&lt;string&gt;Test&lt;/string&gt;&lt;/dict&gt;&lt;/plist&gt;&#39;
+const data = hs.plist.fromString(xml)
+console.log(data.Name)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.plist/HSPlistModule.swift#L56" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.plist/HSPlistModule.swift:56</a>
+        </div>
+    </div>
+    <div class="method" id="toFile">
+        <h3><a href="#toFile">hs.plist.toFile(path, data, binary) -> boolean</a></h3>
+
+        <div class="description">Write a JavaScript object to a plist file on disk.
+Keys must be strings. Values may be strings, numbers, booleans, arrays, or
+nested objects. JavaScript null values are not plist-compatible and will cause
+the write to fail.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.plist.toFile(path, data, binary) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Destination file path</td>
+                </tr>
+                <tr>
+                    <td class="param-name">data</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">A JavaScript object to serialize as a property list</td>
+                </tr>
+                <tr>
+                    <td class="param-name">binary</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">If true, write binary plist format; if false (default), write XML plist format</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the file was written successfully</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.plist.toFile(&quot;/tmp/test.plist&quot;, { name: &quot;Hammerspoon&quot;, version: 2 })
+hs.plist.toFile(&quot;/tmp/test.plist&quot;, { name: &quot;Hammerspoon&quot; }, true)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.plist/HSPlistModule.swift#L74" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.plist/HSPlistModule.swift:74</a>
+        </div>
+    </div>
+    <div class="method" id="toString">
+        <h3><a href="#toString">hs.plist.toString(data, binary) -> string</a></h3>
+
+        <div class="description">Serialize a JavaScript object to a plist string.
+With binary set to false (default), returns an XML plist string suitable for
+storing in text files or passing to `readString`. With binary set to true,
+returns a base64-encoded binary plist string.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.plist.toString(data, binary) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">data</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">A JavaScript object to serialize as a property list</td>
+                </tr>
+                <tr>
+                    <td class="param-name">binary</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">If true, produce base64-encoded binary plist output; if false (default), produce an XML string</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The serialized plist string, or null if serialization failed</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const xml = hs.plist.toString({ name: &quot;Hammerspoon&quot;, version: 2 })
+const b64 = hs.plist.toString({ name: &quot;Hammerspoon&quot; }, true)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.plist/HSPlistModule.swift#L91" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.plist/HSPlistModule.swift:91</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.plist');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
