@@ -36,6 +36,16 @@ struct HSWifiTests {
             #expect(makeHarness().evalTypeOf("hs.wifi.interfaceDetails") == "function")
         }
 
+        @Test("cachedScanResults is a function")
+        func testCachedScanResultsIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.wifi.cachedScanResults") == "function")
+        }
+
+        @Test("configuration is a function")
+        func testConfigurationIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.wifi.configuration") == "function")
+        }
+
         @Test("currentNetwork is a function")
         func testCurrentNetworkIsFunction() {
             #expect(makeHarness().evalTypeOf("hs.wifi.currentNetwork") == "function")
@@ -310,6 +320,54 @@ struct HSWifiTests {
             harness.eval("var d = hs.wifi.interfaceDetails('not-a-real-interface')")
             #expect(!harness.hasException)
             harness.expectTrue("d === null || d === undefined")
+        }
+
+        // configuration() and cachedScanResults() leak inside CoreWLAN, so they must stay out of
+        // interfaceDetails(), which scripts poll
+        @Test("interfaceDetails does not include the leaking configuration or cachedScanResults")
+        func testInterfaceDetailsOmitsLeakingFields() {
+            let harness = makeHarness()
+            harness.eval("var d = hs.wifi.interfaceDetails()")
+            #expect(!harness.hasException)
+            harness.expectTrue("d === null || (!('configuration' in d) && !('cachedScanResults' in d))")
+        }
+
+        @Test("cachedScanResults does not throw, and is null or an array of networks")
+        func testCachedScanResults() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.wifi.cachedScanResults()")
+            #expect(!harness.hasException)
+            harness.expectTrue("""
+                r === null ||
+                (Array.isArray(r) && r.every(n => typeof n.rssi === 'number' && Array.isArray(n.security)))
+            """)
+        }
+
+        @Test("cachedScanResults returns null for an unknown interface")
+        func testCachedScanResultsUnknownInterface() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.wifi.cachedScanResults('not-a-real-interface')")
+            #expect(!harness.hasException)
+            harness.expectTrue("r === null")
+        }
+
+        @Test("configuration does not throw, and is null or well-shaped")
+        func testConfiguration() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.wifi.configuration()")
+            #expect(!harness.hasException)
+            harness.expectTrue("""
+                c === null ||
+                (typeof c.rememberJoinedNetworks === 'boolean' && Array.isArray(c.networkProfiles))
+            """)
+        }
+
+        @Test("configuration returns null for an unknown interface")
+        func testConfigurationUnknownInterface() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.wifi.configuration('not-a-real-interface')")
+            #expect(!harness.hasException)
+            harness.expectTrue("c === null")
         }
 
         @Test("currentNetwork does not throw")

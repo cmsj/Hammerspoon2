@@ -17,8 +17,8 @@
 import AppKit
 
 /// Tests send commands as a distributed notification with this name. `userInfo`:
-/// `command` is `show` (with `test` and `detail`), `newWindow`, `fullScreenWindow` or `closeWindows`; `pid` is the
-/// copy it is meant for, since several can run at once.
+/// `command` is `show` (with `test` and `detail`), `newWindow`, `fullScreenWindow`, `closeWindows` or
+/// `revertMainOnActivate` (with `title`); `pid` is the copy it is meant for, since several can run at once.
 let commandNotification = Notification.Name("net.tenshu.Hammerspoon-2.TestApp.command")
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -26,6 +26,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let testLabel = NSTextField(wrappingLabelWithString: "")
     private let detailLabel = NSTextField(wrappingLabelWithString: "")
     private var extraWindows: [NSWindow] = []
+    /// Title of the window to put back in front each time the app becomes active, if any.
+    private var revertTitle: String?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = makeMenu()
@@ -40,6 +42,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             suspensionBehavior: .deliverImmediately)
     }
 
+    /// Like Google Chrome (#356): shortly after becoming active, put a window of the app's own
+    /// choosing back in front, in place of the one the activation brought forward.
+    func applicationDidBecomeActive(_ notification: Notification) {
+        guard let revertTitle else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(50)) {
+            NSApp.windows.first { $0.title == revertTitle }?.makeKeyAndOrderFront(nil)
+        }
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     @objc private func handleCommand(_ notification: Notification) {
@@ -50,6 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case "newWindow": newWindow(nil)
         case "fullScreenWindow": fullScreenWindow()
         case "closeWindows": closeExtraWindows()
+        case "revertMainOnActivate": revertTitle = info?["title"] as? String
         default: break
         }
     }

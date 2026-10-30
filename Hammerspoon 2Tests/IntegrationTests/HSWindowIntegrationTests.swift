@@ -369,6 +369,130 @@ struct HSWindowIntegrationTests {
             try #require(requestedInFront, "focus() did not bring the requested window in front of Preview")
             #expect(isStacked([requestedID, coverID, behindID]),
                     "the other TextEdit window should have stayed behind Preview")
+
+            // AXFocusedWindow can update after the window comes to the front.
+            var focusStates: String?
+            _ = await waitUntil {
+                focusStates = harness.evalString("""
+                    hs.application.matchingBundleID('\(Self.textEditID)').allWindows
+                        .filter(w => w.title && w.title.indexOf('\(prefix)') === 0)
+                        .map(w => w.title.indexOf('\(prefix)-requested') === 0 ? 'requested=' + w.isFocused : 'behind=' + w.isFocused)
+                        .sort()
+                        .join(',')
+                    """)
+                return focusStates == "behind=false,requested=true"
+            }
+            #expect(!harness.hasException)
+            #expect(focusStates == "behind=false,requested=true")
+        }
+    }
+}
+
+// MARK: - Issue #356: an app putting its previous main window back after focus()
+
+extension HSWindowIntegrationTests {
+    /// Some apps (Google Chrome, for one) finish coming to the front after `focus()` has returned,
+    /// and then put their previous main window back in front of the one asked for.
+    @Suite("hs.window focus re-assertion tests", .serialized,
+           .disabled(if: !AXIsProcessTrusted(), "Accessibility permission not granted"))
+    struct HSWindowFocusReassertionTests {
+        private static let mainTitle = "Hammerspoon 2 Test App"
+
+        /// Polls `condition` until it holds or `timeout` elapses.
+        private func waitUntil(timeout: TimeInterval = 5.0, _ condition: () -> Bool) async -> Bool {
+            let deadline = Date().addingTimeInterval(timeout)
+            while Date() < deadline {
+                if condition() { return true }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            return condition()
+        }
+
+        private func window(titled title: String, in app: NSRunningApplication) -> HSWindow? {
+            HSApplication(runningApplication: app).allWindows.first { $0.title == title }
+        }
+
+        private func focusedTitle(of app: NSRunningApplication) -> String? {
+            HSApplication(runningApplication: app).focusedWindow?.title
+        }
+
+        /// Opens `count` extra windows in `app`, titled "Test window 1" onwards.
+        private func openWindows(_ count: Int, in app: NSRunningApplication) async throws {
+            for _ in 0..<count {
+                TestAppControl.openWindow(in: app.processIdentifier)
+            }
+            let opened = await waitUntil { window(titled: "Test window \(count)", in: app) != nil }
+            try #require(opened, "the test app did not open \(count) extra windows")
+        }
+
+        /// Brings `app` to the front with the window titled `title` as its main window.
+        private func bringToFront(_ app: NSRunningApplication, withMain title: String) async throws {
+            #expect(app.setFrontmost(allWindows: false))
+            #expect(try #require(window(titled: title, in: app)).becomeMain())
+            let isMain = await waitUntil { app.isActive && focusedTitle(of: app) == title }
+            try #require(isMain, "\(title) did not become the test app's main window")
+        }
+
+        /// Makes the window titled `title` the app's main window, then brings `cover` to the front,
+        /// so that `app` is in the background with that window as its main window.
+        private func sendToBackground(_ app: NSRunningApplication, withMain title: String,
+                                      behind cover: NSRunningApplication) async throws {
+            try await bringToFront(app, withMain: title)
+            #expect(cover.setFrontmost(allWindows: false))
+            let inBackground = await waitUntil { cover.isActive && !app.isActive }
+            try #require(inBackground, "the second copy of the test app did not come to the front")
+        }
+
+        private func focusFromJS(_ title: String, in app: NSRunningApplication) -> Bool? {
+            let harness = JSTestHarness()
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            harness.loadModule(HSWindowModule.self, as: "window")
+            let focused = harness.evalBool("""
+                hs.window.windowsForApp(hs.application.fromPID(\(app.processIdentifier)))
+                    .find(w => w.title === '\(title)')
+                    .focus()
+                """)
+            #expect(!harness.hasException)
+            return focused
+        }
+
+        @Test("focus() keeps the requested window in front when the app puts its previous main window back")
+        func testFocusSurvivesAppRevertingMainWindow() async throws {
+            let app = try #require(await TestAppControl.launch(detail: "Puts its main window back in front after activating; focus() must win"))
+            defer { app.terminate() }
+            let cover = try #require(await TestAppControl.launch(detail: "Covers the other copy"))
+            defer { cover.terminate() }
+
+            // Sent before the window is opened, so it has arrived once the window is there.
+            TestAppControl.revertMainOnActivate(to: Self.mainTitle, in: app.processIdentifier)
+            try await openWindows(1, in: app)
+            try await sendToBackground(app, withMain: Self.mainTitle, behind: cover)
+
+            #expect(focusFromJS("Test window 1", in: app) == true)
+
+            let active = await waitUntil { app.isActive }
+            try #require(active, "focus() did not bring the test app to the front")
+            // Long enough for the app's revert (50ms after activating) and focus()'s re-assertion.
+            try await Task.sleep(for: .seconds(1))
+            #expect(focusedTitle(of: app) == "Test window 1")
+        }
+
+        @Test("focus() doesn't undo a different window being chosen while it settles")
+        func testFocusReassertionYieldsToNewerChoice() async throws {
+            let app = try #require(await TestAppControl.launch(detail: "Another window is chosen right after focus(); it must stay in front"))
+            defer { app.terminate() }
+
+            // The app starts in front, so nothing has to settle between focus() and the newer
+            // choice below, and that choice reliably lands before focus()'s re-assertion.
+            try await openWindows(2, in: app)
+            try await bringToFront(app, withMain: "Test window 2")
+
+            #expect(focusFromJS("Test window 1", in: app) == true)
+            // Choose a third window: neither the requested one nor the previous main window.
+            #expect(try #require(window(titled: Self.mainTitle, in: app)).becomeMain())
+
+            try await Task.sleep(for: .seconds(1))
+            #expect(focusedTitle(of: app) == Self.mainTitle)
         }
     }
 }

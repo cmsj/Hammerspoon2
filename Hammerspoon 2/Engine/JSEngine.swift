@@ -30,6 +30,15 @@ class JSEngine {
     private(set) var context: JSContext?
     private var memoryPressureCollector: MemoryPressureCollector?
 
+    // fetch() requests go through a session per context, so deleteContext() can cancel the ones
+    // still in flight. Each of those keeps its JSContext alive until it settles.
+    private let fetchSessionConfiguration: URLSessionConfiguration
+    private var fetchSession: URLSession?
+
+    init(fetchSessionConfiguration: URLSessionConfiguration = .default) {
+        self.fetchSessionConfiguration = fetchSessionConfiguration
+    }
+
     // MARK: - JSContext Managing
     private func createContext() throws(HammerspoonError) {
         id = UUID()
@@ -46,6 +55,8 @@ class JSEngine {
 
         context.name = "Hammerspoon \(id)"
         memoryPressureCollector = MemoryPressureCollector(context: context)
+        let fetchSession = URLSession(configuration: fetchSessionConfiguration)
+        self.fetchSession = fetchSession
 
         // Attach a sentinel so we can observe exactly when this JSContext's ARC drops to 0.
         unsafe objc_setAssociatedObject(context, &contextTrackerKey, ContextLifetimeTracker(id: id), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
@@ -63,7 +74,7 @@ class JSEngine {
         // This is our startup sequence - install all components in order
         do {
             try context.install([
-                .fetch,
+                .fetch(session: fetchSession),
                 NullReturnsInstaller(),        // nil returned from Swift reaches JS as null
                 ConsoleModuleInstaller(),      // console namespace
                 NodeBuiltinModulesInstaller(), // native backing for require('util') etc.
@@ -82,6 +93,8 @@ class JSEngine {
 
         SettingsManager.shared.removeAllDelegates()
         memoryPressureCollector = nil
+        fetchSession?.invalidateAndCancel()
+        fetchSession = nil
 
         if let moduleRoot {
             moduleRoot.shutdown()
@@ -117,10 +130,23 @@ class JSEngine {
             // Do NOT use JSGarbageCollect here — it schedules an asynchronous
             // collection and returns immediately, re-introducing the same race.
             unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
+
+            warnIfNotFreed(context, id: id)
         }
 
         context = nil
         vm = nil
+    }
+
+    /// Logs an error if `context` is still alive a while after it was deleted. Whatever is
+    /// keeping it alive leaks it, and its whole JavaScript heap, on every reload.
+    private func warnIfNotFreed(_ context: JSContext, id: UUID) {
+        Task { [weak context] in
+            try? await Task.sleep(for: .seconds(10))
+            if context != nil {
+                AKError("JSContext \(id) is still alive 10 seconds after it was destroyed. This likely indicates a memory leak, please consider filing an Issue on GitHub.")
+            }
+        }
     }
 }
 

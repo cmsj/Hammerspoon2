@@ -128,7 +128,7 @@ enum NodeUtil {
         let objectConstructor = value.context.objectForKeyedSubscript("Object")
         let keysValue = objectConstructor?.invokeMethod("keys", withArguments: [value])
         let keys = (keysValue?.toArray() as? [String]) ?? []
-        guard !keys.isEmpty else { return "\(prefix){}" }
+        guard !keys.isEmpty else { return nativeDescription(value) ?? "\(prefix){}" }
         let entries = keys.map { key -> String in
             "\(formatKey(key)): \(formatProperty(value, key: key, depth: depth - 1, objectConstructor: objectConstructor))"
         }
@@ -153,10 +153,34 @@ enum NodeUtil {
         return format(value.objectForKeyedSubscript(key), depth: depth)
     }
 
-    private static func constructorPrefix(_ value: JSValue) -> String {
+    /// A JSExport-bridged native object (an `HSApplication`, a module, ...) keeps its properties
+    /// as accessors on its prototype, so it has no own keys and would otherwise render as an
+    /// unhelpful `{}`. Show its own description instead, which for `HSTypeAPI` types is their
+    /// `toString()`.
+    private static func nativeDescription(_ value: JSValue) -> String? {
+        // `toObject()` converts a plain JS object to an `NSDictionary` by reading every property
+        // for-in would visit, including inherited ones, which runs their getters. Only call it
+        // when there are none, so it has nothing to read. Native wrappers' prototype accessors
+        // aren't enumerable, so they still get through.
         guard
-            let name = value.objectForKeyedSubscript("constructor")?
-                .objectForKeyedSubscript("name")?.toString(),
+            let ctx = value.context?.jsGlobalContextRef,
+            let object = JSValueToObject(ctx, value.jsValueRef, nil)
+        else { return nil }
+        let names = JSObjectCopyPropertyNames(ctx, object)
+        defer { JSPropertyNameArrayRelease(names) }
+        guard JSPropertyNameArrayGetCount(names) == 0 else { return nil }
+
+        guard let native = value.toObject() as? NSObject, !(native is NSDictionary) else { return nil }
+        return native.description
+    }
+
+    private static func constructorPrefix(_ value: JSValue) -> String {
+        // A JSExport-bridged constructor is a plain object with no `name`, so check it's really
+        // a string rather than letting `toString()` turn undefined into "undefined"
+        guard
+            let nameValue = value.objectForKeyedSubscript("constructor")?.objectForKeyedSubscript("name"),
+            nameValue.isString,
+            let name = nameValue.toString(),
             !name.isEmpty, name != "Object"
         else { return "" }
         return "\(name) "

@@ -117,21 +117,8 @@ import AppKit
         "cursor": Int(CGWindowLevelForKey(.cursorWindow)),
     ]
 
-    static let windowBehaviorValues: [String: Int] = [
-        "default": 0,
-        "canJoinAllSpaces": Int(NSWindow.CollectionBehavior.canJoinAllSpaces.rawValue),
-        "moveToActiveSpace": Int(NSWindow.CollectionBehavior.moveToActiveSpace.rawValue),
-        "managed": Int(NSWindow.CollectionBehavior.managed.rawValue),
-        "transient": Int(NSWindow.CollectionBehavior.transient.rawValue),
-        "stationary": Int(NSWindow.CollectionBehavior.stationary.rawValue),
-        "participatesInCycle": Int(NSWindow.CollectionBehavior.participatesInCycle.rawValue),
-        "ignoresCycle": Int(NSWindow.CollectionBehavior.ignoresCycle.rawValue),
-        "fullScreenPrimary": Int(NSWindow.CollectionBehavior.fullScreenPrimary.rawValue),
-        "fullScreenAuxiliary": Int(NSWindow.CollectionBehavior.fullScreenAuxiliary.rawValue),
-        "fullScreenNone": Int(NSWindow.CollectionBehavior.fullScreenNone.rawValue),
-        "fullScreenAllowsTiling": Int(NSWindow.CollectionBehavior.fullScreenAllowsTiling.rawValue),
-        "fullScreenDisallowsTiling": Int(NSWindow.CollectionBehavior.fullScreenDisallowsTiling.rawValue),
-    ]
+    static let windowBehaviorValues: [String: Int] =
+        WindowCollectionBehavior.named.mapValues { Int($0.rawValue) }
 
     // Identity mapping of valid element `compositeRule` names -- gives JS callers
     // autocomplete/discoverability instead of hardcoded strings, mirroring the

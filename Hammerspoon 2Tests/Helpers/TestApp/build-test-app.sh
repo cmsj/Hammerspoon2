@@ -20,16 +20,19 @@ SOURCE="$HERE/TestApp.swift"
 APP_BUNDLE="$OUT/Hammerspoon 2 Test App.app"
 CONTENTS="$APP_BUNDLE/Contents"
 EXECUTABLE="$CONTENTS/MacOS/Hammerspoon2TestApp"
+MIN_MACOS="14.0"
 
 if [[ ! -x "$EXECUTABLE" || "$SOURCE" -nt "$EXECUTABLE" || "$0" -nt "$EXECUTABLE" ]]; then
     rm -rf "$APP_BUNDLE"
     mkdir -p "$CONTENTS/MacOS"
 
     # Xcode's build settings in the environment (SDKROOT and friends) would mislead swiftc;
-    # DEVELOPER_DIR stays, so a build phase uses the Xcode that runs it
-    env -i PATH="/usr/bin:/bin" HOME="$HOME" ${DEVELOPER_DIR:+DEVELOPER_DIR="$DEVELOPER_DIR"} xcrun swiftc -O -parse-as-library -D TEST_APP "$SOURCE" -o "$EXECUTABLE" >&2
+    # DEVELOPER_DIR stays, so a build phase uses the Xcode that runs it. Without -target, swiftc
+    # targets the host's macOS version, and a VM guest on an older one refuses to launch the app
+    env -i PATH="/usr/bin:/bin" HOME="$HOME" ${DEVELOPER_DIR:+DEVELOPER_DIR="$DEVELOPER_DIR"} xcrun swiftc -O -parse-as-library -D TEST_APP \
+        -target "$(uname -m)-apple-macos$MIN_MACOS" "$SOURCE" -o "$EXECUTABLE" >&2
 
-    cat > "$CONTENTS/Info.plist" <<'PLIST'
+    cat > "$CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -47,7 +50,7 @@ if [[ ! -x "$EXECUTABLE" || "$SOURCE" -nt "$EXECUTABLE" || "$0" -nt "$EXECUTABLE
   <key>CFBundleShortVersionString</key>
   <string>1.0</string>
   <key>LSMinimumSystemVersion</key>
-  <string>14.0</string>
+  <string>$MIN_MACOS</string>
   <key>NSHighResolutionCapable</key>
   <true/>
 </dict>

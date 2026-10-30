@@ -188,7 +188,12 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     ///
     /// The window becomes its application's main window, and the application is brought to the front
     /// with only this window raised. The application's other windows keep their place in the stacking order.
-    /// - Returns: true if successful
+    ///
+    /// The application finishes coming to the front after this returns, and some applications then bring
+    /// a different window forward, so this makes the window main again 0.3 seconds later. That is skipped
+    /// if another of the application's windows has been chosen in the meantime, or if `focus()` is called again.
+    /// - Returns: true if the window was made main and its application was brought to the front. The window
+    ///   may not be the focused window yet; check `hs.window.focusedWindow()` after a short delay if it matters.
     /// - Example:
     /// ```js
     /// const wins = hs.window.allWindows()
@@ -376,8 +381,12 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     }
 
     @objc var isFocused: Bool {
-        let focused: Bool? = try? element.attribute(.focused)
-        return focused ?? false
+        guard NSWorkspace.shared.frontmostApplication?.processIdentifier == app.processIdentifier,
+              let axApp = Application(app),
+              let focused: UIElement = try? axApp.attribute(.focusedWindow) else {
+            return false
+        }
+        return focused == element
     }
 
     @objc var isFullscreen: Bool {
@@ -529,35 +538,38 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
 
     // MARK: - Actions
 
-    /// Pending re-assertion of the Finder window focused most recently. See `focus()`.
-    private static var finderFocusWorkaround: Task<Void, Never>?
+    /// Pending re-assertion of the window focused most recently. See `focus()`.
+    private static var focusReassertion: Task<Void, Never>?
 
     @objc func focus() -> Bool {
+        let previousMainID = HSApplication(runningApplication: app).mainWindow?.id
+
         // Mirrors Hammerspoon 1: the window must be main before the application is brought to the
         // front, because only the main window is raised.
         let madeMain = becomeMain()
         let broughtToFront = app.setFrontmost(allWindows: false)
 
-        if app.bundleIdentifier == "com.apple.finder" {
-            // Bringing Finder to the front can let the desktop take main status away from the
-            // window, so assert it again once that has settled. 0.3s comes from Hammerspoon 1
-            // (https://github.com/Hammerspoon/hammerspoon/issues/581).
-            Self.finderFocusWorkaround?.cancel()
-            // Captures self strongly: callers typically don't keep the window object around.
-            Self.finderFocusWorkaround = Task {
-                try? await Task.sleep(for: .milliseconds(300))
-                guard !Task.isCancelled else { return }
-                Self.finderFocusWorkaround = nil
-                // The desktop isn't an AX window, so a different main window means the user (or
-                // another script) has chosen another Finder window since; don't undo that.
-                if let current = HSApplication(runningApplication: self.app).mainWindow,
-                   current.id > 0, current.id != self.id {
-                    return
-                }
-                _ = self.becomeMain()
+        // The application finishes coming to the front after this returns, and some then take main
+        // status away from the window again: Finder gives it to the desktop
+        // (https://github.com/Hammerspoon/hammerspoon/issues/581), and Google Chrome puts its
+        // previous main window back (#356). So assert it again once that has settled. 0.3s comes
+        // from Hammerspoon 1.
+        Self.focusReassertion?.cancel()
+        // Captures self strongly: callers typically don't keep the window object around.
+        Self.focusReassertion = Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
+            Self.focusReassertion = nil
+            // A main window that is neither this one nor the one the application had before means
+            // the user (or another script) has chosen another window since; don't undo that.
+            // The desktop isn't an AX window, so Finder taking main status for it still gets here.
+            if let current = HSApplication(runningApplication: self.app).mainWindow,
+               current.id > 0, current.id != self.id, current.id != previousMainID {
+                return
             }
-            _ = becomeMain()
+            _ = self.becomeMain()
         }
+        _ = becomeMain()
 
         return madeMain && broughtToFront
     }
