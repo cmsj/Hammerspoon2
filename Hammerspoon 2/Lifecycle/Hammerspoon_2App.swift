@@ -73,7 +73,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
-            if url.isFileURL, url.pathExtension.lowercased() == "spoon2" {
+            if url.isFileURL, url.pathExtension.lowercased() == "spoon2", SettingsManager.shared.importSpoonsOnOpen {
                 importSpoon(at: url)
             } else if url.isFileURL {
                 openFileQueue.open(url)

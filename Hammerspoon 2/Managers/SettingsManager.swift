@@ -149,6 +149,7 @@ final class SettingsManager {
         case consoleAlwaysOnTop
         case consoleAlpha
         case reopenAction
+        case importSpoonsOnOpen
 
         var id: String { "\(self)" }
 
@@ -172,6 +173,8 @@ final class SettingsManager {
                 return 1.0
             case .reopenAction:
                 return ReopenAction.showConsole.rawValue
+            case .importSpoonsOnOpen:
+                return true
             }
         }
     }
@@ -233,6 +236,15 @@ final class SettingsManager {
         }
     }
 
+    /// Whether opening a `.spoon2` bundle (e.g. double-clicking it in Finder) installs it.
+    /// When off, the bundle is handed to the user's config like any other opened file.
+    var importSpoonsOnOpen: Bool {
+        didSet {
+            UserDefaults.standard.set(importSpoonsOnOpen, forKey: Keys.importSpoonsOnOpen.rawValue)
+            notifyDelegates()
+        }
+    }
+
     @ObservationIgnored
     private var defaultsObserver: (any NSObjectProtocol)?
 
@@ -246,7 +258,8 @@ final class SettingsManager {
             Keys.garbageLoggingEnabled.rawValue: Keys.garbageLoggingEnabled.defaultValue,
             Keys.consoleAlwaysOnTop.rawValue: Keys.consoleAlwaysOnTop.defaultValue,
             Keys.consoleAlpha.rawValue: Keys.consoleAlpha.defaultValue,
-            Keys.reopenAction.rawValue: Keys.reopenAction.defaultValue
+            Keys.reopenAction.rawValue: Keys.reopenAction.defaultValue,
+            Keys.importSpoonsOnOpen.rawValue: Keys.importSpoonsOnOpen.defaultValue
         ])
         configLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
             ?? (Keys.configLocation.defaultValue as! URL)
@@ -256,6 +269,7 @@ final class SettingsManager {
         garbageLoggingEnabled = UserDefaults.standard.bool(forKey: Keys.garbageLoggingEnabled.rawValue)
         consoleAlwaysOnTop = UserDefaults.standard.bool(forKey: Keys.consoleAlwaysOnTop.rawValue)
         consoleAlpha = min(max(UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue), 0.2), 1.0)
+        importSpoonsOnOpen = UserDefaults.standard.bool(forKey: Keys.importSpoonsOnOpen.rawValue)
 
         let dockMenuBehaviourString = UserDefaults.standard.string(forKey: Keys.dockMenuBehaviour.rawValue) ?? Keys.dockMenuBehaviour.defaultValue as! String
         dockMenuBehaviour = DockMenubarType(rawValue: dockMenuBehaviourString) ?? .both
@@ -317,6 +331,9 @@ final class SettingsManager {
         let newConsoleAlwaysOnTop = UserDefaults.standard.bool(forKey: Keys.consoleAlwaysOnTop.rawValue)
         if newConsoleAlwaysOnTop != consoleAlwaysOnTop { consoleAlwaysOnTop = newConsoleAlwaysOnTop }
 
+        let newImportSpoonsOnOpen = UserDefaults.standard.bool(forKey: Keys.importSpoonsOnOpen.rawValue)
+        if newImportSpoonsOnOpen != importSpoonsOnOpen { importSpoonsOnOpen = newImportSpoonsOnOpen }
+
         // Clamped in case another preferences client (e.g. iCloud sync) stores a value
         // outside the range the console UI allows, so displayed and applied opacity agree.
         let newConsoleAlpha = min(max(UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue), 0.2), 1.0)
@@ -333,6 +350,7 @@ extension SettingsManager: SettingsManagerProtocol {
         garbageLoggingEnabled = Keys.garbageLoggingEnabled.defaultValue as! Bool
         consoleAlwaysOnTop = Keys.consoleAlwaysOnTop.defaultValue as! Bool
         consoleAlpha = Keys.consoleAlpha.defaultValue as! Double
+        importSpoonsOnOpen = Keys.importSpoonsOnOpen.defaultValue as! Bool
 
         let dockMenuType = DockMenubarType(rawValue: Keys.dockMenuBehaviour.defaultValue as! String)!
         dockMenuBehaviour = dockMenuType

@@ -50,6 +50,12 @@ struct SettingsAdvancedView: View {
                         .labelsHidden()
                         .fixedSize()
                     }
+                    GridRow {
+                        Text("Install Spoons when opened:")
+                            .gridColumnAlignment(.trailing)
+                        Toggle("Install Spoons when opened", isOn: Bindable(settingsManager).importSpoonsOnOpen)
+                            .labelsHidden()
+                    }
 
                     GridRow {
                         Spacer()
