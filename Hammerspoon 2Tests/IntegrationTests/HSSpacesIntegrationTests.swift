@@ -40,6 +40,37 @@ private func settle(_ promise: String, in harness: JSTestHarness, timeout: TimeI
     return harness.evalString("__settled")
 }
 
+/// Runs `body`, then (whether it passed or not) waits for any Mission Control work it left
+/// queued, switches each display back to the space it started on, removes any desktops it added
+/// and closes Mission Control, so a failure can't leave the machine changed for later tests.
+/// `harness` must have hs.spaces loaded.
+@MainActor
+private func withSpacesRestored(in harness: JSTestHarness, _ body: () async throws -> Void) async throws {
+    harness.eval("""
+        var __startSpaces = Object.values(hs.spaces.allSpaces()).flat();
+        var __startActive = Object.values(hs.spaces.activeSpaces());
+    """)
+    let result: Result<Void, any Error>
+    do {
+        try await body()
+        result = .success(())
+    } catch {
+        result = .failure(error)
+    }
+
+    // Queued behind anything still running, so this waits for it to finish
+    _ = await settle("hs.spaces.closeMissionControl()", in: harness, timeout: 60)
+    harness.eval("""
+        var __current = Object.values(hs.spaces.activeSpaces());
+        var __back = __startActive.filter(id => !__current.includes(id));
+        var __added = Object.values(hs.spaces.allSpaces()).flat().filter(id => !__startSpaces.includes(id));
+    """)
+    let restore = "Promise.allSettled([...__back.map(id => hs.spaces.gotoSpace(id)), ...__added.map(id => hs.spaces.removeSpace(id))])"
+    _ = await settle(restore, in: harness, timeout: 60)
+    _ = await settle("hs.spaces.closeMissionControl()", in: harness, timeout: 20)
+    try result.get()
+}
+
 /// Integration tests for hs.spaces.
 ///
 /// Everything here reads the real Spaces configuration of the machine running the tests, so
@@ -291,28 +322,30 @@ struct HSSpacesTests {
             let harness = JSTestHarness()
             harness.loadModule(HSSpacesModule.self, as: "spaces")
             harness.loadModule(HSScreenModule.self, as: "screen")
-            harness.eval("""
-                var screen = hs.screen.all()[hs.screen.all().length - 1];
-                var original = hs.spaces.activeSpaceOnScreen(screen);
-                var before = hs.spaces.spacesForScreen(screen);
-            """)
+            try await withSpacesRestored(in: harness) {
+                harness.eval("""
+                    var screen = hs.screen.all()[hs.screen.all().length - 1];
+                    var original = hs.spaces.activeSpaceOnScreen(screen);
+                    var before = hs.spaces.spacesForScreen(screen);
+                """)
 
-            let added = try #require(await settle("hs.spaces.addSpaceToScreen(screen)", in: harness))
-            try #require(added.hasPrefix("resolved:"), "got \(added)")
-            harness.eval("var added = \(added.dropFirst("resolved:".count))")
-            harness.expectTrue("!before.includes(added)")
-            harness.expectTrue("hs.spaces.spacesForScreen(screen).includes(added)")
-            #expect(harness.evalString("hs.spaces.spaceType(added)") == "user")
+                let added = try #require(await settle("hs.spaces.addSpaceToScreen(screen)", in: harness))
+                try #require(added.hasPrefix("resolved:"), "got \(added)")
+                harness.eval("var added = \(added.dropFirst("resolved:".count))")
+                harness.expectTrue("!before.includes(added)")
+                harness.expectTrue("hs.spaces.spacesForScreen(screen).includes(added)")
+                #expect(harness.evalString("hs.spaces.spaceType(added)") == "user")
 
-            #expect(await settle("hs.spaces.gotoSpace(added)", in: harness) == "resolved:undefined")
-            harness.expectTrue("hs.spaces.activeSpaceOnScreen(screen) === added")
+                #expect(await settle("hs.spaces.gotoSpace(added)", in: harness) == "resolved:undefined")
+                harness.expectTrue("hs.spaces.activeSpaceOnScreen(screen) === added")
 
-            #expect(await settle("hs.spaces.gotoSpace(original)", in: harness) == "resolved:undefined")
-            harness.expectTrue("hs.spaces.activeSpaceOnScreen(screen) === original")
+                #expect(await settle("hs.spaces.gotoSpace(original)", in: harness) == "resolved:undefined")
+                harness.expectTrue("hs.spaces.activeSpaceOnScreen(screen) === original")
 
-            #expect(await settle("hs.spaces.removeSpace(added)", in: harness) == "resolved:undefined")
-            harness.expectTrue("JSON.stringify(hs.spaces.spacesForScreen(screen)) === JSON.stringify(before)")
-            #expect(!harness.hasException)
+                #expect(await settle("hs.spaces.removeSpace(added)", in: harness) == "resolved:undefined")
+                harness.expectTrue("JSON.stringify(hs.spaces.spacesForScreen(screen)) === JSON.stringify(before)")
+                #expect(!harness.hasException)
+            }
         }
 
         @Test("missionControlSpaceNames() names every space")
@@ -332,25 +365,29 @@ struct HSSpacesTests {
         func testOpenAndClose() async throws {
             let harness = JSTestHarness()
             harness.loadModule(HSSpacesModule.self, as: "spaces")
-            #expect(await settle("hs.spaces.openMissionControl()", in: harness) == "resolved:undefined")
-            #expect(HSMissionControl.isOpen)
-            #expect(await settle("hs.spaces.missionControlSpaceNames()", in: harness)?.hasPrefix("resolved:") == true)
-            #expect(HSMissionControl.isOpen)
-            #expect(await settle("hs.spaces.closeMissionControl()", in: harness) == "resolved:undefined")
-            #expect(await isMissionControlClosed())
-            #expect(!harness.hasException)
+            try await withSpacesRestored(in: harness) {
+                #expect(await settle("hs.spaces.openMissionControl()", in: harness) == "resolved:undefined")
+                #expect(HSMissionControl.isOpen)
+                #expect(await settle("hs.spaces.missionControlSpaceNames()", in: harness)?.hasPrefix("resolved:") == true)
+                #expect(HSMissionControl.isOpen)
+                #expect(await settle("hs.spaces.closeMissionControl()", in: harness) == "resolved:undefined")
+                #expect(await isMissionControlClosed())
+                #expect(!harness.hasException)
+            }
         }
 
         @Test("toggleMissionControl() opens and closes Mission Control")
         func testToggleMissionControl() async throws {
             let harness = JSTestHarness()
             harness.loadModule(HSSpacesModule.self, as: "spaces")
-            harness.eval("hs.spaces.toggleMissionControl()")
-            let opened = (try? await HSMissionControl.waitUntil("not open") { HSMissionControl.isOpen }) != nil
-            harness.eval("hs.spaces.toggleMissionControl()")
-            #expect(opened)
-            #expect(await isMissionControlClosed())
-            #expect(!harness.hasException)
+            try await withSpacesRestored(in: harness) {
+                harness.eval("hs.spaces.toggleMissionControl()")
+                let opened = (try? await HSMissionControl.waitUntil("not open") { HSMissionControl.isOpen }) != nil
+                harness.eval("hs.spaces.toggleMissionControl()")
+                #expect(opened)
+                #expect(await isMissionControlClosed())
+                #expect(!harness.hasException)
+            }
         }
 
         /// Waits for Mission Control to finish closing
@@ -363,18 +400,20 @@ struct HSSpacesTests {
             let harness = JSTestHarness()
             harness.loadModule(HSSpacesModule.self, as: "spaces")
             harness.loadModule(HSScreenModule.self, as: "screen")
-            harness.eval("var screen = hs.screen.all()[hs.screen.all().length - 1]; var before = hs.spaces.spacesForScreen(screen);")
+            try await withSpacesRestored(in: harness) {
+                harness.eval("var screen = hs.screen.all()[hs.screen.all().length - 1]; var before = hs.spaces.spacesForScreen(screen);")
 
-            // Fire both adds without waiting, then both removes
-            let both = "Promise.all([hs.spaces.addSpaceToScreen(screen), hs.spaces.addSpaceToScreen(screen)])"
-            let added = try #require(await settle(both, in: harness, timeout: 20))
-            try #require(added.hasPrefix("resolved:"), "got \(added)")
-            harness.eval("var added = [\(added.dropFirst("resolved:".count))]")
-            harness.expectTrue("added.length === 2 && added[0] !== added[1]")
+                // Fire both adds without waiting, then both removes
+                let both = "Promise.all([hs.spaces.addSpaceToScreen(screen), hs.spaces.addSpaceToScreen(screen)])"
+                let added = try #require(await settle(both, in: harness, timeout: 20))
+                try #require(added.hasPrefix("resolved:"), "got \(added)")
+                harness.eval("var added = [\(added.dropFirst("resolved:".count))]")
+                harness.expectTrue("added.length === 2 && added[0] !== added[1]")
 
-            #expect(await settle("Promise.all(added.map(id => hs.spaces.removeSpace(id)))", in: harness, timeout: 20) == "resolved:,")
-            harness.expectTrue("JSON.stringify(hs.spaces.spacesForScreen(screen)) === JSON.stringify(before)")
-            #expect(!harness.hasException)
+                #expect(await settle("Promise.all(added.map(id => hs.spaces.removeSpace(id)))", in: harness, timeout: 20) == "resolved:,")
+                harness.expectTrue("JSON.stringify(hs.spaces.spacesForScreen(screen)) === JSON.stringify(before)")
+                #expect(!harness.hasException)
+            }
         }
     }
 }

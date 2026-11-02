@@ -636,7 +636,9 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
                 defer { self?.missionControlTasks[id] = nil }
 
                 let result: Result<Any?, any Error>
-                var wasOpen = false
+                // Stays nil if the task was cancelled (or never settled) before reading the state,
+                // in which case Mission Control is left alone
+                var wasOpen: Bool?
                 do {
                     try Task.checkCancellation()
                     // Let any opening/closing animation finish first, or it's unclear which it'll end up as
@@ -646,7 +648,7 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
                 } catch {
                     result = .failure(error)
                 }
-                if !wasOpen && !leaveOpen {
+                if wasOpen == false && !leaveOpen {
                     do {
                         try await HSMissionControl.close()
                     } catch {
