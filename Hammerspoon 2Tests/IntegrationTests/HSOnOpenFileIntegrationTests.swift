@@ -153,3 +153,46 @@ struct OpenFileQueueTests {
         #expect(!harness.hasException)
     }
 }
+
+/// Tests for `OpenedURLRoute`, which decides where `AppDelegate.application(_:open:)` sends
+/// each opened URL
+@Suite("OpenedURLRoute tests")
+struct OpenedURLRouteTests {
+    @Test("Spoons are installed when the setting is on", arguments: ["Greeter.spoon2", "Greeter.SPOON2"])
+    func testSpoonIsImportedWhenEnabled(name: String) {
+        let url = URL(filePath: "/tmp/\(name)", directoryHint: .isDirectory)
+        #expect(OpenedURLRoute(for: url, importSpoonsOnOpen: true) == .importSpoon)
+    }
+
+    @Test("Spoons are passed to hs.onOpenFile when the setting is off")
+    func testSpoonIsOpenedWhenDisabled() {
+        let url = URL(filePath: "/tmp/Greeter.spoon2", directoryHint: .isDirectory)
+        #expect(OpenedURLRoute(for: url, importSpoonsOnOpen: false) == .openFile)
+    }
+
+    @Test("Other files are passed to hs.onOpenFile whatever the setting", arguments: [true, false])
+    func testOtherFilesAreOpened(importSpoonsOnOpen: Bool) {
+        let url = URL(filePath: "/tmp/example.txt")
+        #expect(OpenedURLRoute(for: url, importSpoonsOnOpen: importSpoonsOnOpen) == .openFile)
+    }
+
+    @Test("Non-file URLs are dispatched as URL events whatever the setting", arguments: [true, false])
+    func testNonFileURLsAreDispatched(importSpoonsOnOpen: Bool) throws {
+        let url = try #require(URL(string: "hammerspoon2://example.spoon2"))
+        #expect(OpenedURLRoute(for: url, importSpoonsOnOpen: importSpoonsOnOpen) == .urlEvent)
+    }
+
+    @Test("A Spoon opened before the config has loaded is held for hs.onOpenFile when the setting is off")
+    func testDisabledSpoonOpenedBeforeReadyIsHeld() {
+        let url = URL(filePath: "/tmp/Greeter.spoon2", directoryHint: .isDirectory)
+        var delivered: [URL] = []
+        let queue = OpenFileQueue { delivered.append($0) }
+
+        #expect(OpenedURLRoute(for: url, importSpoonsOnOpen: false) == .openFile)
+        queue.open(url)
+        #expect(delivered.isEmpty)
+
+        queue.markReady()
+        #expect(delivered == [url])
+    }
+}

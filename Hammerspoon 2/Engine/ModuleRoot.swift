@@ -78,7 +78,8 @@ import JavaScriptCoreExtras
     /// {((path: string) => void) | null} Called when a file or folder is opened with Hammerspoon 2,
     /// e.g. by dropping it on the Dock icon, choosing Hammerspoon 2 from Finder's "Open With" menu,
     /// or `open -a "Hammerspoon 2" file.txt`, or null to remove it. It's called once for each item,
-    /// with its path. Spoons (`.spoon2` files) are installed as usual rather than passed to it.
+    /// with its path. Spoons (`.spoon2` files) are installed rather than passed to it, unless
+    /// "Install Spoons when opened" is turned off in the Advanced tab of Settings.
     /// Items opened before your config has loaded (for example, the one that launched
     /// Hammerspoon 2) are passed to it once your config has loaded.
     /// - Example:

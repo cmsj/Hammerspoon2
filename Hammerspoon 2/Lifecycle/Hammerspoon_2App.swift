@@ -73,11 +73,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
-            if url.isFileURL, url.pathExtension.lowercased() == "spoon2", SettingsManager.shared.importSpoonsOnOpen {
+            switch OpenedURLRoute(for: url, importSpoonsOnOpen: SettingsManager.shared.importSpoonsOnOpen) {
+            case .importSpoon:
                 importSpoon(at: url)
-            } else if url.isFileURL {
+            case .openFile:
                 openFileQueue.open(url)
-            } else {
+            case .urlEvent:
                 URLEventDispatcher.shared.dispatch(url)
             }
         }
