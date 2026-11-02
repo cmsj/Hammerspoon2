@@ -170,6 +170,14 @@ enum HSMissionControl {
         return number
     }
 
+    /// The name Mission Control shows for a space's button, e.g. "Desktop 2" or "Safari"
+    static func name(of button: AXUIElement) -> String {
+        for name in [kAXTitleAttribute, kAXDescriptionAttribute] {
+            if let value = attribute(button, name) as? String, !value.isEmpty { return value }
+        }
+        return ""
+    }
+
     static func actions(of element: AXUIElement) -> [String] {
         var names: CFArray?
         guard unsafe AXUIElementCopyActionNames(element, &names) == .success else { return [] }
@@ -199,5 +207,34 @@ enum HSMissionControl {
 
     private static func children(of element: AXUIElement) -> [AXUIElement] {
         attribute(element, kAXChildrenAttribute) as? [AXUIElement] ?? []
+    }
+}
+
+/// Sends the Dock the notifications its hot corners and trackpad gestures use to toggle Mission
+/// Control and friends, as Hammerspoon 1 did. `CoreDockSendNotification` is private API in
+/// HIServices, so it's looked up at runtime and does nothing if it has gone.
+@_documentation(visibility: private)
+enum HSDockNotification: String {
+    case missionControl = "com.apple.expose.awake"
+    case appExpose = "com.apple.expose.front.awake"
+    case launchpad = "com.apple.launchpad.toggle"
+    case showDesktop = "com.apple.showdesktop.awake"
+
+    private typealias SendFn = @convention(c) (CFString, Int32) -> Int32
+
+    private static let sendFn: SendFn? = {
+        guard let symbol = unsafe dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CoreDockSendNotification") else {
+            AKError("hs.spaces: CoreDockSendNotification is missing from this version of macOS")
+            return nil
+        }
+        return unsafe unsafeBitCast(symbol, to: SendFn.self)
+    }()
+
+    static func send(_ notification: HSDockNotification) {
+        guard let sendFn else { return }
+        let result = sendFn(notification.rawValue as CFString, 0)
+        if result != 0 {
+            AKWarning("hs.spaces: the Dock refused \(notification.rawValue) (error \(result))")
+        }
     }
 }
