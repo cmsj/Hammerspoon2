@@ -7,7 +7,7 @@
 // so user code cannot reach or replace them.
 //
 // This is a plain CommonJS loader with no Hammerspoon-specific behavior - it doesn't know
-// anything about Spoons. Spoons are loaded by hs.loadSpoon(), which validates a Spoon
+// anything about Spoons. Spoons are loaded by hs.spoons.load(), which validates a Spoon
 // directory and then hands its init.js to this same require() by absolute path; the module
 // wrapper below (see makeRequire) gives that file its own require() bound to its own
 // directory automatically, the same way it does for any other file.

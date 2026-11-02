@@ -22,12 +22,13 @@ diving into specifics:
   in the whole migration — see [Rebuilding UI with hs.ui](#rebuilding-ui-with-hsui) below.
   The exception is **`hs.canvas`**, which survives as a close port of v1's imperative,
   element-list drawing surface — see [hs.canvas](#hscanvas) below.
-- **Spoons exist in v2, but reshaped.** `hs.loadSpoon()` is back, `init()` is still called
-  automatically, and Spoons install as `.spoon2` bundles (not `.spoon`) — but `start()`/`stop()`/
-  `bindHotkeys()` are conventions now rather than a built-in lifecycle, and there's no
-  spoons.hammerspoon.org-equivalent repository yet. See the [Spoons guide](spoons-guide.html)
-  for the full picture, or [hs.spoons and Spoons](#hsspoons-and-spoons) below for what
-  specifically changed from v1.
+- **Spoons exist in v2, but reshaped.** `hs.spoons.load()` replaces `hs.loadSpoon()`, `init()` is
+  still called automatically, Spoons are `.spoon2` bundles (not `.spoon`), and SpoonInstall is
+  built in as `hs.spoons.use()`/`install()` — but `start()`/`stop()`/`bindHotkeys()` are
+  conventions now rather than a built-in lifecycle, and there's no central Spoon repository: you
+  install from any GitHub repository or zip URL. See the [Spoons guide](spoons-guide.html) for
+  the full picture, or [hs.spoons and Spoons](#hsspoons-and-spoons) below for what specifically
+  changed from v1.
 - **Watchers are usually on the main module now,** not a separate `.watcher` submodule you
   construct and `:start()` — but the exact shape varies enough that it's worth checking each
   module's own signature rather than assuming. Most use Node-style `on(event, listener)`/
@@ -747,11 +748,19 @@ argument: an array of dropped file paths (or a one-element array holding dropped
 
 ## hs.spoons and Spoons
 
-`hs.loadSpoon()` exists in v2, but the surrounding ecosystem is smaller and reshaped — see the
-[Spoons guide](spoons-guide.html) for the full picture (installing, using, and writing one,
-with a worked example). The short version, if you're porting v1 Spoons or config that used
-them:
+Spoons exist in v2, but reshaped — see the [Spoons guide](spoons-guide.html) for the full
+picture (installing, using, and writing one, with a worked example). The short version, if
+you're porting v1 Spoons or config that used them:
 
+- **`hs.spoons.load()` replaces `hs.loadSpoon()`.** Everything to do with Spoons lives on
+  `hs.spoons`.
+- **SpoonInstall is built in.** `hs.spoons.use(name, { source, config, hotkeys, fn, start })`
+  replaces `spoon.SpoonInstall:andUse()`: it installs the Spoon if it's missing, then loads and
+  configures it. `hs.spoons.install()`, `update()`, `uninstall()`, `available()` and
+  `installed()` replace the rest of SpoonInstall. There's no `repos` table and no default
+  repository: `source` names a GitHub repository (`"owner/repo"`) or a zip URL for each Spoon,
+  and `use_syncinstall` is gone, since installs never block. See
+  [Installing Spoons from GitHub](spoons-guide.html#installing-spoons-from-github-or-a-url).
 - **Bundles are `.spoon2`, not `.spoon`** — a deliberate rename, since the two formats aren't
   interchangeable and both might be installed side by side during a transition. A v1 `.spoon`
   (Lua) won't load in v2; it needs rewriting in JavaScript.
@@ -759,23 +768,23 @@ them:
   v1 called a Spoon's `:init()` automatically and had framework-level hotkey-binding helpers.
   v2 does the same for `init()` (called on the returned object, after metadata injection) - but
   `start()`/`stop()`/`bindHotkeys()` are just conventions a Spoon's own code can choose to
-  implement, not something the runtime provides or invokes. One behavioral difference: v2's
-  `require()` caches `init.js` itself, but re-runs `init()` on every `hs.loadSpoon()` call for
-  an already-loaded Spoon - write it to tolerate being called more than once.
+  implement, not something the runtime provides or invokes (other than `hs.spoons.use()`
+  calling them when you ask it to). One behavioral difference: v2's `require()` caches
+  `init.js` itself, but re-runs `init()` on every `hs.spoons.load()` call for an already-loaded
+  Spoon - write it to tolerate being called more than once.
 - **Metadata moved to `spoon.json`, off the returned object,** and gained enforcement: v1's
   `name`/`version`/`author`/`license` (+ optional `homepage`) were properties a Spoon's Lua
   table needed to set itself, checked by convention rather than by Hammerspoon. v2 requires a
   `spoon.json` with `name`/`author`/`version`/`description` (no `license` field currently) and
   refuses to load a Spoon whose `spoon.json` is missing, malformed, or has an empty field. It
   then injects `author`/`description`/`version` onto the loaded object for you.
-- **`hs.spoons` is a plain namespace now, not a module.** v1's `hs.spoons` provided helpers
-  (`resourcePath()`, `scriptPath()`, `bindHotkeysToSpec()`); v2's `hs.spoons` only holds loaded
-  Spoons by name (`hs.spoons.MySpoon`, after calling `hs.loadSpoon("MySpoon")`). `__dirname`
-  (built into `require()`) covers what `resourcePath()`/`scriptPath()` did.
-- **No repository or discovery mechanism yet.** Installation itself works (double-click a
-  `.spoon2` bundle, same UX as v1's `.spoon`), but there's nothing like spoons.hammerspoon.org
-  to browse or discover v2 Spoons from — sharing a bundle directly is the only distribution
-  path today.
+- **`hs.spoons` has different helpers.** v1's `hs.spoons` provided `resourcePath()`,
+  `scriptPath()` and `bindHotkeysToSpec()`; v2's has the loading and installing functions above,
+  plus every loaded Spoon by name (`hs.spoons.MySpoon`, after `hs.spoons.load("MySpoon")`).
+  `__dirname` (built into `require()`) covers what `resourcePath()`/`scriptPath()` did.
+- **No central repository.** There's nothing like spoons.hammerspoon.org, by design: Spoon
+  authors publish from their own GitHub repositories (or anywhere that can serve a zip file),
+  and you install directly from there.
 
 ## Removed with no equivalent
 
