@@ -111,11 +111,15 @@ enum HSMissionControl {
     /// The Spaces bar for a display, once Mission Control is open and its desktop list has caught
     /// up with SkyLight's `expectedCount` spaces for that display. When all displays share one set
     /// of spaces there may not be a bar for the requested display, so any bar is used instead.
+    /// Otherwise only the requested display's bar will do, so another display is never changed.
     static func spacesBar(for displayID: CGDirectDisplayID, expectedCount: Int) async throws -> SpacesBar {
         var bar: SpacesBar?
         try await waitUntil("Mission Control's desktop list for display \(displayID) did not appear") {
             let groups = displayGroups()
-            let group = groups.first { (attribute($0, "AXDisplayID") as? NSNumber)?.uint32Value == displayID } ?? groups.first
+            var group = groups.first { (attribute($0, "AXDisplayID") as? NSNumber)?.uint32Value == displayID }
+            if group == nil && !NSScreen.screensHaveSeparateSpaces {
+                group = groups.first
+            }
             guard let group, let found = spacesBar(in: group), found.spaceButtons.count == expectedCount else { return false }
             bar = found
             return true
