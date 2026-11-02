@@ -130,7 +130,7 @@ import JavaScriptCore
 
     /// The space currently shown on a display.
     /// - Parameter screen?: The display to inspect. Defaults to the main screen (see `hs.screen.main()`)
-    /// - Returns: {number | undefined} A space ID, or `undefined` if the display can't be found
+    /// - Returns: {number | null} A space ID, or `null` if the display can't be found
     /// - Example:
     /// ```js
     /// console.log("Main screen is showing space " + hs.spaces.activeSpaceOnScreen())
@@ -139,7 +139,7 @@ import JavaScriptCore
 
     /// What kind of space a space is.
     /// - Parameter spaceID: The ID of the space to inspect
-    /// - Returns: {"user" | "fullscreen" | "system" | "unknown" | undefined} `"user"` for a regular desktop, `"fullscreen"` for a space holding a fullscreen or Split View app, `"system"` for a space macOS uses internally, `"unknown"` for any other kind, or `undefined` if no such space exists
+    /// - Returns: {"user" | "fullscreen" | "system" | "unknown" | null} `"user"` for a regular desktop, `"fullscreen"` for a space holding a fullscreen or Split View app, `"system"` for a space macOS uses internally, `"unknown"` for any other kind, or `null` if no such space exists
     /// - Example:
     /// ```js
     /// console.log(hs.spaces.spaceType(hs.spaces.focusedSpace()))
@@ -148,7 +148,7 @@ import JavaScriptCore
 
     /// The display a space belongs to.
     /// - Parameter spaceID: The ID of the space to inspect
-    /// - Returns: An HSScreen object, or `undefined` if no such space exists or its display can't be found
+    /// - Returns: An HSScreen object, or `null` if no such space exists or its display can't be found
     /// - Example:
     /// ```js
     /// const screen = hs.spaces.spaceScreen(hs.spaces.focusedSpace())
@@ -166,6 +166,18 @@ import JavaScriptCore
     /// if (win) console.log("Focused window is on " + hs.spaces.windowSpaces(win).join(", "))
     /// ```
     @objc func windowSpaces(_ window: HSWindow) -> [Int]
+
+    /// The spaces a window is on, looked up by its window ID. Use this for the IDs
+    /// `windowsForSpace()` returns, since windows on other spaces often have no HSWindow object.
+    /// - Parameter windowID: The ID of the window to inspect (see `HSWindow.id`)
+    /// - Returns: An array of space IDs. Empty if the window can't be found
+    /// - Example:
+    /// ```js
+    /// for (const id of hs.spaces.windowsForSpace(hs.spaces.focusedSpace())) {
+    ///     console.log("Window " + id + " is on " + hs.spaces.windowSpacesForID(id).join(", "))
+    /// }
+    /// ```
+    @objc func windowSpacesForID(_ windowID: Int) -> [Int]
 
     /// The windows on a space, including spaces that aren't currently visible.
     ///
@@ -222,25 +234,97 @@ import JavaScriptCore
     /// ```
     @objc func removeSpace(_ spaceID: Int) -> JSPromise?
 
-    /// Move a window to a different space.
-    ///
-    /// Since macOS 14.5, macOS refuses to let one app move another app's windows between spaces,
-    /// so this only works for Hammerspoon's own windows (e.g. those created by `hs.ui`) on
-    /// current versions of macOS. It returns `false` when macOS refuses.
-    ///
-    /// Windows can only be moved to regular desktops (see `spaceType()`), not to fullscreen spaces.
-    /// - Parameter window: The window to move
-    /// - Parameter spaceID: The ID of the space to move it to
-    /// - Returns: `true` if the window is now on the requested space, otherwise `false`
+    /// The raw description of every display and space that macOS's window server keeps, as
+    /// returned by the private SkyLight function `SLSCopyManagedDisplaySpaces`. The rest of this
+    /// module is built on it. It's provided for exploring and debugging: its layout is undocumented
+    /// and can change in any macOS update.
+    /// - Returns: {Record<string, any>[]} An array with one object per display, or an empty array if hs.spaces is unavailable
     /// - Example:
     /// ```js
-    /// const win = hs.window.focusedWindow()
-    /// const spaces = hs.spaces.spacesForScreen()
-    /// if (win && !hs.spaces.moveWindowToSpace(win, spaces[spaces.length - 1])) {
-    ///     console.error("macOS wouldn't move the window")
-    /// }
+    /// console.log(JSON.stringify(hs.spaces.managedDisplaySpaces(), null, 2))
     /// ```
-    @objc func moveWindowToSpace(_ window: HSWindow, _ spaceID: Int) -> Bool
+    @objc func managedDisplaySpaces() -> [[String: Any]]
+
+    // MARK: Mission Control
+
+    /// The names Mission Control shows for each space ("Desktop 1", or the app names of a
+    /// fullscreen space), read by briefly opening Mission Control. These are for showing to people;
+    /// every other function in this module identifies spaces by ID. Mission Control is closed again
+    /// afterwards, unless it was already open. Requires Accessibility permission.
+    /// - Returns: {Promise<Record<string, Record<string, string>>>} A Promise that resolves to an object mapping each display's UUID to an object mapping its space IDs to their names, or rejects with the reason they couldn't be read
+    /// - Example:
+    /// ```js
+    /// hs.spaces.missionControlSpaceNames().then(names => {
+    ///     for (const uuid in names) {
+    ///         for (const id in names[uuid]) console.log(id + ": " + names[uuid][id])
+    ///     }
+    /// }).catch(err => console.error(err))
+    /// ```
+    @objc func missionControlSpaceNames() -> JSPromise?
+
+    /// Open Mission Control, if it isn't already open.
+    ///
+    /// `gotoSpace()`, `addSpaceToScreen()`, `removeSpace()` and `missionControlSpaceNames()` each
+    /// open Mission Control themselves and close it afterwards, but leave it open if it already
+    /// was. So to make several changes with a single trip into Mission Control, open it first and
+    /// close it once they've all finished. Requires Accessibility permission.
+    /// - Returns: {Promise<void>} A Promise that resolves once Mission Control is fully open, or rejects with the reason it couldn't be opened
+    /// - Example:
+    /// ```js
+    /// async function addTwoDesktops() {
+    ///     await hs.spaces.openMissionControl()
+    ///     try {
+    ///         await hs.spaces.addSpaceToScreen()
+    ///         await hs.spaces.addSpaceToScreen()
+    ///     } finally {
+    ///         await hs.spaces.closeMissionControl()
+    ///     }
+    /// }
+    /// addTwoDesktops().catch(err => console.error(err))
+    /// ```
+    @objc func openMissionControl() -> JSPromise?
+
+    /// Close Mission Control, if it's open. Requires Accessibility permission.
+    /// - Returns: {Promise<void>} A Promise that resolves once Mission Control has fully closed, or rejects with the reason it couldn't be closed
+    /// - Example:
+    /// ```js
+    /// hs.spaces.closeMissionControl().catch(err => console.error(err))
+    /// ```
+    @objc func closeMissionControl() -> JSPromise?
+
+    /// Show or hide Mission Control, as its keyboard shortcut, hot corner or trackpad gesture does.
+    ///
+    /// This returns straight away, before Mission Control has finished opening or closing. Use
+    /// `openMissionControl()` and `closeMissionControl()` instead to find out when it has.
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.bind(["cmd", "alt"], "up", () => hs.spaces.toggleMissionControl())
+    /// ```
+    @objc func toggleMissionControl()
+
+    /// Show or hide App Exposé (all the windows of the frontmost app), as its keyboard shortcut,
+    /// hot corner or trackpad gesture does.
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.bind(["cmd", "alt"], "down", () => hs.spaces.toggleAppExpose())
+    /// ```
+    @objc func toggleAppExpose()
+
+    /// Show or hide Launchpad (called Apps on macOS 26 and later), as its keyboard shortcut, hot
+    /// corner or trackpad gesture does.
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.bind(["cmd", "alt"], "l", () => hs.spaces.toggleLaunchpad())
+    /// ```
+    @objc func toggleLaunchpad()
+
+    /// Move every window aside to show the desktop, or put them back, as the Show Desktop keyboard
+    /// shortcut, hot corner or trackpad gesture does.
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.bind(["cmd", "alt"], "d", () => hs.spaces.toggleShowDesktop())
+    /// ```
+    @objc func toggleShowDesktop()
 
     // MARK: Watcher
 
@@ -290,7 +374,7 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    private var watcherCallback: JSFunction?
+    private var watcherCallback: JSCallback?
     private var watcherObserver: NSObjectProtocol?
 
     /// Mission Control operations in flight, so shutdown() can cancel them. Each one waits for the
@@ -363,8 +447,8 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
         return exists ? space : nil
     }
 
-    private func windowID(of window: HSWindow) -> CGWindowID? {
-        guard let id = CGWindowID(exactly: window.id), id != 0 else { return nil }
+    private func windowID(_ id: Int) -> CGWindowID? {
+        guard let id = CGWindowID(exactly: id), id != 0 else { return nil }
         return id
     }
 
@@ -434,7 +518,11 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
     // MARK: - Windows
 
     @objc func windowSpaces(_ window: HSWindow) -> [Int] {
-        guard let skyLight = HSSkyLight.shared, let id = windowID(of: window) else { return [] }
+        windowSpacesForID(window.id)
+    }
+
+    @objc func windowSpacesForID(_ windowID: Int) -> [Int] {
+        guard let skyLight = HSSkyLight.shared, let id = self.windowID(windowID) else { return [] }
         return skyLight.spaces(forWindow: id).map { Int(clamping: $0) }
     }
 
@@ -527,8 +615,9 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
     /// Runs `operation` once any earlier Mission Control operation has finished, settling the
     /// returned Promise with its result. Failures reject with "hs.spaces.<name>(): <reason>".
     /// Whether it succeeds or not, Mission Control is closed afterwards unless it was already open
-    /// (switching spaces closes it regardless, as clicking a space always does).
+    /// or `leaveOpen` is set (switching spaces closes it regardless, as clicking a space always does).
     private func runInMissionControl(_ name: String,
+                                     leaveOpen: Bool = false,
                                      _ operation: @escaping @MainActor () async throws -> Any?) -> JSPromise? {
         guard let context = JSContext.current() else { return nil }
         guard HSSkyLight.shared != nil else {
@@ -557,7 +646,7 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
                 } catch {
                     result = .failure(error)
                 }
-                if !wasOpen {
+                if !wasOpen && !leaveOpen {
                     do {
                         try await HSMissionControl.close()
                     } catch {
@@ -593,40 +682,71 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
 
     /// Opens Mission Control and finds the Spaces bar for `display`
     private func openSpacesBar(for display: HSSkyLight.ManagedDisplay) async throws -> HSMissionControl.SpacesBar {
+        try await HSMissionControl.open()
+        return try await spacesBar(for: display)
+    }
+
+    /// The Spaces bar for `display`, once Mission Control is open
+    private func spacesBar(for display: HSSkyLight.ManagedDisplay) async throws -> HSMissionControl.SpacesBar {
         let uuid = screenUUID(forDisplayIdentifier: display.identifier)
         guard let screen = NSScreen.screens.lazy.map({ HSScreen(screen: $0) }).first(where: { $0.uuid == uuid }) else {
             throw HSMissionControl.Failure("no screen for display \(display.identifier)")
         }
-        try await HSMissionControl.open()
         return try await HSMissionControl.spacesBar(for: screen.displayID, expectedCount: display.spaces.count)
     }
 
-    @objc func moveWindowToSpace(_ window: HSWindow, _ spaceID: Int) -> Bool {
-        guard let skyLight = HSSkyLight.shared else { return false }
-        guard let id = windowID(of: window) else {
-            AKWarning("hs.spaces.moveWindowToSpace(): window has no window ID")
-            return false
-        }
-        guard let space = existingSpace(spaceID) else {
-            AKWarning("hs.spaces.moveWindowToSpace(): no such space: \(spaceID)")
-            return false
-        }
-        guard skyLight.type(of: space) == HSSkyLight.SpaceKind.user.rawValue else {
-            AKWarning("hs.spaces.moveWindowToSpace(): space \(spaceID) is not a regular desktop")
-            return false
-        }
+    @objc func managedDisplaySpaces() -> [[String: Any]] {
+        HSSkyLight.shared?.rawManagedDisplaySpaces() ?? []
+    }
 
-        if skyLight.spaces(forWindow: id) == [space] {
-            return true
-        }
+    // MARK: - Mission Control
 
-        skyLight.move(window: id, to: space)
+    @objc func missionControlSpaceNames() -> JSPromise? {
+        runInMissionControl("missionControlSpaceNames") { [weak self] in
+            guard let self, let skyLight = HSSkyLight.shared else { throw HSMissionControl.Failure("hs.spaces is unavailable") }
+            try await HSMissionControl.open()
 
-        guard skyLight.spaces(forWindow: id) == [space] else {
-            AKWarning("hs.spaces.moveWindowToSpace(): macOS did not move window \(id) to space \(spaceID)")
-            return false
+            var result: [String: [String: String]] = [:]
+            for display in skyLight.managedDisplays() {
+                let bar = try await self.spacesBar(for: display)
+                var names: [String: String] = [:]
+                for (space, button) in zip(display.spaces, bar.spaceButtons) {
+                    names[String(space)] = HSMissionControl.name(of: button)
+                }
+                result[self.screenUUID(forDisplayIdentifier: display.identifier)] = names
+            }
+            return result
         }
-        return true
+    }
+
+    @objc func openMissionControl() -> JSPromise? {
+        runInMissionControl("openMissionControl", leaveOpen: true) {
+            try await HSMissionControl.open()
+            return nil
+        }
+    }
+
+    @objc func closeMissionControl() -> JSPromise? {
+        runInMissionControl("closeMissionControl") {
+            try await HSMissionControl.close()
+            return nil
+        }
+    }
+
+    @objc func toggleMissionControl() {
+        HSDockNotification.send(.missionControl)
+    }
+
+    @objc func toggleAppExpose() {
+        HSDockNotification.send(.appExpose)
+    }
+
+    @objc func toggleLaunchpad() {
+        HSDockNotification.send(.launchpad)
+    }
+
+    @objc func toggleShowDesktop() {
+        HSDockNotification.send(.showDesktop)
     }
 
     // MARK: - Watcher
@@ -636,7 +756,7 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
             AKWarning("hs.spaces._addWatcher: already watching — refusing second subscription")
             return false
         }
-        watcherCallback = callback
+        watcherCallback = JSCallback(value: callback, owner: self)
 
         watcherObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.activeSpaceDidChangeNotification,
@@ -657,6 +777,7 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
             NSWorkspace.shared.notificationCenter.removeObserver(observer)
             watcherObserver = nil
         }
+        watcherCallback?.detach(from: self)
         watcherCallback = nil
 
         AKDebug("hs.spaces._removeWatcher: stopped")

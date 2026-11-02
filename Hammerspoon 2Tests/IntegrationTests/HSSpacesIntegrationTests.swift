@@ -20,10 +20,12 @@ private nonisolated func canInspectOwnWindows() -> Bool {
 }
 
 /// The Mission Control tests add, switch to, and remove a real desktop, which takes over the
-/// screen for a few seconds, so they only run when asked for explicitly:
-/// `TEST_RUNNER_HS_TEST_MISSION_CONTROL=1 xcodebuild test ...`
+/// screen for a few seconds, so on a real Mac they only run when asked for explicitly:
+/// `TEST_RUNNER_HS_TEST_MISSION_CONTROL=1 xcodebuild test ...`. They always run in an hs2vm VM,
+/// where there's nobody's screen to take over.
 private nonisolated func canDriveMissionControl() -> Bool {
-    canInspectOwnWindows() && ProcessInfo.processInfo.environment["HS_TEST_MISSION_CONTROL"] != nil
+    let environment = ProcessInfo.processInfo.environment
+    return canInspectOwnWindows() && (environment["HS_TEST_MISSION_CONTROL"] != nil || environment["HS2_VM"] != nil)
 }
 
 /// Evaluates the JS expression `promise` in `harness` and waits for it to settle. Returns
@@ -44,8 +46,7 @@ private func settle(_ promise: String, in harness: JSTestHarness, timeout: TimeI
 /// assertions are about invariants that hold for any configuration rather than specific
 /// values. Adding, removing, and switching spaces visibly drives Mission Control, so they're
 /// only exercised with invalid input unless HS_TEST_MISSION_CONTROL is set (see
-/// canDriveMissionControl()). `moveWindowToSpace()` is only exercised with a window the test
-/// creates, and only onto the space it's already on.
+/// canDriveMissionControl()).
 @Suite("hs.spaces tests", .serialized)
 struct HSSpacesTests {
 
@@ -198,13 +199,27 @@ struct HSSpacesTests {
             #expect(!harness.hasException)
         }
 
+        @Test("managedDisplaySpaces() describes the same spaces as allSpaces()")
+        func testManagedDisplaySpaces() {
+            let harness = makeHarness()
+            harness.eval("""
+                var raw = hs.spaces.managedDisplaySpaces();
+                var rawIDs = raw.flatMap(d => d.Spaces.map(s => s.ManagedSpaceID)).sort();
+            """)
+            harness.expectTrue("Array.isArray(raw) && raw.length >= 1")
+            harness.expectTrue("raw.every(d => typeof d['Display Identifier'] === 'string')")
+            #expect(harness.evalString("JSON.stringify(rawIDs)") == harness.evalString("JSON.stringify(\(allIDs).sort())"))
+            #expect(!harness.hasException)
+        }
+
         @Test("Unknown space IDs are rejected without throwing",
               arguments: ["0", "-1", "999999999"])
         func testUnknownSpaces(id: String) {
             let harness = makeHarness()
-            harness.expectTrue("hs.spaces.spaceType(\(id)) === undefined")
-            harness.expectTrue("hs.spaces.spaceScreen(\(id)) === undefined")
+            harness.expectTrue("hs.spaces.spaceType(\(id)) === null")
+            harness.expectTrue("hs.spaces.spaceScreen(\(id)) === null")
             harness.expectTrue("hs.spaces.windowsForSpace(\(id)).length === 0")
+            harness.expectTrue("hs.spaces.windowSpacesForID(\(id)).length === 0")
             #expect(!harness.hasException)
         }
 
@@ -255,18 +270,11 @@ struct HSSpacesTests {
             }
         }
 
-        @Test("moveWindowToSpace() onto the window's own space succeeds")
-        func testMoveToCurrentSpace() throws {
+        @Test("windowSpacesForID() matches windowSpaces()")
+        func testWindowSpacesForID() throws {
             try withTestWindow { harness in
-                #expect(harness.evalBool("hs.spaces.moveWindowToSpace(testWin, hs.spaces.windowSpaces(testWin)[0])") == true)
-                #expect(!harness.hasException)
-            }
-        }
-
-        @Test("moveWindowToSpace() rejects an unknown space")
-        func testMoveToUnknownSpace() throws {
-            try withTestWindow { harness in
-                #expect(harness.evalBool("hs.spaces.moveWindowToSpace(testWin, 999999999)") == false)
+                #expect(harness.evalString("JSON.stringify(hs.spaces.windowSpacesForID(testWin.id))")
+                        == harness.evalString("JSON.stringify(hs.spaces.windowSpaces(testWin))"))
                 #expect(!harness.hasException)
             }
         }
@@ -305,6 +313,49 @@ struct HSSpacesTests {
             #expect(await settle("hs.spaces.removeSpace(added)", in: harness) == "resolved:undefined")
             harness.expectTrue("JSON.stringify(hs.spaces.spacesForScreen(screen)) === JSON.stringify(before)")
             #expect(!harness.hasException)
+        }
+
+        @Test("missionControlSpaceNames() names every space")
+        func testSpaceNames() async throws {
+            let harness = JSTestHarness()
+            harness.loadModule(HSSpacesModule.self, as: "spaces")
+            let result = try #require(await settle("hs.spaces.missionControlSpaceNames().then(n => JSON.stringify(n))", in: harness))
+            try #require(result.hasPrefix("resolved:"), "got \(result)")
+            harness.eval("var names = \(result.dropFirst("resolved:".count)); var all = hs.spaces.allSpaces();")
+            harness.expectTrue("JSON.stringify(Object.keys(names).sort()) === JSON.stringify(Object.keys(all).sort())")
+            harness.expectTrue("Object.keys(all).every(u => all[u].every(id => typeof names[u][id] === 'string' && names[u][id].length > 0))")
+            #expect(await isMissionControlClosed())
+            #expect(!harness.hasException)
+        }
+
+        @Test("openMissionControl() keeps Mission Control open across other operations until closeMissionControl()")
+        func testOpenAndClose() async throws {
+            let harness = JSTestHarness()
+            harness.loadModule(HSSpacesModule.self, as: "spaces")
+            #expect(await settle("hs.spaces.openMissionControl()", in: harness) == "resolved:undefined")
+            #expect(HSMissionControl.isOpen)
+            #expect(await settle("hs.spaces.missionControlSpaceNames()", in: harness)?.hasPrefix("resolved:") == true)
+            #expect(HSMissionControl.isOpen)
+            #expect(await settle("hs.spaces.closeMissionControl()", in: harness) == "resolved:undefined")
+            #expect(await isMissionControlClosed())
+            #expect(!harness.hasException)
+        }
+
+        @Test("toggleMissionControl() opens and closes Mission Control")
+        func testToggleMissionControl() async throws {
+            let harness = JSTestHarness()
+            harness.loadModule(HSSpacesModule.self, as: "spaces")
+            harness.eval("hs.spaces.toggleMissionControl()")
+            let opened = (try? await HSMissionControl.waitUntil("not open") { HSMissionControl.isOpen }) != nil
+            harness.eval("hs.spaces.toggleMissionControl()")
+            #expect(opened)
+            #expect(await isMissionControlClosed())
+            #expect(!harness.hasException)
+        }
+
+        /// Waits for Mission Control to finish closing
+        private func isMissionControlClosed() async -> Bool {
+            (try? await HSMissionControl.waitUntil("not closed") { HSMissionControl.isClosed }) != nil
         }
 
         @Test("Mission Control operations queue rather than overlap")
