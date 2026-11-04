@@ -21,6 +21,10 @@ confirms with a dialog once it's done. If a Spoon with the same name is already 
 asked to confirm before it's replaced — the dialog shows both the currently-installed and the
 new version so you can tell what's changing.
 
+If you'd rather Hammerspoon 2 didn't install Spoons this way, turn off **Install Spoons when
+opened** in the Advanced tab of Settings. Opened `.spoon2` bundles are then passed to your config
+like any other opened file (see `hs.onOpenFile`), instead of being installed.
+
 Installing a Spoon doesn't load it. Loading is an explicit step in your `init.js`, covered next.
 
 ## Using a Spoon
