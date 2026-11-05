@@ -15,16 +15,17 @@
 /// `fn`, or after the returned Promise resolves. An installed Spoon is never updated by `use()`:
 /// call `hs.spoons.update()` for that.
 ///
-/// Configuration is applied in this order: each key of `config` is set on the Spoon, `hotkeys` is
-/// passed to its `bindHotkeys()` method, `fn` is called with the Spoon, and finally `start()` is
-/// called if `start` is true.
+/// Configuration is applied after the Spoon is loaded (and its `init()` has run), in this order:
+/// each property of `config` is set on the Spoon's object, exactly as if you'd assigned it
+/// yourself, `hotkeys` is passed to its `bindHotkeys()` method, `fn` is called with the Spoon,
+/// and finally `start()` is called if `start` is true.
 ///
 /// The Promise rejects with an `Error` with a `code`, as `hs.spoons.install()`'s does, plus
 /// `ENOTINSTALLED` if the Spoon isn't installed and no `source` was given, or the error thrown by
 /// loading or configuring the Spoon.
 /// Parameters:
 ///  - name: {string} The name of the Spoon
-///  - options: {{source?: string, ref?: string, sha256?: string, config?: Record<string, any>, hotkeys?: Record<string, any> | "default", fn?: (spoon: Object) => void, start?: boolean, disable?: boolean}} `source`, `ref` and `sha256` say where to install the Spoon from, as for `hs.spoons.install()`. `config` holds properties to set on the Spoon. `hotkeys` is passed to the Spoon's `bindHotkeys()`, or `"default"` passes its `defaultHotkeys`. `fn` is called with the Spoon after it's configured. `start: true` calls its `start()`. `disable: true` does nothing at all, which is easier than commenting the call out.
+///  - options: {{source?: string, ref?: string, sha256?: string, config?: Record<string, any>, hotkeys?: Record<string, any> | "default", fn?: (spoon: Object) => void, start?: boolean, disable?: boolean}} `source`, `ref` and `sha256` say where to install the Spoon from, as for `hs.spoons.install()`. `config` holds properties to set on the Spoon's object; which ones it reads is up to the Spoon. `hotkeys` is passed to the Spoon's `bindHotkeys()`, or `"default"` passes its `defaultHotkeys`. `fn` is called with the Spoon after it's configured. `start: true` calls its `start()`. `disable: true` does nothing at all, which is easier than commenting the call out.
 /// Returns: {Promise<Object | null>} Resolves with the Spoon once it's loaded and configured, or null if `disable` is true
 /// Example:
 /// ```js

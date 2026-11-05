@@ -39,9 +39,44 @@ option, which is called with the Spoon after `config` and `hotkeys` are applied 
 ```js
 hs.spoons.use("Greeter", {
     source: "jane/hs2-spoons",
-    fn: (greeter) => greeter.setMessage("Hello!")
+    fn: (greeter) => greeter.show()
 }).catch(err => console.error(`Couldn't use Greeter: ${err.message}`))
 ```
+
+### `use()`'s options
+
+`hs.spoons.use(name, options)` takes the Spoon's name (its directory name under `Spoons/`, and
+the name it's stored under on `hs.spoons`) and an object of options, all of them optional:
+
+| Option | What it does |
+|--------|--------------|
+| `source` | Where to install the Spoon from if it isn't installed: a GitHub repository or a zip file's URL (see below). Without it, `use()` only uses an installed Spoon, and rejects with `ENOTINSTALLED` if there isn't one. |
+| `ref` | The tag, branch or commit to install from a GitHub `source`. |
+| `sha256` | The SHA-256 hash a zip file `source` must have. |
+| `config` | An object whose properties are set on the Spoon. |
+| `hotkeys` | Passed to the Spoon's `bindHotkeys()` method. `"default"` passes the Spoon's own `defaultHotkeys` instead. |
+| `fn` | A function that's called with the Spoon, for any setup the other options don't cover. |
+| `start` | `true` calls the Spoon's `start()` method. |
+| `disable` | `true` makes `use()` do nothing at all, which is quicker than commenting the call out. |
+
+Once the Spoon is loaded (which runs its `init()`, if it has one), the options are applied in
+the order they're listed: `config`, then `hotkeys`, then `fn`, then `start`. So by the time the
+Spoon binds its hotkeys or starts, it's already been configured.
+
+`config` is a shortcut for setting the Spoon's properties yourself. Each of its properties is
+copied onto the object the Spoon exports, replacing whatever was there, so these do the same
+thing:
+
+```js
+hs.spoons.use("Greeter", { config: { message: "Time for a break!", interval: 1800 } })
+
+const Greeter = hs.spoons.load("Greeter")
+Greeter.message = "Time for a break!"
+Greeter.interval = 1800
+```
+
+Which properties mean anything is up to the Spoon, so check its documentation. Nothing checks
+the names: a misspelled one just adds a property the Spoon never reads.
 
 `source` can be:
 
@@ -199,8 +234,38 @@ for things that are genuinely fine to redo.
 
 ## Conventions worth following
 
-Two further conventions are worth following for consistency with how other Spoons will likely
-behave, even though — unlike `init()` — nothing in the runtime calls them for you:
+These conventions are worth following for consistency with how other Spoons will likely behave,
+and they're what `hs.spoons.use()`'s options rely on, even though — unlike `init()` — nothing in
+the runtime calls them for you when a Spoon is loaded:
+
+**Settings as properties** of the exported object, with their defaults, so users can change
+them with `use()`'s `config` option or by setting them directly. `config` copies each of its
+properties onto your Spoon's object, and that's all it does. It doesn't call anything to tell
+you, so:
+
+- **Read a setting from the object whenever you use it**, rather than copying it into a
+  variable. A variable in `init.js` can't be reached by `config`, and a copy taken earlier
+  won't see the change.
+- **Don't use settings in `init()`.** It runs during loading, before `config` is applied, so it
+  only ever sees the defaults. `start()`, `bindHotkeys()` and the methods users call all run
+  after `config`, so they see the user's values.
+- **Document each setting** — its name, type and default — since that's how users find out
+  what to put in `config`.
+
+```js
+const greeter = module.exports = {
+    message: "Hello from Greeter!",  // the notification's text
+    interval: 3600,                  // seconds between notifications once started
+    show, start, stop
+}
+
+function show() {
+    hs.notify.show("Greeter", greeter.message)   // not a copy of it taken earlier
+}
+```
+
+If a setting needs checking, or something has to happen when it changes, make it a property
+with a setter: `config` assigns properties, so the setter runs.
 
 **`start()` / `stop()`** for a Spoon that does anything ongoing (timers, watchers, hotkeys bound
 persistently). Build the object and its configuration in `init.js`, but don't activate anything
@@ -235,6 +300,9 @@ const Greeter = hs.spoons.load("Greeter")
 Greeter.bindHotkeys({ show: [["cmd", "alt"], "g"] })
 ```
 
+If your Spoon has sensible keys to suggest, export them as `defaultHotkeys`, in the same shape.
+Users can then pass `hotkeys: "default"` to `hs.spoons.use()` to bind them.
+
 **Logging:** there's no per-Spoon logger like v1's `hs.logger` — use `console.log()`/`.error()`
 directly, optionally prefixing messages with the Spoon's name so they're identifiable in a
 config that's loaded several Spoons:
@@ -246,32 +314,37 @@ console.log("[Greeter] started")
 ## A complete example
 
 A small Spoon that shows a notification on demand, optionally repeating on a timer, with a
-configurable message and a hotkey to trigger it immediately:
+configurable message and interval, and a hotkey to trigger it immediately:
 
 ```js
 // Greeter/init.js
-let message = "Hello from Greeter!"
 let timer = null
 
-function show() {
-    hs.notify.show("Greeter", message)
+const greeter = module.exports = {
+    // Settings, which users can change with hs.spoons.use()'s config option
+    message: "Hello from Greeter!",   // the notification's text
+    interval: 3600,                   // seconds between notifications once started
+
+    defaultHotkeys: { show: [["cmd", "alt"], "g"] },
+
+    show, init, start, stop, bindHotkeys
 }
 
-function setMessage(newMessage) {
-    message = newMessage
-    return module.exports          // returning `this`-equivalent enables chaining
+function show() {
+    hs.notify.show("Greeter", greeter.message)
 }
 
 function init() {
     // Called automatically by hs.spoons.load(). author/description/version are already set on
     // `this` by this point - safe to log or read, but this could run more than once, so avoid
-    // anything that shouldn't happen twice.
+    // anything that shouldn't happen twice. Settings still have their defaults here: config is
+    // applied after init() runs.
     console.log(`[Greeter] v${this.version} initialized`)
 }
 
 function start() {
     if (timer) return
-    timer = hs.timer.doEvery(3600, show)
+    timer = hs.timer.doEvery(greeter.interval, show)
     console.log("[Greeter] started")
 }
 
@@ -285,8 +358,6 @@ function bindHotkeys(mapping) {
         hs.hotkey.bind(mapping.show[0], mapping.show[1], show)
     }
 }
-
-module.exports = { show, setMessage, init, start, stop, bindHotkeys }
 ```
 
 ```json
@@ -303,9 +374,21 @@ Using it:
 
 ```js
 // init.js
+hs.spoons.use("Greeter", {
+    config: { message: "Time for a break!", interval: 1800 },
+    hotkeys: "default",
+    start: true
+})
+```
+
+or, doing the same thing by hand:
+
+```js
+// init.js
 const Greeter = hs.spoons.load("Greeter")
-Greeter.setMessage("Time for a break!")
-Greeter.bindHotkeys({ show: [["cmd", "alt"], "g"] })
+Greeter.message = "Time for a break!"
+Greeter.interval = 1800
+Greeter.bindHotkeys(Greeter.defaultHotkeys)
 Greeter.start()
 
 console.log(`Loaded ${Greeter.description} v${Greeter.version} by ${Greeter.author}`)

@@ -632,6 +632,7 @@ struct HSSpoonsTests {
                 log: [],
                 message: "default",
                 defaultHotkeys: { show: "default-mapping" },
+                init() { this.log.push("init:" + this.message); },
                 bindHotkeys(mapping) { this.log.push("bindHotkeys:" + JSON.stringify(mapping)); },
                 start() { this.log.push("start:" + this.message); }
             };
@@ -656,7 +657,7 @@ struct HSSpoonsTests {
                 var logNow = hs.spoons.Greeter.log.join('|');
                 """)
             #expect(!ctx.harness.hasException)
-            #expect(ctx.harness.evalString("logNow") == #"bindHotkeys:{"show":"default-mapping"}|fn:1.0.0|start:configured"#)
+            #expect(ctx.harness.evalString("logNow") == #"init:default|bindHotkeys:{"show":"default-mapping"}|fn:1.0.0|start:configured"#)
             #expect(await ctx.settle("p")?.forProperty("message").toString() == "configured")
             #expect(ctx.downloads.requested.count == 1)
         }
@@ -687,7 +688,7 @@ struct HSSpoonsTests {
             ctx.downloads.serve(zip.data, at: "https://example.com/Greeter.zip")
 
             let spoon = await ctx.settle("hs.spoons.use('Greeter', { source: 'https://example.com/Greeter.zip', hotkeys: { show: 1 }, start: true })")
-            #expect(spoon?.forProperty("log").toArray() as? [String] == [#"bindHotkeys:{"show":1}"#, "start:default"])
+            #expect(spoon?.forProperty("log").toArray() as? [String] == ["init:default", #"bindHotkeys:{"show":1}"#, "start:default"])
             #expect(ctx.isInstalled("Greeter"))
             #expect(ctx.harness.evalTypeOf("hs.spoons.Greeter") == "object")
         }
