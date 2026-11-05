@@ -9,8 +9,9 @@ import CryptoKit
 /// Downloads the file at a URL. Injectable so tests never touch the network.
 typealias SpoonFetcher = @Sendable (URL) async throws -> Data
 
-/// Where an installed Spoon came from, recorded in `Spoons/.sources.json` so `update()` knows
-/// where to fetch it from again
+/// Where an installed Spoon came from, so `update()` knows where to fetch it from again. Stored
+/// in the Spoon's own directory, so anything that replaces or removes the Spoon (a Finder import,
+/// a manual copy, `uninstall()`) takes its record with it.
 struct SpoonSourceRecord: Codable, Equatable {
     /// What the user passed as `source`, normalised: `"owner/repo"` or a URL
     var source: String
@@ -123,7 +124,7 @@ final class SpoonInstaller {
                 source: source.displayString, ref: ref, sha256: sha256,
                 commit: archive.commit, url: url.absoluteString, installedAt: .now
             )
-            try updateRecords { $0[name] = record }
+            try saveRecord(record, for: name)
             AKInfo("hs.spoons: installed \(name) \(plan.newMetadata.version) from \(source.displayString)")
             return InstalledSpoon(name: name, metadata: plan.newMetadata, record: record)
         }
@@ -137,11 +138,19 @@ final class SpoonInstaller {
         guard let installed = try? spoonManager.validateSpoon(at: destination(of: name)) else {
             throw SpoonInstallError(.notInstalled, "No Spoon named '\(name)' is installed")
         }
-        guard let record = loadRecords()[name], let url = URL(string: record.url) else {
+        guard let record = loadRecord(for: name), let url = URL(string: record.url) else {
             throw SpoonInstallError(.noSource, "'\(name)' wasn't installed by hs.spoons.install(), so there's nowhere to update it from")
         }
 
         return try await withArchive(from: url, sha256: record.sha256) { archive in
+            // The Spoon may have been uninstalled or reinstalled while we were downloading, and
+            // this update mustn't undo that. Nothing can change it between here and the write.
+            guard isInstalled(name) else {
+                throw SpoonInstallError(.notInstalled, "'\(name)' was uninstalled while it was being updated")
+            }
+            guard loadRecord(for: name) == record else {
+                throw SpoonInstallError(.canceled, "'\(name)' was replaced while it was being updated, so the update was abandoned")
+            }
             let candidate = try Self.find(name, in: archive, from: record.source, spoonManager: spoonManager)
             guard candidate.metadata.version != installed.version else {
                 AKDebug("hs.spoons: \(name) is up to date (\(installed.version))")
@@ -151,7 +160,7 @@ final class SpoonInstaller {
             var updated = record
             updated.commit = archive.commit
             updated.installedAt = .now
-            try updateRecords { $0[name] = updated }
+            try saveRecord(updated, for: name)
             AKInfo("hs.spoons: updated \(name) from \(installed.version) to \(candidate.metadata.version)")
             return true
         }
@@ -164,14 +173,12 @@ final class SpoonInstaller {
         let destination = destination(of: name)
         guard FileManager.default.fileExists(atPath: destination.path) else { return false }
         try FileManager.default.removeItem(at: destination)
-        try updateRecords { $0[name] = nil }
         AKInfo("hs.spoons: uninstalled \(name)")
         return true
     }
 
     /// Every well-formed Spoon in the Spoons directory, by name
     func installed() -> [InstalledSpoon] {
-        let records = loadRecords()
         let children = (try? FileManager.default.contentsOfDirectory(
             at: spoonManager.spoonsDirectory, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]
         )) ?? []
@@ -179,7 +186,7 @@ final class SpoonInstaller {
             let name = url.lastPathComponent
             guard SpoonManager.isValidSpoonName(name),
                   let metadata = try? spoonManager.validateSpoon(at: url) else { return nil }
-            return InstalledSpoon(name: name, metadata: metadata, record: records[name])
+            return InstalledSpoon(name: name, metadata: metadata, record: loadRecord(for: name))
         }
         .sorted { $0.name < $1.name }
     }
@@ -250,29 +257,27 @@ final class SpoonInstaller {
 
     // MARK: - Source records
 
-    private var recordsURL: URL {
-        spoonManager.spoonsDirectory.appendingPathComponent(".sources.json")
+    private func recordURL(for name: String) -> URL {
+        destination(of: name).appendingPathComponent(SpoonManager.sourceRecordFilename)
     }
 
-    private func loadRecords() -> [String: SpoonSourceRecord] {
-        guard let data = try? Data(contentsOf: recordsURL) else { return [:] }
+    private func loadRecord(for name: String) -> SpoonSourceRecord? {
+        let url = recordURL(for: name)
+        guard let data = try? Data(contentsOf: url) else { return nil }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         do {
-            return try decoder.decode([String: SpoonSourceRecord].self, from: data)
+            return try decoder.decode(SpoonSourceRecord.self, from: data)
         } catch {
-            AKError("hs.spoons: ignoring unreadable \(recordsURL.path): \(error.localizedDescription)")
-            return [:]
+            AKError("hs.spoons: ignoring unreadable \(url.path): \(error.localizedDescription)")
+            return nil
         }
     }
 
-    private func updateRecords(_ change: (inout [String: SpoonSourceRecord]) -> Void) throws {
-        var records = loadRecords()
-        change(&records)
+    private func saveRecord(_ record: SpoonSourceRecord, for name: String) throws {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        try FileManager.default.createDirectory(at: spoonManager.spoonsDirectory, withIntermediateDirectories: true)
-        try encoder.encode(records).write(to: recordsURL, options: .atomic)
+        try encoder.encode(record).write(to: recordURL(for: name), options: .atomic)
     }
 }

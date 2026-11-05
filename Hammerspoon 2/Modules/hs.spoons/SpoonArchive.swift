@@ -56,18 +56,21 @@ nonisolated struct ZipListing {
             guard locator >= 0, reader.uint32(at: locator) == 0x0706_4B50 else {
                 throw Self.malformed("missing ZIP64 locator")
             }
-            let record = Int(clamping: reader.uint64(at: locator + 8))
-            guard record >= 0, record + 56 <= data.count, reader.uint32(at: record) == 0x0606_4B50 else {
+            // Offsets come from the download, so check them before doing arithmetic with them
+            let recordOffset = reader.uint64(at: locator + 8)
+            guard data.count >= 56, recordOffset <= UInt64(data.count - 56), reader.uint32(at: Int(recordOffset)) == 0x0606_4B50 else {
                 throw Self.malformed("missing ZIP64 end of central directory record")
             }
+            let record = Int(recordOffset)
             entryCount = reader.uint64(at: record + 32)
             directoryOffset = reader.uint64(at: record + 48)
         }
 
         guard entryCount <= 1_000_000 else { throw Self.malformed("too many entries") }
+        guard directoryOffset <= UInt64(data.count) else { throw Self.malformed("bad central directory offset") }
 
         var entries: [ZipEntry] = []
-        var offset = Int(clamping: directoryOffset)
+        var offset = Int(directoryOffset)
         for _ in 0..<entryCount {
             guard offset + 46 <= data.count, reader.uint32(at: offset) == 0x0201_4B50 else {
                 throw Self.malformed("bad central directory entry")
@@ -118,14 +121,14 @@ nonisolated struct ZipListing {
     /// not entries that would be written through one. A Spoon that contains a symlink is refused
     /// when it's found (see `ExtractedSpoonArchive.findSpoons`).
     func checkSafeToExtract() throws {
-        let symlinks = Set(entries.filter(\.isSymlink).map { Self.trimmingSlashes($0.path) })
+        let symlinks = Set(entries.filter(\.isSymlink).map { Self.normalizedComponents($0.path).joined(separator: "/") })
         var total: UInt64 = 0
         for entry in entries {
             let components = entry.path.split(separator: "/", omittingEmptySubsequences: false)
             if entry.path.hasPrefix("/") || entry.path.contains("\\") || components.contains("..") {
                 throw SpoonInstallError(.invalidSpoon, "The archive contains an unsafe path: \(entry.path)")
             }
-            let parts = Self.trimmingSlashes(entry.path).split(separator: "/")
+            let parts = Self.normalizedComponents(entry.path)
             for length in parts.indices.dropLast() {
                 let ancestor = parts[...length].joined(separator: "/")
                 if symlinks.contains(ancestor) {
@@ -139,10 +142,14 @@ nonisolated struct ZipListing {
         }
     }
 
-    private static func trimmingSlashes(_ path: String) -> String {
-        var path = Substring(path)
-        while path.hasSuffix("/") { path = path.dropLast() }
-        return String(path)
+    /// A path's components as the filesystem will resolve them: without empty or `.` components,
+    /// and folded the way a case-insensitive APFS volume compares names, so different spellings
+    /// of the same path compare equal. (Folding is too strict on a case-sensitive volume, which
+    /// is the safe way to be wrong.)
+    private static func normalizedComponents(_ path: String) -> [String] {
+        path.split(separator: "/")
+            .filter { $0 != "." }
+            .map { $0.precomposedStringWithCanonicalMapping.lowercased() }
     }
 
     static let maximumExtractedSize: UInt64 = 512 * 1_048_576
@@ -329,9 +336,11 @@ struct ExtractedSpoonArchive: Sendable {
         process.standardError = errors
         process.standardOutput = FileHandle.nullDevice
         try process.run()
+        // Read before waiting: ditto would block on a full pipe and never exit
+        let errorOutput = errors.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
-            let detail = String(decoding: errors.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+            let detail = String(decoding: errorOutput, as: UTF8.self)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             throw SpoonInstallError(.invalidSpoon, "Couldn't extract the archive: \(detail)")
         }

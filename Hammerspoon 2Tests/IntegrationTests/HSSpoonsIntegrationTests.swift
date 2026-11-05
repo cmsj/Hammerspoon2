@@ -15,6 +15,7 @@ import Synchronization
 /// Serves archives to `HSSpoonsModule` in place of the network, recording what was requested
 private final class FakeDownloads: Sendable {
     private let state = Mutex<(archives: [URL: Data], requested: [URL])>(([:], []))
+    private let gate = Mutex<(closed: Set<URL>, waiting: [(url: URL, continuation: CheckedContinuation<Void, Never>)])>(([], []))
     /// When set, a download waits until cancelled instead of answering
     let hangs: Bool
 
@@ -28,7 +29,32 @@ private final class FakeDownloads: Sendable {
 
     var requested: [URL] { state.withLock { $0.requested } }
 
+    /// Makes downloads of `url` wait, once requested, until it's opened again
+    func close(_ url: String) {
+        _ = gate.withLock { $0.closed.insert(URL(string: url)!) }
+    }
+
+    func open(_ url: String) {
+        let url = URL(string: url)!
+        let released = gate.withLock { gate in
+            gate.closed.remove(url)
+            defer { gate.waiting.removeAll { $0.url == url } }
+            return gate.waiting.filter { $0.url == url }
+        }
+        released.forEach { $0.continuation.resume() }
+    }
+
+    /// How many downloads are waiting for a closed URL
+    var waitingCount: Int { gate.withLock { $0.waiting.count } }
+
     func fetch(_ url: URL) async throws -> Data {
+        await withCheckedContinuation { continuation in
+            let wait = gate.withLock { gate in
+                if gate.closed.contains(url) { gate.waiting.append((url, continuation)) }
+                return gate.closed.contains(url)
+            }
+            if !wait { continuation.resume() }
+        }
         state.withLock { $0.requested.append(url) }
         if hangs {
             try await Task.sleep(for: .seconds(60))
@@ -77,6 +103,12 @@ private final class SpoonsTestContext {
     /// - Returns: The value it resolved with, or nil if it rejected or didn't settle
     @discardableResult
     func settle(_ expression: String, timeout: TimeInterval = 5) async -> JSValue? {
+        start(expression)
+        return await settled(timeout: timeout)
+    }
+
+    /// Evaluates `expression`, a Promise, without waiting for it: see `settled()`
+    func start(_ expression: String) {
         harness.eval("""
             globalThis.__settled = false; globalThis.__value = undefined; globalThis.__error = undefined;
             (\(expression)).then(
@@ -84,8 +116,13 @@ private final class SpoonsTestContext {
                 e => { __error = e; __settled = true; }
             );
             """)
+    }
+
+    /// Waits for the Promise from the last `start()` to settle
+    /// - Returns: The value it resolved with, or nil if it rejected or didn't settle
+    func settled(timeout: TimeInterval = 5) async -> JSValue? {
         let settled = await harness.waitForAsync(timeout: timeout) { [harness] in harness.evalBool("__settled") == true }
-        #expect(settled, "\(expression) didn't settle")
+        #expect(settled, "The Promise didn't settle")
         return harness.evalBool("__error === undefined") == true ? harness.evalValue("__value") : nil
     }
 
@@ -117,6 +154,12 @@ private func repositoryArchive(version: String = "1.0.0") -> Data {
 }
 
 private let repositoryURL = "https://github.com/jane/hs2-spoons/archive/HEAD.zip"
+
+private extension Data {
+    mutating func replace(at offset: Int, with bytes: [UInt8]) {
+        replaceSubrange(offset..<(offset + bytes.count), with: bytes)
+    }
+}
 
 private func sha256Hex(_ data: Data) -> String {
     SHA256.hash(data: data).map { ($0 < 16 ? "0" : "") + String($0, radix: 16) }.joined()
@@ -206,6 +249,40 @@ struct HSSpoonsTests {
                 let listing = try ZipListing(data: archive.data)
                 #expect(throws: SpoonInstallError.self) { try listing.checkSafeToExtract() }
             }
+        }
+
+        @Test("writing through a symlink is refused however the path is spelled")
+        func testSymlinkPathSpellings() throws {
+            for path in ["./link/file", "link//file", "LINK/file", "./LINK/./file"] {
+                var zip = ZipFixture()
+                zip.symlink("link", to: "/tmp")
+                zip.file(path, "")
+                let listing = try ZipListing(data: zip.data)
+                #expect(throws: SpoonInstallError.self, "\(path)") { try listing.checkSafeToExtract() }
+            }
+        }
+
+        @Test("offsets pointing far outside the archive are refused, not trusted")
+        func testHugeOffsets() throws {
+            var zip = ZipFixture()
+            zip.spoon(at: "", name: "Greeter")
+            let data = zip.data
+            let eocd = data.count - 22
+
+            // A central directory offset past the end of the data
+            var badDirectory = data
+            badDirectory.replace(at: eocd + 16, with: [0xFE, 0xFF, 0xFF, 0xFF])
+            #expect(throws: SpoonInstallError.self) { try ZipListing(data: badDirectory) }
+
+            // ZIP64, with the record's offset at the very top of the range
+            var zip64 = data.prefix(eocd)
+            zip64.append(contentsOf: [0x50, 0x4B, 0x06, 0x07, 0, 0, 0, 0])
+            zip64.append(contentsOf: [UInt8](repeating: 0xFF, count: 8))
+            zip64.append(contentsOf: [1, 0, 0, 0])
+            var eocdRecord = data.suffix(22)
+            eocdRecord.replace(at: eocdRecord.startIndex + 16, with: [0xFF, 0xFF, 0xFF, 0xFF])
+            zip64.append(eocdRecord)
+            #expect(throws: SpoonInstallError.self) { try ZipListing(data: Data(zip64)) }
         }
 
         @Test("an archive may contain symlinks, which are reported as such")
@@ -455,6 +532,66 @@ struct HSSpoonsTests {
             #expect(ctx.errorCode == "ENOSOURCE")
         }
 
+        @Test("a Spoon replaced by opening a .spoon2 file forgets where it was installed from")
+        func testImportForgetsSource() async throws {
+            let ctx = try SpoonsTestContext()
+            ctx.downloads.serve(repositoryArchive(), at: repositoryURL)
+            await ctx.settle("hs.spoons.install('Greeter', { source: 'jane/hs2-spoons' })")
+
+            // A bundle that was copied from an installed Spoon, so it has a source record too
+            let bundle = ctx.configDir.appendingPathComponent("Greeter.spoon2")
+            try FileManager.default.copyItem(at: ctx.spoonsDir.appendingPathComponent("Greeter"), to: bundle)
+            try ctx.module.installer.spoonManager.performImport(ctx.module.installer.spoonManager.planImport(from: bundle))
+
+            #expect(ctx.harness.evalBool("hs.spoons.installed()[0].source === undefined") == true)
+            await ctx.settle("hs.spoons.update('Greeter')")
+            #expect(ctx.errorCode == "ENOSOURCE")
+        }
+
+        @Test("update() doesn't undo an uninstall that happened while it was downloading")
+        func testUpdateAfterUninstall() async throws {
+            let ctx = try SpoonsTestContext()
+            ctx.downloads.serve(repositoryArchive(version: "1.0.0"), at: repositoryURL)
+            await ctx.settle("hs.spoons.install('Greeter', { source: 'jane/hs2-spoons' })")
+            ctx.downloads.serve(repositoryArchive(version: "1.1.0"), at: repositoryURL)
+
+            ctx.downloads.close(repositoryURL)
+            ctx.start("hs.spoons.update('Greeter')")
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.downloads.waitingCount == 1 })
+            #expect(ctx.harness.evalBool("hs.spoons.uninstall('Greeter')") == true)
+            ctx.downloads.open(repositoryURL)
+
+            await ctx.settled()
+            #expect(ctx.errorCode == "ENOTINSTALLED")
+            #expect(!FileManager.default.fileExists(atPath: ctx.spoonsDir.appendingPathComponent("Greeter").path))
+        }
+
+        @Test("update() doesn't undo a reinstall that happened while it was downloading")
+        func testUpdateAfterReinstall() async throws {
+            let ctx = try SpoonsTestContext()
+            ctx.downloads.serve(repositoryArchive(version: "1.0.0"), at: repositoryURL)
+            await ctx.settle("hs.spoons.install('Greeter', { source: 'jane/hs2-spoons' })")
+            ctx.downloads.serve(repositoryArchive(version: "1.1.0"), at: repositoryURL)
+            let otherURL = "https://example.com/Greeter.zip"
+            var other = ZipFixture()
+            other.spoon(at: "Greeter.spoon2", name: "Greeter", version: "0.9.0")
+            ctx.downloads.serve(other.data, at: otherURL)
+
+            ctx.downloads.close(repositoryURL)
+            ctx.harness.eval("""
+                globalThis.__update = undefined;
+                hs.spoons.update('Greeter').then(v => { __update = String(v) }, e => { __update = e.code });
+                """)
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.downloads.waitingCount == 1 })
+            await ctx.settle("hs.spoons.install('Greeter', { source: '\(otherURL)', force: true })")
+            ctx.downloads.open(repositoryURL)
+
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.harness.evalBool("__update !== undefined") == true })
+            #expect(ctx.harness.evalString("__update") == "ECANCELED")
+            #expect(try ctx.installedVersion("Greeter") == "0.9.0")
+            #expect(ctx.harness.evalString("hs.spoons.installed()[0].source") == otherURL)
+        }
+
         @Test("uninstall() removes the Spoon and its source record")
         func testUninstall() async throws {
             let ctx = try SpoonsTestContext()
@@ -465,9 +602,7 @@ struct HSSpoonsTests {
             #expect(!ctx.isInstalled("Greeter"))
             #expect(ctx.harness.evalInt("hs.spoons.installed().length") == 0)
             #expect(ctx.harness.evalBool("hs.spoons.uninstall('Greeter')") == false)
-
-            let records = try String(contentsOf: ctx.spoonsDir.appendingPathComponent(".sources.json"), encoding: .utf8)
-            #expect(!records.contains("Greeter"))
+            #expect(!FileManager.default.fileExists(atPath: ctx.spoonsDir.appendingPathComponent("Greeter").path))
 
             ctx.harness.eval("hs.spoons.uninstall('../Greeter')")
             #expect(ctx.harness.hasException)

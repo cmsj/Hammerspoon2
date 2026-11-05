@@ -107,8 +107,10 @@ import JavaScriptCore
     /// a pinned tag, commit or versioned URL doesn't change; install the newer one with
     /// `install(name, { ..., force: true })` instead.
     ///
-    /// Besides the codes `install()` uses, the Promise rejects with `ENOTINSTALLED`, or
-    /// `ENOSOURCE` for a Spoon that wasn't installed by `install()`.
+    /// Besides the codes `install()` uses, the Promise rejects with `ENOTINSTALLED`, `ENOSOURCE`
+    /// for a Spoon that wasn't installed by `install()` (or was since replaced some other way, such
+    /// as by opening a `.spoon2` file), or `ECANCELED` if the Spoon was reinstalled while the
+    /// update was downloading.
     /// - Parameter name: The name of the installed Spoon
     /// - Returns: {Promise<boolean>} Resolves with true if the Spoon was updated, or false if it was already up to date
     /// - Example:

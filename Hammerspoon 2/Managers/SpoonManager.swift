@@ -137,6 +137,10 @@ class SpoonManager {
             .appendingPathComponent("Spoons")
     }
 
+    /// The file in an installed Spoon's directory that records where `hs.spoons.install()`
+    /// downloaded it from
+    static let sourceRecordFilename = ".hs-source.json"
+
     /// Whether `name` can be used as a Spoon's name: a single, non-hidden path component made of
     /// letters, digits, `_`, `.` and `-`. Spoon names become directory names under `Spoons/`, so
     /// this keeps them from escaping it.
@@ -195,6 +199,8 @@ class SpoonManager {
 
     /// Carries out a plan produced by `planImport(from:)`: creates `<configDir>/Spoons/` if
     /// needed, removes anything already at the plan's destination, and copies the bundle in.
+    /// The copy never has a source record, even if the bundle came with one, so a Spoon installed
+    /// this way can only be updated by installing it again.
     /// Call this only after resolving `plan.conflict` with the user, if it isn't `.none`.
     /// - Parameter plan: A plan previously produced by `planImport(from:)`
     func performImport(_ plan: SpoonImportPlan) throws {
@@ -205,5 +211,9 @@ class SpoonManager {
             try fileSystem.removeItem(at: plan.destination)
         }
         try fileSystem.copyItem(at: plan.bundleURL, to: plan.destination)
+        let sourceRecord = plan.destination.appendingPathComponent(Self.sourceRecordFilename)
+        if fileSystem.fileExists(atPath: sourceRecord.path) {
+            try fileSystem.removeItem(at: sourceRecord)
+        }
     }
 }

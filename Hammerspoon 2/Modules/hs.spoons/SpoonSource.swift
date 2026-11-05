@@ -22,6 +22,8 @@ nonisolated struct SpoonInstallError: LocalizedError, Equatable {
         case exists = "EEXISTS"
         /// No Spoon with that name is installed
         case notInstalled = "ENOTINSTALLED"
+        /// The Spoon was replaced while it was being updated, so the update was abandoned
+        case canceled = "ECANCELED"
         /// The Spoon is installed, but wasn't installed by `hs.spoons.install()`, so there's
         /// nowhere to update it from
         case noSource = "ENOSOURCE"
