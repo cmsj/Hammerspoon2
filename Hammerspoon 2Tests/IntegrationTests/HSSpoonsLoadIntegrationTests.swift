@@ -87,6 +87,11 @@ private final class LoadSpoonContext {
     }
 
     var hadException: Bool { lastException != nil }
+
+    func collectGarbage() {
+        unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
+        unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
+    }
 }
 
 // MARK: - Test suites
@@ -442,6 +447,27 @@ struct HSSpoonsLoadTests {
             let b = ctx.eval("hs.spoons.SpoonB.which")
             #expect(a?.toString() == "A")
             #expect(b?.toString() == "B")
+            #expect(!ctx.hadException)
+        }
+
+        // hs.spoons is a native module, so loaded Spoons are expando properties on its JS
+        // wrapper. They'd vanish if the wrapper were collected and recreated (#185); ModuleRoot
+        // pins it to prevent that.
+        @Test("loaded Spoons survive garbage collection")
+        func testSpoonsSurviveGarbageCollection() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { marker: 'kept' };")
+            // void, in an autorelease pool, so nothing on the Swift side holds the wrapper
+            autoreleasepool {
+                _ = ctx.eval("void hs.spoons.load('TestSpoon')")
+            }
+            #expect(!ctx.hadException)
+
+            ctx.collectGarbage()
+
+            #expect(ctx.eval("hs.spoons.TestSpoon?.marker")?.toString() == "kept")
+            #expect(ctx.eval("Object.keys(hs.spoons).join()")?.toString() == "TestSpoon")
             #expect(!ctx.hadException)
         }
     }
