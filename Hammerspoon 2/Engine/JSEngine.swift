@@ -76,6 +76,7 @@ class JSEngine {
             try context.install([
                 .fetch(session: fetchSession),
                 NullReturnsInstaller(),        // nil returned from Swift reaches JS as null
+                UnhandledRejectionInstaller(), // unhandled Promise rejections are logged
                 ConsoleModuleInstaller(),      // console namespace
                 NodeBuiltinModulesInstaller(), // native backing for require('util') etc.
                 RequireInstaller(),            // require() function

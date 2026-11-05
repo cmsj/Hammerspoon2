@@ -50,6 +50,17 @@ final class JSPromiseHolder {
     func rejectWithMessage(_ message: String) {
         reject.call(withArguments: [message])
     }
+
+    /// Reject the promise with a JS `Error` whose `code` property is set, in the style of Node's
+    /// errors (e.g. `err.code === "ENOENT"`), so callers can tell failures apart
+    func rejectWith(code: String, message: String) {
+        guard let error = JSValue(newErrorFromMessage: message, in: reject.context) else {
+            reject.call(withArguments: [message])
+            return
+        }
+        error.setValue(code, forProperty: "code")
+        reject.call(withArguments: [error])
+    }
 }
 
 /// Wraps a Swift operation as a JavaScript Promise

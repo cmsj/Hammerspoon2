@@ -158,8 +158,15 @@ class JSTestHarness {
     ///   - moduleType: The Swift module class to instantiate
     ///   - name: The JavaScript property name (without 'hs.' prefix)
     func loadModule<T: HSModuleAPI>(_ moduleType: T.Type, as name: String) {
-        let module = moduleType.init(engineID: UUID())
+        loadModule(moduleType.init(engineID: UUID()), as: name)
+    }
 
+    /// Load an already-created module into the test context under hs namespace, for a module
+    /// whose test needs to inject dependencies through its initialiser
+    /// - Parameters:
+    ///   - module: The module
+    ///   - name: The JavaScript property name (without 'hs.' prefix)
+    func loadModule(_ module: any HSModuleAPI, as name: String) {
         // Track for shutdownForLeakTest()
         loadedModulesDict[name] = module
 

@@ -197,7 +197,9 @@ hs.osascript.applescript(`tell application "Finder" to name of every disk`)
 
 Note the shape there: `hs.osascript`'s Promise always *resolves*, even when the script itself
 failed — check `result.success` rather than reaching for `.catch()`. Other modules do reject
-on failure, so check the API reference for the specific module you're calling.
+on failure, so check the API reference for the specific module you're calling. If nothing
+handles a rejection, its error is logged to the Console, as an uncaught exception would be; add
+a `.catch()` to handle it yourself.
 
 `hs.application.launchOrFocus(bundleID)` follows the same Promise pattern for the common
 "open this app, or bring it to the front if it's already running" case:

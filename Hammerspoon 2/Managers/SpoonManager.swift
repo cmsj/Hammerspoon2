@@ -40,11 +40,14 @@ enum SpoonValidationError: LocalizedError {
 
 enum SpoonImportError: LocalizedError {
     case notASpoon2Bundle
+    case invalidName(String)
 
     var errorDescription: String? {
         switch self {
         case .notASpoon2Bundle:
             return "is not a .spoon2 bundle"
+        case .invalidName(let name):
+            return "'\(name)' is not a valid Spoon name (use letters, digits, '_', '.' and '-', not starting with '.' or '-')"
         }
     }
 }
@@ -71,11 +74,12 @@ struct SpoonImportPlan {
     let conflict: SpoonImportConflict
 }
 
-/// Validates well-formed Spoons and imports .spoon2 bundles into the user's config directory.
+/// Validates well-formed Spoons and installs them into the user's config directory.
 ///
-/// Used from two places: `ModuleRoot.loadSpoon()` validates an already-installed Spoon before
-/// loading it, and `AppDelegate` imports a .spoon2 bundle when the user double-clicks one in
-/// Finder. Both share the same definition of "well-formed" via `validateSpoon(at:)`.
+/// Used from two places: `hs.spoons` validates an already-installed Spoon before loading it and
+/// installs Spoons downloaded by `hs.spoons.install()`, and `AppDelegate` imports a .spoon2 bundle
+/// when the user double-clicks one in Finder. All share the same definition of "well-formed" via
+/// `validateSpoon(at:)`, and both install paths go through `planInstall(of:named:)`.
 @_documentation(visibility: private)
 class SpoonManager {
     static let shared = SpoonManager()
@@ -126,6 +130,24 @@ class SpoonManager {
         return metadata
     }
 
+    /// The `Spoons` directory inside the user's config directory, where Spoons are installed
+    var spoonsDirectory: URL {
+        settings.configLocation
+            .deletingLastPathComponent()
+            .appendingPathComponent("Spoons")
+    }
+
+    /// The file in an installed Spoon's directory that records where `hs.spoons.install()`
+    /// downloaded it from
+    static let sourceRecordFilename = ".hs-source.json"
+
+    /// Whether `name` can be used as a Spoon's name: a single, non-hidden path component made of
+    /// letters, digits, `_`, `.` and `-`. Spoon names become directory names under `Spoons/`, so
+    /// this keeps them from escaping it.
+    static func isValidSpoonName(_ name: String) -> Bool {
+        name.wholeMatch(of: #/[A-Za-z0-9_][A-Za-z0-9_.\-]*/#) != nil && name.count <= 255
+    }
+
     /// Validates a .spoon2 bundle and works out where it would be installed, without touching
     /// the filesystem. If a Spoon (or anything else) already exists at that destination, it's
     /// reported via `SpoonImportPlan.conflict` rather than acted on - the caller decides
@@ -136,14 +158,25 @@ class SpoonManager {
         guard bundleURL.pathExtension.lowercased() == "spoon2" else {
             throw SpoonImportError.notASpoon2Bundle
         }
+        return try planInstall(of: bundleURL, named: bundleURL.deletingPathExtension().lastPathComponent)
+    }
 
-        let newMetadata = try validateSpoon(at: bundleURL)
+    /// Validates a Spoon directory and works out what installing it as `name` would do, without
+    /// touching the filesystem. Used directly by `hs.spoons.install()`, whose Spoons may come from
+    /// a directory that isn't named after the Spoon (e.g. a repository that is itself a Spoon).
+    /// - Parameters:
+    ///   - directory: The Spoon's directory
+    ///   - name: The name to install it under, i.e. its directory name under `Spoons/`
+    /// - Returns: A plan describing the would-be install
+    func planInstall(of directory: URL, named name: String) throws -> SpoonImportPlan {
+        guard Self.isValidSpoonName(name) else {
+            throw SpoonImportError.invalidName(name)
+        }
 
-        let spoonName = bundleURL.deletingPathExtension().lastPathComponent
-        let spoonsDir = settings.configLocation
-            .deletingLastPathComponent()
-            .appendingPathComponent("Spoons")
-        let destination = spoonsDir.appendingPathComponent(spoonName)
+        let newMetadata = try validateSpoon(at: directory)
+
+        let spoonsDir = spoonsDirectory
+        let destination = spoonsDir.appendingPathComponent(name)
 
         let conflict: SpoonImportConflict
         if !fileSystem.fileExists(atPath: destination.path) {
@@ -155,10 +188,10 @@ class SpoonManager {
         }
 
         return SpoonImportPlan(
-            bundleURL: bundleURL,
+            bundleURL: directory,
             spoonsDir: spoonsDir,
             destination: destination,
-            name: spoonName,
+            name: name,
             newMetadata: newMetadata,
             conflict: conflict
         )
@@ -166,6 +199,8 @@ class SpoonManager {
 
     /// Carries out a plan produced by `planImport(from:)`: creates `<configDir>/Spoons/` if
     /// needed, removes anything already at the plan's destination, and copies the bundle in.
+    /// The copy never has a source record, even if the bundle came with one, so a Spoon installed
+    /// this way can only be updated by installing it again.
     /// Call this only after resolving `plan.conflict` with the user, if it isn't `.none`.
     /// - Parameter plan: A plan previously produced by `planImport(from:)`
     func performImport(_ plan: SpoonImportPlan) throws {
@@ -176,5 +211,9 @@ class SpoonManager {
             try fileSystem.removeItem(at: plan.destination)
         }
         try fileSystem.copyItem(at: plan.bundleURL, to: plan.destination)
+        let sourceRecord = plan.destination.appendingPathComponent(Self.sourceRecordFilename)
+        if fileSystem.fileExists(atPath: sourceRecord.path) {
+            try fileSystem.removeItem(at: sourceRecord)
+        }
     }
 }

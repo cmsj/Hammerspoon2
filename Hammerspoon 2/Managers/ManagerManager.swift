@@ -85,7 +85,9 @@ class ManagerManager {
             AKError("No config file found at: \(settings.configLocation.path)")
             return
         }
+        AKDebug("Loading user config from: \(settings.configLocation)...")
         try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)
+        AKDebug("User config complete")
     }
 
     /// Quit the app. Teardown happens in `prepareForTermination()`, which the app delegate calls

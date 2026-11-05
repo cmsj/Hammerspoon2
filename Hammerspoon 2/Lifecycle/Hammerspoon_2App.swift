@@ -104,7 +104,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             alert.informativeText = """
                 "\(plan.newMetadata.name)" by \(plan.newMetadata.author) was installed as "\(plan.name)".
 
-                Add hs.loadSpoon("\(plan.name)") to your config to use it, then reload.
+                Add hs.spoons.load("\(plan.name)") to your config to use it, then reload.
                 """
             alert.runModal()
         } catch {

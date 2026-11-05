@@ -1,5 +1,5 @@
 //
-//  HSLoadSpoonIntegrationTests.swift
+//  HSSpoonsLoadIntegrationTests.swift
 //  Hammerspoon 2Tests
 //
 
@@ -11,7 +11,7 @@ import JavaScriptCore
 
 // LoadSpoonContext creates an isolated JSContext with require() and a full ModuleRoot (as `hs`)
 // installed, plus a temporary config directory whose Spoons/ subdirectory tests can populate.
-// A MockSettingsManager points ModuleRoot's hs.loadSpoon() at that temp directory, so tests
+// A MockSettingsManager points ModuleRoot's hs.spoons.load() at that temp directory, so tests
 // never touch the real config location. Each test creates its own instance.
 private final class LoadSpoonContext {
     let context: JSContext
@@ -27,7 +27,7 @@ private final class LoadSpoonContext {
         context = ctx
 
         configDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("hs_loadspoon_\(UUID().uuidString)")
+            .appendingPathComponent("hs_spoons_load_\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: configDir, withIntermediateDirectories: true)
 
         let settings = MockSettingsManager()
@@ -87,12 +87,17 @@ private final class LoadSpoonContext {
     }
 
     var hadException: Bool { lastException != nil }
+
+    func collectGarbage() {
+        unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
+        unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
+    }
 }
 
 // MARK: - Test suites
 
-@Suite("hs.loadSpoon() tests")
-struct HSLoadSpoonTests {
+@Suite("hs.spoons.load() tests")
+struct HSSpoonsLoadTests {
 
     @Suite("validation")
     struct ValidationTests {
@@ -101,7 +106,7 @@ struct HSLoadSpoonTests {
         func testMissingSpoonJSONThrows() throws {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = {};")
-            ctx.eval("hs.loadSpoon('TestSpoon')")
+            ctx.eval("hs.spoons.load('TestSpoon')")
             #expect(ctx.hadException)
         }
 
@@ -110,7 +115,7 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.write(spoon: "TestSpoon", "spoon.json", "{ not valid json")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = {};")
-            ctx.eval("hs.loadSpoon('TestSpoon')")
+            ctx.eval("hs.spoons.load('TestSpoon')")
             #expect(ctx.hadException)
         }
 
@@ -119,7 +124,7 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon", description: nil)
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = {};")
-            ctx.eval("hs.loadSpoon('TestSpoon')")
+            ctx.eval("hs.spoons.load('TestSpoon')")
             #expect(ctx.hadException)
         }
 
@@ -128,7 +133,7 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon", author: "")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = {};")
-            ctx.eval("hs.loadSpoon('TestSpoon')")
+            ctx.eval("hs.spoons.load('TestSpoon')")
             #expect(ctx.hadException)
         }
 
@@ -136,14 +141,14 @@ struct HSLoadSpoonTests {
         func testMissingInitJSThrows() throws {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
-            ctx.eval("hs.loadSpoon('TestSpoon')")
+            ctx.eval("hs.spoons.load('TestSpoon')")
             #expect(ctx.hadException)
         }
 
         @Test("loading a Spoon that doesn't exist at all throws")
         func testNonexistentSpoonThrows() throws {
             let ctx = try LoadSpoonContext()
-            ctx.eval("hs.loadSpoon('NoSuchSpoon')")
+            ctx.eval("hs.spoons.load('NoSuchSpoon')")
             #expect(ctx.hadException)
         }
     }
@@ -158,7 +163,7 @@ struct HSLoadSpoonTests {
             try ctx.writeSpoonInit(spoon: "TestSpoon", """
                 module.exports = { greet: function (n) { return 'Hello, ' + n; } };
             """)
-            let result = ctx.eval("hs.loadSpoon('TestSpoon').greet('World')")
+            let result = ctx.eval("hs.spoons.load('TestSpoon').greet('World')")
             #expect(result?.toString() == "Hello, World")
             #expect(!ctx.hadException)
         }
@@ -174,7 +179,7 @@ struct HSLoadSpoonTests {
                 var helper = require('./lib/helper.js');
                 module.exports = { doubled: helper.double(21) };
             """)
-            let result = ctx.eval("hs.loadSpoon('TestSpoon').doubled")
+            let result = ctx.eval("hs.spoons.load('TestSpoon').doubled")
             #expect(result?.toInt32() == 42)
             #expect(!ctx.hadException)
         }
@@ -185,11 +190,11 @@ struct HSLoadSpoonTests {
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { count: 0 };")
             ctx.eval("""
-                var a = hs.loadSpoon('TestSpoon');
-                var b = hs.loadSpoon('TestSpoon');
+                var a = hs.spoons.load('TestSpoon');
+                var b = hs.spoons.load('TestSpoon');
                 a.count = 1;
             """)
-            let result = ctx.eval("hs.loadSpoon('TestSpoon').count")
+            let result = ctx.eval("hs.spoons.load('TestSpoon').count")
             #expect(result?.toInt32() == 1)
             #expect(!ctx.hadException)
         }
@@ -199,18 +204,18 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "throw new Error('boom');")
-            ctx.eval("hs.loadSpoon('TestSpoon')")
+            ctx.eval("hs.spoons.load('TestSpoon')")
             #expect(ctx.hadException)
         }
 
-        @Test("the caller of loadSpoon() sees the real error message from a throwing init.js, not a generic one")
+        @Test("the caller of load() sees the real error message from a throwing init.js, not a generic one")
         func testSpoonInitThrowingPropagatesRealMessage() throws {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "throw new Error('a very specific failure');")
             let caughtMessage = ctx.eval("""
                 (function () {
-                    try { hs.loadSpoon('TestSpoon'); return null; }
+                    try { hs.spoons.load('TestSpoon'); return null; }
                     catch (e) { return e.message; }
                 })()
             """)
@@ -226,7 +231,7 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon", author: "Jane Dev", version: "2.3.1", description: "Does a thing.")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = {};")
-            ctx.eval("var s = hs.loadSpoon('TestSpoon')")
+            ctx.eval("var s = hs.spoons.load('TestSpoon')")
             #expect(ctx.eval("s.author")?.toString() == "Jane Dev")
             #expect(ctx.eval("s.version")?.toString() == "2.3.1")
             #expect(ctx.eval("s.description")?.toString() == "Does a thing.")
@@ -240,7 +245,7 @@ struct HSLoadSpoonTests {
             try ctx.writeSpoonInit(spoon: "TestSpoon", """
                 module.exports = { author: "wrong", version: "0.0.1", description: "wrong" };
             """)
-            ctx.eval("var s = hs.loadSpoon('TestSpoon')")
+            ctx.eval("var s = hs.spoons.load('TestSpoon')")
             #expect(ctx.eval("s.author")?.toString() == "Real Author")
             #expect(ctx.eval("s.version")?.toString() == "9.9.9")
             #expect(ctx.eval("s.description")?.toString() == "Real description.")
@@ -252,7 +257,7 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon", version: "4.5.6")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = function () { return 42; };")
-            ctx.eval("var s = hs.loadSpoon('TestSpoon')")
+            ctx.eval("var s = hs.spoons.load('TestSpoon')")
             #expect(ctx.eval("typeof s")?.toString() == "function")
             #expect(ctx.eval("s.version")?.toString() == "4.5.6")
             #expect(ctx.eval("s()")?.toInt32() == 42)
@@ -264,7 +269,7 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = 42;")
-            ctx.eval("hs.loadSpoon('TestSpoon')")
+            ctx.eval("hs.spoons.load('TestSpoon')")
             #expect(ctx.hadException)
         }
 
@@ -273,7 +278,7 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = undefined;")
-            ctx.eval("hs.loadSpoon('TestSpoon')")
+            ctx.eval("hs.spoons.load('TestSpoon')")
             #expect(ctx.hadException)
         }
 
@@ -282,7 +287,7 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = 42;")
-            ctx.eval("try { hs.loadSpoon('TestSpoon') } catch (e) {}")
+            ctx.eval("try { hs.spoons.load('TestSpoon') } catch (e) {}")
             let result = ctx.eval("typeof hs.spoons.TestSpoon")
             #expect(result?.toString() == "undefined")
         }
@@ -301,7 +306,7 @@ struct HSLoadSpoonTests {
                     init: function () { this.initCalled = true; }
                 };
             """)
-            let result = ctx.eval("hs.loadSpoon('TestSpoon').initCalled")
+            let result = ctx.eval("hs.spoons.load('TestSpoon').initCalled")
             #expect(result?.toBool() == true)
             #expect(!ctx.hadException)
         }
@@ -316,7 +321,7 @@ struct HSLoadSpoonTests {
                     init: function () { this.versionSeenDuringInit = this.version; }
                 };
             """)
-            let result = ctx.eval("hs.loadSpoon('TestSpoon').versionSeenDuringInit")
+            let result = ctx.eval("hs.spoons.load('TestSpoon').versionSeenDuringInit")
             #expect(result?.toString() == "7.1.0")
             #expect(!ctx.hadException)
         }
@@ -326,7 +331,7 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { works: true };")
-            let result = ctx.eval("hs.loadSpoon('TestSpoon').works")
+            let result = ctx.eval("hs.spoons.load('TestSpoon').works")
             #expect(result?.toBool() == true)
             #expect(!ctx.hadException)
         }
@@ -338,23 +343,23 @@ struct HSLoadSpoonTests {
             try ctx.writeSpoonInit(spoon: "TestSpoon", """
                 module.exports = { init: function () { throw new Error('init boom'); } };
             """)
-            ctx.eval("try { hs.loadSpoon('TestSpoon') } catch (e) {}")
+            ctx.eval("try { hs.spoons.load('TestSpoon') } catch (e) {}")
             let result = ctx.eval("typeof hs.spoons.TestSpoon")
             #expect(result?.toString() == "undefined")
         }
 
-        @Test("hs.loadSpoon() itself throws when init() throws")
+        @Test("hs.spoons.load() itself throws when init() throws")
         func testLoadSpoonThrowsWhenInitThrows() throws {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", """
                 module.exports = { init: function () { throw new Error('init boom'); } };
             """)
-            ctx.eval("hs.loadSpoon('TestSpoon')")
+            ctx.eval("hs.spoons.load('TestSpoon')")
             #expect(ctx.hadException)
         }
 
-        @Test("init()'s return value is ignored - loadSpoon() still returns module.exports")
+        @Test("init()'s return value is ignored - load() still returns module.exports")
         func testInitReturnValueIsIgnored() throws {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
@@ -364,12 +369,12 @@ struct HSLoadSpoonTests {
                     init: function () { return { marker: 'replaced' }; }
                 };
             """)
-            let result = ctx.eval("hs.loadSpoon('TestSpoon').marker")
+            let result = ctx.eval("hs.spoons.load('TestSpoon').marker")
             #expect(result?.toString() == "original")
             #expect(!ctx.hadException)
         }
 
-        @Test("calling loadSpoon() twice for the same Spoon calls init() again on the cached object each time")
+        @Test("calling load() twice for the same Spoon calls init() again on the cached object each time")
         func testInitCalledAgainOnRepeatLoad() throws {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
@@ -380,10 +385,10 @@ struct HSLoadSpoonTests {
                 };
             """)
             ctx.eval("""
-                hs.loadSpoon('TestSpoon');
-                hs.loadSpoon('TestSpoon');
+                hs.spoons.load('TestSpoon');
+                hs.spoons.load('TestSpoon');
             """)
-            let result = ctx.eval("hs.loadSpoon('TestSpoon').initCallCount")
+            let result = ctx.eval("hs.spoons.load('TestSpoon').initCallCount")
             #expect(result?.toInt32() == 3)
             #expect(!ctx.hadException)
         }
@@ -397,19 +402,19 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { marker: 'unique-value' };")
-            ctx.eval("hs.loadSpoon('TestSpoon')")
+            ctx.eval("hs.spoons.load('TestSpoon')")
             let result = ctx.eval("hs.spoons.TestSpoon.marker")
             #expect(result?.toString() == "unique-value")
             #expect(!ctx.hadException)
         }
 
-        @Test("hs.spoons.NAME is the identical object returned by loadSpoon(), not a copy")
+        @Test("hs.spoons.NAME is the identical object returned by load(), not a copy")
         func testSpoonsNamespaceHoldsSameIdentity() throws {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { count: 0 };")
             ctx.eval("""
-                var loaded = hs.loadSpoon('TestSpoon');
+                var loaded = hs.spoons.load('TestSpoon');
                 hs.spoons.TestSpoon.count = 42;
             """)
             let result = ctx.eval("loaded.count")
@@ -422,7 +427,7 @@ struct HSLoadSpoonTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "BrokenSpoon")
             // No init.js written, so this load fails.
-            ctx.eval("try { hs.loadSpoon('BrokenSpoon') } catch (e) {}")
+            ctx.eval("try { hs.spoons.load('BrokenSpoon') } catch (e) {}")
             let result = ctx.eval("typeof hs.spoons.BrokenSpoon")
             #expect(result?.toString() == "undefined")
         }
@@ -435,13 +440,78 @@ struct HSLoadSpoonTests {
             try ctx.writeSpoonJSON(spoon: "SpoonB")
             try ctx.writeSpoonInit(spoon: "SpoonB", "module.exports = { which: 'B' };")
             ctx.eval("""
-                hs.loadSpoon('SpoonA');
-                hs.loadSpoon('SpoonB');
+                hs.spoons.load('SpoonA');
+                hs.spoons.load('SpoonB');
             """)
             let a = ctx.eval("hs.spoons.SpoonA.which")
             let b = ctx.eval("hs.spoons.SpoonB.which")
             #expect(a?.toString() == "A")
             #expect(b?.toString() == "B")
+            #expect(!ctx.hadException)
+        }
+
+        // hs.spoons is a native module, so loaded Spoons are expando properties on its JS
+        // wrapper. They'd vanish if the wrapper were collected and recreated (#185); ModuleRoot
+        // pins it to prevent that.
+        @Test("loaded Spoons survive garbage collection")
+        func testSpoonsSurviveGarbageCollection() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { marker: 'kept' };")
+            // void, in an autorelease pool, so nothing on the Swift side holds the wrapper
+            autoreleasepool {
+                _ = ctx.eval("void hs.spoons.load('TestSpoon')")
+            }
+            #expect(!ctx.hadException)
+
+            ctx.collectGarbage()
+
+            #expect(ctx.eval("hs.spoons.TestSpoon?.marker")?.toString() == "kept")
+            #expect(ctx.eval("Object.keys(hs.spoons).join()")?.toString() == "TestSpoon")
+            #expect(!ctx.hadException)
+        }
+    }
+    @Suite("names and error codes")
+    struct NamesTests {
+
+        @Test("a Spoon can't be loaded under the name of one of hs.spoons' own members")
+        func testReservedNameThrows() throws {
+            let ctx = try LoadSpoonContext()
+            for name in ["install", "toString", "constructor"] {
+                try ctx.writeSpoonJSON(spoon: name)
+                try ctx.writeSpoonInit(spoon: name, "module.exports = {};")
+                let code = ctx.eval("(function () { try { hs.spoons.load('\(name)'); return null; } catch (e) { return e.code; } })()")
+                #expect(code?.toString() == "EINVALIDARG", "\(name)")
+            }
+            #expect(ctx.eval("typeof hs.spoons.install")?.toString() == "function")
+        }
+
+        @Test("a name that isn't a single safe path component is rejected")
+        func testUnsafeNameThrows() throws {
+            let ctx = try LoadSpoonContext()
+            for name in ["../Escape", ".Hidden", "a/b", ""] {
+                let code = ctx.eval("(function () { try { hs.spoons.load('\(name)'); return null; } catch (e) { return e.code; } })()")
+                #expect(code?.toString() == "EINVALIDARG", "\(name)")
+            }
+        }
+
+        @Test("a missing Spoon throws ENOTINSTALLED, and a malformed one EINVALIDSPOON")
+        func testErrorCodes() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "Broken")
+            let missing = ctx.eval("(function () { try { hs.spoons.load('Missing'); } catch (e) { return e.code; } })()")
+            let broken = ctx.eval("(function () { try { hs.spoons.load('Broken'); } catch (e) { return e.code; } })()")
+            #expect(missing?.toString() == "ENOTINSTALLED")
+            #expect(broken?.toString() == "EINVALIDSPOON")
+        }
+
+        @Test("only loaded Spoons are enumerable on hs.spoons, not its methods")
+        func testOnlySpoonsAreEnumerable() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "SpoonA")
+            try ctx.writeSpoonInit(spoon: "SpoonA", "module.exports = {};")
+            ctx.eval("hs.spoons.load('SpoonA')")
+            #expect(ctx.eval("Object.keys(hs.spoons).join(',')")?.toString() == "SpoonA")
             #expect(!ctx.hadException)
         }
     }
