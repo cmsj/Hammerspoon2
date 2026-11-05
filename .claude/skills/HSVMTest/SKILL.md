@@ -23,7 +23,7 @@ mouse/keyboard input (the `hs2vm-guest` tool posting CGEvents) happen inside the
 ## Running tests
 
 ```bash
-scripts/vm/hs2vm test                                                       # full suite (~12 min)
+scripts/vm/hs2vm test                                                       # full suite (~4 min)
 scripts/vm/hs2vm test "-only-testing:Hammerspoon 2Tests/HSHashIntegrationTests"
 scripts/vm/hs2vm test "-only-testing:Hammerspoon 2Tests/HSHashIntegrationTests/testMD5FromJS()"
 scripts/vm/hs2vm test --keep …                                              # keep the VM to investigate

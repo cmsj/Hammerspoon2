@@ -361,8 +361,12 @@ cmd_provision() {
     cp "$REPO_ROOT/scripts/vm/guest/provision.sh" "$dir/run/"
     cmd_start "$work"
 
-    log "installing $GUEST_TOOL"
-    swiftc -O "$REPO_ROOT/scripts/vm/guest/hs2vm-guest.swift" -o "$VM_ROOT/hs2vm-guest"
+    # Target the guest's macOS rather than the host's: the base image can be older than the
+    # host, and a binary built for the host's version won't load there.
+    local guest_os; guest_os="$(tart exec "$work" sw_vers -productVersion)"
+    log "installing $GUEST_TOOL (for macOS $guest_os)"
+    swiftc -O -target "arm64-apple-macos$guest_os" \
+        "$REPO_ROOT/scripts/vm/guest/hs2vm-guest.swift" -o "$VM_ROOT/hs2vm-guest"
     tart exec -i "$work" sudo sh -c "mkdir -p /usr/local/bin && cat > $GUEST_TOOL && chmod 755 $GUEST_TOOL" \
         <"$VM_ROOT/hs2vm-guest"
 
