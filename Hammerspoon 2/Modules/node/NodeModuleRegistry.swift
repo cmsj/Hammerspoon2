@@ -9,9 +9,9 @@ import JavaScriptCoreExtras
 /// Installs the native backing objects for Node's built-in modules, keyed by the name JS code
 /// passes to `require(...)`.
 ///
-/// `require.js` has no npm/node_modules-style package resolution; bare specifiers (eg.
-/// `require('util')`) are looked up in this hard-coded registry instead. Adding a new built-in
-/// module means adding its native object here — no changes to `require.js` are needed.
+/// `require.js` checks bare specifiers (eg. `require('util')`) against this registry before
+/// falling back to a node_modules lookup. Adding a new built-in module means adding its native
+/// object here — no changes to `require.js` are needed.
 struct NodeBuiltinModulesInstaller: JSContextInstallable {
     func install(in context: JSContext) throws {
         let builtins = JSValue(newObjectIn: context)!

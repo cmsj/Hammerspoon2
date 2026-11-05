@@ -619,6 +619,8 @@ extension JSTestHarness {
                 loadModule(HSMIDIModule.self, as: name)
             case "http":
                 loadModule(HSHTTPModule.self, as: name)
+            case "npm":
+                loadModule(HSNPMModule.self, as: name)
             case "httpserver":
                 loadModule(HSHTTPServerModule.self, as: name)
             case "urlevent":

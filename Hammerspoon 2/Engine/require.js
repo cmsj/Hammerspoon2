@@ -12,9 +12,11 @@
 // wrapper below (see makeRequire) gives that file its own require() bound to its own
 // directory automatically, the same way it does for any other file.
 //
-// Bare specifiers (eg. require('util')) never touch the filesystem - there is no
-// npm/node_modules-style package lookup. They resolve directly against _builtinModules, a
-// hard-coded registry of Node built-ins Hammerspoon 2 currently implements.
+// Bare specifiers (eg. require('util')) first resolve against _builtinModules, a hard-coded
+// registry of Node built-ins Hammerspoon 2 currently implements. Anything else is looked up
+// Node-style in node_modules/<name>, walking up from the requiring file's directory (so the
+// config directory's node_modules, populated by hs.npm.install(), is found from anywhere),
+// honouring the package's "main" entry.
 
 (function () {
     const _readFile   = globalThis._hs_readFile;
@@ -69,9 +71,34 @@
         if (id.startsWith('~/')) {
             return tryExtensions(_expandPath(id));
         }
-        // No bare-specifier resolution (no npm/node_modules-style package lookup exists yet) -
-        // every id must be absolute, ~-relative, or explicitly ./ or ../ relative.
-        return null;
+        return resolvePackage(id, fromFile);
+    }
+
+    // The "main" entry of <dir>/package.json, if any.
+    function packageMain(dir) {
+        const src = _readFile(dir + '/package.json');
+        if (src == null) return null;
+        try {
+            const main = JSON.parse(src).main;
+            return typeof main === 'string' ? main : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Node-style bare specifier lookup: node_modules/<id> in the requiring file's directory,
+    // then each parent directory. <id> may include a subpath (eg. 'pkg/lib/util').
+    // ponytail: no package.json "exports" map support, add when a wanted package needs it.
+    function resolvePackage(id, fromFile) {
+        let dir = dirname(fromFile);
+        while (true) {
+            const pkgDir = dir + '/node_modules/' + id;
+            const main = packageMain(pkgDir);
+            const found = (main && tryExtensions(joinPath(pkgDir, main))) || tryExtensions(pkgDir);
+            if (found) return found;
+            if (dir === '/') return null;
+            dir = dirname(dir);
+        }
     }
 
     function makeRequire(currentFile) {
