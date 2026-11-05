@@ -241,3 +241,4 @@ class KeyedLazyWatcherEmitter extends EventEmitter {
     }
 }
 
+console.log("engine.js complete.")
