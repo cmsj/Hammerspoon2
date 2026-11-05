@@ -661,6 +661,24 @@ struct HSSpoonsTests {
             #expect(ctx.downloads.requested.count == 1)
         }
 
+        @Test("an error in a Spoon's init.js is reported even when nothing catches use()'s Promise")
+        func testUseErrorIsReportedWithoutCatch() async throws {
+            let ctx = try SpoonsTestContext()
+            var reported: [JSValue] = []
+            try ctx.harness.context.install([UnhandledRejectionInstaller { reported.append($0) }])
+            var zip = ZipFixture()
+            zip.spoon(at: "Broken.spoon2", name: "Broken", initJS: "undefinedFunction();\nmodule.exports = {};")
+            ctx.downloads.serve(zip.data, at: "https://example.com/Broken.zip")
+            await ctx.settle("hs.spoons.install('Broken', { source: 'https://example.com/Broken.zip' })")
+
+            ctx.harness.eval("hs.spoons.use('Broken', { start: true })")
+
+            #expect(await ctx.harness.waitForAsync(timeout: 2) { !reported.isEmpty })
+            let reason = try #require(reported.first)
+            #expect(reason.toString() == "ReferenceError: Can't find variable: undefinedFunction")
+            #expect(reason.forProperty("stack").toString().contains("Spoons/Broken/init.js"))
+        }
+
         @Test("a Spoon that isn't installed is installed from its source, then configured")
         func testUseInstalls() async throws {
             let ctx = try SpoonsTestContext()

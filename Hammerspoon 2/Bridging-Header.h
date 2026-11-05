@@ -14,6 +14,13 @@
 #import <JavaScriptCore/JavaScriptCore.h>
 JS_EXPORT void JSSynchronousGarbageCollectForDebugging(JSContextRef ctx);
 
+// JSGlobalContextSetUnhandledRejectionCallback is likewise exported but only declared in
+// JavaScriptCore's private JSContextRefPrivate.h (available since macOS 10.15.4). It sets a
+// function JavaScriptCore calls with (promise, reason) for each rejected Promise that has no
+// handler once the microtask queue drains; without one, such rejections are silently dropped.
+// See UnhandledRejectionInstaller.
+JS_EXPORT void JSGlobalContextSetUnhandledRejectionCallback(JSGlobalContextRef ctx, JSObjectRef function, JSValueRef *exception);
+
 // IOHIDGetAccelerationWithKey / IOHIDSetAccelerationWithKey were deprecated in macOS 10.12
 // but remain the only public API for reading and writing live mouse-acceleration values
 // for the current session. These wrappers silence the deprecation warnings so they can be
