@@ -14,21 +14,29 @@ import SwiftUI
 ///
 /// ## Choice format
 ///
-/// Each choice is a plain object with required `text` and optional `subText`, `image`, `valid`,
-/// and `contextMenu` fields. All other fields are passed through to the `onSelect` callback unchanged.
-///
-/// The `contextMenu` array defines per-row right-click menu entries. Each entry is either
-/// `{ title: "...", action: (item) => {} }` for a button or `{ type: "divider" }` for a separator:
+/// Each choice is a plain object with required `text` and optional `subText`, `image`, and `valid`
+/// fields. All other fields are passed through to the `onSelect` callback unchanged.
 ///
 /// ```javascript
 /// {
 ///   text: "Open Safari", subText: "com.apple.Safari",
-///   image: HSImage.fromAppBundle("com.apple.Safari"), valid: true, myData: 42,
-///   contextMenu: [
-///     { title: "Open", action: () => hs.urlevent.openURL("https://apple.com") },
-///     { type: "divider" },
-///     { title: "Copy bundle ID", action: () => hs.pasteboard.writeString("com.apple.Safari") }
-///   ]
+///   image: HSImage.fromAppBundle("com.apple.Safari"), valid: true, myData: 42
+/// }
+/// ```
+///
+/// ## Context menu
+///
+/// A single right-click menu, set with `contextMenu`, is shared by every row. When the user picks
+/// one of its entries, `onContextMenuSelect` is called with the row's choice and the menu entry.
+///
+/// ```javascript
+/// chooser.contextMenu = [
+///   { title: "Open", id: "open" },
+///   { type: "divider" },
+///   { title: "Copy bundle ID", id: "copy" }
+/// ]
+/// chooser.onContextMenuSelect = (choice, menuItem) => {
+///   if (menuItem.id === "copy") hs.pasteboard.writeString(choice.subText)
 /// }
 /// ```
 ///
@@ -316,6 +324,34 @@ import SwiftUI
     /// ```
     @objc var onInvalid: JSFunction? { get set }
 
+    /// {Array<Record<string, any>>} The right-click menu shown for every row (default: `[]`, no menu).
+    ///
+    /// Each entry is either `{ title: "..." }` for a menu item, or `{ type: "divider" }` for a
+    /// separator. Any other fields on an entry (e.g. an `id`) are passed back to
+    /// `onContextMenuSelect` unchanged, so one handler can tell the entries apart.
+    /// - Example:
+    /// ```js
+    /// chooser.contextMenu = [
+    ///     { title: "Reveal in Finder", id: "reveal" },
+    ///     { type: "divider" },
+    ///     { title: "Copy path", id: "copy" }
+    /// ]
+    /// ```
+    @objc var contextMenu: [Any] { get set }
+
+    /// {((choice: Record<string, any>, menuItem: Record<string, any>) => void) | null} Called when the user picks an entry from the `contextMenu`, or null to remove the handler.
+    ///
+    /// `choice` is the row that was right-clicked (same shape as `onSelect`'s argument) and
+    /// `menuItem` is the `contextMenu` entry that was picked, with any custom fields intact.
+    /// The chooser stays open.
+    /// - Example:
+    /// ```js
+    /// chooser.onContextMenuSelect = (choice, menuItem) => {
+    ///     if (menuItem.id === "copy") hs.pasteboard.writeString(choice.subText)
+    /// }
+    /// ```
+    @objc var onContextMenuSelect: JSFunction? { get set }
+
     /// Programmatically confirm a selection.
     ///
     /// Omit `row` to confirm the currently highlighted row. Fires `onSelect` (or `onInvalid`
@@ -359,7 +395,7 @@ import SwiftUI
     }
     @objc let identifier = UUID().uuidString
 
-    private let viewModel = ChooserViewModel()
+    let viewModel = ChooserViewModel()
     private var window: ChooserPanel?
     private weak var tracker: HSObjectTracker<HSChooser>?
 
@@ -375,6 +411,9 @@ import SwiftUI
     init(tracker: HSObjectTracker<HSChooser>) {
         self.tracker = tracker
         super.init()
+        viewModel.onContextMenuSelect = { [weak self] item, entry in
+            self?.handleContextMenuSelection(item, entry: entry)
+        }
     }
 
     private var allChoices: [ChooserItem] = []
@@ -483,7 +522,7 @@ import SwiftUI
     private var _onShow: JSCallback?
     private var _onHide: JSCallback?
     private var _onInvalid: JSCallback?
-    private var contextMenuCallbacks: [JSCallback] = []
+    private var _onContextMenuSelect: JSCallback?
 
     private var previouslyActiveWindow: NSWindow?
     private var keyEventMonitor: Any?
@@ -562,6 +601,41 @@ import SwiftUI
         }
     }
 
+    @objc var onContextMenuSelect: JSValue? {
+        get { _onContextMenuSelect?.value }
+        set {
+            _onContextMenuSelect?.detach(from: self)
+            _onContextMenuSelect = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+        }
+    }
+
+    // MARK: - Context menu
+
+    /// The valid entries of the last `contextMenu` set from JS, as returned by the getter.
+    private var contextMenuEntries: [[String: Any]] = []
+
+    @objc var contextMenu: [Any] {
+        get { contextMenuEntries }
+        set {
+            let parsed = newValue.compactMap { value -> (entry: [String: Any], menuEntry: ChooserContextMenuEntry)? in
+                guard let entry = value as? [String: Any] else {
+                    AKWarning("hs.chooser.contextMenu: ignoring entry that isn't an object")
+                    return nil
+                }
+                if entry["type"] as? String == "divider" {
+                    return (entry, .divider)
+                }
+                guard let title = entry["title"] as? String, !title.isEmpty else {
+                    AKWarning("hs.chooser.contextMenu: ignoring entry without a title")
+                    return nil
+                }
+                return (entry, .item(title: title, entry: entry))
+            }
+            contextMenuEntries = parsed.map(\.entry)
+            viewModel.contextMenuEntries = parsed.map(\.menuEntry)
+        }
+    }
+
     // MARK: - Choices
 
     @objc @discardableResult func setChoices(_ choices: JSValue) -> HSChooser {
@@ -569,7 +643,6 @@ import SwiftUI
             isStaticChoices = true
             _choicesFunction?.detach(from: self)
             _choicesFunction = nil
-            clearContextMenuCallbacks()
             allChoices = parseChoiceArray(choices)
             viewModel.filteredChoices = filteredChoices(for: _storedQuery)
             viewModel.selectedIndex = 0
@@ -582,7 +655,6 @@ import SwiftUI
             isStaticChoices = true
             _choicesFunction?.detach(from: self)
             _choicesFunction = nil
-            clearContextMenuCallbacks()
             allChoices = []
             viewModel.filteredChoices = []
         }
@@ -682,12 +754,14 @@ import SwiftUI
         _onHide = nil
         _onInvalid?.detach(from: self)
         _onInvalid = nil
-        clearContextMenuCallbacks()
+        _onContextMenuSelect?.detach(from: self)
+        _onContextMenuSelect = nil
 
         allChoices = []
         viewModel.filteredChoices = []
         viewModel.onUserQueryChange = nil
         viewModel.onContentSizeChange = nil
+        viewModel.onContextMenuSelect = nil
         AKGarbage("hs.chooser.destroy(): \(identifier)")
     }
 
@@ -856,7 +930,6 @@ import SwiftUI
     private func callChoicesFunction() {
         guard let fn = _choicesFunction?.value else { return }
         let result = fn.call(withArguments: [_storedQuery])
-        clearContextMenuCallbacks()
         allChoices = parseChoiceArray(result)
         viewModel.filteredChoices = allChoices
         viewModel.selectedIndex = 0
@@ -903,6 +976,10 @@ import SwiftUI
         }
     }
 
+    private func handleContextMenuSelection(_ item: ChooserItem, entry: [String: Any]) {
+        _ = _onContextMenuSelect?.call(withArguments: [buildReturnDict(for: item), entry])
+    }
+
     private func buildReturnDict(for item: ChooserItem) -> [String: Any] {
         var dict: [String: Any] = item.extra
         dict["text"] = item.text
@@ -915,13 +992,16 @@ import SwiftUI
     private func parseChoiceArray(_ raw: JSValue?) -> [ChooserItem] {
         guard let raw, raw.isArray else { return [] }
         let basicItems = raw.toArray() ?? []
-        return basicItems.indices.compactMap { i in
-            guard let dict = basicItems[i] as? [String: Any] else { return nil }
-            return parseChoice(dict, jsValue: raw.objectAtIndexedSubscript(i))
+        if basicItems.contains(where: { ($0 as? [String: Any])?["contextMenu"] != nil }) {
+            AKWarning("hs.chooser: per-choice `contextMenu` is no longer supported; use the chooser's `contextMenu` and `onContextMenuSelect` instead")
+        }
+        return basicItems.compactMap { value in
+            guard let dict = value as? [String: Any] else { return nil }
+            return parseChoice(dict)
         }
     }
 
-    private func parseChoice(_ dict: [String: Any], jsValue: JSValue?) -> ChooserItem? {
+    private func parseChoice(_ dict: [String: Any]) -> ChooserItem? {
         guard let text = dict["text"] as? String else { return nil }
 
         let subText = dict["subText"] as? String
@@ -934,43 +1014,12 @@ import SwiftUI
             image = nsImg
         }
 
-        let contextMenuItems = parseContextMenu(jsValue?.objectForKeyedSubscript("contextMenu"))
-
         var extra = dict
         extra.removeValue(forKey: "text")
         extra.removeValue(forKey: "subText")
         extra.removeValue(forKey: "image")
         extra.removeValue(forKey: "valid")
-        extra.removeValue(forKey: "contextMenu")
 
-        return ChooserItem(id: UUID(), text: text, subText: subText, image: image, isValid: isValid, extra: extra, contextMenuItems: contextMenuItems)
-    }
-
-    private func parseContextMenu(_ value: JSValue?) -> [ChooserContextMenuEntry] {
-        guard let value, value.isArray else { return [] }
-        let length = Int(value.objectForKeyedSubscript("length")?.toInt32() ?? 0)
-        return (0..<length).compactMap { i -> ChooserContextMenuEntry? in
-            guard let jsItem = value.objectAtIndexedSubscript(i),
-                  jsItem.isObject, !jsItem.isNull, !jsItem.isUndefined else { return nil }
-
-            if jsItem.objectForKeyedSubscript("type")?.toString() == "divider" {
-                return ChooserContextMenuEntry(kind: .divider)
-            }
-
-            guard let title = jsItem.objectForKeyedSubscript("title")?.toString(), !title.isEmpty else { return nil }
-            let actionVal = jsItem.objectForKeyedSubscript("action")
-            guard let actionVal, actionVal.isObject, !actionVal.isNull, !actionVal.isUndefined else { return nil }
-
-            guard let cb = JSCallback(value: actionVal, owner: self) else { return nil }
-            contextMenuCallbacks.append(cb)
-            return ChooserContextMenuEntry(kind: .button(title: title, action: { [weak cb] in
-                _ = cb?.value?.call(withArguments: [])
-            }))
-        }
-    }
-
-    private func clearContextMenuCallbacks() {
-        for cb in contextMenuCallbacks { cb.detach(from: self) }
-        contextMenuCallbacks.removeAll()
+        return ChooserItem(id: UUID(), text: text, subText: subText, image: image, isValid: isValid, extra: extra)
     }
 }

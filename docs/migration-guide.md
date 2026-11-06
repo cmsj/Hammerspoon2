@@ -216,8 +216,8 @@ itself just takes the affected app, not v1's `(appName, eventType, appObject)` t
 
 **`hs.chooser`** — construction changed from `hs.chooser.new(completionFn)` to
 `hs.chooser.create()` followed by setting `onSelect`/`onQueryChange`/`onShow`/`onHide`/
-`onInvalid` and calling fluent, chainable `setChoices()`/`show()`. Choices gained an optional
-per-row `contextMenu`. Check the styling-property list before assuming appearance options
+`onInvalid` and calling fluent, chainable `setChoices()`/`show()`. A right-click
+`contextMenu`, shared by every row, reports the picked entry and row to `onContextMenuSelect`. Check the styling-property list before assuming appearance options
 (custom fonts/colors) carried over.
 
 **`hs.eventtap`** — `hs.eventtap.event` folded directly into `hs.eventtap` (build events with
