@@ -981,6 +981,27 @@ struct HSChooserTests {
         }
         tracker.assertNoLeaks()
     }
+
+    @Test("A context menu entry that refers to its own chooser doesn't keep it alive after shutdown")
+    func testSelfReferencingContextMenuDoesNotLeak() {
+        let tracker = WeakLeakTracker()
+        autoreleasepool {
+            let harness = JSTestHarness()
+            harness.loadModule(HSChooserModule.self, as: "chooser")
+            // The entry's custom field holds the chooser itself, so the stored menu data
+            // references its own owner until destroy() drops it.
+            harness.eval("""
+                var c = hs.chooser.create()
+                c.contextMenu = [{title: 'Inspect', target: c}]
+            """)
+            if let obj = harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser {
+                tracker.track(obj)
+            }
+            harness.eval("c = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }
 
 // MARK: - Garbage collection (issue #267)
