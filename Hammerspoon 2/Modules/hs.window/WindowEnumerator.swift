@@ -108,7 +108,7 @@ enum WindowEnumerator {
             AKDebug("Failed to get windows for \(app.localizedName ?? "unknown"): \(error.localizedDescription)")
         }
 
-        for attribute in [Attribute.mainWindow, Attribute.focusedWindow] {
+        for attribute in [UIElement.Attribute.mainWindow, UIElement.Attribute.focusedWindow] {
             if let element: UIElement = try? axApp.attribute(attribute),
                (try? element.role()) == .window {
                 add(element)
@@ -158,7 +158,7 @@ enum WindowEnumerator {
 
     /// Whether the WindowServer has the window on any Space
     private static func isOnAnySpace(_ id: CGWindowID) -> Bool {
-        guard let mainConnectionID = unsafe CGSMainConnectionID,
+        guard let mainConnectionID = CGSMainConnectionID,
               let copySpacesForWindows = unsafe CGSCopySpacesForWindows else {
             return true
         }

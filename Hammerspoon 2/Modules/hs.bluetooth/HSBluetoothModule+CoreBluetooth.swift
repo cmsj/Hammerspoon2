@@ -250,7 +250,7 @@ extension HSBluetoothModule: CBCentralManagerDelegate {
                     guard activeScan === scan else { return }
                     // The countdown starts now, so time spent answering the permission prompt
                     // doesn't use up the scan
-                    scan.timer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { [weak self, weak scan] _ in
+                    scan.timer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { [weak self, weak scan = scan] _ in
                         MainActor.assumeIsolated {
                             guard let self, let scan, self.activeScan === scan else { return }
                             self.endScan(nil)

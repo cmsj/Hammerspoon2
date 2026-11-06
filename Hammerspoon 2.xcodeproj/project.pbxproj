@@ -18,11 +18,11 @@
 		4F947DA62F56404F00DD814E /* OSAKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F947DA52F56404F00DD814E /* OSAKit.framework */; };
 		4F9CC6BC306B21AF004B4A15 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F9CC6BA306B2177004B4A15 /* AVKit.framework */; };
 		4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 4FACE0032F12345678900000 /* JavaScriptCoreExtras */; };
+		4FB20C042F00000000000004 /* net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist in Embed Launch Agents */ = {isa = PBXBuildFile; fileRef = 4FB20C022F00000000000002 /* net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist */; };
+		4FB20C052F00000000000005 /* HammerspoonIPCBroker in Embed Tools */ = {isa = PBXBuildFile; fileRef = 4FB20C012F00000000000001 /* HammerspoonIPCBroker */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4FBB01002F70123400DEAD01 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FBB01012F70123400DEAD01 /* ScriptingBridge.framework */; };
 		4FCE0A032F00000000000003 /* CommandLineKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4FCE0A022F00000000000002 /* CommandLineKit */; };
 		4FE4C00C2F0000000000000C /* hs2 in Embed Tools */ = {isa = PBXBuildFile; fileRef = 4FE4C0012F00000000000001 /* hs2 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		4FB20C052F00000000000005 /* HammerspoonIPCBroker in Embed Tools */ = {isa = PBXBuildFile; fileRef = 4FB20C012F00000000000001 /* HammerspoonIPCBroker */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		4FB20C042F00000000000004 /* net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist in Embed Launch Agents */ = {isa = PBXBuildFile; fileRef = 4FB20C022F00000000000002 /* net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,19 +40,19 @@
 			remoteGlobalIDString = 4F947D862F563FCF00DD814E;
 			remoteInfo = HammerspoonOSAScriptHelper;
 		};
-		4FE4C00A2F0000000000000A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4F56417B2E8333830099EB4C /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 4FE4C0032F00000000000003;
-			remoteInfo = hs2;
-		};
 		4FB20C112F00000000000011 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4F56417B2E8333830099EB4C /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 4FB20C0A2F0000000000000A;
 			remoteInfo = HammerspoonIPCBroker;
+		};
+		4FE4C00A2F0000000000000A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4F56417B2E8333830099EB4C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4FE4C0032F00000000000003;
+			remoteInfo = hs2;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -68,6 +68,17 @@
 			name = "Embed XPC Services";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4FB20C062F00000000000006 /* Embed Launch Agents */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchAgents;
+			dstSubfolderSpec = 1;
+			files = (
+				4FB20C042F00000000000004 /* net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist in Embed Launch Agents */,
+			);
+			name = "Embed Launch Agents";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4FE4C00D2F0000000000000D /* Embed Tools */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -78,17 +89,6 @@
 				4FB20C052F00000000000005 /* HammerspoonIPCBroker in Embed Tools */,
 			);
 			name = "Embed Tools";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4FB20C062F00000000000006 /* Embed Launch Agents */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = Contents/Library/LaunchAgents;
-			dstSubfolderSpec = 1;
-			files = (
-				4FB20C042F00000000000004 /* net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist in Embed Launch Agents */,
-			);
-			name = "Embed Launch Agents";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -114,12 +114,12 @@
 		4F973B142EF9523A006A6709 /* module.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = module.njk; sourceTree = "<group>"; };
 		4F973B152EF9523A006A6709 /* type.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = type.njk; sourceTree = "<group>"; };
 		4F9CC6BA306B2177004B4A15 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		4FB20C012F00000000000001 /* HammerspoonIPCBroker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = HammerspoonIPCBroker; sourceTree = BUILT_PRODUCTS_DIR; };
+		4FB20C022F00000000000002 /* net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist"; sourceTree = "<group>"; };
 		4FB6657C306BE133001B87E9 /* generate-docs-if-needed.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "generate-docs-if-needed.sh"; sourceTree = "<group>"; };
 		4FBAC53B433E2BE28A375D63 /* DefaultConfig */ = {isa = PBXFileReference; lastKnownFileType = folder; path = DefaultConfig; sourceTree = "<group>"; };
 		4FBB01012F70123400DEAD01 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		4FE4C0012F00000000000001 /* hs2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hs2; sourceTree = BUILT_PRODUCTS_DIR; };
-		4FB20C012F00000000000001 /* HammerspoonIPCBroker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = HammerspoonIPCBroker; sourceTree = BUILT_PRODUCTS_DIR; };
-		4FB20C022F00000000000002 /* net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -191,11 +191,6 @@
 			path = HammerspoonOSAScriptHelper;
 			sourceTree = "<group>";
 		};
-		4FE4C0022F00000000000002 /* hs2 */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = hs2;
-			sourceTree = "<group>";
-		};
 		4FB20C072F00000000000007 /* HammerspoonIPCBroker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -203,6 +198,11 @@
 				4FB20C092F00000000000009 /* Exceptions for "HammerspoonIPCBroker" folder in "hs2" target */,
 			);
 			path = HammerspoonIPCBroker;
+			sourceTree = "<group>";
+		};
+		4FE4C0022F00000000000002 /* hs2 */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = hs2;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -235,18 +235,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4FB20C0C2F0000000000000C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4FE4C0052F00000000000005 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				4FCE0A032F00000000000003 /* CommandLineKit in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4FB20C0C2F0000000000000C /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -420,6 +420,28 @@
 			productReference = 4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */;
 			productType = "com.apple.product-type.xpc-service";
 		};
+		4FB20C0A2F0000000000000A /* HammerspoonIPCBroker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4FB20C0E2F0000000000000E /* Build configuration list for PBXNativeTarget "HammerspoonIPCBroker" */;
+			buildPhases = (
+				4FB20C0B2F0000000000000B /* Sources */,
+				4FB20C0C2F0000000000000C /* Frameworks */,
+				4FB20C0D2F0000000000000D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				4FB20C072F00000000000007 /* HammerspoonIPCBroker */,
+			);
+			name = HammerspoonIPCBroker;
+			packageProductDependencies = (
+			);
+			productName = HammerspoonIPCBroker;
+			productReference = 4FB20C012F00000000000001 /* HammerspoonIPCBroker */;
+			productType = "com.apple.product-type.tool";
+		};
 		4FE4C0032F00000000000003 /* hs2 */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4FE4C0092F00000000000009 /* Build configuration list for PBXNativeTarget "hs2" */;
@@ -443,28 +465,6 @@
 			productReference = 4FE4C0012F00000000000001 /* hs2 */;
 			productType = "com.apple.product-type.tool";
 		};
-		4FB20C0A2F0000000000000A /* HammerspoonIPCBroker */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 4FB20C0E2F0000000000000E /* Build configuration list for PBXNativeTarget "HammerspoonIPCBroker" */;
-			buildPhases = (
-				4FB20C0B2F0000000000000B /* Sources */,
-				4FB20C0C2F0000000000000C /* Frameworks */,
-				4FB20C0D2F0000000000000D /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				4FB20C072F00000000000007 /* HammerspoonIPCBroker */,
-			);
-			name = HammerspoonIPCBroker;
-			packageProductDependencies = (
-			);
-			productName = HammerspoonIPCBroker;
-			productReference = 4FB20C012F00000000000001 /* HammerspoonIPCBroker */;
-			productType = "com.apple.product-type.tool";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -485,11 +485,11 @@
 					4F947D862F563FCF00DD814E = {
 						CreatedOnToolsVersion = 26.0;
 					};
-					4FE4C0032F00000000000003 = {
-						CreatedOnToolsVersion = 26.0;
-					};
 					4FB20C0A2F0000000000000A = {
 						CreatedOnToolsVersion = 27.0;
+					};
+					4FE4C0032F00000000000003 = {
+						CreatedOnToolsVersion = 26.0;
 					};
 				};
 			};
@@ -549,14 +549,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4FE4C0062F00000000000006 /* Resources */ = {
+		4FB20C0D2F0000000000000D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4FB20C0D2F0000000000000D /* Resources */ = {
+		4FE4C0062F00000000000006 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -566,6 +566,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		336D11A35383A7FA66D4E288 /* Generate API Documentation */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate API Documentation";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/scripts/generate-docs-if-needed.sh\"\n";
+		};
 		4FA7E5D12F9A3B0C00C0FFEE /* Build Test App */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -586,25 +605,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Hammerspoon 2Tests/Helpers/TestApp/build-test-app.sh\" \"${BUILT_PRODUCTS_DIR}\"\n";
-		};
-		336D11A35383A7FA66D4E288 /* Generate API Documentation */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Generate API Documentation";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/scripts/generate-docs-if-needed.sh\"\n";
 		};
 		4FB6657D306BE916001B87E9 /* Highlight TODO/FIXME */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -649,14 +649,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4FE4C0042F00000000000004 /* Sources */ = {
+		4FB20C0B2F0000000000000B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4FB20C0B2F0000000000000B /* Sources */ = {
+		4FE4C0042F00000000000004 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -676,15 +676,15 @@
 			target = 4F947D862F563FCF00DD814E /* HammerspoonOSAScriptHelper */;
 			targetProxy = 4F947D902F563FCF00DD814E /* PBXContainerItemProxy */;
 		};
-		4FE4C00B2F0000000000000B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 4FE4C0032F00000000000003 /* hs2 */;
-			targetProxy = 4FE4C00A2F0000000000000A /* PBXContainerItemProxy */;
-		};
 		4FB20C122F00000000000012 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4FB20C0A2F0000000000000A /* HammerspoonIPCBroker */;
 			targetProxy = 4FB20C112F00000000000011 /* PBXContainerItemProxy */;
+		};
+		4FE4C00B2F0000000000000B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4FE4C0032F00000000000003 /* hs2 */;
+			targetProxy = 4FE4C00A2F0000000000000A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -859,7 +859,7 @@
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Hammerspoon 2 requires camera permissions for various modules to function correctly";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "©2025 by its authors. Released under MIT License.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "©2026 by its authors. Released under MIT License.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Hammerspoon 2 requires local network permissions for various modules to function correctly";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Hammerspoon 2 requires location permissions for hs.location and hs.wifi";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Hammerspoon 2 requires location permissions for hs.location and hs.wifi";
@@ -924,7 +924,7 @@
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Hammerspoon 2 requires calendar permissions for user scripts to function correctly";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Hammerspoon 2 requires camera permissions for various modules to function correctly";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "©2025 by its authors. Released under MIT License.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "©2026 by its authors. Released under MIT License.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Hammerspoon 2 requires local network permissions for various modules to function correctly";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Hammerspoon 2 requires location permissions for hs.location and hs.wifi";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Hammerspoon 2 requires location permissions for hs.location and hs.wifi";
@@ -1071,52 +1071,6 @@
 			};
 			name = Release;
 		};
-		4FE4C0072F00000000000007 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = VQCYSNZB89;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 27.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs2";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_STRICT_MEMORY_SAFETY = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-			};
-			name = Debug;
-		};
-		4FE4C0082F00000000000008 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = VQCYSNZB89;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 27.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs2";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_STRICT_MEMORY_SAFETY = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-			};
-			name = Release;
-		};
 		4FB20C0F2F0000000000000F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1152,6 +1106,52 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.HammerspoonIPCBroker";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_STRICT_MEMORY_SAFETY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		4FE4C0072F00000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = VQCYSNZB89;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs2";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_STRICT_MEMORY_SAFETY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		4FE4C0082F00000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = VQCYSNZB89;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs2";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -1202,20 +1202,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4FE4C0092F00000000000009 /* Build configuration list for PBXNativeTarget "hs2" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				4FE4C0072F00000000000007 /* Debug */,
-				4FE4C0082F00000000000008 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		4FB20C0E2F0000000000000E /* Build configuration list for PBXNativeTarget "HammerspoonIPCBroker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4FB20C0F2F0000000000000F /* Debug */,
 				4FB20C102F00000000000010 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4FE4C0092F00000000000009 /* Build configuration list for PBXNativeTarget "hs2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FE4C0072F00000000000007 /* Debug */,
+				4FE4C0082F00000000000008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

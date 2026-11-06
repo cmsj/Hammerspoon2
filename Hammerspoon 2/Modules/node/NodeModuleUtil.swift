@@ -163,12 +163,12 @@ enum NodeUtil {
         // when there are none, so it has nothing to read. Native wrappers' prototype accessors
         // aren't enumerable, so they still get through.
         guard
-            let ctx = value.context?.jsGlobalContextRef,
-            let object = JSValueToObject(ctx, value.jsValueRef, nil)
+            let ctx = unsafe value.context?.jsGlobalContextRef,
+            let object = unsafe JSValueToObject(ctx, value.jsValueRef, nil)
         else { return nil }
-        let names = JSObjectCopyPropertyNames(ctx, object)
-        defer { JSPropertyNameArrayRelease(names) }
-        guard JSPropertyNameArrayGetCount(names) == 0 else { return nil }
+        let names = unsafe JSObjectCopyPropertyNames(ctx, object)
+        defer { unsafe JSPropertyNameArrayRelease(names) }
+        guard unsafe JSPropertyNameArrayGetCount(names) == 0 else { return nil }
 
         guard let native = value.toObject() as? NSObject, !(native is NSDictionary) else { return nil }
         return native.description

@@ -191,9 +191,9 @@ struct HSBluetoothBatteryLevels {
         // an unsigned char ("C") and take no arguments: a changed signature means skipping it,
         // not reading garbage
         guard device.responds(to: selector),
-              let method = class_getInstanceMethod(type(of: device), selector),
-              let encoding = method_getTypeEncoding(method).map({ String(cString: $0) }),
-              encoding.hasPrefix("C"), method_getNumberOfArguments(method) == 2 else { return nil }
+              let method = unsafe class_getInstanceMethod(type(of: device), selector),
+              let encoding = unsafe method_getTypeEncoding(method).map({ unsafe String(cString: $0) }),
+              encoding.hasPrefix("C"), unsafe method_getNumberOfArguments(method) == 2 else { return nil }
         typealias Getter = @convention(c) (AnyObject, Selector) -> UInt8
         let getter = unsafe unsafeBitCast(device.method(for: selector), to: Getter.self)
         let percent = Int(getter(device, selector))

@@ -170,7 +170,7 @@ struct Hammerspoon_2App: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("Hammerspoon 2", systemImage: "hammer", isInserted: $settingsManager.dockMenuBehaviour.showMenuItem) { // FIXME: Use the real logo here
+        MenuBarExtra(isInserted: $settingsManager.dockMenuBehaviour.showMenuItem) {
             let managerManager = ManagerManager.shared
 
             Button("Reload Config") {
@@ -202,6 +202,18 @@ struct Hammerspoon_2App: App {
 
             Button("Quit") {
                 managerManager.shutdown()
+            }
+        } label: {
+            Label {Text("Hammerspoon 2") } icon: {
+                // FIXME: This is an ugly hack because a regular Image() here, backed by our SVG, renders vastly too large
+                let image: NSImage = {
+                    let ratio = $0.size.height / $0.size.width
+                    $0.size.height = 18
+                    $0.size.width = 18 / ratio
+                    return $0
+                }(NSImage(named: "MenubarIcon")!)
+
+                Image(nsImage: image)
             }
         }
         .onChange(of: settingsManager.dockMenuBehaviour, initial: true) {

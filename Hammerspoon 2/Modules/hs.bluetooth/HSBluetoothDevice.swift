@@ -369,7 +369,7 @@ nonisolated enum HSBluetoothDeviceEvent: String, HSEventName {
         perform("connect") {
             guard !self.classic.isConnected else { return self }
             try await self.requests.wait(for: "connect", timeout: .seconds(20)) {
-                try self.classic.openConnection { [weak self] status in
+                try self.classic.openConnection { [weak self = self] status in
                     self?.requests.settle("connect", status == kIOReturnSuccess ? nil : HSBluetoothError.forIOReturn(status, "Connecting"))
                 }
             }

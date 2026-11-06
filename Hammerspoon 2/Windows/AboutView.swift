@@ -22,10 +22,9 @@ struct AboutView: View {
                     .allowsHitTesting(false)
                 VStack(spacing: 0) {
                     VStack(spacing: 0) {
-                        Image(systemName: "hammer") // FIXME: Proper logo here
+                        Image("MenubarIcon")
                             .resizable()
                             .frame(width: 103, height: 103, alignment: .center)
-                            .clipShape(.buttonBorder)
                             .shadow(color: colorScheme == .dark ? glowColor : .clear, radius: 50)
                             .padding([.top], 30)
                             .allowsHitTesting(false)
@@ -48,7 +47,7 @@ struct AboutView: View {
 
                         HStack {
                             Spacer()
-                            Text("Icon by Juerd Waalboer")
+                            Text("App Icon by Juerd Waalboer")
                                 .font(.system(size: 14))
                             Spacer()
                         }
