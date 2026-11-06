@@ -7,13 +7,11 @@ import AppKit
 import Observation
 import SwiftUI
 
-/// A single entry in a row's context menu — either an action button or a separator.
-struct ChooserContextMenuEntry {
-    enum Kind {
-        case button(title: String, action: () -> Void)
-        case divider
-    }
-    let kind: Kind
+/// A single entry in the context menu shared by every row — either a menu item or a separator.
+enum ChooserContextMenuEntry {
+    /// A menu item; `entry` is the original JS object, passed back to `onContextMenuSelect`.
+    case item(title: String, entry: [String: Any])
+    case divider
 }
 
 /// A single selectable item in the chooser list.
@@ -23,10 +21,8 @@ struct ChooserItem: Identifiable, Equatable {
     let subText: String?
     let image: NSImage?
     let isValid: Bool
-    /// Original JS-side fields (excluding text/subText/image/valid/contextMenu) for passback to onSelect.
+    /// Original JS-side fields (excluding text/subText/image/valid) for passback to onSelect.
     let extra: [String: Any]
-    /// Per-row context menu entries, parsed from the JS `contextMenu` array.
-    let contextMenuItems: [ChooserContextMenuEntry]
 
     static func == (lhs: ChooserItem, rhs: ChooserItem) -> Bool {
         lhs.id == rhs.id
@@ -53,6 +49,8 @@ final class ChooserViewModel {
     var placeholder: String = "Search..."
     var visibleRows: Int = 10
     var isVisible: Bool = false
+    /// The context menu shown when any row is right-clicked.
+    var contextMenuEntries: [ChooserContextMenuEntry] = []
 
     // MARK: - Styling
 
@@ -96,6 +94,8 @@ final class ChooserViewModel {
     @ObservationIgnored var onUserQueryChange: ((String) -> Void)?
     /// Notified when content size changes so the window frame can be updated.
     @ObservationIgnored var onContentSizeChange: ((CGFloat) -> Void)?
+    /// Notified when the user picks a context menu item, with the row it was opened on.
+    @ObservationIgnored var onContextMenuSelect: ((ChooserItem, [String: Any]) -> Void)?
 
     static let separatorHeight: CGFloat = 1
 

@@ -159,6 +159,20 @@ struct HSChooserTests {
             #expect(!harness.hasException)
         }
 
+        @Test("contextMenu defaults to an empty array")
+        func testContextMenuDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("Array.isArray(c.contextMenu) && c.contextMenu.length === 0")
+        }
+
+        @Test("onContextMenuSelect property is writable")
+        func testOnContextMenuSelectWritable() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create(); c.onContextMenuSelect = () => {}")
+            #expect(!harness.hasException)
+        }
+
         @Test("select is a function")
         func testSelectIsFunction() {
             #expect(makeHarness().evalTypeOf("hs.chooser.create().select") == "function")
@@ -731,6 +745,120 @@ struct HSChooserTests {
         }
     }
 
+    // MARK: - Context menu
+
+    @Suite("hs.chooser context menu tests")
+    struct HSChooserContextMenuTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSChooserModule.self, as: "chooser")
+            return harness
+        }
+
+        /// The JS object of the context menu item titled `title`, as the view hands it back.
+        private func menuEntry(titled title: String, in chooser: HSChooser) -> [String: Any]? {
+            for case let .item(itemTitle, entry) in chooser.viewModel.contextMenuEntries where itemTitle == title {
+                return entry
+            }
+            return nil
+        }
+
+        @Test("contextMenu keeps items and dividers, and drops malformed entries")
+        func testContextMenuParsing() throws {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.contextMenu = [
+                {title: "Open", id: "open"},
+                {type: "divider"},
+                {id: "no-title"},
+                "not an object",
+                {title: "Copy", id: "copy"}
+            ]
+        """)
+            #expect(!harness.hasException)
+            harness.expectEqual("c.contextMenu.length", 3)
+            harness.expectEqual("c.contextMenu[0].id", "open")
+            harness.expectEqual("c.contextMenu[1].type", "divider")
+            harness.expectEqual("c.contextMenu[2].title", "Copy")
+
+            let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
+            #expect(chooser.viewModel.contextMenuEntries.count == 3)
+        }
+
+        @Test("setting contextMenu to an empty array removes the menu")
+        func testContextMenuCleared() throws {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.contextMenu = [{title: "Open"}]
+            c.contextMenu = []
+        """)
+            harness.expectEqual("c.contextMenu.length", 0)
+            let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
+            #expect(chooser.viewModel.contextMenuEntries.isEmpty)
+        }
+
+        @Test("picking a context menu item calls onContextMenuSelect with the row and the menu item")
+        func testContextMenuSelectArguments() throws {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([{text: "First", myData: 1}, {text: "Second", subText: "two", myData: 2}])
+            c.contextMenu = [{title: "Open", id: "open"}, {type: "divider"}, {title: "Copy", id: "copy"}]
+            var calls = []
+            c.onContextMenuSelect = function(choice, menuItem) { calls.push({choice: choice, menuItem: menuItem}) }
+        """)
+            let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
+            let row = chooser.viewModel.filteredChoices[1]
+            let entry = try #require(menuEntry(titled: "Copy", in: chooser))
+
+            chooser.viewModel.onContextMenuSelect?(row, entry)
+
+            #expect(!harness.hasException)
+            harness.expectEqual("calls.length", 1)
+            harness.expectEqual("calls[0].choice.text", "Second")
+            harness.expectEqual("calls[0].choice.subText", "two")
+            harness.expectEqual("calls[0].choice.myData", 2)
+            harness.expectEqual("calls[0].menuItem.title", "Copy")
+            harness.expectEqual("calls[0].menuItem.id", "copy")
+        }
+
+        @Test("one context menu serves every row, including invalid ones")
+        func testContextMenuSharedByAllRows() throws {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([{text: "A"}, {text: "B", valid: false}, {text: "C"}])
+            c.contextMenu = [{title: "Inspect"}]
+            var seen = []
+            c.onContextMenuSelect = function(choice, menuItem) { seen.push(choice.text + ":" + menuItem.title) }
+        """)
+            let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
+            let entry = try #require(menuEntry(titled: "Inspect", in: chooser))
+            for row in chooser.viewModel.filteredChoices {
+                chooser.viewModel.onContextMenuSelect?(row, entry)
+            }
+            harness.expectEqual("seen.join(',')", "A:Inspect,B:Inspect,C:Inspect")
+            #expect(!harness.hasException)
+        }
+
+        @Test("picking a context menu item without a handler does nothing")
+        func testContextMenuSelectWithoutHandler() throws {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([{text: "A"}])
+            c.contextMenu = [{title: "Inspect"}]
+        """)
+            let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
+            let entry = try #require(menuEntry(titled: "Inspect", in: chooser))
+            chooser.viewModel.onContextMenuSelect?(chooser.viewModel.filteredChoices[0], entry)
+            #expect(!harness.hasException)
+        }
+    }
+
     // MARK: - Keyboard navigation
 
     @Suite("hs.chooser keyboard navigation tests")
@@ -741,7 +869,7 @@ struct HSChooserTests {
             let viewModel = ChooserViewModel()
             viewModel.filteredChoices = (0..<rows).map { index in
                 ChooserItem(id: UUID(), text: "Row \(index)", subText: nil, image: nil,
-                            isValid: true, extra: [:], contextMenuItems: [])
+                            isValid: true, extra: [:])
             }
             viewModel.visibleRows = visibleRows
             viewModel.selectedIndex = selectedIndex
@@ -841,6 +969,8 @@ struct HSChooserTests {
                 c.setChoices([{text: 'Option A'}, {text: 'Option B'}])
                 c.onSelect = function(item) {}
                 c.onQueryChange = function(q) {}
+                c.contextMenu = [{title: 'Inspect'}]
+                c.onContextMenuSelect = function(choice, menuItem) {}
                 c.show()
             """)
             if let obj = harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser {
