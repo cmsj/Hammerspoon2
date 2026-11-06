@@ -762,6 +762,9 @@ import SwiftUI
         viewModel.onUserQueryChange = nil
         viewModel.onContentSizeChange = nil
         viewModel.onContextMenuSelect = nil
+        // Entries can hold native objects (even this chooser) in custom fields
+        contextMenuEntries = []
+        viewModel.contextMenuEntries = []
         AKGarbage("hs.chooser.destroy(): \(identifier)")
     }
 
