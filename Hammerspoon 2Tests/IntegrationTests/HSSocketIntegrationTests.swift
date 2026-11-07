@@ -249,6 +249,17 @@ struct HSSocketTests {
             #expect(harness.evalString("log[1]") == "got ping\n")
             #expect(harness.evalString("client.unixPath") == path)
 
+            // A second listener mustn't take over a path something is still listening on
+            harness.eval("""
+                var secondErrors = [];
+                var second = hs.socket.create().setCallback((event, sock, data) => {
+                    if (event === "error") secondErrors.push(data);
+                }).listenUnix("\(path)");
+            """)
+            #expect(harness.evalInt("secondErrors.length") == 1)
+            #expect(harness.evalBool("second.isListening") == false)
+            #expect(FileManager.default.fileExists(atPath: path))
+
             harness.eval("server.disconnect()")
             #expect(!FileManager.default.fileExists(atPath: path))
             #expect(!harness.hasException)
@@ -382,6 +393,43 @@ struct HSSocketTests {
             #expect(harness.evalInt("u.localPort") == 0)
             harness.eval("u.bind(0)")
             #expect(harness.evalBool("u.isBound") == true)
+            #expect(!harness.hasException)
+        }
+
+        @Test("A closed socket's port is free as soon as close() returns")
+        func testPortFreedOnClose() {
+            let harness = makeHarness()
+            harness.eval("""
+                var errors = [];
+                var u = hs.socket.createUDP().setCallback((event, sock, data) => { if (event === "error") errors.push(data); }).bind(0).receive();
+                var port = u.localPort;
+                u.close();
+                u.bind(port);
+            """)
+            #expect(harness.evalString("errors.join('|')") == "")
+            #expect(harness.evalBool("u.isBound && u.localPort === port") == true)
+            #expect(!harness.hasException)
+        }
+
+        @Test("A send from a hostname connection's callback doesn't repeat the connection")
+        func testHostnameConnectRunsOnce() async throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var received = [];
+                var connects = 0;
+                var receiver = hs.socket.createUDP().setCallback((event, sock, data) => {
+                    if (event === "data") received.push(hs.socket.decodeText(data));
+                }).bind(0).receive();
+                var sender = hs.socket.createUDP().setCallback((event, sock) => {
+                    if (event === "connected") { connects++; sock.send("hello"); }
+                });
+            """)
+            let port = try #require(harness.evalInt("receiver.localPort"))
+            harness.eval("sender.connect('localhost', \(port))")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.evalInt("received.length") == 1 })
+            try await Task.sleep(for: .milliseconds(200))
+            #expect(harness.evalInt("connects") == 1)
+            #expect(harness.evalInt("received.length") == 1)
             #expect(!harness.hasException)
         }
     }
