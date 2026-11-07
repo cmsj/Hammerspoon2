@@ -36,6 +36,9 @@ struct HSMQTTClientOptions {
         "caCertificate", "clientCertificate", "clientCertificatePassword", "allowUntrustedCertificates",
     ]
 
+    /// The longest timeout or interval accepted: a day, comfortably within what Duration can hold
+    static let maximumSeconds = 86_400.0
+
     var host: String
     var port: Int?
     var clientID: String
@@ -80,9 +83,10 @@ struct HSMQTTClientOptions {
             port = url.port
             username = url.user(percentEncoded: false)
             password = url.password(percentEncoded: false)
+            // Kept as given, query included, since brokers may route or authorize on it
             let path = url.path(percentEncoded: true)
-            if websocket, !path.isEmpty, path != "/" {
-                websocketPath = path
+            if websocket, !path.isEmpty || url.query != nil {
+                websocketPath = (path.isEmpty ? "/" : path) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
             }
         } else {
             host = server
@@ -123,16 +127,16 @@ struct HSMQTTClientOptions {
             keepAlive = value
         }
         if let value = try reader.number("connectTimeout") {
-            guard value > 0 else { throw HSMQTTError("connectTimeout must be greater than 0") }
+            guard value > 0, value <= Self.maximumSeconds else { throw HSMQTTError("connectTimeout must be between 0 and \(Int(Self.maximumSeconds)) seconds") }
             connectTimeout = value
         }
         if let value = try reader.number("timeout") {
-            guard value > 0 else { throw HSMQTTError("timeout must be greater than 0") }
+            guard value > 0, value <= Self.maximumSeconds else { throw HSMQTTError("timeout must be between 0 and \(Int(Self.maximumSeconds)) seconds") }
             timeout = value
         }
         cleanSession = try reader.bool("cleanSession") ?? cleanSession
         if let value = try reader.number("reconnectInterval") {
-            guard value >= 0 else { throw HSMQTTError("reconnectInterval must not be negative") }
+            guard value >= 0, value <= Self.maximumSeconds else { throw HSMQTTError("reconnectInterval must be between 0 and \(Int(Self.maximumSeconds)) seconds") }
             reconnectInterval = value
         }
         if let value = try reader.dictionary("will") {

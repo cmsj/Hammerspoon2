@@ -257,6 +257,8 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
     private var subscriptionTasks: [String: Task<Void, Never>] = [:]
     /// The filters whose subscriptions are currently delivering messages (see didReceive)
     private var activeFilters: Set<String> = []
+    /// The last subscription change queued for each filter (see changeSubscription)
+    private var filterChanges: [String: Task<Void, Never>] = [:]
 
     /// The connection attempt in progress, if any, which disconnect() waits for
     private var connectTask: Task<Bool, Error>?
@@ -294,6 +296,7 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
         connection = nil
         subscriptionTasks.removeAll()
         activeFilters.removeAll()
+        filterChanges.removeAll()
     }
 
     private func updateActivity() {
@@ -329,6 +332,8 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
         }
         return wrapAsyncInJSPromise(in: context) { [self] holder in
             Task {
+                // destroy() may have run since this was called, in the same JavaScript turn
+                guard !isDestroyed else { return }
                 do {
                     let result = try await body()
                     if !isDestroyed { holder.resolveWith(result) }
@@ -361,7 +366,14 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
                 guard self.connectionState == .connecting else {
                     throw HSMQTTError("disconnect() was called before the connection was established")
                 }
-                guard self.connection != nil else {
+                guard let connection = self.connection else {
+                    throw HSMQTTError("the broker closed the connection")
+                }
+                await self.restoreSubscriptions(on: connection)
+                guard self.connectionState == .connecting else {
+                    throw HSMQTTError("disconnect() was called before the connection was established")
+                }
+                guard self.connection === connection else {
                     throw HSMQTTError("the broker closed the connection")
                 }
                 self.connectionState = .connected
@@ -450,11 +462,9 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
         guard !topicFilter.isEmpty, topicFilter != "undefined" else { return reject("unsubscribe", "a topic filter is required") }
         return perform("unsubscribe") {
             _ = try self.requireConnection()
-            self.subscribedFilters[topicFilter] = nil
-            if let task = self.subscriptionTasks.removeValue(forKey: topicFilter) {
-                // Ending the subscription's closure makes mqtt-nio unsubscribe, which the task waits for
-                task.cancel()
-                await task.value
+            try await self.changeSubscription(for: topicFilter) {
+                self.subscribedFilters[topicFilter] = nil
+                await self.endSubscription(to: topicFilter)
             }
             return nil
         }
@@ -495,6 +505,15 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
                 var pending: CheckedContinuation<Bool, any Error>? = continuation
                 var failure: (any Error)?
                 let operation: (MQTTConnection, Bool) async -> Void = { connection, sessionPresent in
+                    // A connection that completes after destroy() is closed straight away. self is
+                    // only borrowed here, not kept for the connection's lifetime (which would keep
+                    // the client alive past destroy() until the connection had closed).
+                    guard self?.isDestroyed == false else {
+                        connection.close()
+                        pending?.resume(throwing: HSMQTTError("the client has been destroyed"))
+                        pending = nil
+                        return
+                    }
                     self?.connection = connection
                     pending?.resume(returning: sessionPresent)
                     pending = nil
@@ -524,15 +543,43 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
         }
     }
 
+    /// Runs changes to one topic filter's subscription one at a time, in the order they're made.
+    /// Each waits for the subscription before it to be replaced or removed, so two changes can't
+    /// both see no subscription and start one each, and a SUBSCRIBE can't overtake an UNSUBSCRIBE.
+    private func changeSubscription(for topicFilter: String, _ change: @escaping @MainActor () async throws -> Void) async throws {
+        let previous = filterChanges[topicFilter]
+        let task = Task {
+            await previous?.value
+            try await change()
+        }
+        let done = Task { _ = try? await task.value }
+        filterChanges[topicFilter] = done
+        defer {
+            if filterChanges[topicFilter] == done { filterChanges[topicFilter] = nil }
+        }
+        try await task.value
+    }
+
+    /// Ends the subscription to a filter, if there is one, waiting for mqtt-nio to unsubscribe
+    private func endSubscription(to topicFilter: String) async {
+        guard let task = subscriptionTasks.removeValue(forKey: topicFilter) else { return }
+        // Ending the subscription's closure makes mqtt-nio unsubscribe, which the task waits for
+        task.cancel()
+        await task.value
+    }
+
     /// Subscribes to one topic filter on a connection, remembering it for reconnection.
     /// Returns once the broker has acknowledged the subscription.
     private func subscribe(to topicFilter: String, qos: MQTTQoS, on connection: MQTTConnection) async throws {
-        // A subscription to the same filter replaces the old one, which must have unsubscribed
-        // first, or its UNSUBSCRIBE would remove the new one too
-        if let previous = subscriptionTasks.removeValue(forKey: topicFilter) {
-            previous.cancel()
-            await previous.value
+        try await changeSubscription(for: topicFilter) {
+            // Replaces any existing subscription, which must have unsubscribed first, or its
+            // UNSUBSCRIBE would remove the new one too
+            await self.endSubscription(to: topicFilter)
+            try await self.startSubscription(to: topicFilter, qos: qos, on: connection)
         }
+    }
+
+    private func startSubscription(to topicFilter: String, qos: MQTTQoS, on connection: MQTTConnection) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
             subscriptionTasks[topicFilter] = Task { [weak self] in
                 var pending: CheckedContinuation<Void, any Error>? = continuation
@@ -552,6 +599,17 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
                     pending = nil
                 }
                 self?.activeFilters.remove(topicFilter)
+            }
+        }
+    }
+
+    /// Re-subscribes a new connection to the topic filters subscribed to on earlier ones
+    private func restoreSubscriptions(on connection: MQTTConnection) async {
+        for (filter, qos) in subscribedFilters {
+            do {
+                try await subscribe(to: filter, qos: qos, on: connection)
+            } catch {
+                AKWarning("hs.mqtt: \(toString()) couldn't restore its subscription to '\(filter)': \(Self.describe(error))")
             }
         }
     }
@@ -590,13 +648,7 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
             let sessionPresent = try await establishConnection()
             guard connectionState == .reconnecting else { return true }
             guard let connection else { return false }
-            for (filter, qos) in subscribedFilters {
-                do {
-                    try await subscribe(to: filter, qos: qos, on: connection)
-                } catch {
-                    AKWarning("hs.mqtt: \(toString()) couldn't restore its subscription to '\(filter)': \(Self.describe(error))")
-                }
-            }
+            await restoreSubscriptions(on: connection)
             guard connectionState == .reconnecting else { return true }
             guard self.connection === connection else { return false }
             reconnectTask = nil

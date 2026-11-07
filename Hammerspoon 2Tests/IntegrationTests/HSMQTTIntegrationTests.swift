@@ -183,6 +183,9 @@ struct HSMQTTTests {
             "'broker.local', { keepAlive: 0 }",
             "'broker.local', { connectTimeout: -1 }",
             "'broker.local', { reconnectInterval: -1 }",
+            "'broker.local', { reconnectInterval: 1e20 }",
+            "'broker.local', { connectTimeout: 1e20 }",
+            "'broker.local', { timeout: 86401 }",
             "'broker.local', { will: { payload: 'gone' } }",
             "'broker.local', { will: { topic: 't', qos: 3 } }",
             "'broker.local', { will: { topic: 't', delay: 1 } }",
@@ -223,6 +226,18 @@ struct HSMQTTTests {
             #expect(options.tls)
             #expect(options.websocket)
             #expect(options.websocketPath == "/ws/mqtt")
+        }
+
+        @Test("A WebSocket URL's path and query are kept, and /mqtt is used without a path", arguments: [
+            ("wss://broker.local", nil),
+            ("wss://broker.local/", "/"),
+            ("wss://broker.local/?token=a%2Bb", "/?token=a%2Bb"),
+            ("ws://broker.local/ws?x=1&y=2", "/ws?x=1&y=2"),
+            ("mqtt://broker.local/ignored", nil),
+        ])
+        func testWebSocketPath(_ server: String, _ path: String?) throws {
+            let options = try HSMQTTClientOptions(server: server, options: [:])
+            #expect(options.websocketPath == path)
         }
 
         @Test("Option credentials replace the URL's")
@@ -546,6 +561,48 @@ struct HSMQTTTests {
             #expect(result.error == nil)
             #expect(await fixture.waitFor("connectResult !== null"))
             #expect(fixture.harness.evalString("client.state") == "disconnected")
+        }
+
+        @Test("destroy() straight after connect() leaves no connection behind")
+        func testDestroyDuringConnect() async throws {
+            let fixture = MQTTFixture()
+            try await fixture.start()
+            fixture.harness.eval("client.connect(); client.destroy()")
+            try await Task.sleep(for: .milliseconds(300))
+            #expect(fixture.harness.evalString("client.state") == "disconnected")
+            #expect(fixture.broker.connectionCount == 0)
+        }
+
+        @Test("connect() after disconnect() restores the client's subscriptions")
+        func testManualReconnectRestoresSubscriptions() async throws {
+            let fixture = MQTTFixture()
+            try await fixture.start()
+            fixture.harness.eval("var received = []; client.on('message', m => received.push(m.payload))")
+            await fixture.connect()
+            await fixture.settle("client.subscribe('home/#')")
+            await fixture.disconnect()
+            await fixture.connect()
+            #expect(fixture.broker.subscribes == ["home/#", "home/#"])
+            fixture.broker.send(topic: "home/door", payload: "open")
+            #expect(await fixture.waitFor("received.length === 1"))
+            await fixture.disconnect()
+        }
+
+        @Test("Overlapping changes to one subscription are applied in order")
+        func testConcurrentSubscriptionChanges() async throws {
+            let fixture = MQTTFixture()
+            try await fixture.start()
+            fixture.harness.eval("var received = []; client.on('message', m => received.push(m.payload))")
+            await fixture.connect()
+            await fixture.settle("Promise.all([client.subscribe('a'), client.subscribe('a', 1), client.unsubscribe('a'), client.subscribe('a', 2)])")
+            #expect(fixture.harness.evalString("JSON.stringify(client.subscriptions)") == "{\"a\":2}")
+            #expect(fixture.broker.subscribes == ["a", "a", "a"])
+            #expect(fixture.broker.unsubscribes == ["a", "a"])
+            fixture.broker.send(topic: "a", payload: "once")
+            #expect(await fixture.waitFor("received.length === 1"))
+            try await Task.sleep(for: .milliseconds(100))
+            #expect(fixture.harness.evalInt("received.length") == 1)
+            await fixture.disconnect()
         }
 
         @Test("A destroyed client rejects connect() and disconnects from the broker")
