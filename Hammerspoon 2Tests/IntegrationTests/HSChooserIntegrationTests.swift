@@ -844,6 +844,30 @@ struct HSChooserTests {
             #expect(!harness.hasException)
         }
 
+        @Test("a choice can opt out of the context menu with contextMenu: false")
+        func testChoiceOptsOutOfContextMenu() throws {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([
+                {text: "Entry"},
+                {text: "Clear history", action: "clear", contextMenu: false},
+                {text: "Explicitly on", contextMenu: true}
+            ])
+            c.contextMenu = [{title: "Delete entry"}]
+            var selected = null
+            c.onSelect = function(item) { selected = item }
+        """)
+            let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
+            #expect(chooser.viewModel.filteredChoices.map(\.showsContextMenu) == [true, false, true])
+
+            // The field is still passed back to onSelect like any other
+            harness.eval("c.select(1)")
+            harness.expectEqual("selected.action", "clear")
+            harness.expectTrue("selected.contextMenu === false")
+            #expect(!harness.hasException)
+        }
+
         @Test("picking a context menu item without a handler does nothing")
         func testContextMenuSelectWithoutHandler() throws {
             let harness = makeHarness()
@@ -869,7 +893,7 @@ struct HSChooserTests {
             let viewModel = ChooserViewModel()
             viewModel.filteredChoices = (0..<rows).map { index in
                 ChooserItem(id: UUID(), text: "Row \(index)", subText: nil, image: nil,
-                            isValid: true, extra: [:])
+                            isValid: true, showsContextMenu: true, extra: [:])
             }
             viewModel.visibleRows = visibleRows
             viewModel.selectedIndex = selectedIndex
