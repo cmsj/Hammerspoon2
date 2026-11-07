@@ -252,42 +252,59 @@ import Darwin
         }
     }
 
-    /// One system socket, for one address family, and the dispatch source that reads it.
-    private final class Endpoint {
+    /// One system socket, for one address family, monitored for incoming datagrams on the main
+    /// run loop.
+    ///
+    /// This uses CFSocket rather than a dispatch source because invalidating a CFSocket closes the
+    /// system socket immediately, so its port is free as soon as `close()` returns. A dispatch
+    /// source's descriptor may only be closed from its cancel handler, which runs later.
+    fileprivate final class Endpoint {
         let fd: Int32
         let family: Int32
-        let source: DispatchSourceRead
-        private var isActivated = false
-        private(set) var isReading = false
+        fileprivate weak var owner: HSUDPSocket?
+        private var socket: CFSocket?
+        private var isReading = false
 
-        init(fd: Int32, family: Int32, source: DispatchSourceRead) {
+        /// Takes ownership of `fd`, which is closed by `close()`, or straight away if this fails.
+        init?(fd: Int32, family: Int32, owner: HSUDPSocket) {
             self.fd = fd
             self.family = family
-            self.source = source
+            self.owner = owner
+            var context = CFSocketContext(version: 0, info: unsafe Unmanaged.passUnretained(self).toOpaque(),
+                                          retain: nil, release: nil, copyDescription: nil)
+            guard let socket = unsafe CFSocketCreateWithNative(nil, fd, CFSocketCallBackType.readCallBack.rawValue,
+                                                               udpEndpointReadable, &context) else {
+                _ = Darwin.close(fd)
+                return nil
+            }
+            CFSocketDisableCallBacks(socket, CFSocketCallBackType.readCallBack.rawValue)
+            let source = CFSocketCreateRunLoopSource(nil, socket, 0)
+            CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
+            self.socket = socket
         }
 
         func startReading() {
-            guard !isReading else { return }
-            if isActivated {
-                source.resume()
-            } else {
-                source.activate()
-                isActivated = true
-            }
+            guard !isReading, let socket else { return }
+            CFSocketEnableCallBacks(socket, CFSocketCallBackType.readCallBack.rawValue)
             isReading = true
         }
 
         func stopReading() {
-            guard isReading else { return }
-            source.suspend()
+            guard isReading, let socket else { return }
+            CFSocketDisableCallBacks(socket, CFSocketCallBackType.readCallBack.rawValue)
             isReading = false
         }
 
-        /// Cancels the source, whose cancel handler closes the socket. A source can't be
-        /// released while it's inactive or suspended, so it's started first.
+        isolated deinit {
+            close()
+        }
+
+        /// Removes the socket from the run loop and closes it.
         func close() {
-            startReading()
-            source.cancel()
+            guard let socket else { return }
+            CFSocketInvalidate(socket)
+            self.socket = nil
+            isReading = false
         }
     }
 
@@ -487,7 +504,10 @@ import Darwin
                 }
                 guard generation == self.generation else { return }
                 self.isRunningOperation = false
+                // The operation stays queued while its callbacks run, so they mustn't start it again
+                self.isDrainingOperations = true
                 self.finish(operation, addresses: result)
+                self.isDrainingOperations = false
                 self.runOperations()
             }
             return
@@ -620,7 +640,7 @@ import Darwin
         }
     }
 
-    private func readDatagram(from endpoint: Endpoint) {
+    fileprivate func readDatagram(from endpoint: Endpoint) {
         guard receiveMode != .off, endpoints.contains(where: { $0 === endpoint }) else { return }
         var buffer = [UInt8](repeating: 0, count: Self.maximumDatagramSize)
         var storage = sockaddr_storage()
@@ -721,16 +741,9 @@ import Darwin
             setOption(fd, SOL_SOCKET, SO_BROADCAST, true)
         }
 
-        let source = DispatchSource.makeReadSource(fileDescriptor: fd, queue: .main)
-        let endpoint = Endpoint(fd: fd, family: family, source: source)
-        source.setEventHandler { [weak self, weak endpoint] in
-            MainActor.assumeIsolated {
-                guard let self, let endpoint else { return }
-                self.readDatagram(from: endpoint)
-            }
-        }
-        source.setCancelHandler {
-            _ = Darwin.close(fd)
+        guard let endpoint = Endpoint(fd: fd, family: family, owner: self) else {
+            emitError("Could not monitor socket")
+            return nil
         }
         endpoints.append(endpoint)
         return endpoint
@@ -845,4 +858,16 @@ nonisolated private func lookupSocketAddresses(host: String, port: Int, numericO
 @concurrent
 nonisolated private func lookupSocketAddressesInBackground(host: String, port: Int) async throws -> [Data] {
     try lookupSocketAddresses(host: host, port: port, numericOnly: false)
+}
+
+/// Called on the main run loop when one of an `HSUDPSocket.Endpoint`'s sockets is readable.
+///
+/// `nonisolated` and at file scope, since CFSocket calls it as a C function.
+nonisolated private func udpEndpointReadable(_ socket: CFSocket?, _ type: CFSocketCallBackType, _ address: CFData?,
+                                             _ data: UnsafeRawPointer?, _ info: UnsafeMutableRawPointer?) {
+    guard let info = unsafe info else { return }
+    let endpoint = unsafe Unmanaged<HSUDPSocket.Endpoint>.fromOpaque(info).takeUnretainedValue()
+    MainActor.assumeIsolated {
+        endpoint.owner?.readDatagram(from: endpoint)
+    }
 }

@@ -395,8 +395,8 @@ import Security
     }
 
     @objc var clients: [HSSocket] {
-        acceptedClients = acceptedClients.filter { $0.socket?.isConnected == true }
-        return acceptedClients.compactMap(\.socket)
+        acceptedClients = acceptedClients.filter { $0.socket != nil }
+        return acceptedClients.compactMap(\.socket).filter(\.isConnected)
     }
 
     // MARK: - Configuration
@@ -503,7 +503,10 @@ import Security
             emitError("Invalid socket path")
             return self
         }
-        removeStaleSocketFile(at: path)
+        guard removeStaleSocketFile(at: path) else {
+            emitError("Another program is already listening at \(path)")
+            return self
+        }
         let parameters = NWParameters.tcp
         parameters.requiredLocalEndpoint = .unix(path: path)
         startListener(parameters: parameters, port: nil, path: path)
@@ -575,10 +578,14 @@ import Security
         emit(.connection, client)
     }
 
-    private func removeStaleSocketFile(at path: String) {
+    /// Removes a socket file left at `path` by a listener that has gone, so its path can be reused.
+    /// - Returns: `false` if something is still listening there
+    private func removeStaleSocketFile(at path: String) -> Bool {
         var info = stat()
-        guard unsafe lstat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFSOCK else { return }
+        guard unsafe lstat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFSOCK else { return true }
+        guard !unixSocketAcceptsConnections(at: path) else { return false }
         unsafe unlink(path)
+        return true
     }
 
     // MARK: - Reading
@@ -694,6 +701,8 @@ import Security
                     self.buffer.append(contentsOf: content)
                 }
                 self.processReads()
+                // A "data" callback may have disconnected, or even reconnected, the socket
+                guard connection === self.connection else { return }
                 if let error {
                     self.teardown(error: Self.describe(error), graceful: false)
                 } else if isComplete {
@@ -775,14 +784,15 @@ import Security
         }
         connectedPath = nil
 
+        // Clients are disconnected only once this socket's own state is cleared, since their
+        // callbacks may disconnect or restart it
+        var clientsToDisconnect: [HSSocket] = []
         if let listener {
             listener.newConnectionHandler = nil
             listener.stateUpdateHandler = nil
             listener.cancel()
             self.listener = nil
-            for client in acceptedClients.compactMap(\.socket) {
-                client.disconnect()
-            }
+            clientsToDisconnect = acceptedClients.compactMap(\.socket)
             acceptedClients.removeAll()
             if let listenerPath {
                 unsafe unlink(listenerPath)
@@ -797,13 +807,19 @@ import Security
         state = .idle
         AKDebug("HSSocket(\(identifier)): disconnected\(error.map { ": \($0)" } ?? "")")
 
-        guard let function, let wrapper else { return }
-        if let error {
-            _ = function.call(withArguments: [Event.error.rawValue, wrapper, error])
+        if let function, let wrapper {
+            if let error {
+                _ = function.call(withArguments: [Event.error.rawValue, wrapper, error])
+            }
+            // A callback that reconnected the socket after the error has already moved on
+            if state == .idle {
+                _ = function.call(withArguments: [Event.disconnected.rawValue, wrapper])
+            }
         }
-        // A callback that reconnected the socket after the error has already moved on
-        guard state == .idle else { return }
-        _ = function.call(withArguments: [Event.disconnected.rawValue, wrapper])
+
+        for client in clientsToDisconnect {
+            client.teardown(error: nil, graceful: true, notify: notify)
+        }
     }
 
     // MARK: - Timeouts
@@ -905,4 +921,27 @@ nonisolated private func acceptAnyCertificate(_ metadata: sec_protocol_metadata_
 nonisolated func normalizedOptionalString(_ value: String?) -> String? {
     guard let value, value != "undefined", value != "null" else { return nil }
     return value
+}
+
+/// Whether something is listening on the Unix domain socket at `path`, found by trying to connect.
+/// A socket file whose listener has gone refuses the connection.
+nonisolated private func unixSocketAcceptsConnections(at path: String) -> Bool {
+    var address = sockaddr_un()
+    let pathBytes = Array(path.utf8)
+    guard pathBytes.count < MemoryLayout.size(ofValue: address.sun_path) else { return false }
+    address.sun_family = sa_family_t(AF_UNIX)
+    address.sun_len = UInt8(MemoryLayout<sockaddr_un>.size)
+    withUnsafeMutableBytes(of: &address.sun_path) { buffer in
+        buffer.copyBytes(from: pathBytes)
+    }
+
+    let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+    guard fd >= 0 else { return false }
+    defer { close(fd) }
+    // Non-blocking, so a listener with a full backlog can't stall the main thread
+    _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
+    let result = unsafe withUnsafePointer(to: &address) { pointer in
+        unsafe pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { unsafe connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) }
+    }
+    return result == 0 || errno == EAGAIN || errno == EINPROGRESS
 }
