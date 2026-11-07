@@ -1,6 +1,6 @@
 ---
 name: hsvmtest
-description: Run Hammerspoon 2 tests, or install and drive a build, inside a headless Tart macOS VM via scripts/vm/hs2vm, instead of on the developer's own Mac — use this by default whenever running tests or poking at the running app
+description: Run Hammerspoon 2 tests, or install and drive a build, inside a headless Tart macOS VM via scripts/vm/hs2vm, instead of on the developer's own Mac — use this by default whenever running tests or poking at the running app, and to capture screenshots for pull requests that change UI
 ---
 
 # Testing in a VM with hs2vm
@@ -99,6 +99,38 @@ scripts/vm/hs2vm type hs2-dev 'Hello, world!'
   arrows, `home`/`end`/`pageup`/`pagedown`, `f1`–`f12`.
 - `type` sends Unicode text directly, so it's independent of keyboard layout.
 - Input is real HID-level CGEvents, so Hammerspoon's own event taps and hotkeys see it.
+
+### Screenshots for UI pull requests
+
+When a change affects anything on screen, verify it in a VM as above and put screenshots of
+what you checked in the pull request, so reviewers can see it without building the branch.
+
+1. Take a screenshot of each state worth showing (`hs2vm screenshot`), e.g. a menu open, and
+   the case where it must not appear. Read each one to confirm it shows what you claim.
+2. Crop to the UI in question. Full screenshots are 2048x1536 (~1.5 MB) and mostly desktop;
+   `sips` edits in place, so crop copies:
+   ```bash
+   cp shot.png menu-open.png
+   sips -c 520 1080 --cropOffset 385 485 menu-open.png   # height width, then y x, in pixels
+   ```
+   Read the crop again: it must still contain everything the caption mentions.
+3. Attach them with `gh`, which uploads them to GitHub (needs push access). Reference each
+   file by path in a `--body-file` and `gh` rewrites the reference to the uploaded URL; any
+   attached file the body doesn't reference is appended. Write descriptive alt text.
+   ```bash
+   cat > body.md <<'EOF'
+   Right-clicking a row shows the shared menu:
+
+   ![Right-clicking the Bravo row shows Open, a divider, and Copy](./menu-open.png)
+   EOF
+   gh pr comment 123 --body-file body.md --attach menu-open.png
+   ```
+   `gh pr create` and `gh pr edit` take `--attach` too, to put them in the description.
+   Paths in the body file are relative to its directory.
+
+Keep the screenshots and body file out of the repo (use your scratch directory). If a system
+banner (e.g. "App Background Activity") covers the UI, run
+`scripts/vm/hs2vm exec <vm> /usr/local/bin/hs2vm-guest dismiss-notifications 5` and retake it.
 
 ## Other commands
 
