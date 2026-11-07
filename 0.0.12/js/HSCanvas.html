@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSCanvas - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="canvas-guide.html" class="">hs.canvas</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSCanvas</span>
+</nav>
+<div class="page-header">
+    <h1>HSCanvas</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><h1>HSCanvas</h1>
+<p>A single canvas window: an absolutely-positioned, low-level drawing surface
+mirroring v1 Hammerspoon&#39;s <code>hs.canvas</code>. Elements are plain JS objects (matching
+v1&#39;s Lua tables) added with <code>appendElements()</code> and mutated in place with
+<code>setElementAttribute()</code>/<code>elementAttribute()</code>. Supports the same <code>fill</code>/<code>stroke</code>/
+<code>strokeAndFill</code>/<code>clip</code>/<code>build</code>/<code>skip</code> action pipeline as v1, including the
+<code>build</code>+<code>clip</code>+<code>reversePath</code> technique used to punch holes in shapes (see
+<code>hs.canvas.windowLevels</code>/<code>hs.canvas.windowBehaviors</code> for the window-level/Spaces
+controls needed alongside this for overlay-style canvases).</p>
+<h2>Example</h2>
+<pre><code class="language-javascript">const c = hs.canvas.create({x: 100, y: 100, w: 200, h: 200})
+c.appendElements([
+    { type: &quot;rectangle&quot;, action: &quot;fill&quot;, fillColor: { red: 0.2, green: 0.5, blue: 0.9, alpha: 1 } }
+])
+c.show()
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This type has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="show">
+        <h3>
+<a href="#show">show() -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Show the canvas window</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">show() -> HSCanvas</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L35" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:35</a>
+        </div>
+    </div>
+    <div class="method" id="hide">
+        <h3>
+<a href="#hide">hide() -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Hide the canvas window (keeps it in memory; elements and window config are preserved)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hide() -> HSCanvas</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L39" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:39</a>
+        </div>
+    </div>
+    <div class="method" id="destroy">
+        <h3>
+<a href="#destroy">destroy() -> None</a>
+        </h3>
+
+        <div class="description">Destroy the canvas window and release its resources
+Named `destroy()` rather than v1&#39;s `delete()` -- `delete` cannot be used as a
+JavaScriptCore-exported method name in this codebase&#39;s bridging layer.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">destroy() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.destroy()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L49" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:49</a>
+        </div>
+    </div>
+    <div class="method" id="isShowing">
+        <h3>
+<a href="#isShowing">isShowing() -> boolean</a>
+        </h3>
+
+        <div class="description">Whether the canvas window is currently ordered onto the screen</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">isShowing() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the canvas has been shown and not hidden or destroyed</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L53" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:53</a>
+        </div>
+    </div>
+    <div class="method" id="isVisible">
+        <h3>
+<a href="#isVisible">isVisible() -> boolean</a>
+        </h3>
+
+        <div class="description">Whether the canvas is showing AND at least partially visible (not fully occluded or off-screen)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">isVisible() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the canvas is showing and at least partially on-screen</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L57" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:57</a>
+        </div>
+    </div>
+    <div class="method" id="isOccluded">
+        <h3>
+<a href="#isOccluded">isOccluded() -> boolean</a>
+        </h3>
+
+        <div class="description">Whether the canvas is hidden behind other windows, or off-screen entirely</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">isOccluded() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the canvas is showing but fully occluded or off-screen</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L61" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:61</a>
+        </div>
+    </div>
+    <div class="method" id="frame">
+        <h3>
+<a href="#frame">frame() -> object</a>
+        </h3>
+
+        <div class="description">The canvas window&#39;s current position and size</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">frame() -> object</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">object</div>
+        <div class="return-desc">A `{x, y, w, h}` dictionary, in the same unflipped AppKit screen coordinates as `create()`</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L67" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:67</a>
+        </div>
+    </div>
+    <div class="method" id="setFrame">
+        <h3>
+<a href="#setFrame">setFrame(rect) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Move and/or resize the canvas window</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setFrame(rect) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">rect</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">A `{x, y, w, h}` dictionary. Any keys left out keep their current value</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.setFrame({x: 200, y: 200, w: 300, h: 300})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L76" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:76</a>
+        </div>
+    </div>
+    <div class="method" id="topLeft">
+        <h3>
+<a href="#topLeft">topLeft() -> object</a>
+        </h3>
+
+        <div class="description">The canvas window&#39;s current top-left corner
+the point at the window&#39;s highest `y` (its screen-visual top), not `y = 0`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">topLeft() -> object</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">object</div>
+        <div class="return-desc">An `{x, y}` dictionary</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L83" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:83</a>
+        </div>
+    </div>
+    <div class="method" id="setTopLeft">
+        <h3>
+<a href="#setTopLeft">setTopLeft(point) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Move the canvas window without changing its size</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setTopLeft(point) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">point</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">An `{x, y}` dictionary giving the new top-left corner. Any keys left out keep their current value</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.setTopLeft({x: 200, y: 800})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L92" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:92</a>
+        </div>
+    </div>
+    <div class="method" id="size">
+        <h3>
+<a href="#size">size() -> object</a>
+        </h3>
+
+        <div class="description">The canvas window&#39;s current size</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">size() -> object</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">object</div>
+        <div class="return-desc">A `{w, h}` dictionary</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L96" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:96</a>
+        </div>
+    </div>
+    <div class="method" id="setSize">
+        <h3>
+<a href="#setSize">setSize(dimensions) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Resize the canvas window without moving its top-left corner</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setSize(dimensions) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">dimensions</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">A `{w, h}` dictionary. Any keys left out keep their current value</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.setSize({w: 400, h: 300})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L105" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:105</a>
+        </div>
+    </div>
+    <div class="method" id="level">
+        <h3>
+<a href="#level">level(name) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set the window level by name</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">level(name) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A level name from `hs.canvas.windowLevels` (e.g. `&quot;floating&quot;`, `&quot;screenSaver&quot;`)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.level(&quot;floating&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L116" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:116</a>
+        </div>
+    </div>
+    <div class="method" id="levelValue">
+        <h3>
+<a href="#levelValue">levelValue(value) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set the window level to a raw numeric value
+Split out from `level(_:)` (rather than accepting a string-or-number union)
+because JSExport parameters must have a single concrete type -- see
+`hs.canvas.windowLevels`, which exposes raw numeric values (not opaque name
+strings) so scripts can do arithmetic on them, matching v1 behavior.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">levelValue(value) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A raw numeric window level</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.levelValue(hs.canvas.windowLevels.screenSaver + 1)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L130" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:130</a>
+        </div>
+    </div>
+    <div class="method" id="behavior">
+        <h3>
+<a href="#behavior">behavior(name) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set the window&#39;s Spaces/Exposé collection behavior to a single named behavior</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">behavior(name) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A behavior name from `hs.canvas.windowBehaviors` (e.g. `&quot;canJoinAllSpaces&quot;`)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.behavior(&quot;canJoinAllSpaces&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L139" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:139</a>
+        </div>
+    </div>
+    <div class="method" id="behaviorList">
+        <h3>
+<a href="#behaviorList">behaviorList(names) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set the window&#39;s Spaces/Exposé collection behavior to a combination of named behaviors</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">behaviorList(names) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">names</td>
+                    <td class="param-type">string[]</td>
+                    <td class="param-desc">Behavior names from `hs.canvas.windowBehaviors`, combined together</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.behaviorList([&quot;canJoinAllSpaces&quot;, &quot;stationary&quot;])</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L148" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:148</a>
+        </div>
+    </div>
+    <div class="method" id="behaviorValue">
+        <h3>
+<a href="#behaviorValue">behaviorValue(value) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set the window&#39;s Spaces/Exposé collection behavior to a raw bitmask</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">behaviorValue(value) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A raw `NSWindow.CollectionBehavior` bitmask</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L153" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:153</a>
+        </div>
+    </div>
+    <div class="method" id="clickActivating">
+        <h3>
+<a href="#clickActivating">clickActivating(flag) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set whether clicking the canvas activates the Hammerspoon app</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">clickActivating(flag) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">flag</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `false` to prevent clicks on the canvas from bringing the app forward</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L158" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:158</a>
+        </div>
+    </div>
+    <div class="method" id="ignoreMouseEvents">
+        <h3>
+<a href="#ignoreMouseEvents">ignoreMouseEvents(flag) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set whether the canvas window ignores all mouse events, passing clicks through to whatever is behind it
+This is a capability beyond v1&#39;s `hs.canvas` API surface (not a literal v1 method
+name) -- v1 has no direct equivalent for full click pass-through.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">ignoreMouseEvents(flag) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">flag</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `true` to make the canvas fully click-through</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L166" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:166</a>
+        </div>
+    </div>
+    <div class="method" id="appendElements">
+        <h3>
+<a href="#appendElements">appendElements(elements) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Append one or more elements to the end of the canvas
+Element `frame`/`center`/`coordinates` values are y-down (`y = 0` at the top of
+the canvas) -- a different sense from the canvas *window&#39;s* own `x`/`y` position,
+which is unflipped AppKit screen coordinates. See `hs.canvas`&#39;s module-level docs
+for the full explanation.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">appendElements(elements) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">elements</td>
+                    <td class="param-type">[[String: Any]]</td>
+                    <td class="param-desc">Array of element dictionaries (each needs at least a `type`)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.appendElements([{ type: &quot;circle&quot;, action: &quot;fill&quot;, fillColor: { alpha: 1 } }])</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L182" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:182</a>
+        </div>
+    </div>
+    <div class="method" id="insertElement">
+        <h3>
+<a href="#insertElement">insertElement(element, index) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Insert an element at a specific index</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">insertElement(element, index) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">element</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">The element dictionary to insert</td>
+                </tr>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The index to insert at (clamped to the valid range)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L189" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:189</a>
+        </div>
+    </div>
+    <div class="method" id="assignElement">
+        <h3>
+<a href="#assignElement">assignElement(element, index) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Replace the element at an index, or append if the index equals the current element count</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">assignElement(element, index) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">element</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">The replacement element dictionary</td>
+                </tr>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The index to replace</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L196" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:196</a>
+        </div>
+    </div>
+    <div class="method" id="removeElement">
+        <h3>
+<a href="#removeElement">removeElement(index) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Remove the element at a specific index</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">removeElement(index) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The index to remove</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L201" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:201</a>
+        </div>
+    </div>
+    <div class="method" id="removeLastElement">
+        <h3>
+<a href="#removeLastElement">removeLastElement() -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Remove the last element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">removeLastElement() -> HSCanvas</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L205" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:205</a>
+        </div>
+    </div>
+    <div class="method" id="replaceElements">
+        <h3>
+<a href="#replaceElements">replaceElements(elements) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Replace all elements on the canvas</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">replaceElements(elements) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">elements</td>
+                    <td class="param-type">[[String: Any]]</td>
+                    <td class="param-desc">The new full element list</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L210" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:210</a>
+        </div>
+    </div>
+    <div class="method" id="elementCount">
+        <h3>
+<a href="#elementCount">elementCount() -> number</a>
+        </h3>
+
+        <div class="description">The number of elements on the canvas</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">elementCount() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The current element count</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L214" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:214</a>
+        </div>
+    </div>
+    <div class="method" id="canvasElements">
+        <h3>
+<a href="#canvasElements">canvasElements() -> object[]</a>
+        </h3>
+
+        <div class="description">All elements currently on the canvas</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">canvasElements() -> object[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">object[]</div>
+        <div class="return-desc">Array of element dictionaries</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L218" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:218</a>
+        </div>
+    </div>
+    <div class="method" id="elementKeys">
+        <h3>
+<a href="#elementKeys">elementKeys(index) -> string[]</a>
+        </h3>
+
+        <div class="description">The attribute keys present on an element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">elementKeys(index) -> string[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The element index</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string[]</div>
+        <div class="return-desc">Array of attribute key names</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L223" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:223</a>
+        </div>
+    </div>
+    <div class="method" id="elementAttribute">
+        <h3>
+<a href="#elementAttribute">elementAttribute(index, key) -> any</a>
+        </h3>
+
+        <div class="description">Get a single attribute value from an element
+Returns `Any?` (mirroring `hs.userdefaults.get()`) rather than a concrete Swift
+type because an element attribute&#39;s value is genuinely heterogeneous -- a
+string, number, boolean, nested object, or array, matching v1&#39;s dynamically-typed
+Lua table values.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">elementAttribute(index, key) -> any</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The element index</td>
+                </tr>
+                <tr>
+                    <td class="param-name">key</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The attribute key</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">any</div>
+        <div class="return-desc">The attribute&#39;s current value, or `null` if not set</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L235" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:235</a>
+        </div>
+    </div>
+    <div class="method" id="setElementAttribute">
+        <h3>
+<a href="#setElementAttribute">setElementAttribute(index, key, value) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set a single attribute value on an element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setElementAttribute(index, key, value) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The element index</td>
+                </tr>
+                <tr>
+                    <td class="param-name">key</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The attribute key</td>
+                </tr>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">The value to assign</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L243" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:243</a>
+        </div>
+    </div>
+    <div class="method" id="removeElementAttribute">
+        <h3>
+<a href="#removeElementAttribute">removeElementAttribute(index, key) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Remove a single attribute from an element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">removeElementAttribute(index, key) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The element index</td>
+                </tr>
+                <tr>
+                    <td class="param-name">key</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The attribute key to remove</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L250" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:250</a>
+        </div>
+    </div>
+    <div class="method" id="elementBounds">
+        <h3>
+<a href="#elementBounds">elementBounds(index) -> object</a>
+        </h3>
+
+        <div class="description">The smallest rectangle enclosing an element&#39;s rendered shape</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">elementBounds(index) -> object</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The element index</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">object</div>
+        <div class="return-desc">A `{x, y, w, h}` dictionary</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L255" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:255</a>
+        </div>
+    </div>
+    <div class="method" id="minimumTextSize">
+        <h3>
+<a href="#minimumTextSize">minimumTextSize(index, text) -> object</a>
+        </h3>
+
+        <div class="description">The smallest size that can fully render a string of text, using a text element&#39;s
+font attributes (`textFont`/`textSize`/`textWeight`/`textDesign`/`textItalic`)
+Mirrors v1&#39;s `hs.canvas:minimumTextSize()`. Multi-line strings (separated by `&#92;n`)
+are measured correctly -- the height covers every line and the width is the longest
+line&#39;s width, not a fixed single-line size.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">minimumTextSize(index, text) -> object</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The index of a text element in the canvas whose font attributes to measure with</td>
+                </tr>
+                <tr>
+                    <td class="param-name">text</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The string to measure -- it doesn&#39;t need to match the element&#39;s own `text`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">object</div>
+        <div class="return-desc">A `{w, h}` dictionary, or `{}` if `index` is out of bounds</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.appendElements([{ type: &quot;text&quot;, text: &quot;placeholder&quot;, textFont: &quot;Menlo-Bold&quot;, textSize: 24 }])
+const size = c.minimumTextSize(0, &quot;Hello&#92;nWorld&quot;)
+c.setElementAttribute(0, &quot;frame&quot;, { x: 10, y: 10, w: size.w, h: size.h })</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L273" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:273</a>
+        </div>
+    </div>
+    <div class="method" id="mouseCallback">
+        <h3>
+<a href="#mouseCallback">mouseCallback(callback) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set the callback fired for tracked mouse events
+Fires for elements with `trackMouseDown`/`trackMouseUp`/`trackMouseEnterExit`/
+`trackMouseMove` set to `true` in their element dictionary, and for whole-canvas
+regions enabled via `canvasMouseEvents()` (delivered with id `&quot;_canvas&quot;`).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">mouseCallback(callback) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">A JavaScript function called with the canvas, the event name (`&quot;mouseDown&quot;`/`&quot;mouseUp&quot;`/`&quot;mouseEnter&quot;`/`&quot;mouseExit&quot;`/`&quot;mouseMove&quot;`), the tracked element&#39;s id, and the event&#39;s x/y coordinates</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.appendElements([{ type: &quot;circle&quot;, action: &quot;fill&quot;, trackMouseDown: true, id: &quot;dot&quot; }])
+c.mouseCallback((canvas, message, id, x, y) =&gt; console.log(message, id, x, y))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L289" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:289</a>
+        </div>
+    </div>
+    <div class="method" id="canvasMouseEvents">
+        <h3>
+<a href="#canvasMouseEvents">canvasMouseEvents(down, up, enterExit, move) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Enable whole-canvas mouse tracking for regions not covered by any individually
+tracked element. Delivered through `mouseCallback()` with id `&quot;_canvas&quot;`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">canvasMouseEvents(down, up, enterExit, move) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">down</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Track mouse-down events</td>
+                </tr>
+                <tr>
+                    <td class="param-name">up</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Track mouse-up events</td>
+                </tr>
+                <tr>
+                    <td class="param-name">enterExit</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Track mouse enter/exit events</td>
+                </tr>
+                <tr>
+                    <td class="param-name">move</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Track mouse-move events</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L299" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:299</a>
+        </div>
+    </div>
+    <div class="method" id="rotateElement">
+        <h3>
+<a href="#rotateElement">rotateElement(index, angle) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Rotate an element about its own bounding-box center</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">rotateElement(index, angle) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The element index</td>
+                </tr>
+                <tr>
+                    <td class="param-name">angle</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The rotation angle, in degrees</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L308" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:308</a>
+        </div>
+    </div>
+    <div class="method" id="rotateElementAroundPoint">
+        <h3>
+<a href="#rotateElementAroundPoint">rotateElementAroundPoint(index, angle, point) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Rotate an element about a specific point</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">rotateElementAroundPoint(index, angle, point) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The element index</td>
+                </tr>
+                <tr>
+                    <td class="param-name">angle</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The rotation angle, in degrees</td>
+                </tr>
+                <tr>
+                    <td class="param-name">point</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">A `{x, y}` dictionary giving the pivot point</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L316" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:316</a>
+        </div>
+    </div>
+    <div class="method" id="setElementTransformation">
+        <h3>
+<a href="#setElementTransformation">setElementTransformation(index, matrix) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Apply a raw 2D affine transformation matrix to a single element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setElementTransformation(index, matrix) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The element index</td>
+                </tr>
+                <tr>
+                    <td class="param-name">matrix</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">A `{m11, m12, m21, m22, tX, tY}` matrix dictionary</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L323" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:323</a>
+        </div>
+    </div>
+    <div class="method" id="setTransformation">
+        <h3>
+<a href="#setTransformation">setTransformation(matrix) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Apply a raw 2D affine transformation matrix to the whole canvas</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setTransformation(matrix) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">matrix</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">A `{m11, m12, m21, m22, tX, tY}` matrix dictionary</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L328" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:328</a>
+        </div>
+    </div>
+    <div class="method" id="clearTransformation">
+        <h3>
+<a href="#clearTransformation">clearTransformation() -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Remove the whole-canvas transformation set by `setTransformation()`</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">clearTransformation() -> HSCanvas</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L332" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:332</a>
+        </div>
+    </div>
+    <div class="method" id="imageFromCanvas">
+        <h3>
+<a href="#imageFromCanvas">imageFromCanvas() -> HSImage</a>
+        </h3>
+
+        <div class="description">Render the canvas&#39;s current contents to an image</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">imageFromCanvas() -> HSImage</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">An HSImage snapshot of the canvas, or `null` if it could not be rendered</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L338" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:338</a>
+        </div>
+    </div>
+    <div class="method" id="duplicate">
+        <h3>
+<a href="#duplicate">duplicate() -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Create an independent copy of this canvas, with the same frame, elements, and
+window configuration
+Named `duplicate()` rather than v1&#39;s `copy()` -- this codebase&#39;s conventions
+forbid method names starting with `copy` (an ARC/ObjC hazard), the same rule
+that renamed `new()` to `create()`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">duplicate() -> HSCanvas</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">A new HSCanvas</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L347" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:347</a>
+        </div>
+    </div>
+    <div class="method" id="setAccessibilitySubrole">
+        <h3>
+<a href="#setAccessibilitySubrole">setAccessibilitySubrole(subrole) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set the accessibility subrole reported for this canvas&#39;s window</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setAccessibilitySubrole(subrole) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">subrole</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The accessibility subrole string</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L354" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:354</a>
+        </div>
+    </div>
+    <div class="method" id="draggingCallback">
+        <h3>
+<a href="#draggingCallback">draggingCallback(callback) -> HSCanvas</a>
+        </h3>
+
+        <div class="description">Set a callback fired when files or text are dropped onto the canvas</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">draggingCallback(callback) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called with the dropped file paths, or a single-element array containing dropped text</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L361" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:361</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSCanvas');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

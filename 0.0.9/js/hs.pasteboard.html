@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.pasteboard - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.pasteboard</span>
+</nav>
+<div class="page-header">
+    <h1>hs.pasteboard</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Module for interacting with the macOS pasteboard (clipboard)</p>
+<p>The macOS pasteboard is &quot;rich&quot; — a single clipboard operation can carry multiple representations
+of the same content for different applications to consume. For example, text copied from a web
+browser may carry plain text, HTML, and RTF representations simultaneously.</p>
+<h2>Basic Usage</h2>
+<pre><code class="language-js">// Read and write plain text
+const text = hs.pasteboard.readString()
+hs.pasteboard.writeString(&quot;Hello from Hammerspoon!&quot;)
+
+// Check what types are currently on the pasteboard
+const available = hs.pasteboard.types()
+
+// Write multiple representations at once
+hs.pasteboard.writeObjects({
+    &quot;public.utf8-plain-text&quot;: &quot;Hello&quot;,
+    &quot;public.html&quot;: &quot;&lt;b&gt;Hello&lt;/b&gt;&quot;
+})
+
+// Watch for pasteboard changes
+const handler = (changeCount) =&gt; {
+    console.log(&quot;Pasteboard changed, count:&quot;, changeCount)
+    console.log(&quot;New text:&quot;, hs.pasteboard.readString())
+}
+hs.pasteboard.addWatcher(handler)
+// Later: hs.pasteboard.removeWatcher(handler)
+</code></pre>
+<h2>Pasteboard Conventions (nspasteboard.org)</h2>
+<p>macOS has no built-in notification API for transient or confidential clipboard content, so a
+community convention has emerged (see <a href="https://nspasteboard.org">nspasteboard.org</a>) around four
+<code>org.nspasteboard.*</code> UTI marker types. These markers carry no payload — their mere presence on
+the pasteboard signals intent to other applications.</p>
+<h3>Standard marker UTIs</h3>
+<table>
+<thead>
+<tr>
+<th>UTI</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>org.nspasteboard.TransientType</code></td>
+<td>Content is temporary; it will be removed or overwritten shortly. Clipboard historians should <strong>not</strong> record this change.</td>
+</tr>
+<tr>
+<td><code>org.nspasteboard.ConcealedType</code></td>
+<td>Content is sensitive (e.g. a password). Historians should obfuscate it if displayed and ideally encrypt it if stored.</td>
+</tr>
+<tr>
+<td><code>org.nspasteboard.AutoGeneratedType</code></td>
+<td>Content was placed by an application without any user Copy action. Historians should generally skip recording it.</td>
+</tr>
+<tr>
+<td><code>org.nspasteboard.source</code></td>
+<td>The bundle identifier of the application that placed the content. Use an empty string when the source is unknown.</td>
+</tr>
+</tbody></table>
+<h3>Legacy proprietary markers</h3>
+<p>Several apps defined their own markers before the <code>org.nspasteboard.*</code> standard existed.
+Clipboard historians should also honour these for compatibility:</p>
+<table>
+<thead>
+<tr>
+<th>UTI</th>
+<th>Application</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>de.petermaurer.TransientPasteboardType</code></td>
+<td>TextExpander, Butler</td>
+</tr>
+<tr>
+<td><code>com.typeit4me.clipping</code></td>
+<td>TypeIt4Me</td>
+</tr>
+<tr>
+<td><code>Pasteboard generator type</code></td>
+<td>Typinator</td>
+</tr>
+<tr>
+<td><code>com.agilebits.onepassword</code></td>
+<td>1Password (confidential)</td>
+</tr>
+<tr>
+<td><code>com.apple.is-remote-clipboard</code></td>
+<td>macOS (remote content)</td>
+</tr>
+</tbody></table>
+<h3>For scripts that write to the pasteboard</h3>
+<p>If your script temporarily commandeers the pasteboard (e.g. to trigger a paste), add
+<code>org.nspasteboard.TransientType</code> so clipboard historians skip the entry:</p>
+<pre><code class="language-js">hs.pasteboard.writeObjects({
+    &quot;public.utf8-plain-text&quot;: &quot;temporary value&quot;,
+    &quot;org.nspasteboard.TransientType&quot;: &quot;&quot;
+})
+</code></pre>
+<p>For sensitive content such as a generated password, use <code>org.nspasteboard.ConcealedType</code>:</p>
+<pre><code class="language-js">hs.pasteboard.writeObjects({
+    &quot;public.utf8-plain-text&quot;: &quot;s3cr3t!&quot;,
+    &quot;org.nspasteboard.ConcealedType&quot;: &quot;&quot;
+})
+</code></pre>
+<h3>For scripts that monitor the pasteboard</h3>
+<p>If you are building a clipboard history tool with <code>addWatcher</code>, skip or obfuscate entries that
+carry any of the marker UTIs listed above:</p>
+<pre><code class="language-js">const SKIP_TYPES = [
+    &quot;org.nspasteboard.TransientType&quot;,
+    &quot;org.nspasteboard.AutoGeneratedType&quot;,
+    &quot;de.petermaurer.TransientPasteboardType&quot;,
+    &quot;com.typeit4me.clipping&quot;,
+    &quot;Pasteboard generator type&quot;,
+]
+const CONCEAL_TYPES = [
+    &quot;org.nspasteboard.ConcealedType&quot;,
+    &quot;com.agilebits.onepassword&quot;,
+]
+
+hs.pasteboard.addWatcher((changeCount) =&gt; {
+    const types = hs.pasteboard.types()
+    if (SKIP_TYPES.some(t =&gt; types.includes(t))) return        // ignore transient
+    const conceal = CONCEAL_TYPES.some(t =&gt; types.includes(t)) // handle sensitively
+    // … record or display the pasteboard contents …
+})
+</code></pre>
+</div>
+
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="changeCount">
+        <h3><a href="#changeCount">hs.pasteboard.changeCount</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The pasteboard change count. Increments each time any application writes to the pasteboard.
+Comparing a saved value to the current value is the standard way to detect external changes.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L274" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:274</a>
+        </div>
+    </div>
+    <div class="property" id="watcherInterval">
+        <h3><a href="#watcherInterval">hs.pasteboard.watcherInterval</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The polling interval for the pasteboard watcher, in seconds. Defaults to 0.5.
+Changes take effect the next time a watcher is started (i.e. after removing and re-adding).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L293" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:293</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="readString">
+        <h3><a href="#readString">hs.pasteboard.readString() -> string</a></h3>
+
+        <div class="description">Read plain text from the pasteboard</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.readString() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The plain text string, or null if not available</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const text = hs.pasteboard.readString()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L130" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:130</a>
+        </div>
+    </div>
+    <div class="method" id="readHTML">
+        <h3><a href="#readHTML">hs.pasteboard.readHTML() -> string</a></h3>
+
+        <div class="description">Read HTML from the pasteboard</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.readHTML() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The HTML string, or null if not available</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const html = hs.pasteboard.readHTML()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L138" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:138</a>
+        </div>
+    </div>
+    <div class="method" id="readRTF">
+        <h3><a href="#readRTF">hs.pasteboard.readRTF() -> string</a></h3>
+
+        <div class="description">Read RTF from the pasteboard</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.readRTF() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The RTF string, or null if not available</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const rtf = hs.pasteboard.readRTF()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L146" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:146</a>
+        </div>
+    </div>
+    <div class="method" id="readURL">
+        <h3><a href="#readURL">hs.pasteboard.readURL() -> string</a></h3>
+
+        <div class="description">Read a URL from the pasteboard</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.readURL() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The URL as a string, or null if not available</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const url = hs.pasteboard.readURL()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L154" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:154</a>
+        </div>
+    </div>
+    <div class="method" id="readImage">
+        <h3><a href="#readImage">hs.pasteboard.readImage() -> HSImage</a></h3>
+
+        <div class="description">Read an image from the pasteboard</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.readImage() -> HSImage</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">An HSImage, or null if not available</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const img = hs.pasteboard.readImage()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L162" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:162</a>
+        </div>
+    </div>
+    <div class="method" id="readData">
+        <h3><a href="#readData">hs.pasteboard.readData(uti) -> string</a></h3>
+
+        <div class="description">Read raw data for a specific UTI type, returned as a base64-encoded string.
+Use this for types not covered by the convenience read methods.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.readData(uti) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">uti</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A UTI type string (e.g. &quot;com.adobe.pdf&quot;)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">A base64-encoded string, or null if the type is not available</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const b64 = hs.pasteboard.readData(&quot;com.adobe.pdf&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L172" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:172</a>
+        </div>
+    </div>
+    <div class="method" id="writeString">
+        <h3><a href="#writeString">hs.pasteboard.writeString(str) -> boolean</a></h3>
+
+        <div class="description">Write plain text to the pasteboard, replacing all current contents</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.writeString(str) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">str</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The text string to write</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the write succeeded</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.pasteboard.writeString(&quot;Hello, world!&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L183" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:183</a>
+        </div>
+    </div>
+    <div class="method" id="writeHTML">
+        <h3><a href="#writeHTML">hs.pasteboard.writeHTML(html) -> boolean</a></h3>
+
+        <div class="description">Write HTML to the pasteboard, replacing all current contents</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.writeHTML(html) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">html</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The HTML string to write</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the write succeeded</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.pasteboard.writeHTML(&quot;&lt;b&gt;Hello&lt;/b&gt;&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L192" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:192</a>
+        </div>
+    </div>
+    <div class="method" id="writeRTF">
+        <h3><a href="#writeRTF">hs.pasteboard.writeRTF(rtf) -> boolean</a></h3>
+
+        <div class="description">Write RTF to the pasteboard, replacing all current contents</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.writeRTF(rtf) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">rtf</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The RTF string to write</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the write succeeded</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.pasteboard.writeRTF(rtfString)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L201" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:201</a>
+        </div>
+    </div>
+    <div class="method" id="writeURL">
+        <h3><a href="#writeURL">hs.pasteboard.writeURL(url) -> boolean</a></h3>
+
+        <div class="description">Write a URL to the pasteboard, replacing all current contents</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.writeURL(url) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">url</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The URL string to write</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the write succeeded</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.pasteboard.writeURL(&quot;https://www.example.com&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L210" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:210</a>
+        </div>
+    </div>
+    <div class="method" id="writeImage">
+        <h3><a href="#writeImage">hs.pasteboard.writeImage(image) -> boolean</a></h3>
+
+        <div class="description">Write an image to the pasteboard, replacing all current contents</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.writeImage(image) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">image</td>
+                    <td class="param-type">HSImage</td>
+                    <td class="param-desc">An HSImage to write</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the write succeeded</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const img = hs.pasteboard.readImage()
+hs.pasteboard.writeImage(img)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L220" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:220</a>
+        </div>
+    </div>
+    <div class="method" id="writeData">
+        <h3><a href="#writeData">hs.pasteboard.writeData(base64, uti) -> boolean</a></h3>
+
+        <div class="description">Write raw base64-encoded data for a specific UTI type, replacing all current contents.
+Use this for types not covered by the convenience write methods.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.writeData(base64, uti) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">base64</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The data encoded as a base64 string</td>
+                </tr>
+                <tr>
+                    <td class="param-name">uti</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A UTI type string (e.g. &quot;com.adobe.pdf&quot;)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the write succeeded</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.pasteboard.writeData(b64Encoded, &quot;com.adobe.pdf&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L232" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:232</a>
+        </div>
+    </div>
+    <div class="method" id="writeObjects">
+        <h3><a href="#writeObjects">hs.pasteboard.writeObjects(representations) -> boolean</a></h3>
+
+        <div class="description">Write multiple type representations to the pasteboard atomically, replacing all current contents.
+Keys must be UTI type strings; values must be strings. This is how you provide both a plain-text
+fallback and a richer representation (such as HTML) in a single clipboard operation.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.writeObjects(representations) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">representations</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">A JavaScript object whose keys are UTI strings and values are strings</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the write succeeded</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.pasteboard.writeObjects({
+    &quot;public.utf8-plain-text&quot;: &quot;Hello&quot;,
+    &quot;public.html&quot;:            &quot;&lt;b&gt;Hello&lt;/b&gt;&quot;
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L247" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:247</a>
+        </div>
+    </div>
+    <div class="method" id="types">
+        <h3><a href="#types">hs.pasteboard.types() -> string[]</a></h3>
+
+        <div class="description">Get all UTI type strings currently on the pasteboard, across all items</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.types() -> string[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string[]</div>
+        <div class="return-desc">An array of UTI strings (e.g. [&quot;public.utf8-plain-text&quot;, &quot;public.html&quot;])</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const types = hs.pasteboard.types()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L257" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:257</a>
+        </div>
+    </div>
+    <div class="method" id="hasType">
+        <h3><a href="#hasType">hs.pasteboard.hasType(uti) -> boolean</a></h3>
+
+        <div class="description">Check whether a specific UTI type is currently available on the pasteboard</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.hasType(uti) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">uti</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A UTI type string to check for</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the type is available</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">if (hs.pasteboard.hasType(&quot;public.html&quot;)) console.log(&quot;HTML available&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L266" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:266</a>
+        </div>
+    </div>
+    <div class="method" id="clear">
+        <h3><a href="#clear">hs.pasteboard.clear() -> None</a></h3>
+
+        <div class="description">Clear all contents from the pasteboard</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.clear() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.pasteboard.clear()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L283" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:283</a>
+        </div>
+    </div>
+    <div class="method" id="addWatcher">
+        <h3><a href="#addWatcher">hs.pasteboard.addWatcher(listener) -> None</a></h3>
+
+        <div class="description">Add a watcher that is called whenever the pasteboard contents change.
+Multiple watchers may be registered; they are each called independently.
+Because macOS provides no pasteboard change notification API, this is implemented
+by polling `changeCount` at the interval specified by `watcherInterval`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.addWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">A function called with the new `changeCount` integer whenever the pasteboard changes</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.pasteboard.addWatcher((count) =&gt; {
+    console.log(&quot;Pasteboard changed:&quot;, count)
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L306" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:306</a>
+        </div>
+    </div>
+    <div class="method" id="removeWatcher">
+        <h3><a href="#removeWatcher">hs.pasteboard.removeWatcher(listener) -> None</a></h3>
+
+        <div class="description">Remove a previously registered pasteboard watcher</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.pasteboard.removeWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">The function previously passed to `addWatcher`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.pasteboard.removeWatcher(myHandler)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.pasteboard/HSPasteboardModule.swift#L314" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift:314</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.pasteboard');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
