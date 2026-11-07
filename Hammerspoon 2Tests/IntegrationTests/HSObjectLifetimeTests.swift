@@ -40,6 +40,24 @@ struct HSObjectLifetimeTests {
         #expect(!tracker.isActive(object))
     }
 
+    @Test("Re-activating an active object updates whether it finishes on its own")
+    func testTrackerUpdatesFinishesOnItsOwn() {
+        let harness = JSTestHarness()
+        let tracker = HSObjectTracker<NSObject>()
+        tracker.context = harness.context
+        let object = NSObject()
+        tracker.add(object)
+
+        // e.g. a connection attempt (finishes on its own) becoming an open connection (doesn't)
+        tracker.setActive(object, true, finishesOnItsOwn: true)
+        #expect(HSActiveObjects.wrappers(in: harness.context, finishingOnTheirOwnOnly: true).count == 1)
+        tracker.setActive(object, true, finishesOnItsOwn: false)
+        #expect(HSActiveObjects.wrappers(in: harness.context, finishingOnTheirOwnOnly: true).isEmpty)
+        #expect(tracker.activeCount == 1)
+
+        tracker.setActive(object, false)
+    }
+
     @Test("An active object is kept alive until removeAllObjects()")
     func testTrackerPinsUntilRemoveAll() {
         let harness = JSTestHarness()
