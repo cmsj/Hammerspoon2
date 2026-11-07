@@ -52,14 +52,14 @@ import JavaScriptCoreExtras
     ///  - `connectTimeout`: seconds to wait for a connection. Defaults to `10`
     ///  - `timeout`: seconds to wait for the broker to acknowledge an operation. Defaults to `30`
     ///  - `cleanSession`: `false` to ask the broker to keep the client's subscriptions and queued messages while it's disconnected. Defaults to `true`
-    ///  - `will`: `{topic, payload, retain}`, a message the broker publishes if the client disconnects without calling `disconnect()`. It is always sent with QoS 0
+    ///  - `will`: `{topic, payload, qos, retain}`, a message the broker publishes if the client disconnects without calling `disconnect()`
     ///  - `reconnectInterval`: seconds to wait before trying to reconnect when the connection is lost, retrying until `disconnect()` is called. Defaults to `0`, which doesn't reconnect
     ///  - `caCertificate`: the path of a PEM or DER file with the certificate(s) to trust for the broker, e.g. for a self-signed certificate
     ///  - `clientCertificate`: the path of a PKCS#12 (.p12) file with a certificate and private key to identify the client, and `clientCertificatePassword` for its password
     ///  - `allowUntrustedCertificates`: `true` to accept any certificate from the broker. This makes the connection insecure, so use `caCertificate` instead if you can
     /// - Parameters:
     ///   - server: The broker's host name or URL
-    ///   - options?: {{port?: number, clientID?: string, username?: string, password?: string, tls?: boolean, websocket?: boolean, websocketPath?: string, version?: "3.1.1" | "5", keepAlive?: number, connectTimeout?: number, timeout?: number, cleanSession?: boolean, will?: {topic: string, payload?: string, retain?: boolean}, reconnectInterval?: number, caCertificate?: string, clientCertificate?: string, clientCertificatePassword?: string, allowUntrustedCertificates?: boolean}} Connection options
+    ///   - options?: {{port?: number, clientID?: string, username?: string, password?: string, tls?: boolean, websocket?: boolean, websocketPath?: string, version?: "3.1.1" | "5", keepAlive?: number, connectTimeout?: number, timeout?: number, cleanSession?: boolean, will?: {topic: string, payload?: string, qos?: 0 | 1 | 2, retain?: boolean}, reconnectInterval?: number, caCertificate?: string, clientCertificate?: string, clientCertificatePassword?: string, allowUntrustedCertificates?: boolean}} Connection options
     /// - Returns: A new `HSMQTTClient`, or `null` if the server or options are invalid (the reason is logged to the Console)
     /// - Example:
     /// ```js

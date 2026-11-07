@@ -114,7 +114,7 @@ import NIOTransportServices
     /// - Parameters:
     ///   - topicFilter: The topic, which may contain the wildcards `+` (one level) and `#` (all remaining levels)
     ///   - qos?: {0 | 1 | 2} The highest QoS level to receive messages with. Defaults to `0`
-    /// - Returns: {Promise<number>} A Promise resolving to the QoS level the broker granted, or rejecting if the broker refused the subscription
+    /// - Returns: {Promise<number>} A Promise resolving to the requested QoS level once the broker has acknowledged the subscription. The broker may grant a lower level, or refuse the subscription, which this can't currently detect
     /// - Example:
     /// ```js
     /// await client.subscribe("home/#")
@@ -227,7 +227,9 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
     private weak var module: HSMQTTModule?
     private weak var tracker: HSObjectTracker<HSMQTTClient>?
     private let options: HSMQTTClientOptions
-    private let client: MQTTClient
+    /// Session state (e.g. QoS 1/2 messages in flight) kept across connections. Only used when
+    /// the cleanSession option is false; mqtt-nio connects with a clean session otherwise.
+    private let session: MQTTSession?
 
     /// The connection state. A connected or reconnecting client is active until disconnect(),
     /// even if the user drops their reference to it; connecting and disconnecting finish on their own.
@@ -241,8 +243,20 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
     @objc var _watcherEmitter: JSFunction? = nil
     @objc var _eventNames: [String] { HSMQTTClientEvent.allNames }
 
+    /// The open connection. mqtt-nio scopes a connection to a closure, which `connectionTask`
+    /// runs until the connection closes.
+    private var connection: MQTTConnection?
+    private var connectionTask: Task<Void, Never>?
+    /// Counts connections, so a closing connection's late notification can't affect a newer one
+    private var connectionGeneration = 0
+
     /// Topic filters subscribed to, with the requested QoS, restored on reconnection
     private var subscribedFilters: [String: MQTTQoS] = [:]
+    /// The task iterating each subscription's messages. mqtt-nio scopes a subscription to a
+    /// closure too, so cancelling its task unsubscribes.
+    private var subscriptionTasks: [String: Task<Void, Never>] = [:]
+    /// The filters whose subscriptions are currently delivering messages (see didReceive)
+    private var activeFilters: Set<String> = []
 
     /// The connection attempt in progress, if any, which disconnect() waits for
     private var connectTask: Task<Bool, Error>?
@@ -258,16 +272,8 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
         self.module = module
         self.tracker = tracker
         self.options = options
-        client = MQTTClient(
-            host: options.host,
-            port: options.port,
-            identifier: options.clientID,
-            // Network.framework's event loops, which TSTLSConfiguration (see HSMQTTClientOptions) needs
-            eventLoopGroupProvider: .shared(NIOTSEventLoopGroup.singleton),
-            configuration: options.configuration
-        )
+        session = options.cleanSession ? nil : MQTTSession(clientID: options.clientID)
         super.init()
-        Self.installListeners(on: client, for: self)
     }
 
     isolated deinit {
@@ -282,26 +288,12 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
         reconnectTask = nil
         _removeWatcher()
         connectionState = .disconnected
-
-        // mqtt-nio traps if an MQTTClient is deallocated before it's shut down, and shutdown()
-        // keeps it alive until it's done. Disconnect first, so the broker doesn't publish the
-        // client's will message as if the connection had failed.
-        Self.disconnectAndShutDown(client)
-    }
-
-    /// Nonisolated so its closures aren't main-actor isolated: mqtt-nio calls them on its own queues
-    nonisolated private static func disconnectAndShutDown(_ client: MQTTClient) {
-        // Removed first, so closing the connection doesn't notify (and briefly retain) the
-        // HSMQTTClient that's being destroyed
-        client.removePublishListener(named: listenerName)
-        client.removeCloseListener(named: listenerName)
-        if client.isActive() {
-            client.disconnect().whenComplete { _ in
-                client.shutdown { _ in }
-            }
-        } else {
-            client.shutdown { _ in }
-        }
+        // Sends DISCONNECT, so the broker doesn't publish the will message, then closes. The
+        // connection and subscription tasks finish by themselves once it has closed.
+        connection?.close()
+        connection = nil
+        subscriptionTasks.removeAll()
+        activeFilters.removeAll()
     }
 
     private func updateActivity() {
@@ -320,9 +312,9 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
 
     // MARK: - Properties
 
-    @objc var clientID: String { client.identifier }
-    @objc var host: String { client.host }
-    @objc var port: Int { client.port }
+    @objc var clientID: String { options.clientID }
+    @objc var host: String { options.host }
+    @objc var port: Int { options.resolvedPort }
     @objc var state: String { connectionState.rawValue }
     @objc var isConnected: Bool { connectionState == .connected }
     @objc var subscriptions: [String: Int] { subscribedFilters.mapValues { Int($0.rawValue) } }
@@ -351,10 +343,11 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
         JSContext.current()?.createRejectedPromise(with: "hs.mqtt client.\(method)(): \(message)")
     }
 
-    private func requireConnection() throws {
-        guard connectionState == .connected else {
+    private func requireConnection() throws -> MQTTConnection {
+        guard connectionState == .connected, let connection else {
             throw HSMQTTError("the client is not connected (it is \(state))")
         }
+        return connection
     }
 
     @objc func connect() -> JSPromise? {
@@ -368,7 +361,7 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
                 guard self.connectionState == .connecting else {
                     throw HSMQTTError("disconnect() was called before the connection was established")
                 }
-                guard self.client.isActive() else {
+                guard self.connection != nil else {
                     throw HSMQTTError("the broker closed the connection")
                 }
                 self.connectionState = .connected
@@ -400,12 +393,9 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
                 if let pending = self.connectTask {
                     _ = try? await pending.value
                 }
-                if self.client.isActive() {
-                    do {
-                        try await self.client.disconnect()
-                    } catch {
-                        AKWarning("hs.mqtt client.disconnect(): \(Self.describe(error))")
-                    }
+                if let connection = self.connection {
+                    connection.close()
+                    await self.connectionTask?.value
                 }
                 self.connectionState = .disconnected
                 if wasConnected {
@@ -437,8 +427,8 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
             return reject("publish", Self.describe(error))
         }
         return perform("publish") {
-            try self.requireConnection()
-            try await self.client.publish(to: topic, payload: ByteBuffer(string: payload), qos: qos, retain: retain)
+            let connection = try self.requireConnection()
+            try await connection.publish(to: topic, payload: ByteBuffer(string: payload), qos: qos, retain: retain)
             return nil
         }
     }
@@ -449,61 +439,129 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
             return reject("subscribe", "qos must be 0, 1 or 2")
         }
         return perform("subscribe") {
-            try self.requireConnection()
-            let granted = try await self.subscribe(to: topicFilter, qos: level)
-            return Int(granted.rawValue)
+            let connection = try self.requireConnection()
+            try await self.subscribe(to: topicFilter, qos: level, on: connection)
+            // mqtt-nio 3 doesn't report the QoS the broker granted
+            return Int(level.rawValue)
         }
     }
 
     @objc func unsubscribe(_ topicFilter: String) -> JSPromise? {
         guard !topicFilter.isEmpty, topicFilter != "undefined" else { return reject("unsubscribe", "a topic filter is required") }
         return perform("unsubscribe") {
-            try self.requireConnection()
-            try await self.client.unsubscribe(from: [topicFilter])
+            _ = try self.requireConnection()
             self.subscribedFilters[topicFilter] = nil
+            if let task = self.subscriptionTasks.removeValue(forKey: topicFilter) {
+                // Ending the subscription's closure makes mqtt-nio unsubscribe, which the task waits for
+                task.cancel()
+                await task.value
+            }
             return nil
         }
     }
 
     @objc func ping() -> JSPromise? {
         perform("ping") {
-            try self.requireConnection()
-            try await self.client.ping()
+            let connection = try self.requireConnection()
+            try await connection.ping()
             return nil
         }
     }
 
     // MARK: - Connection
 
-    /// Connects the underlying MQTTClient, returning whether the broker resumed a session
+    /// Opens a connection, returning whether the broker resumed a session
     private func establishConnection() async throws -> Bool {
-        let client = client
-        let cleanSession = options.cleanSession
-        let will = options.willMessage
-        let task = Task {
-            try await client.connect(cleanSession: cleanSession, will: will)
-        }
+        let task = Task { try await self.openConnection() }
         connectTask = task
         defer { connectTask = nil }
         return try await task.value
     }
 
-    /// Subscribes to one topic filter, remembering it for reconnection
-    private func subscribe(to topicFilter: String, qos: MQTTQoS) async throws -> MQTTQoS {
-        let suback = try await client.subscribe(to: [MQTTSubscribeInfo(topicFilter: topicFilter, qos: qos)])
-        guard let code = suback.returnCodes.first, code != .failure, let granted = MQTTQoS(rawValue: code.rawValue) else {
-            throw HSMQTTError("the broker refused the subscription to '\(topicFilter)'")
+    /// Starts `connectionTask`, which connects and then holds the connection open until it
+    /// closes. Returns once the broker has accepted the connection.
+    private func openConnection() async throws -> Bool {
+        connectionGeneration += 1
+        let generation = connectionGeneration
+        let address = MQTTServerAddress.hostname(options.host, port: options.resolvedPort)
+        let configuration = options.configuration
+        let clientID = options.clientID
+        let session = session
+        // Network.framework's event loops, which TSTLSConfiguration (see HSMQTTClientOptions) needs
+        let eventLoop = NIOTSEventLoopGroup.singleton.any()
+
+        return try await withCheckedThrowingContinuation { continuation in
+            connectionTask = Task { [weak self] in
+                var pending: CheckedContinuation<Bool, any Error>? = continuation
+                var failure: (any Error)?
+                let operation: (MQTTConnection, Bool) async -> Void = { connection, sessionPresent in
+                    self?.connection = connection
+                    pending?.resume(returning: sessionPresent)
+                    pending = nil
+                    await connection.waitOnClose()
+                }
+                do {
+                    if let session {
+                        try await MQTTConnection.withConnection(address: address, configuration: configuration, session: session, eventLoop: eventLoop, operation: operation)
+                    } else {
+                        try await MQTTConnection.withConnection(address: address, configuration: configuration, identifier: clientID, eventLoop: eventLoop) { connection in
+                            await operation(connection, false)
+                        }
+                    }
+                } catch {
+                    failure = error
+                }
+                if let pending {
+                    pending.resume(throwing: failure ?? HSMQTTError("the broker closed the connection"))
+                }
+                guard let self, self.connectionGeneration == generation else { return }
+                self.connection = nil
+                self.connectionTask = nil
+                self.subscriptionTasks.removeAll()
+                self.activeFilters.removeAll()
+                self.connectionDidClose(failure)
+            }
         }
-        subscribedFilters[topicFilter] = qos
-        return granted
     }
 
-    /// Called on the main thread when mqtt-nio reports that a connection closed
-    private func connectionDidClose(_ reason: String?) {
+    /// Subscribes to one topic filter on a connection, remembering it for reconnection.
+    /// Returns once the broker has acknowledged the subscription.
+    private func subscribe(to topicFilter: String, qos: MQTTQoS, on connection: MQTTConnection) async throws {
+        // A subscription to the same filter replaces the old one, which must have unsubscribed
+        // first, or its UNSUBSCRIBE would remove the new one too
+        if let previous = subscriptionTasks.removeValue(forKey: topicFilter) {
+            previous.cancel()
+            await previous.value
+        }
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
+            subscriptionTasks[topicFilter] = Task { [weak self] in
+                var pending: CheckedContinuation<Void, any Error>? = continuation
+                do {
+                    try await connection.subscribe(to: [MQTTSubscribeInfo(topicFilter: topicFilter, qos: qos)]) { messages in
+                        // Recorded before any message (e.g. a retained one) is delivered
+                        self?.subscribedFilters[topicFilter] = qos
+                        self?.activeFilters.insert(topicFilter)
+                        pending?.resume()
+                        pending = nil
+                        for try await message in messages {
+                            self?.didReceive(message, via: topicFilter)
+                        }
+                    }
+                } catch {
+                    pending?.resume(throwing: error)
+                    pending = nil
+                }
+                self?.activeFilters.remove(topicFilter)
+            }
+        }
+    }
+
+    /// Called when a connection closes, unless the client is being disconnected or destroyed
+    private func connectionDidClose(_ error: (any Error)?) {
         // Only an established connection being lost matters here: connect() and disconnect()
-        // handle their own connections closing. If the client is active, this is a stale
-        // notification for a connection that has since been replaced.
-        guard !isDestroyed, connectionState == .connected, !client.isActive() else { return }
+        // handle their own connections closing
+        guard !isDestroyed, connectionState == .connected else { return }
+        let reason = error.map(Self.describe)
         AKDebug("hs.mqtt: \(toString()) lost its connection: \(reason ?? "closed by the broker")")
         if options.reconnectInterval > 0 {
             connectionState = .reconnecting
@@ -531,17 +589,16 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
         do {
             let sessionPresent = try await establishConnection()
             guard connectionState == .reconnecting else { return true }
-            if !sessionPresent {
-                for (filter, qos) in subscribedFilters {
-                    do {
-                        _ = try await subscribe(to: filter, qos: qos)
-                    } catch {
-                        AKWarning("hs.mqtt: \(toString()) couldn't restore its subscription to '\(filter)': \(Self.describe(error))")
-                    }
+            guard let connection else { return false }
+            for (filter, qos) in subscribedFilters {
+                do {
+                    try await subscribe(to: filter, qos: qos, on: connection)
+                } catch {
+                    AKWarning("hs.mqtt: \(toString()) couldn't restore its subscription to '\(filter)': \(Self.describe(error))")
                 }
             }
             guard connectionState == .reconnecting else { return true }
-            guard client.isActive() else { return false }
+            guard self.connection === connection else { return false }
             reconnectTask = nil
             connectionState = .connected
             AKDebug("hs.mqtt: \(toString()) reconnected")
@@ -553,8 +610,13 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
         }
     }
 
-    /// Called on the main thread for each message the broker sends
-    private func didReceive(_ message: MQTTPublishInfo) {
+    /// Called for each message delivered to the subscription for `topicFilter`
+    private func didReceive(_ message: MQTTPublishInfo, via topicFilter: String) {
+        // mqtt-nio delivers a message to every subscription whose filter matches its topic, so
+        // with overlapping filters (e.g. "home/#" and "home/+/temperature") only the first
+        // matching filter's subscription passes it on, so it's delivered once
+        let deliveringFilter = activeFilters.sorted().first { Self.topic(message.topicName, matches: $0) }
+        guard deliveringFilter == topicFilter else { return }
         guard !isDestroyed, let context = watcherCallback?.value?.context else { return }
         let bytes = message.payload.readableBytesView
         fire(.message, [[
@@ -567,37 +629,18 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
         ] as [String: Any]])
     }
 
-    /// Registers for mqtt-nio's notifications, which arrive on its event loop. Nonisolated so
-    /// the closures aren't main-actor isolated: they hop to the main queue themselves, which
-    /// also keeps messages in the order they arrived.
-    nonisolated private static let listenerName = "hs.mqtt"
-
-    nonisolated private static func installListeners(on client: MQTTClient, for owner: HSMQTTClient) {
-        client.addPublishListener(named: listenerName) { [weak owner] result in
-            switch result {
-            case .success(let message):
-                let owner = owner
-                DispatchQueue.main.async {
-                    MainActor.assumeIsolated { owner?.didReceive(message) }
-                }
-            case .failure(let error):
-                let reason = describe(error)
-                DispatchQueue.main.async {
-                    MainActor.assumeIsolated { AKWarning("hs.mqtt: failed to receive a message: \(reason)") }
-                }
-            }
+    /// MQTT topic filter matching: `+` matches one level and `#` all remaining levels, and
+    /// neither matches a first level starting with `$` (e.g. `$SYS`)
+    static func topic(_ topic: String, matches filter: String) -> Bool {
+        let topicLevels = topic.split(separator: "/", omittingEmptySubsequences: false)
+        let filterLevels = filter.split(separator: "/", omittingEmptySubsequences: false)
+        if topic.hasPrefix("$"), filter.first == "+" || filter.first == "#" { return false }
+        for (index, level) in filterLevels.enumerated() {
+            if level == "#" { return true }
+            guard index < topicLevels.count else { return false }
+            if level != "+" && level != topicLevels[index] { return false }
         }
-        client.addCloseListener(named: listenerName) { [weak owner] result in
-            let owner = owner
-            var reason: String?
-            if case .failure(let error) = result {
-                reason = describe(error)
-            }
-            let closeReason = reason
-            DispatchQueue.main.async {
-                MainActor.assumeIsolated { owner?.connectionDidClose(closeReason) }
-            }
-        }
+        return filterLevels.count == topicLevels.count
     }
 
     // MARK: - Helpers
@@ -620,10 +663,10 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
             switch error {
             case .connectionError(let code): return "the broker refused the connection (\(code))"
             case .reasonError(let code): return "the broker returned an error (\(code))"
-            case .noConnection: return "the client is not connected"
+            case .connectionClosed: return "the connection is closed"
             case .serverClosedConnection: return "the broker closed the connection"
             case .timeout: return "timed out waiting for the broker"
-            case .alreadyShutdown: return "the client has been destroyed"
+            case .invalidTopicFilter(let filter): return "'\(filter)' is not a valid topic filter"
             default: return "\(error)"
             }
         default:

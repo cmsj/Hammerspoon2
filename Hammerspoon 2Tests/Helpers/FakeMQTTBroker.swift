@@ -20,6 +20,7 @@ nonisolated final class FakeMQTTBroker: @unchecked Sendable {
         var cleanSession: Bool
         var willTopic: String?
         var willPayload: String?
+        var willQoS = 0
         var willRetain = false
     }
 
@@ -216,6 +217,7 @@ nonisolated final class FakeMQTTBroker: @unchecked Sendable {
                 connect.willTopic = reader.string()
                 connect.willPayload = String(decoding: reader.binary(), as: UTF8.self)
                 connect.willRetain = flags & 0x20 != 0
+                connect.willQoS = Int((flags >> 3) & 0x03)
             }
             if flags & 0x80 != 0 { connect.username = reader.string() }
             if flags & 0x40 != 0 { connect.password = String(decoding: reader.binary(), as: UTF8.self) }

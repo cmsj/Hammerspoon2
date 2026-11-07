@@ -1263,8 +1263,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/swift-server-community/mqtt-nio";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.13.0;
+				kind = exactVersion;
+				version = "3.0.0-rc.1";
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

@@ -184,7 +184,8 @@ struct HSMQTTTests {
             "'broker.local', { connectTimeout: -1 }",
             "'broker.local', { reconnectInterval: -1 }",
             "'broker.local', { will: { payload: 'gone' } }",
-            "'broker.local', { will: { topic: 't', qos: 1 } }",
+            "'broker.local', { will: { topic: 't', qos: 3 } }",
+            "'broker.local', { will: { topic: 't', delay: 1 } }",
             "'broker.local', { allowUntrustedCertificates: true }",
             "'broker.local', { caCertificate: '/tmp/ca.pem' }",
             "'mqtts://broker.local', { caCertificate: '/nonexistent/ca.pem' }",
@@ -203,7 +204,7 @@ struct HSMQTTTests {
             "'broker.local', { tls: true, allowUntrustedCertificates: true }",
             "'broker.local', { websocket: true, websocketPath: 'mqtt' }",
             "'broker.local', { username: 'u', password: 'p', keepAlive: 30, connectTimeout: 2.5, timeout: 5 }",
-            "'broker.local', { cleanSession: false, reconnectInterval: 1, will: { topic: 't', payload: 'gone', retain: true } }",
+            "'broker.local', { cleanSession: false, reconnectInterval: 1, will: { topic: 't', payload: 'gone', qos: 2, retain: true } }",
             "'broker.local', { port: null, clientID: undefined }",
         ])
         func testValidCreatesClient(_ arguments: String) {
@@ -272,11 +273,12 @@ struct HSMQTTTests {
         @Test("connect() sends the will message")
         func testWill() async throws {
             let fixture = MQTTFixture()
-            try await fixture.start(options: "{ will: { topic: 'status/mac', payload: 'offline', retain: true } }")
+            try await fixture.start(options: "{ will: { topic: 'status/mac', payload: 'offline', qos: 1, retain: true } }")
             await fixture.connect()
             let connect = try #require(fixture.broker.connects.first)
             #expect(connect.willTopic == "status/mac")
             #expect(connect.willPayload == "offline")
+            #expect(connect.willQoS == 1)
             #expect(connect.willRetain)
             await fixture.disconnect()
         }
@@ -413,18 +415,53 @@ struct HSMQTTTests {
             await fixture.disconnect()
         }
 
-        @Test("subscribe() rejects when the broker refuses, and for an invalid QoS")
+        @Test("subscribe() rejects an invalid QoS")
+        func testSubscribeInvalidQoS() async throws {
+            let fixture = MQTTFixture()
+            try await fixture.start()
+            await fixture.connect()
+            let badQoS = await fixture.settle("client.subscribe('t', 3)")
+            #expect(badQoS.error?.contains("qos") == true)
+            #expect(fixture.harness.evalString("JSON.stringify(client.subscriptions)") == "{}")
+            await fixture.disconnect()
+        }
+
+        @Test("subscribe() can't tell when the broker refuses a subscription")
         func testSubscribeRefused() async throws {
             let fixture = MQTTFixture()
             try await fixture.start()
             fixture.broker.refusedFilters = ["secret/#"]
             await fixture.connect()
             let refused = await fixture.settle("client.subscribe('secret/#')")
-            #expect(refused.error?.contains("refused the subscription") == true)
-            let badQoS = await fixture.settle("client.subscribe('t', 3)")
-            #expect(badQoS.error?.contains("qos") == true)
-            #expect(fixture.harness.evalString("JSON.stringify(client.subscriptions)") == "{}")
+            withKnownIssue("mqtt-nio 3.0.0-rc.1 ignores the return codes in SUBACK") {
+                #expect(refused.error?.contains("refused") == true)
+            }
             await fixture.disconnect()
+        }
+
+        @Test("A message matching overlapping subscriptions is delivered once")
+        func testOverlappingSubscriptions() async throws {
+            let fixture = MQTTFixture()
+            try await fixture.start()
+            fixture.harness.eval("var received = []; client.on('message', m => received.push(m.topic))")
+            await fixture.connect()
+            await fixture.settle("client.subscribe('home/#')")
+            await fixture.settle("client.subscribe('home/+/temperature')")
+            fixture.broker.send(topic: "home/office/temperature", payload: "21")
+            fixture.broker.send(topic: "home/office/humidity", payload: "40")
+            #expect(await fixture.waitFor("received.length >= 2"))
+            try await Task.sleep(for: .milliseconds(100))
+            #expect(fixture.harness.evalString("received.join(',')") == "home/office/temperature,home/office/humidity")
+            await fixture.disconnect()
+        }
+
+        @Test("Topic filters match MQTT's wildcard rules", arguments: [
+            ("a/b", "a/b", true), ("a/b", "a/c", false), ("a/b/c", "a/+/c", true), ("a/b", "a/+/c", false),
+            ("a/b/c", "a/#", true), ("a", "a/#", true), ("a/b", "#", true), ("$SYS/x", "#", false),
+            ("$SYS/x", "$SYS/#", true), ("a/b", "+", false),
+        ])
+        func testTopicMatching(_ topic: String, _ filter: String, _ matches: Bool) {
+            #expect(HSMQTTClient.topic(topic, matches: filter) == matches)
         }
 
         @Test("unsubscribe() removes the subscription")

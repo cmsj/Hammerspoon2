@@ -26,6 +26,7 @@ struct HSMQTTClientOptions {
     struct Will {
         let topic: String
         let payload: String
+        let qos: MQTTQoS
         let retain: Bool
     }
 
@@ -43,7 +44,7 @@ struct HSMQTTClientOptions {
     var tls = false
     var websocket = false
     var websocketPath: String?
-    var version: MQTTClient.Version = .v3_1_1
+    var version: MQTTConnectionConfiguration.Version = .v3_1_1
     var keepAlive = 60
     var connectTimeout = 10.0
     var timeout = 30.0
@@ -155,48 +156,72 @@ struct HSMQTTClientOptions {
         }
     }
 
+    /// The port to connect to: the one given, or the default for the transport
+    var resolvedPort: Int {
+        if let port { return port }
+        switch (tls, websocket) {
+        case (false, false): return 1883
+        case (true, false): return 8883
+        case (false, true): return 80
+        case (true, true): return 443
+        }
+    }
+
     /// The mqtt-nio configuration for these options
-    var configuration: MQTTClient.Configuration {
-        let tlsConfiguration: MQTTClient.TLSConfigurationType? = tls
-            ? .ts(TSTLSConfiguration(
+    var configuration: MQTTConnectionConfiguration {
+        let tlsSetting: MQTTConnectionConfiguration.Transport.TLS = tls
+            ? .enable(.ts(TSTLSConfiguration(
                 minimumTLSVersion: .tlsV12,
                 trustRoots: trustRoots,
                 clientIdentity: clientIdentity,
-                certificateVerification: allowUntrustedCertificates ? .none : .fullVerification))
-            : nil
-        return MQTTClient.Configuration(
-            version: version,
-            keepAliveInterval: .seconds(Int64(keepAlive)),
-            connectTimeout: Self.timeAmount(connectTimeout),
-            timeout: Self.timeAmount(timeout),
+                certificateVerification: allowUntrustedCertificates ? .none : .fullVerification)), tlsServerName: nil)
+            : .disable
+        let transport: MQTTConnectionConfiguration.Transport = websocket
+            ? .webSocket(.init(urlPath: websocketPath ?? "/mqtt"), tls: tlsSetting)
+            : .tcp(tls: tlsSetting)
+        let versionConfiguration: MQTTConnectionConfiguration.VersionConfiguration
+        switch version {
+        case .v3_1_1:
+            versionConfiguration = .v3_1_1(will: will.map {
+                .init(topicName: $0.topic, payload: ByteBuffer(string: $0.payload), qos: $0.qos, retain: $0.retain)
+            })
+        case .v5_0:
+            versionConfiguration = .v5_0(will: will.map {
+                .init(topicName: $0.topic, payload: ByteBuffer(string: $0.payload), qos: $0.qos, retain: $0.retain)
+            })
+        }
+        return MQTTConnectionConfiguration(
+            versionConfiguration: versionConfiguration,
+            keepAliveInterval: .seconds(keepAlive),
+            connectTimeout: Self.duration(connectTimeout),
+            timeout: Self.duration(timeout),
             userName: username,
             password: password,
-            useSSL: tls,
-            useWebSockets: websocket,
-            tlsConfiguration: tlsConfiguration,
-            webSocketURLPath: websocketPath
+            transport: transport
         )
     }
 
-    /// The will message in the form mqtt-nio's connect() takes. mqtt-nio always sends wills at QoS 0.
-    var willMessage: (topicName: String, payload: ByteBuffer, qos: MQTTQoS, retain: Bool)? {
-        will.map { (topicName: $0.topic, payload: ByteBuffer(string: $0.payload), qos: .atMostOnce, retain: $0.retain) }
-    }
-
-    private static func timeAmount(_ seconds: Double) -> TimeAmount {
+    private static func duration(_ seconds: Double) -> Duration {
         .milliseconds(Int64((seconds * 1000).rounded()))
     }
 
     private static func parseWill(_ will: [String: Any]) throws -> Will {
         let reader = OptionReader(will, prefix: "will.")
-        let unknown = Set(will.keys).subtracting(["topic", "payload", "retain"])
+        let unknown = Set(will.keys).subtracting(["topic", "payload", "qos", "retain"])
         guard unknown.isEmpty else {
             throw HSMQTTError("unknown will option(s): \(unknown.sorted().joined(separator: ", "))")
         }
         guard let topic = try reader.string("topic"), !topic.isEmpty else {
             throw HSMQTTError("will.topic is required")
         }
-        return Will(topic: topic, payload: try reader.string("payload") ?? "", retain: try reader.bool("retain") ?? false)
+        var qos = MQTTQoS.atMostOnce
+        if let value = try reader.integer("qos") {
+            guard let level = MQTTQoS(rawValue: UInt8(clamping: value)), (0...2).contains(value) else {
+                throw HSMQTTError("will.qos must be 0, 1 or 2")
+            }
+            qos = level
+        }
+        return Will(topic: topic, payload: try reader.string("payload") ?? "", qos: qos, retain: try reader.bool("retain") ?? false)
     }
 
     // MARK: - TLS material
