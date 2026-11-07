@@ -785,14 +785,18 @@ import Security
         connectedPath = nil
 
         // Clients are disconnected only once this socket's own state is cleared, since their
-        // callbacks may disconnect or restart it
-        var clientsToDisconnect: [HSSocket] = []
+        // callbacks may disconnect or restart it. Each one's connection is noted, so a client that
+        // a callback has meanwhile reconnected keeps its new connection.
+        var clientsToDisconnect: [(client: HSSocket, connection: NWConnection)] = []
         if let listener {
             listener.newConnectionHandler = nil
             listener.stateUpdateHandler = nil
             listener.cancel()
             self.listener = nil
-            clientsToDisconnect = acceptedClients.compactMap(\.socket)
+            clientsToDisconnect = acceptedClients.compactMap { entry in
+                guard let client = entry.socket, let connection = client.connection else { return nil }
+                return (client, connection)
+            }
             acceptedClients.removeAll()
             if let listenerPath {
                 unsafe unlink(listenerPath)
@@ -817,7 +821,7 @@ import Security
             }
         }
 
-        for client in clientsToDisconnect {
+        for (client, connection) in clientsToDisconnect where client.connection === connection {
             client.teardown(error: nil, graceful: true, notify: notify)
         }
     }

@@ -187,6 +187,36 @@ struct HSSocketTests {
             #expect(!harness.hasException)
         }
 
+        @Test("An accepted socket reconnected from the listener's disconnected callback keeps its new connection")
+        func testReconnectedClientSurvivesListenerTeardown() async throws {
+            let harness = makeHarness()
+            let port = try #require(await startServer(harness))
+            harness.eval("""
+                var accepted = null;
+                var acceptedEvents = [];
+                var listener = hs.socket.create().setCallback((event, sock, data) => {
+                    if (event === "connection") {
+                        accepted = data;
+                        accepted.setCallback((e) => acceptedEvents.push(e));
+                    }
+                    if (event === "disconnected" && accepted) {
+                        accepted.disconnect();
+                        accepted.connect("127.0.0.1", \(port));
+                    }
+                }).listen(0);
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("listener.localPort") ?? 0 > 0 })
+            let listenerPort = try #require(harness.evalInt("listener.localPort"))
+            harness.eval("var client = hs.socket.create().connect('127.0.0.1', \(listenerPort))")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.evalBool("accepted !== null && accepted.isConnected") == true })
+
+            harness.eval("listener.disconnect()")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.evalBool("acceptedEvents.includes('connected')") == true })
+            #expect(harness.evalBool("accepted.isConnected") == true)
+            #expect(harness.evalInt("accepted.remotePort") == port)
+            #expect(!harness.hasException)
+        }
+
         @Test("A refused connection reports an error, then disconnected")
         func testConnectionRefused() async throws {
             let harness = makeHarness()
