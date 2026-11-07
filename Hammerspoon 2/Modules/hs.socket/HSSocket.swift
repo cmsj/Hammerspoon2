@@ -932,7 +932,7 @@ nonisolated private func unixSocketAcceptsConnections(at path: String) -> Bool {
     address.sun_family = sa_family_t(AF_UNIX)
     address.sun_len = UInt8(MemoryLayout<sockaddr_un>.size)
     withUnsafeMutableBytes(of: &address.sun_path) { buffer in
-        buffer.copyBytes(from: pathBytes)
+        unsafe buffer.copyBytes(from: pathBytes)
     }
 
     let fd = socket(AF_UNIX, SOCK_STREAM, 0)
@@ -940,7 +940,7 @@ nonisolated private func unixSocketAcceptsConnections(at path: String) -> Bool {
     defer { close(fd) }
     // Non-blocking, so a listener with a full backlog can't stall the main thread
     _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
-    let result = unsafe withUnsafePointer(to: &address) { pointer in
+    let result = withUnsafePointer(to: &address) { pointer in
         unsafe pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { unsafe connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) }
     }
     return result == 0 || errno == EAGAIN || errno == EINPROGRESS

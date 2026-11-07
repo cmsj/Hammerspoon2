@@ -270,7 +270,7 @@ import Darwin
             self.fd = fd
             self.family = family
             self.owner = owner
-            var context = CFSocketContext(version: 0, info: unsafe Unmanaged.passUnretained(self).toOpaque(),
+            var context = unsafe CFSocketContext(version: 0, info: Unmanaged.passUnretained(self).toOpaque(),
                                           retain: nil, release: nil, copyDescription: nil)
             guard let socket = unsafe CFSocketCreateWithNative(nil, fd, CFSocketCallBackType.readCallBack.rawValue,
                                                                udpEndpointReadable, &context) else {
