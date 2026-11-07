@@ -17,6 +17,7 @@
 		4F947D922F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = 4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4F947DA62F56404F00DD814E /* OSAKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F947DA52F56404F00DD814E /* OSAKit.framework */; };
 		4F9CC6BC306B21AF004B4A15 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F9CC6BA306B2177004B4A15 /* AVKit.framework */; };
+		4FA0A0032F00000000000003 /* MQTTNIO in Frameworks */ = {isa = PBXBuildFile; productRef = 4FA0A0022F00000000000002 /* MQTTNIO */; };
 		4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 4FACE0032F12345678900000 /* JavaScriptCoreExtras */; };
 		4FB20C042F00000000000004 /* net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist in Embed Launch Agents */ = {isa = PBXBuildFile; fileRef = 4FB20C022F00000000000002 /* net.tenshu.Hammerspoon-2.HammerspoonIPCBroker.plist */; };
 		4FB20C052F00000000000005 /* HammerspoonIPCBroker in Embed Tools */ = {isa = PBXBuildFile; fileRef = 4FB20C012F00000000000001 /* HammerspoonIPCBroker */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -216,6 +217,7 @@
 				4F463EA02EA7A669000A2135 /* AXSwift in Frameworks */,
 				4F9CC6BC306B21AF004B4A15 /* AVKit.framework in Frameworks */,
 				4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */,
+				4FA0A0032F00000000000003 /* MQTTNIO in Frameworks */,
 				4FBB01002F70123400DEAD01 /* ScriptingBridge.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -369,6 +371,7 @@
 				4F488B2F2E97E79800A2B5F4 /* Sparkle */,
 				4F463E9F2EA7A669000A2135 /* AXSwift */,
 				4FACE0032F12345678900000 /* JavaScriptCoreExtras */,
+				4FA0A0022F00000000000002 /* MQTTNIO */,
 			);
 			productName = "Hammerspoon 2";
 			productReference = 4F5641832E8333830099EB4C /* Hammerspoon 2.app */;
@@ -507,6 +510,7 @@
 				4F463E9E2EA7A669000A2135 /* XCRemoteSwiftPackageReference "AXSwift" */,
 				4FACE0012F12345678900000 /* XCRemoteSwiftPackageReference "javascript-core-extras" */,
 				4FCE0A012F00000000000001 /* XCRemoteSwiftPackageReference "swift-commandlinekit" */,
+				4FA0A0012F00000000000001 /* XCRemoteSwiftPackageReference "mqtt-nio" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4F5641842E8333830099EB4C /* Products */;
@@ -1255,6 +1259,14 @@
 				kind = branch;
 			};
 		};
+		4FA0A0012F00000000000001 /* XCRemoteSwiftPackageReference "mqtt-nio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/swift-server-community/mqtt-nio";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.13.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1277,6 +1289,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4FCE0A012F00000000000001 /* XCRemoteSwiftPackageReference "swift-commandlinekit" */;
 			productName = CommandLineKit;
+		};
+		4FA0A0022F00000000000002 /* MQTTNIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FA0A0012F00000000000001 /* XCRemoteSwiftPackageReference "mqtt-nio" */;
+			productName = MQTTNIO;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

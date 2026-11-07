@@ -196,13 +196,18 @@ enum HSActiveObjects {
         /// nil if no JSContext was available, in which case the object is only counted.
         let wrapper: JSValue?
         let contextRef: JSGlobalContextRef?
-        let finishesOnItsOwn: Bool
+        var finishesOnItsOwn: Bool
     }
 
     private static var entries: [ObjectIdentifier: Entry] = [:]
 
     static func insert(_ object: AnyObject, trackedBy tracker: ObjectIdentifier, in context: JSContext?, finishesOnItsOwn: Bool) {
-        if let existing = entries[ObjectIdentifier(object)], existing.object === object { return }
+        if let existing = entries[ObjectIdentifier(object)], existing.object === object {
+            // Already pinned; the kind of activity may have changed (e.g. a connection attempt,
+            // which finishes on its own, becoming a connection that runs until it's closed)
+            entries[ObjectIdentifier(object)]?.finishesOnItsOwn = finishesOnItsOwn
+            return
+        }
 
         let wrapper = context.flatMap { JSValue(object: object, in: $0) }
         if wrapper == nil {
