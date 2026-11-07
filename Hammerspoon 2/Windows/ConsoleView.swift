@@ -201,15 +201,10 @@ struct ConsoleView: View {
 
         evalHistory.append(evalString)
         evalIndex = -1
-        if let result = JSEngine.shared.eval(evalString) {
-            // FIXME: This is a disgusting hack, there must be a better way to detect if result is a Bool type of NSNumber?
-            let typeString = "\(type(of: result))"
-            if typeString == "__NSCFBoolean" {
-                let boolResult = result as! NSNumber
-                AKConsole("\(boolResult.boolValue)")
-            } else {
-                AKConsole(String(describing: result))
-            }
+        // Format with the same inspector console.log() uses, so results look the same either way.
+        // undefined is skipped, as it's what statements and thrown exceptions evaluate to.
+        if let result = JSEngine.shared.evalValue(evalString), !result.isUndefined {
+            AKConsole(NodeUtil.inspect(result))
         }
         evalString = ""
     }

@@ -170,7 +170,13 @@ extension JSEngine: JSEngineProtocol {
     }
 
     @discardableResult func eval(_ script: String) -> Any? {
-        return context?.evaluateScript(script)?.toObject()
+        return evalValue(script)?.toObject()
+    }
+
+    /// Like ``eval(_:)``, but returns the raw `JSValue`, preserving JS type information
+    /// (eg. booleans) that `toObject()` loses when it bridges to Foundation types.
+    @discardableResult func evalValue(_ script: String) -> JSValue? {
+        return context?.evaluateScript(script)
     }
 
     @discardableResult func evalFromURL(_ url: URL, wrapInIIFE: Bool = false) throws -> Any? {
