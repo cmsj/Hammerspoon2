@@ -14,8 +14,9 @@ import SwiftUI
 ///
 /// ## Choice format
 ///
-/// Each choice is a plain object with required `text` and optional `subText`, `image`, and `valid`
-/// fields. All other fields are passed through to the `onSelect` callback unchanged.
+/// Each choice is a plain object with required `text` and optional `subText`, `image`, `valid`,
+/// and `contextMenu` fields. All other fields are passed through to the `onSelect` callback unchanged.
+/// Set `contextMenu: false` on a choice to show no context menu on its row.
 ///
 /// ```javascript
 /// {
@@ -26,8 +27,9 @@ import SwiftUI
 ///
 /// ## Context menu
 ///
-/// A single right-click menu, set with `contextMenu`, is shared by every row. When the user picks
-/// one of its entries, `onContextMenuSelect` is called with the row's choice and the menu entry.
+/// A single right-click menu, set with `contextMenu`, is shared by every row (except choices with
+/// `contextMenu: false`). When the user picks one of its entries, `onContextMenuSelect` is called
+/// with the row's choice and the menu entry.
 ///
 /// ```javascript
 /// chooser.contextMenu = [
@@ -329,6 +331,8 @@ import SwiftUI
     /// Each entry is either `{ title: "..." }` for a menu item, or `{ type: "divider" }` for a
     /// separator. Any other fields on an entry (e.g. an `id`) are passed back to
     /// `onContextMenuSelect` unchanged, so one handler can tell the entries apart.
+    ///
+    /// Rows whose choice has `contextMenu: false` show no menu, e.g. for a "Clear history" row.
     /// - Example:
     /// ```js
     /// chooser.contextMenu = [
@@ -995,9 +999,6 @@ import SwiftUI
     private func parseChoiceArray(_ raw: JSValue?) -> [ChooserItem] {
         guard let raw, raw.isArray else { return [] }
         let basicItems = raw.toArray() ?? []
-        if basicItems.contains(where: { ($0 as? [String: Any])?["contextMenu"] != nil }) {
-            AKWarning("hs.chooser: per-choice `contextMenu` is no longer supported; use the chooser's `contextMenu` and `onContextMenuSelect` instead")
-        }
         return basicItems.compactMap { value in
             guard let dict = value as? [String: Any] else { return nil }
             return parseChoice(dict)
@@ -1009,6 +1010,8 @@ import SwiftUI
 
         let subText = dict["subText"] as? String
         let isValid = dict["valid"] as? Bool ?? true
+        // Left in `extra`, so the choice round-trips to onSelect with it intact
+        let showsContextMenu = dict["contextMenu"] as? Bool ?? true
 
         var image: NSImage? = nil
         if let hsImg = dict["image"] as? HSImage {
@@ -1023,6 +1026,7 @@ import SwiftUI
         extra.removeValue(forKey: "image")
         extra.removeValue(forKey: "valid")
 
-        return ChooserItem(id: UUID(), text: text, subText: subText, image: image, isValid: isValid, extra: extra)
+        return ChooserItem(id: UUID(), text: text, subText: subText, image: image, isValid: isValid,
+                           showsContextMenu: showsContextMenu, extra: extra)
     }
 }

@@ -93,8 +93,10 @@ struct ChooserView: View {
                             onSelect(index)
                         }
                         .contextMenu {
-                            ForEach(Array(viewModel.contextMenuEntries.enumerated()), id: \.offset) { _, entry in
-                                contextMenuEntryView(for: entry, item: item)
+                            if item.showsContextMenu {
+                                ForEach(Array(viewModel.contextMenuEntries.enumerated()), id: \.offset) { _, entry in
+                                    contextMenuEntryView(for: entry, item: item)
+                                }
                             }
                         }
                     }

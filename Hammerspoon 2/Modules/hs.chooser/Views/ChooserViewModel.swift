@@ -21,6 +21,8 @@ struct ChooserItem: Identifiable, Equatable {
     let subText: String?
     let image: NSImage?
     let isValid: Bool
+    /// `false` when the choice opted out of the shared context menu with `contextMenu: false`.
+    let showsContextMenu: Bool
     /// Original JS-side fields (excluding text/subText/image/valid) for passback to onSelect.
     let extra: [String: Any]
 
