@@ -648,6 +648,8 @@ extension JSTestHarness {
                 loadModule(HSKeyboardModule.self, as: name)
             case "serial":
                 loadModule(HSSerialModule.self, as: name)
+            case "socket":
+                loadModule(HSSocketModule.self, as: name)
             case "sound":
                 loadModule(HSSoundModule.self, as: name)
             case "network":
