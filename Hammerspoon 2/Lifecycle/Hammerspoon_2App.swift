@@ -248,6 +248,10 @@ struct Hammerspoon_2App: App {
                     NSApplication.shared.activate(ignoringOtherApps: true)
                     openWindow(id: "console")
                 }
+                Button("Open Documentation") {
+                    NSApplication.shared.activate(ignoringOtherApps: true)
+                    JSEngine.shared.eval("hs.docs.show()")
+                }
             }
         }
 
