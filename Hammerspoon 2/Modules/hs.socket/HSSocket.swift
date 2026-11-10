@@ -203,6 +203,38 @@ import Security
     /// ```
     @objc @discardableResult func enableTLS(_ peerName: String?, _ allowUntrusted: Bool) -> HSSocket
 
+    /// Makes the next `listen()` use TLS, presenting the certificate and private key stored in a
+    /// PKCS#12 (`.p12`) file. If the file can't be loaded, `listen()` reports an error instead of
+    /// listening without encryption.
+    ///
+    /// A PKCS#12 file can be exported from Keychain Access, or made from a certificate and key
+    /// with `openssl pkcs12 -export -in cert.pem -inkey key.pem -out server.p12`.
+    ///
+    /// - Note: TLS isn't supported on Unix domain sockets, so `listenUnix()` reports an error if this has been called
+    /// - Parameter path: The path to the PKCS#12 file.
+    /// - Parameter passphrase?: The passphrase protecting the file. Defaults to an empty passphrase.
+    /// - Returns: The socket, for chaining.
+    /// - Example:
+    /// ```js
+    /// hs.socket.create().setCallback(handler).enableServerTLS("~/.config/server.p12", "secret").listen(8443)
+    /// ```
+    @objc @discardableResult func enableServerTLS(_ path: String, _ passphrase: String?) -> HSSocket
+
+    /// Makes the next `listen()` use TLS, presenting a certificate and private key (an identity)
+    /// from the keychain. The identity is found by its certificate's name, as Keychain Access
+    /// shows it (usually the certificate's common name). If no identity has that name, `listen()`
+    /// reports an error instead of listening without encryption.
+    ///
+    /// - Note: macOS may ask for permission to use the private key the first time a client connects
+    /// - Note: TLS isn't supported on Unix domain sockets, so `listenUnix()` reports an error if this has been called
+    /// - Parameter name: The name of the certificate, e.g. `"myhost.local"`.
+    /// - Returns: The socket, for chaining.
+    /// - Example:
+    /// ```js
+    /// hs.socket.create().setCallback(handler).enableServerTLSFromKeychain("myhost.local").listen(8443)
+    /// ```
+    @objc @discardableResult func enableServerTLSFromKeychain(_ name: String) -> HSSocket
+
     /// Queues a read that completes once `delimiter` arrives. The callback receives the data up
     /// to and including the delimiter.
     ///
@@ -309,6 +341,12 @@ import Security
         case connected, listening, connection, data, error, disconnected
     }
 
+    /// The identity a listening socket presents to its clients, or why it couldn't be loaded.
+    private enum ServerTLS {
+        case identity(SecIdentity)
+        case unavailable(String)
+    }
+
     private enum ReadRequest {
         case delimiter([UInt8], tag: Int)
         case length(Int, tag: Int)
@@ -346,6 +384,8 @@ import Security
     private var tlsPeerName: String?
     private var tlsAllowUntrusted = false
     private var connectionUsesTLS = false
+    private var serverTLS: ServerTLS?
+    private var listenerUsesTLS = false
 
     private var buffer: [UInt8] = []
     /// How far into `buffer` the current delimiter read has already searched
@@ -414,6 +454,24 @@ import Security
         return self
     }
 
+    @objc @discardableResult func enableServerTLS(_ path: String, _ passphrase: String?) -> HSSocket {
+        serverTLS = Self.loadIdentity(pkcs12At: path, passphrase: normalizedOptionalString(passphrase) ?? "")
+        logServerTLSFailure()
+        return self
+    }
+
+    @objc @discardableResult func enableServerTLSFromKeychain(_ name: String) -> HSSocket {
+        serverTLS = Self.findIdentity(named: name)
+        logServerTLSFailure()
+        return self
+    }
+
+    private func logServerTLSFailure() {
+        if case .unavailable(let message) = serverTLS {
+            AKError("HSSocket(\(identifier)): \(message)")
+        }
+    }
+
     // MARK: - Connecting
 
     @objc @discardableResult func connect(_ host: String, _ port: Int) -> HSSocket {
@@ -457,7 +515,7 @@ import Security
     /// announced to the listener, once it's ready.
     fileprivate func startAccepted(_ connection: NWConnection, by listener: HSSocket, path: String?) {
         acceptingSocket = listener
-        startConnection(connection, path: path, usesTLS: false)
+        startConnection(connection, path: path, usesTLS: listener.listenerUsesTLS)
     }
 
     private func connectionStateChanged(_ newState: NWConnection.State, on connection: NWConnection) {
@@ -491,9 +549,24 @@ import Security
             emitError("Invalid port \(port)")
             return self
         }
-        let parameters = NWParameters.tcp
+        let parameters: NWParameters
+        switch serverTLS {
+        case .unavailable(let message):
+            emitError(message)
+            return self
+        case .identity(let identity):
+            guard let secIdentity = sec_identity_create(identity) else {
+                emitError("The TLS identity can't be used")
+                return self
+            }
+            let tls = NWProtocolTLS.Options()
+            sec_protocol_options_set_local_identity(tls.securityProtocolOptions, secIdentity)
+            parameters = NWParameters(tls: tls, tcp: NWProtocolTCP.Options())
+        case nil:
+            parameters = .tcp
+        }
         parameters.allowLocalEndpointReuse = true
-        startListener(parameters: parameters, port: nwPort, path: nil)
+        startListener(parameters: parameters, port: nwPort, path: nil, usesTLS: serverTLS != nil)
         return self
     }
 
@@ -503,19 +576,23 @@ import Security
             emitError("Invalid socket path")
             return self
         }
+        guard serverTLS == nil else {
+            emitError("TLS isn't supported on Unix domain sockets")
+            return self
+        }
         guard removeStaleSocketFile(at: path) else {
             emitError("Another program is already listening at \(path)")
             return self
         }
         let parameters = NWParameters.tcp
         parameters.requiredLocalEndpoint = .unix(path: path)
-        startListener(parameters: parameters, port: nil, path: path)
+        startListener(parameters: parameters, port: nil, path: path, usesTLS: false)
         return self
     }
 
-    private func startListener(parameters: NWParameters, port: NWEndpoint.Port?, path: String?) {
+    private func startListener(parameters: NWParameters, port: NWEndpoint.Port?, path: String?, usesTLS: Bool) {
         if tlsEnabled {
-            AKWarning("HSSocket(\(identifier)): TLS is only supported when connecting, the listener will not use it")
+            AKWarning("HSSocket(\(identifier)): enableTLS() only applies to connect(), use enableServerTLS() to listen with TLS")
         }
         let listener: NWListener
         do {
@@ -532,6 +609,7 @@ import Security
 
         self.listener = listener
         listenerPath = path
+        listenerUsesTLS = usesTLS
         state = .listening
         listener.newConnectionHandler = { [weak self] connection in
             MainActor.assumeIsolated {
@@ -897,10 +975,71 @@ import Security
         return Int(port.rawValue)
     }
 
+    // MARK: - Server identities
+
+    /// Loads the identity in a PKCS#12 file, keeping it in memory rather than adding it to the keychain.
+    private static func loadIdentity(pkcs12At path: String, passphrase: String) -> ServerTLS {
+        let url = URL(fileURLWithPath: (path as NSString).expandingTildeInPath)
+        let data: Data
+        do {
+            data = try Data(contentsOf: url)
+        } catch {
+            return .unavailable("Could not read \(path): \(error.localizedDescription)")
+        }
+        let options: [String: Any] = [
+            kSecImportExportPassphrase as String: passphrase,
+            kSecImportToMemoryOnly as String: true,
+        ]
+        var items: CFArray?
+        let status = unsafe SecPKCS12Import(data as CFData, options as CFDictionary, &items)
+        guard status == errSecSuccess else {
+            return .unavailable("Could not load \(path): \(describe(status))")
+        }
+        let identity = (items as? [[String: Any]])?.lazy.compactMap { $0[kSecImportItemIdentity as String] }.first
+        guard let identity = identity.flatMap(Self.asIdentity) else {
+            return .unavailable("\(path) doesn't contain a certificate with its private key")
+        }
+        return .identity(identity)
+    }
+
+    /// Finds the keychain identity whose certificate is called `name`.
+    private static func findIdentity(named name: String) -> ServerTLS {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassIdentity,
+            kSecMatchLimit as String: kSecMatchLimitAll,
+            kSecReturnRef as String: true,
+        ]
+        var result: CFTypeRef?
+        let status = unsafe SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            return .unavailable("Could not search the keychain: \(describe(status))")
+        }
+        let identities = (result as? [Any] ?? []).compactMap(Self.asIdentity)
+        let match = identities.first { identity in
+            var certificate: SecCertificate?
+            guard unsafe SecIdentityCopyCertificate(identity, &certificate) == errSecSuccess, let certificate else { return false }
+            return SecCertificateCopySubjectSummary(certificate) as String? == name
+        }
+        guard let match else {
+            return .unavailable("No certificate called \"\(name)\" with a private key was found in the keychain")
+        }
+        return .identity(match)
+    }
+
+    private static func asIdentity(_ value: Any) -> SecIdentity? {
+        let object = value as CFTypeRef
+        guard CFGetTypeID(object) == SecIdentityGetTypeID() else { return nil }
+        return (object as! SecIdentity)
+    }
+
+    private static func describe(_ status: OSStatus) -> String {
+        (SecCopyErrorMessageString(status, nil) as String?) ?? "error \(status)"
+    }
+
     private static func describe(_ error: NWError) -> String {
         switch error {
         case .posix(let code): return unsafe String(cString: strerror(code.rawValue))
-        case .tls(let status): return (SecCopyErrorMessageString(status, nil) as String?).map { "TLS error: \($0)" } ?? "TLS error \(status)"
+        case .tls(let status): return "TLS error: \(describe(status))"
         case .dns(let code): return "DNS lookup failed (\(code))"
         default: return error.localizedDescription
         }
