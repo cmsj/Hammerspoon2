@@ -10,6 +10,55 @@ import Foundation
 import JavaScriptCore
 @testable import Hammerspoon_2
 
+/// A PKCS#12 file holding a self-signed certificate for "hs-socket-test" (valid for localhost and
+/// 127.0.0.1 until 2126) and its private key, protected by the passphrase "hammerspoon". Made with
+/// OpenSSL's defaults, which encrypt it with AES-256.
+private let serverPKCS12Base64 = """
+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
++AICCAA=
+"""
+
+/// Writes the test PKCS#12 file to a unique temporary path.
+private func writeServerPKCS12() throws -> URL {
+    let data = try #require(Data(base64Encoded: serverPKCS12Base64, options: .ignoreUnknownCharacters))
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent("hs2-\(UUID().uuidString).p12")
+    try data.write(to: url)
+    return url
+}
+
 /// A unique Unix domain socket path. Kept short, since socket paths are limited to 104 bytes.
 private func temporarySocketPath() -> String {
     "/tmp/hs2-\(UUID().uuidString.prefix(8)).sock"
@@ -309,6 +358,92 @@ struct HSSocketTests {
             """)
             #expect(harness.evalInt("errors.length") == 5)
             #expect(harness.evalBool("s.isConnected || s.isListening") == false)
+            #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Server TLS
+
+    @MainActor
+    @Suite("hs.socket server TLS tests", .serialized)
+    struct HSSocketServerTLSTests {
+
+        @Test("A TLS listener loaded from a PKCS#12 file serves a TLS client")
+        func testPKCS12ServerRoundTrip() async throws {
+            let p12 = try writeServerPKCS12()
+            defer { try? FileManager.default.removeItem(at: p12) }
+            let harness = makeHarness()
+            harness.eval("""
+                var serverLog = [];
+                var server = hs.socket.create().setCallback((event, sock, data) => {
+                    if (event === "connection") { serverLog.push("secure:" + data.isSecure); data.readUntil("\\n"); }
+                    if (event === "data") sock.write("echo:" + hs.socket.decodeText(data));
+                    if (event === "error") serverLog.push("error:" + data);
+                }).enableServerTLS("\(p12.path)", "hammerspoon").listen(0);
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("server.localPort") ?? 0 > 0 })
+            let port = try #require(harness.evalInt("server.localPort"))
+
+            harness.eval("""
+                var clientLog = [];
+                var client = hs.socket.create().setCallback((event, sock, data) => {
+                    if (event === "connected") { clientLog.push("secure:" + sock.isSecure); sock.write("hello\\n").readUntil("\\n"); }
+                    if (event === "data") clientLog.push(hs.socket.decodeText(data));
+                    if (event === "error") clientLog.push("error:" + data);
+                }).enableTLS("hs-socket-test", true).connect("127.0.0.1", \(port));
+            """)
+            #expect(await harness.waitForAsync(timeout: 5) { harness.evalInt("clientLog.length") == 2 })
+            #expect(harness.evalString("clientLog.join('|')") == "secure:true|echo:hello\n")
+            #expect(harness.evalString("serverLog.join('|')") == "secure:true")
+            #expect(harness.evalBool("server.isSecure") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("A plain client can't talk to a TLS listener")
+        func testPlainClientRejected() async throws {
+            let p12 = try writeServerPKCS12()
+            defer { try? FileManager.default.removeItem(at: p12) }
+            let harness = makeHarness()
+            harness.eval("""
+                var serverEvents = [];
+                var server = hs.socket.create().setCallback((event, sock, data) => {
+                    serverEvents.push(event);
+                    if (event === "connection") data.readUntil("\\n");
+                }).enableServerTLS("\(p12.path)", "hammerspoon").listen(0);
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("server.localPort") ?? 0 > 0 })
+            let port = try #require(harness.evalInt("server.localPort"))
+
+            harness.eval("""
+                var clientEvents = [];
+                var client = hs.socket.create().setCallback((event, sock, data) => {
+                    clientEvents.push(event);
+                    if (event === "connected") sock.write("hello\\n").readAvailable();
+                }).connect("127.0.0.1", \(port));
+            """)
+            #expect(await harness.waitForAsync(timeout: 5) { harness.evalBool("clientEvents.includes('disconnected')") == true })
+            #expect(harness.evalBool("serverEvents.includes('data')") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("An identity that can't be loaded makes listen() fail rather than listen unencrypted")
+        func testUnavailableIdentities() async throws {
+            let p12 = try writeServerPKCS12()
+            defer { try? FileManager.default.removeItem(at: p12) }
+            let harness = makeHarness()
+            harness.eval("""
+                var errors = [];
+                function makeServer() {
+                    return hs.socket.create().setCallback((event, sock, data) => { if (event === "error") errors.push(data); });
+                }
+                var wrongPassphrase = makeServer().enableServerTLS("\(p12.path)", "wrong").listen(0);
+                var missingFile = makeServer().enableServerTLS("/nonexistent/server.p12").listen(0);
+                var missingIdentity = makeServer().enableServerTLSFromKeychain("hs-socket-test no such identity").listen(0);
+                var unixTLS = makeServer().enableServerTLS("\(p12.path)", "hammerspoon").listenUnix("\(temporarySocketPath())");
+            """)
+            #expect(harness.evalInt("errors.length") == 4)
+            #expect(harness.evalBool("[wrongPassphrase, missingFile, missingIdentity, unixTLS].some(s => s.isListening)") == false)
+            #expect(harness.evalBool("errors[2].includes('hs-socket-test no such identity')") == true)
             #expect(!harness.hasException)
         }
     }
