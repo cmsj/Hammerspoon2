@@ -39,12 +39,13 @@ struct ConsoleView: View {
     @State var textSelection: TextSelection? = nil
 
     @State var searchString: String = ""
-    @State var searchPresented: Bool = false
+    @State var searchPresented: Bool = true
 
     @State var saveError: String?
     @State var showSaveError: Bool = false
 
     @Environment(\.dismissWindow) var dismissWindow
+    @Environment(\.openSettings) private var openSettings
     @Environment(\.locale) var locale
     @Environment(\.timeZone) var timeZone
     @Environment(\.calendar) var calendar
@@ -286,8 +287,11 @@ struct ConsoleView: View {
                     }
                 }
             }
+
+            ToolbarSpacer(.flexible)
+
             ToolbarItem(id: "saveLogs") {
-                Button("Save to File") {
+                Button("Save Logs", systemImage: "arrow.down.document") {
                     let savePanel = NSSavePanel()
                     savePanel.allowedContentTypes = [.plainText]
                     savePanel.nameFieldStringValue = "hammerspoon-console-\(Date().timeIntervalSince1970).txt"
@@ -307,25 +311,44 @@ struct ConsoleView: View {
                         }
                     }
                 }
+                .help("Save logs to file")
             }
             ToolbarItem(id: "copyVisibleLogs") {
-                Button("Copy Logs") {
+                Button("Copy Logs", systemImage: "document.on.document") {
                     let logText = displayedEntries
                         .map { formatEntry($0) }
                         .joined(separator: "\n")
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(logText, forType: .string)
                 }
+                .help("Copy logs")
             }
             ToolbarItem(id: "clearLogs") {
-                Button("Clear Logs") {
+                Button("Clear Logs", systemImage: "trash") {
                     HammerspoonLog.shared.clearLog()
                 }
+                .help("Clear logs")
             }
+
+            ToolbarSpacer(.flexible)
+
             ToolbarItem(id: "reload") {
-                Button("Reload Config") {
+                Button("Reload Config", systemImage: "arrow.clockwise") {
                     try? ManagerManager.shared.reload()
                 }
+                .help("Reload configuration")
+            }
+            ToolbarItem(id: "docs") {
+                Button("Open Documentation", systemImage: "questionmark") {
+                    JSEngine.shared.eval("hs.docs.show()")
+                }
+                .help("Open documentation")
+            }
+            ToolbarItem(id: "settings") {
+                Button("Settings", systemImage: "gear") {
+                    openSettings()
+                }
+                .help("Settings")
             }
         }
         .alert("Save Failed", isPresented: $showSaveError) {

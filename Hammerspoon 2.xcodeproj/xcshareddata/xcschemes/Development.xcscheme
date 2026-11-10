@@ -29,19 +29,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "NO"
       shouldAutocreateTestPlan = "YES">
-      <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4F56418F2E8333840099EB4C"
-               BuildableName = "Hammerspoon 2Tests.xctest"
-               BlueprintName = "Hammerspoon 2Tests"
-               ReferencedContainer = "container:Hammerspoon 2.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-      </Testables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
@@ -57,6 +44,19 @@
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
+      <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "4F56418F2E8333840099EB4C"
+               BuildableName = "Hammerspoon 2Tests.xctest"
+               BlueprintName = "Hammerspoon 2Tests"
+               ReferencedContainer = "container:Hammerspoon 2.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
