@@ -51,9 +51,28 @@ W+DHII0wSTAxMA0GCWCGSAFlAwQCAQUABCCpwEKcbiX2UQtRkpKSAcsp2RxubhDBO3w846+vqQRGNAQQ
 +AICCAA=
 """
 
-/// Writes the test PKCS#12 file to a unique temporary path.
-private func writeServerPKCS12() throws -> URL {
-    let data = try #require(Data(base64Encoded: serverPKCS12Base64, options: .ignoreUnknownCharacters))
+/// A PKCS#12 file like `serverPKCS12Base64`, with an EC key, protected by the passphrase "undefined".
+private let undefinedPassphrasePKCS12Base64 = """
+MIIENAIBAzCCA+IGCSqGSIb3DQEHAaCCA9MEggPPMIIDyzCCAnoGCSqGSIb3DQEHBqCCAmswggJnAgEAMIICYAYJKoZIhvcNAQcB
+MF8GCSqGSIb3DQEFDTBSMDEGCSqGSIb3DQEFDDAkBBABGn/LYnFGQ7j1CSW6omnQAgIIADAMBggqhkiG9w0CCQUAMB0GCWCGSAFl
+AwQBKgQQpFZ8QuMyUGFZtPfpayY+IYCCAfAjcYodfM2kn6giztThasWgz8YyByn2qTMh0RSGAWjMTvIK/i0FHr4j1DcdjviVKMLR
+HTdtJw5eKyvUD7cmR/Rg/92CmWsMXyueDem4O56IHbtn7SrPi5tpTRwL7kRbFIIeunjO8DHJPF59AIIoHF61N7/r04ptDXtitCUJ
+jn8XEEmCTJRpRlsliWtTfUc3XQRErvOLgKbFlzLD74GKmPMWdGSwnhAn+Aom2px3QYfku6nWfrwqIy0P5GgogkjRynwueEuQyg/g
+M1q/zBXjchULNR534Z0ox+UbFVmUOjKko8jOUluAZ92dyt6DYf4Zh7hRJcbMhEOk5KsC6aAa+CvVmgE6VQEPgCpQ4RTJ2CT9f0KX
+bIIBYpfEfc3SlpyT4JUSs8j9DUyLk+qxQ3rNvoX/qwEJbk7Tsjd3M6OjnDT4U1FS0L09Gx5HhnCB0Bxx7C9lrnqxE7SgxF+6hQvm
+qwj7u0p8M/SKrC57rUXpumFteMaaq0M6nnzbOTSAAgho2kHJHzkM9TnBRa+rjWHjjNoor3YY3vd40g7mPgs+rQExtcKJkHxchvkM
+Zsvcry/f8p2hQKwDrVmH9kWlt5RV1N9pCFCPekN8uWHqQCF5PwRfoKf1L04vO2jRs2l1z1hg4K6nDLCc53Q6EE32Jn8mzHzHMIIB
+SQYJKoZIhvcNAQcBoIIBOgSCATYwggEyMIIBLgYLKoZIhvcNAQwKAQKggfcwgfQwXwYJKoZIhvcNAQUNMFIwMQYJKoZIhvcNAQUM
+MCQEEGDuvHgogcIvexAFdKZ0J5QCAggAMAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBCTVOAmrzYnA19au0QqPaBnBIGQm1HN
+ctFayQ2SqnKcP6/gsX3UjEflU4QTp2dddBxFzmpfpwIWBMubkK41OFXT9ltuUG6pilNhOr8mqXg7sH3OeqXu0U8RHZSYra+Hxzef
+i0vn9e72OqT0b41vIqcjbHKeP92XCDcfUYRagN5jtkmUOls2dMNVPTmyeCqA4ng3Bspaj17hh+23HsiT1Tt8mmXTMSUwIwYJKoZI
+hvcNAQkVMRYEFMbnFyEP1dNjTCf6pcIiy99y8XFOMEkwMTANBglghkgBZQMEAgEFAAQg4PiBtCdm4moDiv9cEqlRqghMYedQEC1Y
+F5G9SzWp1NYEEFWF+dGQSzg2jjEWsA4mwusCAggA
+"""
+
+/// Writes a test PKCS#12 file to a unique temporary path.
+private func writeServerPKCS12(_ base64: String = serverPKCS12Base64) throws -> URL {
+    let data = try #require(Data(base64Encoded: base64, options: .ignoreUnknownCharacters))
     let url = FileManager.default.temporaryDirectory.appendingPathComponent("hs2-\(UUID().uuidString).p12")
     try data.write(to: url)
     return url
@@ -423,6 +442,25 @@ struct HSSocketTests {
             """)
             #expect(await harness.waitForAsync(timeout: 5) { harness.evalBool("clientEvents.includes('disconnected')") == true })
             #expect(harness.evalBool("serverEvents.includes('data')") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("A passphrase of \"undefined\" isn't mistaken for an omitted one")
+        func testUndefinedPassphrase() async throws {
+            let undefinedP12 = try writeServerPKCS12(undefinedPassphrasePKCS12Base64)
+            defer { try? FileManager.default.removeItem(at: undefinedP12) }
+            let harness = makeHarness()
+            harness.eval("""
+                var errors = [];
+                function makeServer() {
+                    return hs.socket.create().setCallback((event, sock, data) => { if (event === "error") errors.push(data); });
+                }
+                var literal = makeServer().enableServerTLS("\(undefinedP12.path)", "undefined").listen(0);
+                var omitted = makeServer().enableServerTLS("\(undefinedP12.path)").listen(0);
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalBool("literal.isListening") == true })
+            #expect(harness.evalBool("omitted.isListening") == false)
+            #expect(harness.evalInt("errors.length") == 1)
             #expect(!harness.hasException)
         }
 
