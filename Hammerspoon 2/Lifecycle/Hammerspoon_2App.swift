@@ -177,19 +177,23 @@ struct Hammerspoon_2App: App {
                 try? managerManager.reload()
             }
 
+            Button ("Show Config") {
+                NSWorkspace.shared.open(SettingsManager.shared.configLocation.deletingLastPathComponent())
+            }
+
             Divider()
 
-            Button("Settings") {
+            Button("Settings...") {
                 NSApplication.shared.activate(ignoringOtherApps: true)
                 openSettings()
             }
 
-            Button("Open Console") {
+            Button("Console...") {
                 NSApplication.shared.activate(ignoringOtherApps: true)
                 openWindow(id: "console")
             }
 
-            Button("Open Documentation") {
+            Button("API Documentation") {
                 NSApplication.shared.activate(ignoringOtherApps: true)
                 JSEngine.shared.eval("hs.docs.show()")
             }
