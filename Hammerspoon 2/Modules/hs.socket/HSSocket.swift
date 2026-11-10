@@ -455,7 +455,11 @@ import Security
     }
 
     @objc @discardableResult func enableServerTLS(_ path: String, _ passphrase: String?) -> HSSocket {
-        serverTLS = Self.loadIdentity(pkcs12At: path, passphrase: normalizedOptionalString(passphrase) ?? "")
+        // Checked against the arguments JS actually passed, since JSExport turns an omitted
+        // passphrase into "undefined", which is also a valid passphrase
+        let arguments = (JSContext.currentArguments() as? [JSValue]) ?? []
+        let passphraseGiven = arguments.count > 1 && arguments[1].isString
+        serverTLS = Self.loadIdentity(pkcs12At: path, passphrase: passphraseGiven ? passphrase ?? "" : "")
         logServerTLSFailure()
         return self
     }
