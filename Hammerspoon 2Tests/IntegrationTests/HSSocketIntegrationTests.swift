@@ -78,6 +78,39 @@ private func writeServerPKCS12(_ base64: String = serverPKCS12Base64) throws -> 
     return url
 }
 
+/// A loopback TCP port that never answers a connection: a socket bound to it but not listening,
+/// held open until this is released. macOS drops connection attempts to such a port, so they
+/// stay connecting until they time out.
+private final class SilentTCPPort {
+    let port: Int
+    private let fd: Int32
+
+    init?() {
+        let fd = socket(AF_INET, SOCK_STREAM, 0)
+        guard fd >= 0 else { return nil }
+        var address = sockaddr_in()
+        address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+        address.sin_family = sa_family_t(AF_INET)
+        address.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
+        var length = socklen_t(MemoryLayout<sockaddr_in>.size)
+        let bound = withUnsafeMutablePointer(to: &address) { pointer in
+            unsafe pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { address in
+                unsafe bind(fd, address, length) == 0 && getsockname(fd, address, &length) == 0
+            }
+        }
+        guard bound else {
+            close(fd)
+            return nil
+        }
+        self.fd = fd
+        port = Int(UInt16(bigEndian: address.sin_port))
+    }
+
+    deinit {
+        close(fd)
+    }
+}
+
 /// A loopback TCP port with nothing listening on it, found by binding a socket and closing it.
 /// Stopping an `hs.socket` listener isn't enough, since Network.framework closes the listening
 /// socket asynchronously, and can still accept a connection made just afterwards.
@@ -125,7 +158,8 @@ struct HSSocketTests {
             #expect(harness.evalTypeOf("hs.socket.create") == "function")
             #expect(harness.evalTypeOf("hs.socket.createUDP") == "function")
             #expect(harness.evalTypeOf("hs.socket.decodeText") == "function")
-            #expect(harness.evalDouble("hs.socket.timeout") == 0)
+            #expect(harness.evalDouble("hs.socket.connectTimeout") == 0)
+            #expect(harness.evalDouble("hs.socket.readTimeout") == 0)
         }
 
         @Test("A new stream socket is idle")
@@ -133,6 +167,7 @@ struct HSSocketTests {
             let harness = makeHarness()
             harness.eval("var s = hs.socket.create()")
             #expect(harness.evalString("s.typeName") == "HSSocket")
+            #expect(harness.evalString("s.state") == "idle")
             #expect(harness.evalBool("s.isConnected") == false)
             #expect(harness.evalBool("s.isListening") == false)
             #expect(harness.evalBool("s.isSecure") == false)
@@ -145,11 +180,12 @@ struct HSSocketTests {
             #expect(!harness.hasException)
         }
 
-        @Test("New stream sockets take the module's timeout")
-        func testDefaultTimeout() {
+        @Test("New stream sockets take the module's timeouts")
+        func testDefaultTimeouts() {
             let harness = makeHarness()
-            harness.eval("hs.socket.timeout = 7")
-            #expect(harness.evalDouble("hs.socket.create().timeout") == 7)
+            harness.eval("hs.socket.connectTimeout = 7; hs.socket.readTimeout = 9")
+            #expect(harness.evalDouble("hs.socket.create().connectTimeout") == 7)
+            #expect(harness.evalDouble("hs.socket.create().readTimeout") == 9)
         }
 
         @Test("A new UDP socket has its defaults")
@@ -174,6 +210,10 @@ struct HSSocketTests {
             #expect(harness.evalString("hs.socket.decodeText(new Uint8Array([104, 195, 169]))") == "hé")
             #expect(harness.evalBool("hs.socket.decodeText(new Uint8Array([0xFF, 0xFE])) === null") == true)
             #expect(harness.evalBool("hs.socket.decodeText('nope') === null") == true)
+            // A multi-byte character cut short, as readBytes() or readAvailable() can deliver
+            #expect(harness.evalBool("hs.socket.decodeText(new Uint8Array([104, 0xE2, 0x82])) === null") == true)
+            #expect(harness.evalString("hs.socket.decodeText(new Uint8Array([104, 0xE2, 0x82]), true)") == "h\u{FFFD}")
+            #expect(harness.evalString("hs.socket.decodeText(new Uint8Array([104, 195, 169]), true)") == "hé")
             #expect(!harness.hasException)
         }
     }
@@ -378,11 +418,128 @@ struct HSSocketTests {
                 var client = hs.socket.create().setCallback((event, sock, data) => {
                     events.push(event === "error" ? data : event);
                 });
-                client.timeout = 0.1;
+                client.readTimeout = 0.1;
                 client.readUntil("never").connect("127.0.0.1", \(port));
             """)
             #expect(await harness.waitForAsync(timeout: 2) { harness.evalBool("events.includes('disconnected')") == true })
             #expect(harness.evalString("events.join('|')") == "connected|Read timed out|disconnected")
+        }
+
+        @Test("Data that keeps arriving restarts the read timeout, and an idle connection with no read queued never times out")
+        func testReadTimeoutRestartsOnData() async throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var serverSide = null;
+                var server = hs.socket.create().setCallback((event, sock, data) => {
+                    if (event === "connection") serverSide = data;
+                }).listen(0, "127.0.0.1");
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("server.localPort") ?? 0 > 0 })
+            let port = try #require(harness.evalInt("server.localPort"))
+            harness.eval("""
+                var events = [];
+                var client = hs.socket.create().setCallback((event, sock, data) => {
+                    events.push(event === "data" ? hs.socket.decodeText(data) : event === "error" ? data : event);
+                });
+                client.readTimeout = 0.2;
+                client.connect("127.0.0.1", \(port));
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalBool("serverSide !== null && client.isConnected") == true })
+
+            // Quiet for longer than the timeout with no read queued
+            try await Task.sleep(for: .milliseconds(400))
+            #expect(harness.evalString("events.join('|')") == "connected")
+
+            // One byte at a time, each well inside the timeout, but the whole read takes longer than it
+            harness.eval("client.readBytes(6)")
+            for byte in ["a", "b", "c", "d", "e", "f"] {
+                try await Task.sleep(for: .milliseconds(80))
+                harness.eval("serverSide.write('\(byte)')")
+            }
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("events.length") == 2 })
+            #expect(harness.evalString("events.join('|')") == "connected|abcdef")
+            #expect(harness.evalString("client.state") == "connected")
+            #expect(!harness.hasException)
+        }
+
+        @Test("The connect timeout limits connecting, and the read timeout doesn't apply to it")
+        func testConnectTimeout() async throws {
+            let silentPort = try #require(SilentTCPPort())
+            let harness = makeHarness()
+            harness.eval("""
+                var events = { connect: [], read: [] };
+                function client(key) {
+                    return hs.socket.create().setCallback((event, sock, data) => events[key].push(event === "error" ? data : event));
+                }
+                var connectLimited = client("connect");
+                connectLimited.connectTimeout = 0.1;
+                connectLimited.connect("127.0.0.1", \(silentPort.port));
+                var readLimited = client("read");
+                readLimited.readTimeout = 0.1;
+                readLimited.readAvailable().connect("127.0.0.1", \(silentPort.port));
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalBool("events.connect.includes('disconnected')") == true })
+            #expect(harness.evalString("events.connect.join('|')") == "Connection timed out|disconnected")
+            try await Task.sleep(for: .milliseconds(200))
+            #expect(harness.evalString("events.read.join('|')") == "")
+            #expect(harness.evalString("readLimited.state") == "connecting")
+            harness.eval("readLimited.disconnect()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("state follows the socket through connecting, connected and idle, and errors alone don't change it")
+        func testState() async throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var states = [];
+                var errors = [];
+                var server = hs.socket.create().setCallback((event, sock, data) => {
+                    if (event === "listening") states.push("server " + sock.state);
+                }).listen(0, "127.0.0.1");
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("server.localPort") ?? 0 > 0 })
+            let port = try #require(harness.evalInt("server.localPort"))
+            harness.eval("""
+                var client = hs.socket.create().setCallback((event, sock, data) => {
+                    if (event === "error") errors.push(data);
+                    else states.push(event + " " + sock.state);
+                }).connect("127.0.0.1", \(port));
+                states.push("after connect() " + client.state);
+                client.connect("127.0.0.1", \(port));
+                states.push("after a failed connect() " + client.state);
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalBool("client.isConnected") == true })
+            harness.eval("""
+                client.disconnect();
+                states.push("after disconnect() " + client.state);
+            """)
+            #expect(harness.evalString("states.join('|')") ==
+                    "server listening|after connect() connecting|after a failed connect() connecting|connected connected|disconnected idle|after disconnect() idle")
+            #expect(harness.evalInt("errors.length") == 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("When the peer closes, data left over for the first queued read is delivered before disconnected")
+        func testRemainingDataDeliveredOnPeerClose() async throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var server = hs.socket.create().setCallback((event, sock, data) => {
+                    if (event === "connection") data.write("line one\\nno newline at the end").disconnect();
+                }).listen(0, "127.0.0.1");
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("server.localPort") ?? 0 > 0 })
+            let port = try #require(harness.evalInt("server.localPort"))
+            harness.eval("""
+                var events = [];
+                var client = hs.socket.create().setCallback((event, sock, data, tag) => {
+                    if (event === "data") { events.push(tag + ":" + hs.socket.decodeText(data)); sock.readUntil("\\n", tag + 1); }
+                    else events.push(event);
+                });
+                client.readUntil("\\n", 1).connect("127.0.0.1", \(port));
+            """)
+            #expect(await harness.waitForAsync(timeout: 3) { harness.evalBool("events.includes('disconnected')") == true })
+            #expect(harness.evalString("events.join('|')") == "connected|1:line one\n|2:no newline at the end|disconnected")
+            #expect(!harness.hasException)
         }
 
         @Test("A client and server exchange data over a Unix domain socket")
