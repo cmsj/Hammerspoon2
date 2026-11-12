@@ -133,6 +133,7 @@ import JavaScriptCoreExtras
     @objc var ipc: HSIPCModule { get }
     @objc var usb: HSUSBModule { get }
     @objc var bluetooth: HSBluetoothModule { get }
+    @objc var mqtt: HSMQTTModule { get }
     @objc var keyboard: HSKeyboardModule { get }
     @objc var shortcuts: HSShortcutsModule { get }
     @objc var sound: HSSoundModule { get }
@@ -364,6 +365,7 @@ import JavaScriptCoreExtras
     @objc var urlevent: HSURLEventModule { get { getOrCreate(name: "urlevent", type: HSURLEventModule.self)}}
     @objc var usb: HSUSBModule { get { getOrCreate(name: "usb", type: HSUSBModule.self)}}
     @objc var bluetooth: HSBluetoothModule { get { getOrCreate(name: "bluetooth", type: HSBluetoothModule.self)}}
+    @objc var mqtt: HSMQTTModule { get { getOrCreate(name: "mqtt", type: HSMQTTModule.self)}}
     @objc var keyboard: HSKeyboardModule { get { getOrCreate(name: "keyboard", type: HSKeyboardModule.self)}}
     @objc var shortcuts: HSShortcutsModule { get { getOrCreate(name: "shortcuts", type: HSShortcutsModule.self)}}
     @objc var sound: HSSoundModule { get { getOrCreate(name: "sound", type: HSSoundModule.self)}}
