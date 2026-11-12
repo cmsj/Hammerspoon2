@@ -347,6 +347,15 @@ import Security
 
     private enum State: String {
         case idle, connecting, connected, listening
+
+        var isActive: Bool {
+            switch (self) {
+            case .idle:
+                return false
+            case .connecting, .connected, .listening:
+                return true
+            }
+        }
     }
 
     private enum Event: String {
@@ -378,7 +387,7 @@ import Security
     // Any state but idle is active: a connecting, connected or listening socket stays alive with
     // its callback until it stops, even if the user dropped their reference to it.
     private var state: State = .idle {
-        didSet { tracker?.setActive(self, state != .idle) }
+        didSet { tracker?.setActive(self, state.isActive) }
     }
 
     private weak var tracker: HSObjectTracker<HSSocket>?
