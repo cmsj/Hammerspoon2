@@ -78,6 +78,26 @@ private func writeServerPKCS12(_ base64: String = serverPKCS12Base64) throws -> 
     return url
 }
 
+/// A loopback TCP port with nothing listening on it, found by binding a socket and closing it.
+/// Stopping an `hs.socket` listener isn't enough, since Network.framework closes the listening
+/// socket asynchronously, and can still accept a connection made just afterwards.
+private func closedTCPPort() -> Int? {
+    let fd = socket(AF_INET, SOCK_STREAM, 0)
+    guard fd >= 0 else { return nil }
+    defer { close(fd) }
+    var address = sockaddr_in()
+    address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+    address.sin_family = sa_family_t(AF_INET)
+    address.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
+    var length = socklen_t(MemoryLayout<sockaddr_in>.size)
+    let bound = withUnsafeMutablePointer(to: &address) { pointer in
+        unsafe pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { address in
+            unsafe bind(fd, address, length) == 0 && getsockname(fd, address, &length) == 0
+        }
+    }
+    return bound ? Int(UInt16(bigEndian: address.sin_port)) : nil
+}
+
 /// A unique Unix domain socket path. Kept short, since socket paths are limited to 104 bytes.
 private func temporarySocketPath() -> String {
     "/tmp/hs2-\(UUID().uuidString.prefix(8)).sock"
@@ -288,11 +308,7 @@ struct HSSocketTests {
         @Test("A refused connection reports an error, then disconnected")
         func testConnectionRefused() async throws {
             let harness = makeHarness()
-            // Find a free port by listening on it, then stop listening
-            harness.eval("var probe = hs.socket.create().listen(0)")
-            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("probe.localPort") ?? 0 > 0 })
-            let port = try #require(harness.evalInt("probe.localPort"))
-            harness.eval("probe.disconnect()")
+            let port = try #require(closedTCPPort())
 
             harness.eval("""
                 var events = [];
