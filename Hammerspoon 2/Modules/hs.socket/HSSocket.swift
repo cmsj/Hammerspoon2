@@ -164,11 +164,20 @@ import Security
     /// ```
     @objc @discardableResult func connectUnix(_ path: String) -> HSSocket
 
-    /// Listens for incoming TCP connections on all network interfaces. The callback receives
-    /// `"listening"` once the socket is ready, then `"connection"` for each client that connects.
+    /// Listens for incoming TCP connections. The callback receives `"listening"` once the socket
+    /// is ready, then `"connection"` for each client that connects.
+    ///
+    /// By default the socket listens on all network interfaces. Pass one of this Mac's IP
+    /// addresses to accept connections only on that address (and so only on the interface that
+    /// has it), e.g. `"127.0.0.1"` to accept connections only from this Mac. Use
+    /// `hs.network.addresses()` to find an interface's addresses.
+    /// If the interface's address can change (e.g. it comes from DHCP), watch
+    /// `State:/Network/Interface/<name>/IPv4` with `hs.network.configurationWatcher()` and listen again
+    /// when it does.
     ///
     /// - Note: A listening socket, and its callback, stay alive until it stops listening, even if you don't keep a reference to it
     /// - Parameter port: The TCP port to listen on, or 0 to let the system choose one (see `localPort`).
+    /// - Parameter address?: A local IPv4 or IPv6 address to listen on. Defaults to all addresses.
     /// - Returns: The socket, for chaining.
     /// - Example:
     /// ```js
@@ -176,8 +185,11 @@ import Security
     ///     if (event === "connection") data.write("Hello!\n").readUntil("\n")
     ///     if (event === "data") sock.write(data)
     /// }).listen(9000)
+    ///
+    /// // Only reachable from this Mac
+    /// hs.socket.create().setCallback(handler).listen(9001, "127.0.0.1")
     /// ```
-    @objc @discardableResult func listen(_ port: Int) -> HSSocket
+    @objc @discardableResult func listen(_ port: Int, _ address: String?) -> HSSocket
 
     /// Listens for incoming connections on a Unix domain socket. A stale socket file left at
     /// `path` is replaced, and the file is removed when the socket stops listening.
@@ -547,11 +559,22 @@ import Security
 
     // MARK: - Listening
 
-    @objc @discardableResult func listen(_ port: Int) -> HSSocket {
+    @objc @discardableResult func listen(_ port: Int, _ address: String?) -> HSSocket {
         guard requireIdle("listen") else { return self }
         guard (0...65535).contains(port), let nwPort = NWEndpoint.Port(rawValue: UInt16(port)) else {
             emitError("Invalid port \(port)")
             return self
+        }
+        var localHost: NWEndpoint.Host?
+        if let address = normalizedOptionalString(address) {
+            if let ipv4 = IPv4Address(address) {
+                localHost = .ipv4(ipv4)
+            } else if let ipv6 = IPv6Address(address) {
+                localHost = .ipv6(ipv6)
+            } else {
+                emitError("\(address) is not an IP address")
+                return self
+            }
         }
         let parameters: NWParameters
         switch serverTLS {
@@ -570,7 +593,10 @@ import Security
             parameters = .tcp
         }
         parameters.allowLocalEndpointReuse = true
-        startListener(parameters: parameters, port: nwPort, path: nil, usesTLS: serverTLS != nil)
+        if let localHost {
+            parameters.requiredLocalEndpoint = .hostPort(host: localHost, port: nwPort)
+        }
+        startListener(parameters: parameters, port: localHost == nil ? nwPort : nil, path: nil, usesTLS: serverTLS != nil)
         return self
     }
 

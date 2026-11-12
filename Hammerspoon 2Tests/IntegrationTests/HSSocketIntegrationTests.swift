@@ -305,6 +305,54 @@ struct HSSocketTests {
             #expect(!harness.hasException)
         }
 
+        @Test("A socket listening on an address accepts connections there and nowhere else")
+        func testListenOnAddress() async throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var server = hs.socket.create().setCallback((event, sock, data) => {
+                    if (event === "connection") data.write("hi\\n");
+                }).listen(0, "127.0.0.1");
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("server.localPort") ?? 0 > 0 })
+            let port = try #require(harness.evalInt("server.localPort"))
+
+            harness.eval("""
+                var events = { v4: [], v6: [] };
+                function client(key, host) {
+                    return hs.socket.create().setCallback((event, sock, data) => {
+                        events[key].push(event);
+                        if (event === "connected") sock.readUntil("\\n");
+                    }).connect(host, \(port));
+                }
+                var v4 = client("v4", "127.0.0.1");
+                var v6 = client("v6", "::1");
+            """)
+            #expect(await harness.waitForAsync(timeout: 3) {
+                harness.evalBool("events.v4.includes('data') && events.v6.includes('disconnected')") == true
+            })
+            #expect(harness.evalString("events.v4.join('|')") == "connected|data")
+            #expect(harness.evalString("events.v6.join('|')") == "error|disconnected")
+            #expect(!harness.hasException)
+        }
+
+        @Test("Listening on something that isn't one of this Mac's addresses reports an error")
+        func testListenOnInvalidAddress() async throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var errors = [];
+                function makeServer() {
+                    return hs.socket.create().setCallback((event, sock, data) => { if (event === "error") errors.push(data); });
+                }
+                var notAnAddress = makeServer().listen(0, "localhost");
+                var notLocal = makeServer().listen(0, "192.0.2.1");
+            """)
+            #expect(harness.evalInt("errors.length") ?? 0 >= 1)
+            #expect(await harness.waitForAsync(timeout: 3) { harness.evalInt("errors.length") == 2 })
+            #expect(harness.evalBool("errors[0].includes('not an IP address')") == true)
+            #expect(harness.evalBool("notAnAddress.isListening || notLocal.isListening") == false)
+            #expect(!harness.hasException)
+        }
+
         @Test("A read times out when no data arrives")
         func testReadTimeout() async throws {
             let harness = makeHarness()
@@ -583,6 +631,50 @@ struct HSSocketTests {
             """)
             #expect(harness.evalInt("errors.length") == 4)
             #expect(harness.evalBool("u.isReceiving") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("A socket bound to an address receives there, and only uses that address's family")
+        func testBindToAddress() async throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var received = [];
+                var errors = [];
+                var receiver = hs.socket.createUDP().setCallback((event, sock, data, address) => {
+                    if (event === "data") received.push(hs.socket.decodeText(data));
+                    if (event === "error") errors.push(data);
+                }).bind(0, "127.0.0.1").receive();
+                var sender = hs.socket.createUDP();
+            """)
+            let port = try #require(harness.evalInt("receiver.localPort"))
+            #expect(port > 0)
+            harness.eval("""
+                sender.send("v4", "127.0.0.1", \(port));
+                sender.send("v6", "::1", \(port));
+                receiver.send("from bound socket", "::1", 9);
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("received.length") == 1 })
+            #expect(harness.evalString("received.join('|')") == "v4")
+            #expect(harness.evalInt("errors.length") == 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("Binding to something that isn't a usable local address reports an error")
+        func testBindToInvalidAddress() {
+            let harness = makeHarness()
+            harness.eval("""
+                var errors = [];
+                function makeSocket() {
+                    return hs.socket.createUDP().setCallback((event, sock, data) => { if (event === "error") errors.push(data); });
+                }
+                var notAnAddress = makeSocket().bind(0, "localhost");
+                var notLocal = makeSocket().bind(0, "192.0.2.1");
+                var disabledFamily = makeSocket();
+                disabledFamily.ipv6Enabled = false;
+                disabledFamily.bind(0, "::1");
+            """)
+            #expect(harness.evalInt("errors.length") == 3)
+            #expect(harness.evalBool("[notAnAddress, notLocal, disabledFamily].some(s => s.isBound)") == false)
             #expect(!harness.hasException)
         }
 

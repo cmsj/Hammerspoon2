@@ -111,16 +111,29 @@ import Darwin
     /// ```
     @objc @discardableResult func setCallback(_ callback: JSFunction?) -> HSUDPSocket
 
-    /// Binds the socket to a local port on all network interfaces, so it can receive datagrams
-    /// sent to that port. Call it before `connect()` or sending.
+    /// Binds the socket to a local port, so it can receive datagrams sent to that port. Call it
+    /// before `connect()` or sending.
     ///
+    /// By default the socket binds on all network interfaces. Pass one of this Mac's IP addresses
+    /// to bind only to that address (and so only to the interface that has it). Use
+    /// `hs.network.addresses()` to find an interface's addresses.
+    /// If the interface's address can change (e.g. it comes from DHCP), watch
+    /// `State:/Network/Interface/<name>/IPv4` with `hs.network.configurationWatcher()` and bind again
+    /// when it does.
+    ///
+    /// - Note: A socket bound to an address only uses that address's family (IPv4 or IPv6), and doesn't receive broadcasts
     /// - Parameter port: The UDP port to bind to, or 0 to let the system choose one (see `localPort`).
+    /// - Parameter address?: A local IPv4 or IPv6 address to bind to, e.g. `"127.0.0.1"` or `"192.168.1.20"`. Defaults to all addresses.
     /// - Returns: The socket, for chaining.
     /// - Example:
     /// ```js
     /// hs.socket.createUDP().setCallback(handler).bind(9999).receive()
+    ///
+    /// // Only on the Wi-Fi interface's IPv4 address
+    /// const wifi = hs.network.addresses().find(a => a.interface === "en0" && a.family === "ipv4")
+    /// hs.socket.createUDP().setCallback(handler).bind(9999, wifi.address).receive()
     /// ```
-    @objc @discardableResult func bind(_ port: Int) -> HSUDPSocket
+    @objc @discardableResult func bind(_ port: Int, _ address: String?) -> HSUDPSocket
 
     /// Connects the socket to a single peer. Afterwards, `send()` needs no host and port, and only
     /// datagrams from that peer are received. The callback receives `"connected"` once the host
@@ -391,7 +404,7 @@ import Darwin
 
     // MARK: - Binding
 
-    @objc @discardableResult func bind(_ port: Int) -> HSUDPSocket {
+    @objc @discardableResult func bind(_ port: Int, _ address: String?) -> HSUDPSocket {
         guard endpoints.isEmpty else {
             emitError("bind() must be called before the socket connects or sends")
             return self
@@ -400,9 +413,17 @@ import Darwin
             emitError("Invalid port \(port)")
             return self
         }
-        let families = enabledFamilies
-        guard !families.isEmpty else {
-            emitError("Both IPv4 and IPv6 are disabled")
+        var localAddress: Data?
+        if let address = normalizedOptionalString(address) {
+            guard let parsed = try? lookupSocketAddresses(host: address, port: port, numericOnly: true).first else {
+                emitError("\(address) is not an IP address")
+                return self
+            }
+            localAddress = parsed
+        }
+        let families = localAddress.map { [socketAddressFamily($0)] } ?? enabledFamilies
+        guard families.allSatisfy(enabledFamilies.contains), !families.isEmpty else {
+            emitError(localAddress == nil ? "Both IPv4 and IPv6 are disabled" : "\(families[0] == AF_INET ? "IPv4" : "IPv6") is disabled")
             return self
         }
 
@@ -414,14 +435,14 @@ import Darwin
                 closeEndpoints()
                 return self
             }
-            let address = family == AF_INET ? ipv4AnyAddress(port: boundPort) : ipv6AnyAddress(port: boundPort)
-            let result = unsafe address.withUnsafeBytes { raw in
-                unsafe Darwin.bind(endpoint.fd, raw.baseAddress!.assumingMemoryBound(to: sockaddr.self), socklen_t(address.count))
+            let bindAddress = localAddress ?? (family == AF_INET ? ipv4AnyAddress(port: boundPort) : ipv6AnyAddress(port: boundPort))
+            let result = unsafe bindAddress.withUnsafeBytes { raw in
+                unsafe Darwin.bind(endpoint.fd, raw.baseAddress!.assumingMemoryBound(to: sockaddr.self), socklen_t(bindAddress.count))
             }
             guard result == 0 else {
                 let message = currentErrorMessage()
                 closeEndpoints()
-                emitError("Could not bind to port \(boundPort): \(message)")
+                emitError("Could not bind to \(localAddress.flatMap(networkAddressString).map { "\($0) " } ?? "")port \(boundPort): \(message)")
                 return self
             }
             if boundPort == 0 {
