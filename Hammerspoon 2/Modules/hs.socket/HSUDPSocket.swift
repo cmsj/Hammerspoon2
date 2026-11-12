@@ -245,6 +245,15 @@ import Darwin
 
     private enum ReceiveMode {
         case off, continuous, once
+
+        var isActive: Bool {
+            switch self {
+            case .off:
+                return false
+            case .continuous, .once:
+                return true
+            }
+        }
     }
 
     private enum Operation {
@@ -373,7 +382,7 @@ import Darwin
     }
 
     private func updateActivity() {
-        tracker?.setActive(self, receiveMode != .off || !operations.isEmpty)
+        tracker?.setActive(self, receiveMode.isActive || !operations.isEmpty)
     }
 
     // MARK: - Properties
