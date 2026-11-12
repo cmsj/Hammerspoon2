@@ -46,13 +46,21 @@ import JavaScriptCore
 /// ```
 @objc protocol HSSocketModuleAPI: JSExport {
 
-    /// The timeout, in seconds, that new stream sockets start with (see `HSSocket.timeout`).
-    /// 0 means no timeout, which is the default.
+    /// The connect timeout, in seconds, that new stream sockets start with (see
+    /// `HSSocket.connectTimeout`). 0 means no timeout, which is the default.
     /// - Example:
     /// ```js
-    /// hs.socket.timeout = 10
+    /// hs.socket.connectTimeout = 10
     /// ```
-    @objc var timeout: Double { get set }
+    @objc var connectTimeout: Double { get set }
+
+    /// The read timeout, in seconds, that new stream sockets start with (see
+    /// `HSSocket.readTimeout`). 0 means no timeout, which is the default.
+    /// - Example:
+    /// ```js
+    /// hs.socket.readTimeout = 30
+    /// ```
+    @objc var readTimeout: Double { get set }
 
     /// Creates a TCP or Unix domain stream socket. It does nothing until you connect it or make
     /// it listen.
@@ -72,13 +80,21 @@ import JavaScriptCore
     @objc func createUDP() -> HSUDPSocket
 
     /// Decodes bytes as UTF-8 text.
+    ///
+    /// Data from `readBytes()` or `readAvailable()` can end part-way through a multi-byte
+    /// character, whose remaining bytes arrive in the next read. Such bytes aren't valid UTF-8 on
+    /// their own, so join the reads' bytes before decoding them, or use `readUntil()` with a
+    /// delimiter, whose data always ends with a complete character.
+    ///
     /// - Parameter bytes: {Uint8Array | ArrayBuffer} The bytes to decode, e.g. the data from a `"data"` event.
-    /// - Returns: The text, or `null` if the bytes aren't valid UTF-8.
+    /// - Parameter lossy?: `true` to replace invalid or incomplete UTF-8 with the replacement character (U+FFFD) instead of returning `null`. Defaults to `false`.
+    /// - Returns: The text, or `null` if the bytes aren't valid UTF-8 (including when they end part-way through a character) and `lossy` isn't `true`.
     /// - Example:
     /// ```js
     /// console.log(hs.socket.decodeText(new Uint8Array([104, 105])))  // "hi"
+    /// console.log(hs.socket.decodeText(new Uint8Array([104, 0xE2]), true))  // "h\uFFFD"
     /// ```
-    @objc func decodeText(_ bytes: JSValue) -> String?
+    @objc func decodeText(_ bytes: JSValue, _ lossy: Bool) -> String?
 }
 
 // MARK: - Implementation
@@ -91,7 +107,8 @@ import JavaScriptCore
     private var sockets = HSObjectTracker<HSSocket>()
     private var udpSockets = HSObjectTracker<HSUDPSocket>()
 
-    @objc var timeout: Double = 0
+    @objc var connectTimeout: Double = 0
+    @objc var readTimeout: Double = 0
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -118,7 +135,7 @@ import JavaScriptCore
     }
 
     @objc func create() -> HSSocket {
-        let socket = HSSocket(tracker: sockets, timeout: timeout)
+        let socket = HSSocket(tracker: sockets, connectTimeout: connectTimeout, readTimeout: readTimeout)
         sockets.add(socket)
         return socket
     }
@@ -129,11 +146,11 @@ import JavaScriptCore
         return socket
     }
 
-    @objc func decodeText(_ bytes: JSValue) -> String? {
+    @objc func decodeText(_ bytes: JSValue, _ lossy: Bool) -> String? {
         guard let data = bytes.typedArrayBytes else {
             AKWarning("hs.socket.decodeText(): needs a typed array or ArrayBuffer")
             return nil
         }
-        return String(validating: data, as: UTF8.self)
+        return lossy ? String(decoding: data, as: UTF8.self) : String(validating: data, as: UTF8.self)
     }
 }

@@ -42,6 +42,13 @@ import Security
     /// ```
     @objc var isConnected: Bool { get }
 
+    /// {"idle" | "connecting" | "connected" | "listening"} What the socket is doing.
+    /// - Example:
+    /// ```js
+    /// if (sock.state === "idle") sock.connect("localhost", 6379)
+    /// ```
+    @objc var state: String { get }
+
     /// Whether the socket is currently listening for incoming connections.
     /// - Example:
     /// ```js
@@ -102,14 +109,27 @@ import Security
     /// ```
     @objc var clients: [HSSocket] { get }
 
-    /// The timeout, in seconds, for connecting and for each read. When it expires, the callback
-    /// receives an `"error"` event and the socket disconnects. 0 (or any negative number) means
-    /// no timeout. Defaults to `hs.socket.timeout`.
+    /// How long, in seconds, connecting may take, including any TLS handshake. When it expires,
+    /// the callback receives an `"error"` event and the socket disconnects. 0 (or any negative
+    /// number) means no timeout. Defaults to `hs.socket.connectTimeout`.
     /// - Example:
     /// ```js
-    /// sock.timeout = 5
+    /// sock.connectTimeout = 5
     /// ```
-    @objc var timeout: Double { get set }
+    @objc var connectTimeout: Double { get set }
+
+    /// How long, in seconds, a queued read may wait with no data arriving. The timer runs only
+    /// while a read is queued, and restarts whenever data arrives, so a slow but steady transfer
+    /// doesn't time out, and nor does a connection that's quiet while no read is queued. When it
+    /// expires, the callback receives an `"error"` event and the socket disconnects. 0 (or any
+    /// negative number) means no timeout. Defaults to `hs.socket.readTimeout`.
+    ///
+    /// - Note: Protocols where the peer can stay quiet for a long time while a read is queued (e.g. waiting for the next line of a notification stream) usually want no read timeout
+    /// - Example:
+    /// ```js
+    /// sock.readTimeout = 30
+    /// ```
+    @objc var readTimeout: Double { get set }
 
     /// Sets the callback that receives this socket's events.
     ///
@@ -125,6 +145,18 @@ import Security
     /// - `"disconnected"` - the connection closed, or the socket stopped listening, for any
     ///   reason, including calling `disconnect()`. Data received that no read had asked for yet
     ///   is discarded.
+    ///
+    /// An `"error"` event on its own never changes the socket's state: errors such as calling
+    /// `connect()` on a socket that is already connecting, or writing to an idle socket, leave it
+    /// as it was. Every connection that ends, and every listening socket that stops, gets a
+    /// `"disconnected"` event, after the `"error"` that caused it, if any. So reconnecting belongs
+    /// in the `"disconnected"` handler, not the `"error"` one.
+    ///
+    /// When the peer closes the connection, data already received for the first queued read is
+    /// delivered to it in a last `"data"` event, before `"disconnected"`, even though the read
+    /// isn't satisfied: it may be missing its delimiter, or be shorter than asked for. This is
+    /// how to receive the end of a stream that the peer ends by closing, such as an HTTP/1.0
+    /// response body.
     ///
     /// - Parameter callback: {((event: "connected" | "listening" | "connection" | "data" | "error" | "disconnected", socket: HSSocket, data?: Uint8Array | HSSocket | string, tag?: number) => void) | null} The event handler, or `null` to remove it.
     /// - Returns: The socket, for chaining.
@@ -306,6 +338,8 @@ import Security
     /// that no read has asked for yet, are discarded.
     ///
     /// The socket can be connected or listen again afterwards.
+    ///
+    /// - Note: The callback receives `"disconnected"` (for this socket, and for each client of a listening socket) before `disconnect()` returns, so update any state the handler relies on before calling it
     /// - Returns: The socket, for chaining.
     /// - Example:
     /// ```js
@@ -313,7 +347,8 @@ import Security
     /// ```
     @objc @discardableResult func disconnect() -> HSSocket
 
-    /// Disconnects the socket and releases its callback.
+    /// Disconnects the socket and releases its callback. Unlike `disconnect()`, the callback isn't
+    /// called.
     /// - Example:
     /// ```js
     /// sock.destroy()
@@ -331,7 +366,7 @@ import Security
 
     @objc func toString() -> String {
         let target = unixPath ?? remoteHost.map { "\($0):\(remotePort)" } ?? (localPort > 0 ? "port \(localPort)" : nil)
-        return "<\(typeName): \(state.rawValue)\(target.map { ", \($0)" } ?? "")>"
+        return "<\(typeName): \(currentState.rawValue)\(target.map { ", \($0)" } ?? "")>"
     }
 
     nonisolated override var description: String {
@@ -386,8 +421,8 @@ import Security
 
     // Any state but idle is active: a connecting, connected or listening socket stays alive with
     // its callback until it stops, even if the user dropped their reference to it.
-    private var state: State = .idle {
-        didSet { tracker?.setActive(self, state.isActive) }
+    private var currentState: State = .idle {
+        didSet { tracker?.setActive(self, currentState.isActive) }
     }
 
     private weak var tracker: HSObjectTracker<HSSocket>?
@@ -416,11 +451,13 @@ import Security
     private var isProcessingReads = false
     private var timeoutWorkItem: DispatchWorkItem?
 
-    @objc var timeout: Double
+    @objc var connectTimeout: Double
+    @objc var readTimeout: Double
 
-    init(tracker: HSObjectTracker<HSSocket>, timeout: Double) {
+    init(tracker: HSObjectTracker<HSSocket>, connectTimeout: Double, readTimeout: Double) {
         self.tracker = tracker
-        self.timeout = timeout
+        self.connectTimeout = connectTimeout
+        self.readTimeout = readTimeout
         super.init()
     }
 
@@ -431,9 +468,10 @@ import Security
 
     // MARK: - Properties
 
-    @objc var isConnected: Bool { state == .connected }
-    @objc var isListening: Bool { state == .listening }
-    @objc var isSecure: Bool { state == .connected && connectionUsesTLS }
+    @objc var state: String { currentState.rawValue }
+    @objc var isConnected: Bool { currentState == .connected }
+    @objc var isListening: Bool { currentState == .listening }
+    @objc var isSecure: Bool { currentState == .connected && connectionUsesTLS }
 
     private var remoteEndpoint: NWEndpoint? { connection?.currentPath?.remoteEndpoint }
     private var localEndpoint: NWEndpoint? { connection?.currentPath?.localEndpoint }
@@ -448,7 +486,7 @@ import Security
     }
 
     @objc var unixPath: String? {
-        switch state {
+        switch currentState {
         case .listening: return listenerPath
         case .connecting, .connected: return connectedPath
         case .idle: return nil
@@ -526,13 +564,13 @@ import Security
         self.connection = connection
         connectedPath = path
         connectionUsesTLS = usesTLS
-        state = .connecting
+        currentState = .connecting
         connection.stateUpdateHandler = { [weak self] newState in
             MainActor.assumeIsolated {
                 self?.connectionStateChanged(newState, on: connection)
             }
         }
-        startTimeout(reason: "Connection timed out")
+        startTimeout(after: connectTimeout, reason: "Connection timed out")
         connection.start(queue: .main)
     }
 
@@ -547,9 +585,9 @@ import Security
         guard connection === self.connection else { return }
         switch newState {
         case .ready:
-            guard state == .connecting else { return }
+            guard currentState == .connecting else { return }
             cancelTimeout()
-            state = .connected
+            currentState = .connected
             if let acceptingSocket {
                 self.acceptingSocket = nil
                 acceptingSocket.clientConnected(self)
@@ -649,7 +687,7 @@ import Security
         self.listener = listener
         listenerPath = path
         listenerUsesTLS = usesTLS
-        state = .listening
+        currentState = .listening
         listener.newConnectionHandler = { [weak self] connection in
             MainActor.assumeIsolated {
                 self?.accept(connection, on: listener)
@@ -681,7 +719,7 @@ import Security
             connection.cancel()
             return
         }
-        let client = HSSocket(tracker: tracker, timeout: timeout)
+        let client = HSSocket(tracker: tracker, connectTimeout: connectTimeout, readTimeout: readTimeout)
         tracker.add(client)
         if let value = callback?.value {
             client.callback = JSCallback(value: value, owner: client)
@@ -728,7 +766,7 @@ import Security
     }
 
     private func queueRead(_ request: ReadRequest) -> HSSocket {
-        guard state != .listening else {
+        guard currentState != .listening else {
             AKWarning("HSSocket(\(identifier)): can't read from a listening socket, read from the sockets it accepts instead")
             return self
         }
@@ -745,7 +783,7 @@ import Security
         isProcessingReads = true
         defer { isProcessingReads = false }
 
-        while state == .connected, let request = pendingReads.first {
+        while currentState == .connected, let request = pendingReads.first {
             guard let data = takeData(for: request) else { break }
             pendingReads.removeFirst()
             delimiterSearchOffset = 0
@@ -753,7 +791,7 @@ import Security
             emitData(data, tag: request.tag)
         }
 
-        guard state == .connected else { return }
+        guard currentState == .connected else { return }
         guard let request = pendingReads.first else {
             // Keep receiving a little ahead of the reads, so a peer closing the connection is
             // noticed even when no read is queued
@@ -767,9 +805,21 @@ import Security
             return
         }
         if timeoutWorkItem == nil {
-            startTimeout(reason: "Read timed out")
+            startTimeout(after: readTimeout, reason: "Read timed out")
         }
         receiveMore()
+    }
+
+    /// Gives whatever is left in the buffer to the first queued read, which can no longer be
+    /// satisfied because the peer closed the connection.
+    private func deliverRemainingData() {
+        guard currentState == .connected, !buffer.isEmpty, let request = pendingReads.first else { return }
+        pendingReads.removeFirst()
+        let data = buffer
+        buffer.removeAll()
+        delimiterSearchOffset = 0
+        cancelTimeout()
+        emitData(data, tag: request.tag)
     }
 
     /// Removes and returns the data `request` needs from the buffer, or `nil` if it isn't all
@@ -814,8 +864,10 @@ import Security
             MainActor.assumeIsolated {
                 guard let self, connection === self.connection else { return }
                 self.isReceiving = false
-                if let content {
+                if let content, !content.isEmpty {
                     self.buffer.append(contentsOf: content)
+                    // The read timeout measures time without data, so arriving data restarts it
+                    self.cancelTimeout()
                 }
                 self.processReads()
                 // A "data" callback may have disconnected, or even reconnected, the socket
@@ -823,7 +875,9 @@ import Security
                 if let error {
                     self.teardown(error: Self.describe(error), graceful: false)
                 } else if isComplete {
-                    // The peer closed its end
+                    // The peer closed its end, so no more data will complete the first read
+                    self.deliverRemainingData()
+                    guard connection === self.connection else { return }
                     self.teardown(error: nil, graceful: false)
                 }
             }
@@ -846,7 +900,7 @@ import Security
     }
 
     private func send(_ data: Data) -> HSSocket {
-        guard state == .connecting || state == .connected, let connection else {
+        guard currentState == .connecting || currentState == .connected, let connection else {
             emitError("Can't write: the socket isn't connected")
             return self
         }
@@ -878,7 +932,7 @@ import Security
     ///   - graceful: Whether to send data already written before closing
     ///   - notify: Whether to call the callback
     private func teardown(error: String?, graceful: Bool, notify: Bool = true) {
-        guard state != .idle else { return }
+        guard currentState != .idle else { return }
         cancelTimeout()
         pendingReads.removeAll()
         buffer.removeAll()
@@ -925,7 +979,7 @@ import Security
         // the socket again, and un-pinning afterwards would drop that new activity's pin.
         let function = notify ? callback?.value : nil
         let wrapper = function.flatMap { JSValue(object: self, in: $0.context) }
-        state = .idle
+        currentState = .idle
         AKDebug("HSSocket(\(identifier)): disconnected\(error.map { ": \($0)" } ?? "")")
 
         if let function, let wrapper {
@@ -933,7 +987,7 @@ import Security
                 _ = function.call(withArguments: [Event.error.rawValue, wrapper, error])
             }
             // A callback that reconnected the socket after the error has already moved on
-            if state == .idle {
+            if currentState == .idle {
                 _ = function.call(withArguments: [Event.disconnected.rawValue, wrapper])
             }
         }
@@ -945,7 +999,7 @@ import Security
 
     // MARK: - Timeouts
 
-    private func startTimeout(reason: String) {
+    private func startTimeout(after timeout: Double, reason: String) {
         cancelTimeout()
         guard timeout > 0 else { return }
         let item = DispatchWorkItem { [weak self] in
@@ -966,9 +1020,9 @@ import Security
     // MARK: - Helpers
 
     private func requireIdle(_ method: String) -> Bool {
-        guard state == .idle else {
-            AKWarning("HSSocket(\(identifier)): \(method)() called while \(state.rawValue), call disconnect() first")
-            emitError("\(method)() called while the socket is \(state.rawValue)")
+        guard currentState == .idle else {
+            AKWarning("HSSocket(\(identifier)): \(method)() called while \(currentState.rawValue), call disconnect() first")
+            emitError("\(method)() called while the socket is \(currentState.rawValue)")
             return false
         }
         return true
