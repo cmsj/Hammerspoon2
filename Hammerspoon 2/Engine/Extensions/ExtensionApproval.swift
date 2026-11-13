@@ -50,9 +50,30 @@ struct AlertExtensionApprover: ExtensionApprover {
     }
 }
 
-/// The extensions the user has allowed to load, each by the cdhash of the build they allowed.
+/// The user's approval of one build of an extension
+nonisolated struct ExtensionApproval: Equatable, Identifiable {
+    /// The extension's name
+    let name: String
+    /// The cdhash of the build they allowed
+    let cdHash: String
+    /// Who signed that build, or nil if it had an ad-hoc signature
+    let signerName: String?
+    /// When they allowed it
+    let date: Date
+
+    var id: String { name }
+}
+
+/// The extensions the user has allowed to load, each by the cdhash of the build they allowed,
+/// stored in UserDefaults.
 struct ExtensionApprovals {
     static let defaultsKey = "approvedExtensions"
+
+    private enum Field {
+        static let cdHash = "cdHash"
+        static let signerName = "signerName"
+        static let date = "date"
+    }
 
     let defaults: UserDefaults
 
@@ -60,19 +81,46 @@ struct ExtensionApprovals {
         self.defaults = defaults
     }
 
-    private var approvals: [String: String] {
-        defaults.dictionary(forKey: Self.defaultsKey) as? [String: String] ?? [:]
+    private var stored: [String: [String: Any]] {
+        defaults.dictionary(forKey: Self.defaultsKey) as? [String: [String: Any]] ?? [:]
+    }
+
+    /// Every approval, sorted by extension name
+    var all: [ExtensionApproval] {
+        stored.compactMap { name, fields in
+            guard let cdHash = fields[Field.cdHash] as? String else { return nil }
+            return ExtensionApproval(name: name,
+                                     cdHash: cdHash,
+                                     signerName: fields[Field.signerName] as? String,
+                                     date: fields[Field.date] as? Date ?? .distantPast)
+        }
+        .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
     /// Whether the user has allowed exactly this build of the extension
     func isApproved(_ name: String, signature: ExtensionSignature) -> Bool {
-        approvals[name] == signature.cdHash
+        stored[name]?[Field.cdHash] as? String == signature.cdHash
     }
 
     /// Records that the user allowed this build of the extension, replacing any earlier build
     func approve(_ name: String, signature: ExtensionSignature) {
-        var updated = approvals
-        updated[name] = signature.cdHash
+        var fields: [String: Any] = [Field.cdHash: signature.cdHash, Field.date: Date()]
+        fields[Field.signerName] = signature.signerName
+        var updated = stored
+        updated[name] = fields
         defaults.set(updated, forKey: Self.defaultsKey)
+    }
+
+    /// Forgets the approval of an extension, so the user is asked again the next time a config
+    /// loads it
+    func revoke(_ name: String) {
+        var updated = stored
+        updated.removeValue(forKey: name)
+        defaults.set(updated, forKey: Self.defaultsKey)
+    }
+
+    /// Forgets every approval
+    func revokeAll() {
+        defaults.removeObject(forKey: Self.defaultsKey)
     }
 }

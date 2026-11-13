@@ -84,16 +84,16 @@ final class ExtensionLoader {
         guard isEnabled() else { throw .disabled }
         if let failure = unusable[name] { throw failure }
         if let existing = loaded[name] {
+            // Its code is loaded for good, but if the user has since removed their approval in
+            // Settings, they're asked again before a config can use it
+            try ensureApproved(existing.manifest, signature: existing.signature)
             warnIfChanged(existing)
             return existing
         }
 
         let manifest = try ExtensionManifest.read(name: name, in: directory(), hostSDKVersion: hostSDKVersion)
         let signature = try ExtensionSignature.verify(bundleAt: manifest.bundleURL, name: name)
-        if !approvals.isApproved(name, signature: signature) {
-            guard approver.approve(manifest, signature: signature) else { throw .notApproved(name: name) }
-            approvals.approve(name, signature: signature)
-        }
+        try ensureApproved(manifest, signature: signature)
 
         do {
             let extensionInfo = try loadCode(of: manifest, signature: signature)
@@ -156,6 +156,13 @@ final class ExtensionLoader {
 
         exportedClasses += NullReturnsInstaller.findExportedClasses(inImage: image)
         return LoadedExtension(manifest: manifest, signature: signature, moduleType: moduleType, imagePath: image)
+    }
+
+    /// Asks the user to allow the extension, unless they already have
+    private func ensureApproved(_ manifest: ExtensionManifest, signature: ExtensionSignature) throws(ExtensionError) {
+        guard !approvals.isApproved(manifest.name, signature: signature) else { return }
+        guard approver.approve(manifest, signature: signature) else { throw .notApproved(name: manifest.name) }
+        approvals.approve(manifest.name, signature: signature)
     }
 
     private func warnIfChanged(_ loadedExtension: LoadedExtension) {

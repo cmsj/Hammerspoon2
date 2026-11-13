@@ -21,7 +21,9 @@ foo.doSomething()
 The first time a config loads an extension, Hammerspoon 2 asks whether to allow it, and shows
 who signed it. An extension runs its own code inside Hammerspoon 2, with all of the permissions
 you've given Hammerspoon 2, such as Accessibility and Input Monitoring, so only allow extensions
-from developers you trust. You're asked again whenever the extension changes.
+from developers you trust. You're asked again whenever the extension changes. The extensions
+you've allowed are listed under **Approved extensions** in the Advanced tab of Settings, where
+you can remove them; you're then asked again the next time your config loads one.
 
 An extension's code stays loaded until Hammerspoon 2 quits: macOS can't unload it. If you update
 an extension, restart Hammerspoon 2 to use the new version. Reloading your config isn't enough,
@@ -183,24 +185,27 @@ it's lost when JavaScriptCore collects the module's wrapper.
 
 ### Building
 
-Build the SDK from Hammerspoon 2's source, at the version you're targeting:
+Build against the SDK in Hammerspoon 2 itself, at
+`/Applications/Hammerspoon 2.app/Contents/Frameworks/HammerspoonSDK.framework`. It contains the
+SDK's public Swift interface, which the Swift compiler builds the module from. That works with
+the Swift compiler Hammerspoon 2 was built with, or any later one, so if you get an error about
+the interface, update Xcode.
 
-```bash
-xcodebuild build -project "Hammerspoon 2.xcodeproj" -target HammerspoonSDK -configuration Release
-# → build/Release/HammerspoonSDK.framework
-```
-
-Then compile your code into a bundle against it. In Xcode, use a macOS Bundle target, with the
-framework added to the target but not embedded (Hammerspoon 2 provides it at runtime), and the
-wrapper extension set to `hsmodule`. Or with `swiftc`:
+In Xcode, use a macOS Bundle target, with its wrapper extension set to `hsmodule`, and add
+`/Applications/Hammerspoon 2.app/Contents/Frameworks` to its Framework Search Paths. Link
+HammerspoonSDK.framework, but don't embed it: Hammerspoon 2 provides it at runtime. Or with
+`swiftc`:
 
 ```bash
 swiftc -parse-as-library -emit-library -swift-version 6 \
     -module-name ComExampleFoo -target arm64-apple-macos27.0 \
-    -F path/to/build/Release -framework HammerspoonSDK \
+    -F "/Applications/Hammerspoon 2.app/Contents/Frameworks" -framework HammerspoonSDK \
     Sources/*.swift -o com.example.foo.hsmodule/Contents/MacOS/ComExampleFoo
 codesign --force --sign - com.example.foo.hsmodule
 ```
+
+Build against the oldest version of Hammerspoon 2 you want the extension to work with: it can
+only use the API that version's SDK has.
 
 ### SDK versions
 

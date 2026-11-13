@@ -4,8 +4,11 @@
 # TestExtension.swift next to this script), into <output directory>/TestExtensions, and prints
 # its path. Does nothing when it is up to date.
 #
-# It's built the way a third party would build one: compiled with `swiftc` against
-# HammerspoonSDK.framework and nothing else from the app, then given an ad-hoc signature.
+# It's built the way a third party would build one: compiled with `swiftc` against the
+# HammerspoonSDK.framework embedded in the app, and nothing else from it, then given an ad-hoc
+# signature. That copy has only the SDK's public .swiftinterface (see
+# scripts/trim-embedded-sdk.sh), so this also checks that the interface is enough to build an
+# extension.
 #
 # Usage: build-test-extension.sh <output directory> <directory containing HammerspoonSDK.framework>
 set -euo pipefail

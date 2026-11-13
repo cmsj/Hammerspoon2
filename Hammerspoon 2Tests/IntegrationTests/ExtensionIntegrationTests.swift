@@ -149,6 +149,19 @@ struct ExtensionTests {
         }
     }
 
+    @Suite("The SDK in the app bundle")
+    struct EmbeddedSDKTests {
+        @Test("The app's copy of the SDK has its public interface, and nothing that exposes host-only API")
+        func publicInterfaceOnly() throws {
+            let module = try #require(Bundle.main.privateFrameworksURL)
+                .appendingPathComponent("HammerspoonSDK.framework/Modules/HammerspoonSDK.swiftmodule")
+            let files = try FileManager.default.contentsOfDirectory(atPath: module.path)
+            let isPrivate: (String) -> Bool = { $0.hasSuffix(".private.swiftinterface") || $0.hasSuffix(".package.swiftinterface") }
+            #expect(files.contains { $0.hasSuffix(".swiftinterface") && !isPrivate($0) }, "Extension authors need the public interface to build against: \(files)")
+            #expect(!files.contains { isPrivate($0) || $0.hasSuffix(".swiftmodule") || $0 == "Project" }, "Only the public interface should ship: \(files)")
+        }
+    }
+
     @Suite("Refusing extensions before loading their code")
     struct RefusalTests {
         @Test("Nothing loads while extensions are turned off, and nobody is asked")
@@ -288,6 +301,44 @@ struct ExtensionTests {
             _ = try second.load(named: TestExtensionFixture.name)
             _ = try setup.loader.load(named: TestExtensionFixture.name)
             #expect(setup.approver.requests == [TestExtensionFixture.name])
+        }
+
+        @Test("Approvals record who signed the build, and can be removed")
+        func approvalRecords() throws {
+            let setup = LoaderSetup()
+            let approvals = ExtensionApprovals(defaults: setup.defaults)
+            let adHoc = ExtensionSignature(cdHash: "aa", teamIdentifier: nil, signerName: nil)
+            let signed = ExtensionSignature(cdHash: "bb", teamIdentifier: "ABCDE12345", signerName: "Developer ID Application: Example Ltd (ABCDE12345)")
+            approvals.approve("com.example.zed", signature: adHoc)
+            approvals.approve("com.example.alpha", signature: signed)
+
+            #expect(approvals.all.map(\.name) == ["com.example.alpha", "com.example.zed"])
+            #expect(approvals.all.first?.signerName == signed.signerName)
+            #expect(approvals.all.last?.signerName == nil)
+
+            approvals.revoke("com.example.alpha")
+            #expect(approvals.all.map(\.name) == ["com.example.zed"])
+            #expect(!approvals.isApproved("com.example.alpha", signature: signed))
+
+            approvals.revokeAll()
+            #expect(approvals.all.isEmpty)
+        }
+
+        @Test("Removing the approval of a loaded extension means the user is asked again before it's used")
+        func revokedAfterLoading() throws {
+            let setup = LoaderSetup()
+            _ = try setup.loader.load(named: TestExtensionFixture.name)
+            #expect(setup.approver.requests == [TestExtensionFixture.name])
+
+            ExtensionApprovals(defaults: setup.defaults).revoke(TestExtensionFixture.name)
+            setup.approver.answer = false
+            #expect(throws: ExtensionError.notApproved(name: TestExtensionFixture.name)) {
+                try setup.loader.load(named: TestExtensionFixture.name)
+            }
+
+            setup.approver.answer = true
+            _ = try setup.loader.load(named: TestExtensionFixture.name)
+            #expect(setup.approver.requests == Array(repeating: TestExtensionFixture.name, count: 3))
         }
 
         @Test("An extension whose classes clash with loaded ones is unusable")

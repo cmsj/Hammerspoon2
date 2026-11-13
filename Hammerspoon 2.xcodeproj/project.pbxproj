@@ -25,7 +25,7 @@
 		4FCE0A032F00000000000003 /* CommandLineKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4FCE0A022F00000000000002 /* CommandLineKit */; };
 		4FE4C00C2F0000000000000C /* hs2 in Embed Tools */ = {isa = PBXBuildFile; fileRef = 4FE4C0012F00000000000001 /* hs2 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F5DC00B2F0000000000000B /* HammerspoonSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5DC0012F00000000000001 /* HammerspoonSDK.framework */; };
-		4F5DC00C2F0000000000000C /* HammerspoonSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5DC0012F00000000000001 /* HammerspoonSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4F5DC00C2F0000000000000C /* HammerspoonSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5DC0012F00000000000001 /* HammerspoonSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F5DC0102F00000000000010 /* HammerspoonSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5DC0012F00000000000001 /* HammerspoonSDK.framework */; };
 /* End PBXBuildFile section */
 
@@ -393,6 +393,7 @@
 				4F5641802E8333830099EB4C /* Frameworks */,
 				4F5641812E8333830099EB4C /* Resources */,
 				4F5DC00D2F0000000000000D /* Embed Frameworks */,
+				4F5DC0122F00000000000012 /* Trim Embedded SDK */,
 				4F947D932F563FCF00DD814E /* Embed XPC Services */,
 				4FE4C00D2F0000000000000D /* Embed Tools */,
 				4FB20C062F00000000000006 /* Embed Launch Agents */,
@@ -722,7 +723,7 @@
 				"$(SRCROOT)/Hammerspoon 2Tests/Helpers/TestExtension/TestExtension.swift",
 				"$(SRCROOT)/Hammerspoon 2Tests/Helpers/TestExtension/hs2.testextension.js",
 				"$(SRCROOT)/Hammerspoon 2Tests/Helpers/TestExtension/build-test-extension.sh",
-				"$(BUILT_PRODUCTS_DIR)/HammerspoonSDK.framework/HammerspoonSDK",
+				"$(BUILT_PRODUCTS_DIR)/Hammerspoon 2.app/Contents/Frameworks/HammerspoonSDK.framework/HammerspoonSDK",
 			);
 			name = "Build Test Extension";
 			outputFileListPaths = (
@@ -732,7 +733,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Hammerspoon 2Tests/Helpers/TestExtension/build-test-extension.sh\" \"${BUILT_PRODUCTS_DIR}\" \"${BUILT_PRODUCTS_DIR}\"\n";
+			shellScript = "\"${SRCROOT}/Hammerspoon 2Tests/Helpers/TestExtension/build-test-extension.sh\" \"${BUILT_PRODUCTS_DIR}\" \"${BUILT_PRODUCTS_DIR}/Hammerspoon 2.app/Contents/Frameworks\"\n";
+		};
+		4F5DC0122F00000000000012 /* Trim Embedded SDK */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Trim Embedded SDK";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/scripts/trim-embedded-sdk.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
