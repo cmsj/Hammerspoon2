@@ -278,6 +278,31 @@ function summaryLines(report, version) {
     if (asiLines.length) {
         lines.push('', 'Application Specific Information:', ...asiLines);
     }
+    lines.push(...javaScriptLines(body.hammerspoonJavaScript));
+    return lines;
+}
+
+/**
+ * The JavaScript the app was running when it crashed, which it adds to its own reports (see
+ * Engine/JSBreadcrumbs.swift and CrashReport.adding(javaScript:)).
+ */
+function javaScriptLines(javaScript) {
+    if (!javaScript || typeof javaScript !== 'object') return [];
+    const entries = list =>
+        (Array.isArray(list) ? list : []).map(entry =>
+            `  ${String(entry?.time ?? '')}  ${String(entry?.label ?? '')}`.replace(/[\r\n]+/g, ' ')
+        );
+    const lines = [''];
+    const running = entries(javaScript.running);
+    if (running.length) {
+        lines.push('JavaScript running (innermost last):', ...running);
+        const omitted = Number(javaScript.omittedRunning);
+        if (omitted > 0) lines.push(`  ... and ${omitted} more inside those`);
+    } else {
+        lines.push('JavaScript running: none');
+    }
+    const recent = entries(javaScript.recent);
+    if (recent.length) lines.push('', 'Recent JavaScript (newest last):', ...recent);
     return lines;
 }
 

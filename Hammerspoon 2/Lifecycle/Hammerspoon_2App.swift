@@ -22,6 +22,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AKGarbage("applicationDidFinishLaunching: Creating/booting shared manager")
 
         AppDelegate.instance = self
+        // Tests run in the app, and their breadcrumbs files would push out those of real crashes.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            JSBreadcrumbs.start()
+        }
         ConsoleCompletionEngine.shared.prewarm()
         // Before the config loads, so a config that crashes the app can still be reported.
         CrashReportManager.shared.offerToReportNewCrashes()
