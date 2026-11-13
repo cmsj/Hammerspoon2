@@ -34,12 +34,8 @@ nonisolated struct CrashReport {
     /// rest of the issue form needs some of that.
     static let maximumCompactLength = 50_000
 
-    /// The body key the app adds the JavaScript that was running under (see `JSBreadcrumbs`).
-    /// It survives `compactText()`, so the symbolicator can show it too.
-    static let javaScriptKey = "hammerspoonJavaScript"
-
     let header: [String: Any]
-    private(set) var body: [String: Any]
+    let body: [String: Any]
 
     /// Parses an `.ips` crash report.
     /// - Parameters:
@@ -106,26 +102,6 @@ nonisolated struct CrashReport {
 
     /// When the crash happened, as macOS wrote it.
     var captureTime: String? { body["captureTime"] as? String }
-
-    /// The process ID of the process that crashed.
-    var pid: Int32? { (body["pid"] as? NSNumber)?.int32Value }
-
-    /// When the process that crashed was launched, if the report says in a form we understand.
-    var launchDate: Date? { (body["procLaunch"] as? String).flatMap(Self.parseDate) }
-
-    /// When the crash happened, if the report says in a form we understand.
-    var captureDate: Date? { captureTime.flatMap(Self.parseDate) }
-
-    /// Parses dates as they appear in reports, such as `2026-10-20 23:43:37.6376 +0100`.
-    private static func parseDate(_ string: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        for format in ["yyyy-MM-dd HH:mm:ss.SSSS Z", "yyyy-MM-dd HH:mm:ss.SS Z", "yyyy-MM-dd HH:mm:ss Z"] {
-            formatter.dateFormat = format
-            if let date = formatter.date(from: string) { return date }
-        }
-        return nil
-    }
 
     /// Whether the crash was in the process with `bundleIdentifier`, or one of its helpers
     /// (whose identifiers start with it).
@@ -229,72 +205,6 @@ nonisolated struct CrashReport {
         frames(body["lastExceptionBacktrace"] as? [[String: Any]] ?? [])
     }
 
-    // MARK: - JavaScript
-
-    /// Whether `snapshot`, from a breadcrumbs file with this report's process ID, could have
-    /// been recorded by the process that crashed. Process IDs get reused, so a file can belong to
-    /// an earlier process, or a later one may have replaced it. Its entries must all be from
-    /// while the crashed process was running. If the report's dates can't be read, it's assumed
-    /// to be the same process.
-    func couldHaveRecorded(_ snapshot: JSBreadcrumbs.Snapshot) -> Bool {
-        let times = (snapshot.running + snapshot.recent).map(\.time)
-        // The report's times are to the 0.1ms, but allow for clocks being read at different moments.
-        if let launchDate, let earliest = times.min(), earliest < launchDate.addingTimeInterval(-1) {
-            return false
-        }
-        if let captureDate, let latest = times.max(), latest > captureDate.addingTimeInterval(1) {
-            return false
-        }
-        return true
-    }
-
-    /// The report with what JavaScript the crashed process was running added to it.
-    func adding(javaScript snapshot: JSBreadcrumbs.Snapshot) -> CrashReport {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "HH:mm:ss.SSS"
-        func entries(_ entries: [JSBreadcrumbs.Entry]) -> [[String: Any]] {
-            entries.map { ["time": formatter.string(from: $0.time), "label": $0.label] }
-        }
-
-        var javaScript: [String: Any] = ["running": entries(snapshot.running), "recent": entries(snapshot.recent)]
-        if snapshot.omittedRunning > 0 { javaScript["omittedRunning"] = snapshot.omittedRunning }
-        var report = self
-        report.body[Self.javaScriptKey] = javaScript
-        return report
-    }
-
-    /// Lines describing the JavaScript that was running, and up to `recentLimit` of the
-    /// entries before it, if the report has them.
-    private func javaScriptLines(recentLimit: Int) -> [String] {
-        guard let javaScript = body[Self.javaScriptKey] as? [String: Any] else { return [] }
-        func lines(_ key: String) -> [String] {
-            (javaScript[key] as? [[String: Any]] ?? []).map {
-                "  \($0["time"] as? String ?? "")  \($0["label"] as? String ?? "")"
-            }
-        }
-
-        var result = [""]
-        let running = lines("running")
-        if running.isEmpty {
-            result.append("JavaScript running: none")
-        } else {
-            result.append("JavaScript running (innermost last):")
-            result.append(contentsOf: running)
-            if let omitted = javaScript["omittedRunning"] as? Int, omitted > 0 {
-                // Only the outermost entries fit in the file.
-                result.append("  ... and \(omitted) more inside those")
-            }
-        }
-        let recent = lines("recent").suffix(recentLimit)
-        if !recent.isEmpty {
-            result.append("")
-            result.append("Recent JavaScript (newest last):")
-            result.append(contentsOf: recent)
-        }
-        return result
-    }
-
     // MARK: - Reporting
 
     /// A short title for an issue about this crash.
@@ -327,7 +237,6 @@ nonisolated struct CrashReport {
             lines.append("Application Specific Information:")
             lines.append(contentsOf: asi.map { String($0.prefix(500)) })
         }
-        lines.append(contentsOf: javaScriptLines(recentLimit: min(frameLimit, 10)))
 
         func append(_ heading: String, _ frames: [Frame]) {
             guard !frames.isEmpty, frameLimit > 0 else { return }
@@ -376,7 +285,7 @@ nonisolated struct CrashReport {
     static let essentialKeys: Set<String> = [
         "procName", "codeSigningID", "pid", "captureTime", "procLaunch", "incident", "modelCode", "cpuType",
         "bundleInfo", "exception", "termination", "asi", "faultingThread", "threads", "omittedThreads",
-        "lastExceptionBacktrace", "usedImages", javaScriptKey,
+        "lastExceptionBacktrace", "usedImages",
     ]
 
     private struct CompactLevel {

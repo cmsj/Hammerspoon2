@@ -94,10 +94,10 @@ class JSTestHarness {
             print("❌ JavaScript Exception: \(exception?.toString() ?? "unknown")")
         }
 
-        // Make nil returned from Swift reach JS as null, inject type bridges (for HSRect,
-        // HSPoint, etc.), and give engine.js its breadcrumb functions
+        // Make nil returned from Swift reach JS as null, and inject type bridges (for HSRect,
+        // HSPoint, etc.)
         do {
-            try context.install([NullReturnsInstaller(), TypeBridgesInstaller(), JSBreadcrumbsInstaller()])
+            try context.install([NullReturnsInstaller(), TypeBridgesInstaller()])
         } catch {
             print("⚠️ Failed to install type bridges: \(error)")
         }
