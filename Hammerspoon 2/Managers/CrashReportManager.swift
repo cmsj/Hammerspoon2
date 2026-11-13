@@ -24,15 +24,12 @@ final class CrashReportManager {
     static let lastCheckedKey = "crashReportsLastChecked"
 
     let reportsDirectory: URL
-    let breadcrumbsDirectory: URL
     let defaults: UserDefaults
 
     init(reportsDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
             .appending(path: "Library/Logs/DiagnosticReports", directoryHint: .isDirectory),
-         breadcrumbsDirectory: URL = JSBreadcrumbs.defaultDirectory,
          defaults: UserDefaults = .standard) {
         self.reportsDirectory = reportsDirectory
-        self.breadcrumbsDirectory = breadcrumbsDirectory
         self.defaults = defaults
     }
 
@@ -49,8 +46,7 @@ final class CrashReportManager {
         offerToReport(newest.report, otherCrashes: crashes.count - 1)
     }
 
-    /// Crash reports of the app or its helpers written since the last call, oldest first. The
-    /// app's own reports include the JavaScript it was running, if it left breadcrumbs.
+    /// Crash reports of the app or its helpers written since the last call, oldest first.
     ///
     /// The first call only records when it happened, so crashes from before crash reporting
     /// existed (and whose dSYMs may not be published) aren't offered.
@@ -71,15 +67,9 @@ final class CrashReportManager {
                 guard let created = try? file.resourceValues(forKeys: [.creationDateKey]).creationDate,
                       created > lastChecked,
                       let text = try? String(contentsOf: file, encoding: .utf8),
-                      var report = try? CrashReport(text: text, redactingHomeDirectory: home),
+                      let report = try? CrashReport(text: text, redactingHomeDirectory: home),
                       report.belongs(toBundleIdentifier: bundleIdentifier) else { continue }
                 if let incident = report.incidentID, !seenIncidents.insert(incident).inserted { continue }
-                // Helpers don't run JavaScript.
-                if report.codeSigningID == bundleIdentifier, let pid = report.pid,
-                   let snapshot = JSBreadcrumbs.snapshot(forProcess: pid, in: breadcrumbsDirectory),
-                   report.couldHaveRecorded(snapshot) {
-                    report = report.adding(javaScript: snapshot)
-                }
                 found.append((file, report, created))
             }
         }

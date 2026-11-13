@@ -81,7 +81,6 @@ class JSEngine {
                 NodeBuiltinModulesInstaller(), // native backing for require('util') etc.
                 RequireInstaller(),            // require() function
                 TypeBridgesInstaller(),        // HSPoint, HSSize, HSRect, HSFont, HSAlert
-                JSBreadcrumbsInstaller(),      // lets engine.js record which listener is running
                 .bundled(path: "engine.js", in: .main),  // EventEmitter class
                 ModuleRootInstaller(engineID: id),  // hs namespace
             ])
@@ -120,8 +119,6 @@ class JSEngine {
             context.globalObject.deleteProperty("_hs_expandPath")
             context.globalObject.deleteProperty("_hs_eval")
             context.globalObject.deleteProperty("_hs_configDir")
-            context.globalObject.deleteProperty("_hs_breadcrumbEnter")
-            context.globalObject.deleteProperty("_hs_breadcrumbExit")
 
             // Force a synchronous full GC cycle (mark → sweep → finalize) before
             // tearing down the VM. JSC's concurrent GC defers ObjC bridge finalizers
