@@ -27,5 +27,4 @@ To make it your own, rename:
 
 The package depends on the HammerspoonSDK package for the oldest version of Hammerspoon 2 the
 extension should work with; set `HSSDKVersion` in `Bundle/Info.plist` to the SDK version that
-release provides (`HSSDK.version`). Build with Xcode 27 or later: Hammerspoon 2 refuses
-extensions built with older ones.
+release provides (`HSSDK.version`).

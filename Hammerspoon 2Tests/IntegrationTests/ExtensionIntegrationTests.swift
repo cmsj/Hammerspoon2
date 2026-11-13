@@ -96,7 +96,6 @@ private final class LoaderSetup {
          enabled: Bool = true,
          approve: Bool = true,
          hostSDKVersion: HSSDKVersion = HSSDK.version,
-         minimumBuildSDK: BuildVersion = ExtensionLoader.minimumBuildSDK,
          hostOSVersion: BuildVersion = .currentOS) {
         approver = RecordingApprover(answer: approve)
         defaults = UserDefaults(suiteName: suiteName)!
@@ -105,7 +104,6 @@ private final class LoaderSetup {
                                  approver: approver,
                                  approvals: ExtensionApprovals(defaults: defaults),
                                  hostSDKVersion: hostSDKVersion,
-                                 minimumBuildSDK: minimumBuildSDK,
                                  hostOSVersion: hostOSVersion)
     }
 
@@ -173,36 +171,33 @@ struct ExtensionTests {
     struct BinaryTests {
         /// A 64-bit Mach-O header for `cpuType`, with one LC_BUILD_VERSION command
         private static func thinBinary(cpuType: Int32 = ExtensionBinary.hostArchitecture,
-                                       minimumOS: UInt32 = 0x1B_00_00, sdk: UInt32 = 0x1B_02_00) -> Data {
+                                       minimumOS: UInt32 = 0x1B_00_00) -> Data {
             var data = Data()
             func append(_ value: UInt32) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
             append(0xFEED_FACF); append(UInt32(bitPattern: cpuType)); append(0); append(8)  // magic, cpu, subtype, MH_BUNDLE
             append(1); append(24); append(0); append(0)                                      // ncmds, sizeofcmds, flags, reserved
-            append(0x32); append(24); append(1); append(minimumOS); append(sdk); append(0)   // LC_BUILD_VERSION
+            append(0x32); append(24); append(1); append(minimumOS); append(0x1B_02_00); append(0)   // LC_BUILD_VERSION
             return data
         }
 
-        @Test("The test extension's binary is read: its architecture, deployment target and SDK")
+        @Test("The test extension's binary is read: its architecture and deployment target")
         func readsFixture() throws {
             let manifest = try ExtensionManifest.read(name: TestExtensionFixture.name, in: TestExtensionFixture.directory)
             let binary = try ExtensionBinary.read(at: manifest.executableURL)
             #expect(binary.architectures.contains(ExtensionBinary.hostArchitecture))
             #expect(binary.minimumOS == BuildVersion(27, 0))
-            let sdk = try #require(binary.sdk)
-            #expect(sdk >= ExtensionLoader.minimumBuildSDK)
         }
 
-        @Test("Versions are decoded from a thin binary")
+        @Test("The deployment target is decoded from a thin binary")
         func thin() throws {
-            let binary = try ExtensionBinary.parse(Self.thinBinary(minimumOS: 0x1A_04_01, sdk: 0x1B_02_00))
+            let binary = try ExtensionBinary.parse(Self.thinBinary(minimumOS: 0x1A_04_01))
             #expect(binary.minimumOS == BuildVersion(26, 4, 1))
-            #expect(binary.sdk == BuildVersion(27, 2))
         }
 
         @Test("A universal binary's slice for this Mac is found")
         func universal() throws {
             let other: Int32 = ExtensionBinary.hostArchitecture == ExtensionBinary.cpuTypeARM64 ? ExtensionBinary.cpuTypeX86_64 : ExtensionBinary.cpuTypeARM64
-            let slices = [(other, Self.thinBinary(cpuType: other, sdk: 0x0E_00_00)), (ExtensionBinary.hostArchitecture, Self.thinBinary())]
+            let slices = [(other, Self.thinBinary(cpuType: other, minimumOS: 0x0E_00_00)), (ExtensionBinary.hostArchitecture, Self.thinBinary())]
             var data = Data()
             func appendBE(_ value: UInt32) { withUnsafeBytes(of: value.bigEndian) { data.append(contentsOf: $0) } }
             appendBE(0xCAFE_BABE); appendBE(UInt32(slices.count))
@@ -218,15 +213,15 @@ struct ExtensionTests {
 
             let binary = try ExtensionBinary.parse(data)
             #expect(Set(binary.architectures) == [other, ExtensionBinary.hostArchitecture])
-            #expect(binary.sdk == BuildVersion(27, 2))
+            #expect(binary.minimumOS == BuildVersion(27, 0))
         }
 
-        @Test("A binary without this Mac's architecture has no versions to check")
+        @Test("A binary without this Mac's architecture has no deployment target to check")
         func otherArchitecture() throws {
             let other: Int32 = ExtensionBinary.hostArchitecture == ExtensionBinary.cpuTypeARM64 ? ExtensionBinary.cpuTypeX86_64 : ExtensionBinary.cpuTypeARM64
             let binary = try ExtensionBinary.parse(Self.thinBinary(cpuType: other))
             #expect(binary.architectures == [other])
-            #expect(binary.sdk == nil)
+            #expect(binary.minimumOS == nil)
         }
 
         @Test("Files that aren't 64-bit Mach-O binaries are rejected")
@@ -322,21 +317,6 @@ struct ExtensionTests {
                 Issue.record("Expected invalidSignature, got \(String(describing: error))")
                 return
             }
-            #expect(setup.approver.requests.isEmpty)
-        }
-
-        @Test("An extension built with an older Xcode than the minimum is refused without asking")
-        func outdatedToolchain() throws {
-            let setup = LoaderSetup(minimumBuildSDK: BuildVersion(99, 0))
-            let error = #expect(throws: ExtensionError.self) {
-                try setup.loader.load(named: TestExtensionFixture.name)
-            }
-            guard case .outdatedToolchain(_, let sdk, let minimum) = error else {
-                Issue.record("Expected outdatedToolchain, got \(String(describing: error))")
-                return
-            }
-            #expect(sdk != nil)
-            #expect(minimum == BuildVersion(99, 0))
             #expect(setup.approver.requests.isEmpty)
         }
 

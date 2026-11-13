@@ -5,21 +5,15 @@
 
 import Foundation
 
-/// What an extension's compiled code says about how it was built, read from its Mach-O load
-/// commands without loading it.
-///
-/// A Swift binary doesn't record which Swift compiler built it, but it does record the macOS SDK
-/// it was linked against, and each SDK ships with one Xcode, and so one Swift compiler. That's
-/// how `ExtensionLoader` refuses extensions built by a compiler with bugs that would crash the
-/// app (see `ExtensionLoader.minimumBuildSDK`).
+/// What an extension's compiled code says about where it can run, read from its Mach-O header and
+/// load commands without loading it.
 nonisolated struct ExtensionBinary: Equatable {
     /// The CPU types of the slices in the binary
     let architectures: [Int32]
 
-    /// For the slice that would run here: the oldest macOS it runs on, and the SDK it was linked
-    /// against. Nil if the binary has no slice for this Mac, or the slice doesn't say.
+    /// The oldest macOS the slice that would run here runs on. Nil if the binary has no slice for
+    /// this Mac, or the slice doesn't say.
     let minimumOS: BuildVersion?
-    let sdk: BuildVersion?
 
     static let cpuTypeARM64: Int32 = 0x0100_000C
     static let cpuTypeX86_64: Int32 = 0x0100_0007
@@ -42,9 +36,9 @@ nonisolated struct ExtensionBinary: Equatable {
     /// Reads the binary at a URL.
     /// - Parameters:
     ///   - url: The binary
-    ///   - architecture: The CPU type whose slice to read the versions from
+    ///   - architecture: The CPU type whose slice to read the deployment target from
     /// - Throws: `ParseError` if it isn't a readable 64-bit Mach-O file
-    /// - Returns: What it says about how it was built
+    /// - Returns: What it says about where it can run
     static func read(at url: URL, architecture: Int32 = hostArchitecture) throws(ParseError) -> ExtensionBinary {
         guard let data = try? Data(contentsOf: url, options: .alwaysMapped) else { throw .unreadable }
         return try parse(data, architecture: architecture)
@@ -73,25 +67,23 @@ nonisolated struct ExtensionBinary: Equatable {
                 }
             }
             guard let slice else {
-                return ExtensionBinary(architectures: architectures, minimumOS: nil, sdk: nil)
+                return ExtensionBinary(architectures: architectures, minimumOS: nil)
             }
             guard slice.offset >= 0, slice.size >= 0, slice.offset + slice.size <= data.count else { throw .truncated }
-            let versions = try thinVersions(bytes, base: slice.offset)
-            return ExtensionBinary(architectures: architectures, minimumOS: versions.minimumOS, sdk: versions.sdk)
+            return ExtensionBinary(architectures: architectures, minimumOS: try thinMinimumOS(bytes, base: slice.offset))
         }
 
         let cpuType = Int32(bitPattern: try bytes.uint32LE(at: 4))
         guard try bytes.uint32LE(at: 0) == 0xFEED_FACF else { throw .notMachO }
         guard cpuType == architecture else {
-            return ExtensionBinary(architectures: [cpuType], minimumOS: nil, sdk: nil)
+            return ExtensionBinary(architectures: [cpuType], minimumOS: nil)
         }
-        let versions = try thinVersions(bytes, base: 0)
-        return ExtensionBinary(architectures: [cpuType], minimumOS: versions.minimumOS, sdk: versions.sdk)
+        return ExtensionBinary(architectures: [cpuType], minimumOS: try thinMinimumOS(bytes, base: 0))
     }
 
-    /// The deployment target and SDK of a 64-bit Mach-O image starting at `base`, from its
+    /// The deployment target of a 64-bit Mach-O image starting at `base`, from its
     /// LC_BUILD_VERSION (or, in old binaries, LC_VERSION_MIN_MACOSX) load command
-    private static func thinVersions(_ bytes: Bytes, base: Int) throws(ParseError) -> (minimumOS: BuildVersion?, sdk: BuildVersion?) {
+    private static func thinMinimumOS(_ bytes: Bytes, base: Int) throws(ParseError) -> BuildVersion? {
         guard try bytes.uint32LE(at: base) == 0xFEED_FACF else { throw .notMachO }
         let commandCount = Int(try bytes.uint32LE(at: base + 16))
         var offset = base + 32  // sizeof(mach_header_64)
@@ -101,14 +93,14 @@ nonisolated struct ExtensionBinary: Equatable {
             guard size >= 8 else { throw .truncated }
             switch command {
             case 0x32:  // LC_BUILD_VERSION: platform, minos, sdk, ntools
-                return (version(try bytes.uint32LE(at: offset + 12)), version(try bytes.uint32LE(at: offset + 16)))
+                return version(try bytes.uint32LE(at: offset + 12))
             case 0x24:  // LC_VERSION_MIN_MACOSX: version, sdk
-                return (version(try bytes.uint32LE(at: offset + 8)), version(try bytes.uint32LE(at: offset + 12)))
+                return version(try bytes.uint32LE(at: offset + 8))
             default:
                 offset += size
             }
         }
-        return (nil, nil)
+        return nil
     }
 
     /// Decodes a Mach-O version, packed as xxxx.yy.zz in nibbles
@@ -144,7 +136,7 @@ nonisolated struct ExtensionBinary: Equatable {
     }
 }
 
-/// A version recorded in a Mach-O binary, such as a deployment target or SDK version
+/// A macOS version, such as a binary's deployment target
 nonisolated struct BuildVersion: Comparable, CustomStringConvertible {
     let major: Int
     let minor: Int

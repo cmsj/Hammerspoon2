@@ -45,7 +45,6 @@ If an extension can't be loaded, `require()` throws an `Error` whose `code` says
 | `ERR_EXTENSION_INCOMPATIBLE_SDK` | It was built for an SDK version this copy of Hammerspoon 2 doesn't provide |
 | `ERR_EXTENSION_INVALID_SIGNATURE` | It isn't signed, or it changed after it was signed |
 | `ERR_EXTENSION_UNSUPPORTED_BINARY` | Its code isn't built for this Mac's processor |
-| `ERR_EXTENSION_OUTDATED_TOOLCHAIN` | It was built with an Xcode older than Hammerspoon 2 supports |
 | `ERR_EXTENSION_REQUIRES_NEWER_MACOS` | It needs a later version of macOS |
 | `ERR_EXTENSION_BUNDLES_SDK` | It contains its own copy of HammerspoonSDK.framework |
 | `ERR_EXTENSION_NOT_APPROVED` | You didn't allow it to load |
@@ -143,16 +142,11 @@ a complete working example, including the ticker.
 
 ### Rules
 
-These are the same rules Hammerspoon 2's own modules follow. The first five are checked when
+These are the same rules Hammerspoon 2's own modules follow. The first four are checked when
 the extension loads, and an extension that breaks them is refused.
 
-- **Build with Xcode 27 or later.** Older Swift compilers generate code that can crash
-  Hammerspoon 2 when JavaScript's garbage collector frees your objects. Swift binaries don't say
-  which compiler built them, so Hammerspoon 2 checks the macOS SDK the extension was built
-  with, which comes with the compiler: it must be the macOS 27 SDK or later.
 - **Link HammerspoonSDK.framework, but don't embed it.** A second copy would define every SDK
   class twice.
-
 - **Give every Objective-C class a unique name.** All classes share one namespace with
   Hammerspoon 2 and every other extension, so give each `@objc` class an explicit, prefixed
   name: `@objc(ExampleFooModule)`. An extension whose classes clash with loaded ones can't be
@@ -165,6 +159,9 @@ the extension loads, and an extension that breaks them is refused.
 - **Mark your JSExport protocols `@MainActor`.** JavaScript runs on the main thread, and the
   SDK's protocols are main-actor isolated. Alternatively, build with
   `-default-isolation MainActor`, as Hammerspoon 2 does.
+- **Use Xcode 27 or later if any of your classes has an `isolated deinit`.** Earlier Swift
+  compilers generate code for it that crashes Hammerspoon 2 when JavaScript's garbage collector
+  frees the object on a background thread.
 - **Store JavaScript callbacks in a `JSCallback`**, never a `JSValue`, which would keep the
   whole JavaScript context alive.
 - **Track the objects you hand to JavaScript with an `HSObjectTracker`**, and keep an object
