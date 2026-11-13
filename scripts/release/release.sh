@@ -6,8 +6,9 @@
 #   scripts/release/release.sh execute [--dry-run] [--yes] <version>
 #
 # prepare changes nothing outside build/release/<version>. Once it has checked
-# that <version> is unused and that every tool, key and permission both phases
-# need is in place, it:
+# that <version> is unused, that every tool, key and permission both phases
+# need is in place, and that the API of the SDK version it ships has been
+# recorded (see scripts/sdk/check-api.sh), it:
 #
 #   1. archives the Release scheme from HEAD with MARKETING_VERSION=<version>
 #      and CURRENT_PROJECT_VERSION=<commit count>, so Sparkle's build numbers
@@ -16,8 +17,9 @@
 #   3. zips it and signs the zip with the Sparkle EdDSA key, and zips the
 #      archive's dSYMs (checking every executable of ours has one) so crash
 #      reports from the release can be symbolicated
-#   3a. packages the app's HammerspoonSDK.framework as a zipped XCFramework,
-#      for extension authors (scripts/sdk/build-xcframework.sh)
+#   3a. checks the app's HammerspoonSDK.framework has the API recorded for its
+#      version, and packages it as a zipped XCFramework, for extension authors
+#      (scripts/sdk/build-xcframework.sh)
 #   4. builds signed binary deltas against the previous releases that this
 #      script published, and writes sparkle.json to describe all of the above
 #   5. writes a changelog from the Changelog-Added/Changed/Fixed trailers in
@@ -393,6 +395,12 @@ cmd_prepare() {
     check_build_is_newest "$BUILD_NUMBER" "$WORK_ROOT/live-$VERSION.xml"
     rm -f "$WORK_ROOT/live-$VERSION.xml"
 
+    # Releasing an SDK version fixes its API, which later builds are checked against
+    local sdk_state
+    sdk_state="$("$REPO_ROOT/scripts/sdk/check-api.sh" version)"
+    [[ "$sdk_state" == *"(recorded)" ]] \
+        || die "the API of HammerspoonSDK ${sdk_state%% *} hasn't been recorded. Build the app, run scripts/sdk/check-api.sh record <Hammerspoon 2.app>, and commit and push the file it adds to scripts/sdk/api/"
+
     resolve_packages
     check_sparkle_key
     FEED_URL="$(plutil -extract SUFeedURL raw "$INFO_PLIST")"
@@ -515,6 +523,7 @@ EOF
     ditto -c -k --keepParent "$archive/dSYMs" "$dsyms_zip"
 
     log "Packaging the SDK for extension authors"
+    "$REPO_ROOT/scripts/sdk/check-api.sh" check "$app"
     # From the exported app, so it's the trimmed, Developer ID signed copy the app ships
     local sdk_checksum
     sdk_checksum="$("$REPO_ROOT/scripts/sdk/build-xcframework.sh" "$app" "$sdk_zip")"

@@ -163,7 +163,7 @@ struct ExtensionTests {
             let files = try FileManager.default.contentsOfDirectory(atPath: module.path)
             let isPrivate: (String) -> Bool = { $0.hasSuffix(".private.swiftinterface") || $0.hasSuffix(".package.swiftinterface") }
             #expect(files.contains { $0.hasSuffix(".swiftinterface") && !isPrivate($0) }, "Extension authors need the public interface to build against: \(files)")
-            #expect(!files.contains { isPrivate($0) || $0.hasSuffix(".swiftmodule") || $0 == "Project" }, "Only the public interface should ship: \(files)")
+            #expect(!files.contains { isPrivate($0) || $0.hasSuffix(".swiftmodule") || $0.hasSuffix(".abi.json") || $0 == "Project" }, "Only the public interface should ship: \(files)")
         }
     }
 

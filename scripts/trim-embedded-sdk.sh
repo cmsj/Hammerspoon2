@@ -9,6 +9,7 @@
 #   - *.private.swiftinterface: declares the @_spi(HammerspoonHost) API that only the app may use
 #   - the binary *.swiftmodule: also includes that SPI, and only works with the exact compiler
 #     that built it, so the compiler would fall back to the .swiftinterface anyway
+#   - *.abi.json: a description of the module's ABI, which also lists the SPI
 #   - Project/: source info, with paths on the machine that built it
 #
 # Changing the framework breaks the signature Embed Frameworks gave it, so it's signed again
@@ -25,7 +26,7 @@ if [ ! -d "$MODULE" ]; then
 fi
 
 shopt -s nullglob
-EXTRA=("$MODULE"/*.private.swiftinterface "$MODULE"/*.package.swiftinterface "$MODULE"/*.swiftmodule)
+EXTRA=("$MODULE"/*.private.swiftinterface "$MODULE"/*.package.swiftinterface "$MODULE"/*.swiftmodule "$MODULE"/*.abi.json)
 [ -e "$MODULE/Project" ] && EXTRA+=("$MODULE/Project")
 shopt -u nullglob
 
