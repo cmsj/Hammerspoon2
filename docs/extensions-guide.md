@@ -223,6 +223,19 @@ codesign --force --sign - com.example.foo.hsmodule
 Build against the oldest version of Hammerspoon 2 you want the extension to work with: it can
 only use the API that version's SDK has.
 
+To build without Hammerspoon 2 installed, for example in CI, each release's SDK is also
+published on its [GitHub release page](https://github.com/cmsj/Hammerspoon2/releases), as
+`HammerspoonSDK-<version>.xcframework.zip`, and as the
+[HammerspoonSDK](https://github.com/cmsj/HammerspoonSDK) Swift package. The
+[extension template](https://github.com/cmsj/Hammerspoon2/tree/main/Examples/ExtensionTemplate)
+is a Swift package that uses it, with a script that builds the extension into a signed bundle:
+
+```bash
+cd ExtensionTemplate
+./build.sh
+cp -R build/com.example.hello.hsmodule ~/.config/Hammerspoon2/Extensions/
+```
+
 ### SDK versions
 
 `HSSDKVersion` has a major and a minor version. Hammerspoon 2 loads an extension built for the
