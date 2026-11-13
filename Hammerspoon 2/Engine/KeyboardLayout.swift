@@ -5,6 +5,7 @@
 
 import Foundation
 import Carbon
+import HammerspoonSDK
 
 // MARK: - Key code table
 

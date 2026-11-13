@@ -7,6 +7,7 @@ import Testing
 import AppKit
 import JavaScriptCore
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 /// JavaScriptCore bridges nil returned from Swift as `undefined`; `NullReturnsInstaller` makes it
 /// `null` instead. These use real app types, since the installer only looks at classes in the app

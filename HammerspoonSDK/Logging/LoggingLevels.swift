@@ -1,12 +1,12 @@
 //
 //  HammerspoonLogType.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 //  Created by Chris Jones on 31/08/2026.
 //
 
 @_documentation(visibility: private)
-enum HammerspoonLogType: Int, CaseIterable, Identifiable {
+nonisolated public enum HammerspoonLogType: Int, CaseIterable, Identifiable, Sendable {
     // Raw values are deliberately spaced out so future cases can be inserted
     // without reshuffling the severity ordering (or persisted @AppStorage values)
     // of existing cases.
@@ -18,8 +18,8 @@ enum HammerspoonLogType: Int, CaseIterable, Identifiable {
     case Console = 50
     case Autocomplete = 60
 
-    var id: Self { self }
-    var asString: String {
+    public var id: Self { self }
+    public var asString: String {
         switch self {
         case .Garbage:
             return "Garbage"

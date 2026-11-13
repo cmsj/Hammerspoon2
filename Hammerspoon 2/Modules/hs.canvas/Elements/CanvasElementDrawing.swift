@@ -7,6 +7,7 @@ import Foundation
 import AppKit
 import CoreText
 import SwiftUI
+import HammerspoonSDK
 
 /// Translates v1-style canvas element dictionaries into SwiftUI `GraphicsContext` drawing
 /// calls. Kept as a set of pure functions (no state) so both `HSCanvasRenderView`'s live

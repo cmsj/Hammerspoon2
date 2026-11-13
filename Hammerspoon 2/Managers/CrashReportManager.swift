@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import HammerspoonSDK
 
 /// Offers, at launch, to report the last crash of Hammerspoon 2 (or one of its helpers) as a
 /// GitHub issue.

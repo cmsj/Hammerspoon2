@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import Vision
+import HammerspoonSDK
 
 /// Recognize text in images using Apple's Vision framework.
 ///

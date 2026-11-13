@@ -1,6 +1,6 @@
 //
 //  HSEventName.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 
 import Foundation
@@ -17,9 +17,9 @@ import Foundation
 /// actually emit is in the list. `scripts/check-event-names.js` (run by `npm run docs:test`)
 /// separately checks that the event unions in the module's `on`/`off`/`once` docstrings match
 /// these enums, which it finds by looking for conformances to this protocol.
-nonisolated protocol HSEventName: RawRepresentable, CaseIterable, Sendable where RawValue == String {}
+nonisolated public protocol HSEventName: RawRepresentable, CaseIterable, Sendable where RawValue == String {}
 
 nonisolated extension HSEventName {
     /// Every event name, in declaration order.
-    static var allNames: [String] { allCases.map(\.rawValue) }
+    public static var allNames: [String] { allCases.map(\.rawValue) }
 }

@@ -7,6 +7,7 @@ import Testing
 import AppKit
 import JavaScriptCore
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 @Suite("Native memory accounting for JavaScript garbage collection")
 struct JSExtraMemoryTests {

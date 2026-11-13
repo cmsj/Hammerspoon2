@@ -7,6 +7,7 @@ import Foundation
 import JavaScriptCore
 import AppKit
 import SwiftUI
+import HammerspoonSDK
 
 /// A keyboard-driven floating chooser panel.
 ///

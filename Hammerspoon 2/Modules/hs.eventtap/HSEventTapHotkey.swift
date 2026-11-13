@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import CoreGraphics
+import HammerspoonSDK
 
 // MARK: - Coordinator protocol
 

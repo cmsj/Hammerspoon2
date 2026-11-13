@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import CryptoKit
+import HammerspoonSDK
 
 // MARK: - Declare our JavaScript API
 

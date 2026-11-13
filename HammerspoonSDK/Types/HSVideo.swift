@@ -1,6 +1,6 @@
 //
 //  HSVideo.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 //  Created by Claude Code on 02/08/2026.
 //
@@ -48,7 +48,7 @@ import AVFoundation
 /// Gapless looping (via `AVPlayerLooper`) is only supported when the playlist contains a
 /// single URL. Calling `loop(true)` on a multi-URL playlist has no effect (the playlist just
 /// plays through once) and logs a warning.
-@objc protocol HSVideoAPI: HSTypeAPI, JSExport {
+@objc public protocol HSVideoAPI: HSTypeAPI, JSExport {
     /// Load a playlist of videos to play back to back, in order
     /// - Parameter urls: {string[]} Each entry is a local file path (`~` is expanded) or a remote URL string
     /// - Returns: An HSVideo object, or null if the list is empty or an entry couldn't be resolved
@@ -106,22 +106,22 @@ import AVFoundation
     @objc var volume: Double { get set }
 }
 
-@objc class HSVideo: NSObject, HSVideoAPI {
-    @objc var typeName = "HSVideo"
+@objc public class HSVideo: NSObject, HSVideoAPI {
+    @objc public var typeName = "HSVideo"
 
-    @objc func toString() -> String {
+    @objc public func toString() -> String {
         return "<\(typeName): \(items.count) item\(items.count == 1 ? "" : "s")>"
     }
 
-    nonisolated override var description: String {
+    public nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
 
-    let player: AVQueuePlayer
+    public let player: AVQueuePlayer
     private let items: [AVPlayerItem]
     private var looper: AVPlayerLooper?
 
-    init(player: AVQueuePlayer, items: [AVPlayerItem]) {
+    public init(player: AVQueuePlayer, items: [AVPlayerItem]) {
         self.player = player
         self.items = items
         super.init()
@@ -129,7 +129,7 @@ import AVFoundation
 
     // MARK: - Factory Methods
 
-    @objc static func fromURLs(_ urls: [String]) -> HSVideo? {
+    @objc public static func fromURLs(_ urls: [String]) -> HSVideo? {
         guard !urls.isEmpty else {
             AKError("HSVideo: fromURLs requires at least one URL")
             return nil
@@ -160,22 +160,22 @@ import AVFoundation
 
     // MARK: - Playback Control
 
-    @objc func play() -> HSVideo {
+    @objc public func play() -> HSVideo {
         player.play()
         return self
     }
 
-    @objc func pause() -> HSVideo {
+    @objc public func pause() -> HSVideo {
         player.pause()
         return self
     }
 
-    @objc func seek(_ seconds: Double) -> HSVideo {
+    @objc public func seek(_ seconds: Double) -> HSVideo {
         player.seek(to: CMTime(seconds: seconds, preferredTimescale: 600))
         return self
     }
 
-    @objc func loop(_ enabled: Bool) -> HSVideo {
+    @objc public func loop(_ enabled: Bool) -> HSVideo {
         guard enabled else {
             // Nothing to tear down: looper is only ever non-nil for a single-URL
             // playlist, so skip the queue reset for multi-URL playlists (where it
@@ -206,7 +206,7 @@ import AVFoundation
         return self
     }
 
-    @objc var volume: Double {
+    @objc public var volume: Double {
         get { Double(player.volume) }
         set { player.volume = Float(newValue) }
     }

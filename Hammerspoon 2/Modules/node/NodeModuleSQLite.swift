@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import SQLite3
+import HammerspoonSDK
 
 // A partial re-implementation of Node.js's `node:sqlite` module, backed by the SQLite library
 // that ships with macOS.

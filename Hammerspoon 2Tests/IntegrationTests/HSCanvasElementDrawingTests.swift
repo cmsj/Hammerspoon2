@@ -12,6 +12,7 @@ import CoreGraphics
 import SwiftUI
 import AppKit
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 @Suite("hs.canvas element drawing tests")
 struct HSCanvasElementDrawingTests {

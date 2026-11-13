@@ -54,6 +54,13 @@ const GUIDES = [
         slug: 'typescript-guide',
         pageTitle: 'TypeScript',
         searchDescription: 'How to write your Hammerspoon 2 config in TypeScript: setup, the ambient hammerspoon.d.ts globals, compiling, and editor support.'
+    },
+    {
+        sourcePath: path.join(__dirname, '..', 'docs', 'extensions-guide.md'),
+        outputName: 'extensions-guide.html',
+        slug: 'extensions-guide',
+        pageTitle: 'Extensions',
+        searchDescription: 'How to use and write extensions: native Swift code, built against the HammerspoonSDK framework, loaded with require(\'ext:...\').'
     }
 ];
 

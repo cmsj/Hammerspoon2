@@ -5,6 +5,7 @@
 
 import Foundation
 import Synchronization
+import HammerspoonSDK
 
 /// Ensures processes that have been asked to terminate actually die.
 ///

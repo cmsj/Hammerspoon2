@@ -1,6 +1,6 @@
 //
 //  Font.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 //  Created by Chris Jones on 13/11/2025.
 //
@@ -10,7 +10,7 @@ import JavaScriptCore
 import SwiftUI
 
 /// This is a JavaScript object used to represent macOS fonts. It includes a variety of static methods that can instantiate the various font sizes commonly used with UI elements, and also includes static methods for instantiating the system font at various sizes/weights, or any custom font available on the system.
-@objc protocol HSFontAPI: HSTypeAPI, JSExport {
+@objc public protocol HSFontAPI: HSTypeAPI, JSExport {
     /// Body text style
     /// - Returns: An HSFont object
     @objc static func body() -> HSFont
@@ -79,17 +79,17 @@ import SwiftUI
     @objc static func custom(_ name: String, _ size: Double) -> HSFont
 }
 
-@objc class HSFont: NSObject, HSFontAPI {
-    @objc var typeName = "HSFont"
+@objc public class HSFont: NSObject, HSFontAPI {
+    @objc public var typeName = "HSFont"
 
-    @objc func toString() -> String {
+    @objc public func toString() -> String {
         return "<\(typeName): \(String(describing: font))>"
     }
 
-    nonisolated override var description: String {
+    public nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
-    var font: Font
+    public var font: Font
 
     private init(font: Font) {
         self.font = font
@@ -98,53 +98,53 @@ import SwiftUI
 
     // MARK: - Text Styles
 
-    @objc static func body() -> HSFont {
+    @objc public static func body() -> HSFont {
         HSFont(font: .body)
     }
 
-    @objc static func callout() -> HSFont {
+    @objc public static func callout() -> HSFont {
         HSFont(font: .callout)
     }
 
-    @objc static func caption() -> HSFont {
+    @objc public static func caption() -> HSFont {
         HSFont(font: .caption)
     }
 
-    @objc static func caption2() -> HSFont {
+    @objc public static func caption2() -> HSFont {
         HSFont(font: .caption2)
     }
 
-    @objc static func footnote() -> HSFont {
+    @objc public static func footnote() -> HSFont {
         HSFont(font: .footnote)
     }
 
-    @objc static func headline() -> HSFont {
+    @objc public static func headline() -> HSFont {
         HSFont(font: .headline)
     }
 
-    @objc static func largeTitle() -> HSFont {
+    @objc public static func largeTitle() -> HSFont {
         HSFont(font: .largeTitle)
     }
 
-    @objc static func subheadline() -> HSFont {
+    @objc public static func subheadline() -> HSFont {
         HSFont(font: .subheadline)
     }
 
-    @objc static func title() -> HSFont {
+    @objc public static func title() -> HSFont {
         HSFont(font: .title)
     }
 
-    @objc static func title2() -> HSFont {
+    @objc public static func title2() -> HSFont {
         HSFont(font: .title2)
     }
 
-    @objc static func title3() -> HSFont {
+    @objc public static func title3() -> HSFont {
         HSFont(font: .title3)
     }
 
     // MARK: - System Fonts
 
-    @objc static func system(_ size: Double, _ weight: String?) -> HSFont {
+    @objc public static func system(_ size: Double, _ weight: String?) -> HSFont {
         let weight = weight == "undefined" ? "regular" : (weight ?? "regular")
         let fontWeight: Font.Weight
         switch weight.lowercased() {
@@ -175,7 +175,7 @@ import SwiftUI
 
     // MARK: - Custom Fonts
 
-    @objc static func custom(_ name: String, _ size: Double) -> HSFont {
+    @objc public static func custom(_ name: String, _ size: Double) -> HSFont {
         HSFont(font: .custom(name, size: size))
     }
 }

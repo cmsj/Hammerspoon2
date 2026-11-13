@@ -8,6 +8,7 @@ import JavaScriptCore
 import JavaScriptCoreExtras
 import IOBluetooth
 import CoreBluetooth
+import HammerspoonSDK
 
 // MARK: - JavaScript API
 

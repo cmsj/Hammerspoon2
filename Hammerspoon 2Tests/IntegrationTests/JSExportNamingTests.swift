@@ -8,6 +8,7 @@ import Foundation
 import JavaScriptCore
 import ObjectiveC
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 /// Checks the names of JSExport protocol methods.
 ///
@@ -38,14 +39,10 @@ struct JSExportNamingTests {
         return encoding.first == "@"
     }
 
-    /// Every protocol adopted, directly or by inheritance, by a class in the app binary. System
-    /// frameworks have JSExport protocols of their own (SceneKit's declare `-copy`), which aren't ours to check.
+    /// Every protocol adopted, directly or by inheritance, by a class in the app or SDK binaries.
+    /// System frameworks have JSExport protocols of their own (SceneKit's declare `-copy`), which
+    /// aren't ours to check.
     private static func appProtocols() throws -> [Protocol] {
-        let image = try #require(class_getImageName(HSImage.self))
-        var classCount: UInt32 = 0
-        let classNames = try #require(objc_copyClassNamesForImage(image, &classCount))
-        defer { free(UnsafeMutableRawPointer(classNames)) }
-
         var seen = Set<String>()
         var result: [Protocol] = []
         func visit(_ proto: Protocol) {
@@ -56,8 +53,7 @@ struct JSExportNamingTests {
             defer { free(UnsafeMutableRawPointer(inherited)) }
             UnsafeBufferPointer(start: inherited, count: Int(count)).forEach(visit)
         }
-        for name in UnsafeBufferPointer(start: classNames, count: Int(classCount)) {
-            guard let cls = objc_getClass(name) as? AnyClass else { continue }
+        for cls in try ExportedProtocol.appClasses() {
             var count: UInt32 = 0
             guard let adopted = class_copyProtocolList(cls, &count) else { continue }
             defer { free(UnsafeMutableRawPointer(adopted)) }

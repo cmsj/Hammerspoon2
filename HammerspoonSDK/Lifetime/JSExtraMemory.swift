@@ -1,6 +1,6 @@
 //
 //  JSExtraMemory.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 
 import AppKit
@@ -22,7 +22,7 @@ import JavaScriptCore
 /// `JSReportExtraMemoryCost` is exported by JavaScriptCore.framework but not declared in its
 /// public headers, so it's looked up at runtime, and reporting is skipped if macOS removes it.
 @_documentation(visibility: private)
-enum JSExtraMemory {
+public enum JSExtraMemory {
     private typealias ReportFunction = @convention(c) (JSContextRef, Int) -> Void
 
     private static let reportFunction: ReportFunction? = {
@@ -36,7 +36,7 @@ enum JSExtraMemory {
     }()
 
     /// Whether reports reach JSC. False only if JavaScriptCore no longer exports the function.
-    static var isAvailable: Bool { unsafe reportFunction != nil }
+    public static var isAvailable: Bool { unsafe reportFunction != nil }
 
     /// Report native memory taken on by a bridged object.
     /// - Parameters:
@@ -44,15 +44,15 @@ enum JSExtraMemory {
     ///   - context: The context the object's wrapper lives in. Defaults to the context of the JS
     ///     call in progress, or else the engine's, for objects made outside a JS call (e.g. when a
     ///     promise resolves).
-    static func report(_ byteCount: Int, in context: JSContext? = nil) {
+    public static func report(_ byteCount: Int, in context: JSContext? = nil) {
         guard byteCount > 0,
               let reportFunction = unsafe reportFunction,
-              let context = context ?? JSContext.current() ?? JSEngine.shared.context else { return }
+              let context = context ?? JSContext.current() ?? HSSDK.engineContextProvider() else { return }
         unsafe reportFunction(context.jsGlobalContextRef, byteCount)
     }
 
     /// Report the backing store of a window that's just been made, which holds 4 bytes per pixel.
-    static func reportBackingStore(of window: NSWindow) {
+    public static func reportBackingStore(of window: NSWindow) {
         let scale = window.backingScaleFactor
         let size = window.frame.size
         report(byteCount(pixelsWide: size.width * scale, pixelsHigh: size.height * scale))
@@ -60,7 +60,7 @@ enum JSExtraMemory {
 
     /// The bytes taken by an image of the given size at 4 bytes per pixel, or 0 for a size that
     /// isn't positive and finite.
-    static func byteCount(pixelsWide: Double, pixelsHigh: Double) -> Int {
+    public static func byteCount(pixelsWide: Double, pixelsHigh: Double) -> Int {
         let bytes = pixelsWide * pixelsHigh * 4
         guard bytes.isFinite, bytes > 0 else { return 0 }
         return Int(min(bytes, Double(Int32.max)))

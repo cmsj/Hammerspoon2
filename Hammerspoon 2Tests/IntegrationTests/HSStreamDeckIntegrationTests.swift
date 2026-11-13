@@ -9,6 +9,7 @@ import AppKit
 import IOKit
 import IOKit.hid
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 private nonisolated func hasNoStreamDeck() -> Bool {
     // Matches HSStreamDeckModel.usbVendorIDElgato, duplicated here since that type is

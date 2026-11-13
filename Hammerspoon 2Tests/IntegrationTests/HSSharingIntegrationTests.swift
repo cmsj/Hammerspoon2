@@ -6,6 +6,7 @@
 import Testing
 import JavaScriptCore
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 // MARK: - Suite 1: hs.sharing module API structure
 

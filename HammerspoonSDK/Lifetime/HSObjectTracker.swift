@@ -1,6 +1,6 @@
 //
 //  HSObjectTracker.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 
 import Foundation
@@ -75,7 +75,7 @@ import JavaScriptCore
 ///     didSet { tracker?.setActive(self, timer != nil) }
 /// }
 /// ```
-final class HSObjectTracker<T: AnyObject> {
+public final class HSObjectTracker<T: AnyObject> {
     private struct WeakBox {
         weak var value: T?
         init(_ value: T) { self.value = value }
@@ -83,25 +83,28 @@ final class HSObjectTracker<T: AnyObject> {
 
     private var storage: [ObjectIdentifier: WeakBox] = [:]
 
+    /// Creates an empty tracker
+    public init() {}
+
     /// The JSContext the tracked objects' wrappers live in. A module only runs in one context, so
     /// this is recorded from whichever JS call adds or activates an object, and used to pin
     /// objects that become active outside a JS call (from a system event). Released by
     /// `removeAllObjects()`.
-    var context: JSContext?
+    public var context: JSContext?
 
     /// All currently-alive objects, active or not. Dead entries are compacted on each access.
-    var allObjects: [T] {
+    public var allObjects: [T] {
         compact()
         return storage.values.compactMap(\.value)
     }
 
     /// The number of objects currently active
-    var activeCount: Int {
+    public var activeCount: Int {
         HSActiveObjects.count(trackedBy: ObjectIdentifier(self))
     }
 
     /// Add an object. Replaces any existing entry for the same identity.
-    func add(_ object: T) {
+    public func add(_ object: T) {
         recordCurrentContext()
         storage[ObjectIdentifier(object)] = WeakBox(object)
         DispatchQueue.main.async {
@@ -110,7 +113,7 @@ final class HSObjectTracker<T: AnyObject> {
     }
 
     /// Remove a specific object, un-pinning it if it was active.
-    func remove(_ object: T) {
+    public func remove(_ object: T) {
         HSActiveObjects.remove(object)
         storage.removeValue(forKey: ObjectIdentifier(object))
         DispatchQueue.main.async {
@@ -120,7 +123,7 @@ final class HSObjectTracker<T: AnyObject> {
 
     /// Remove all objects and drop every pin, without destroying them. Modules should call
     /// `shutdown()` instead, which destroys them first.
-    func removeAllObjects() {
+    public func removeAllObjects() {
         let released = HSActiveObjects.removeAll(trackedBy: ObjectIdentifier(self))
         if released > 0 {
             AKDebug("HSObjectTracker<\(T.self)>: released \(released) active object\(released == 1 ? "" : "s") at shutdown")
@@ -139,7 +142,7 @@ final class HSObjectTracker<T: AnyObject> {
     ///     one-shot timer firing), rather than running until it's stopped (a watcher, a hotkey).
     ///     Tests fail if such an object is still active when they end, since it should have
     ///     finished by then.
-    func setActive(_ object: T, _ active: Bool, finishesOnItsOwn: Bool = false) {
+    public func setActive(_ object: T, _ active: Bool, finishesOnItsOwn: Bool = false) {
         if active {
             recordCurrentContext()
             storage[ObjectIdentifier(object)] = WeakBox(object)
@@ -151,7 +154,7 @@ final class HSObjectTracker<T: AnyObject> {
     }
 
     /// Whether an object is currently active
-    func isActive(_ object: T) -> Bool {
+    public func isActive(_ object: T) -> Bool {
         HSActiveObjects.contains(object)
     }
 
@@ -169,7 +172,7 @@ final class HSObjectTracker<T: AnyObject> {
 }
 
 /// A child object tracked by an `HSObjectTracker`, so module shutdown can stop it
-protocol HSTrackedObject: AnyObject {
+public protocol HSTrackedObject: AnyObject {
     /// Ends all of the object's activity and releases its callbacks. It must be safe to call more
     /// than once, and on an object that was never active.
     func destroy()
@@ -178,7 +181,7 @@ protocol HSTrackedObject: AnyObject {
 extension HSObjectTracker where T: HSTrackedObject {
     /// Destroys every tracked object, then drops every pin. Call this from the module's
     /// `shutdown()`, once per tracker.
-    func shutdown() {
+    public func shutdown() {
         for object in allObjects {
             object.destroy()
         }
@@ -188,7 +191,7 @@ extension HSObjectTracker where T: HSTrackedObject {
 
 /// The record of every active object, across all trackers. Owned by `HSObjectTracker`; nothing
 /// else should insert or remove entries.
-enum HSActiveObjects {
+public enum HSActiveObjects {
     @safe private struct Entry {
         let tracker: ObjectIdentifier
         weak var object: AnyObject?
@@ -245,7 +248,8 @@ enum HSActiveObjects {
     /// Drops every pin held for a context, whichever tracker holds it, returning a description of
     /// each object that was still active. Module shutdown should already have stopped them all,
     /// so anything left is a bug, but its pin would keep the whole context alive.
-    static func removeAll(in context: JSContext) -> [String] {
+    @_spi(HammerspoonHost)
+    public static func removeAll(in context: JSContext) -> [String] {
         let ids = entries.filter { unsafe $0.value.contextRef == context.jsGlobalContextRef }.keys
         var released: [String] = []
         for id in ids {
@@ -260,7 +264,8 @@ enum HSActiveObjects {
     /// - Parameters:
     ///   - context: The context
     ///   - finishingOnTheirOwnOnly: Only include objects whose activity ends without being stopped
-    static func wrappers(in context: JSContext, finishingOnTheirOwnOnly: Bool = false) -> [JSValue] {
+    @_spi(HammerspoonHost)
+    public static func wrappers(in context: JSContext, finishingOnTheirOwnOnly: Bool = false) -> [JSValue] {
         live.filter { unsafe $0.contextRef == context.jsGlobalContextRef && (!finishingOnTheirOwnOnly || $0.finishesOnItsOwn) }
             .compactMap(\.wrapper)
     }

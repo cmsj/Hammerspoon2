@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
+import HammerspoonSDK
 
 // MARK: - JSContext lifetime diagnostics
 
@@ -71,6 +72,9 @@ class JSEngine {
             }
         }
 
+        // Made before installing require(), which looks extensions up through it
+        let moduleRoot = ModuleRoot(engineID: id)
+
         // This is our startup sequence - install all components in order
         do {
             try context.install([
@@ -79,10 +83,13 @@ class JSEngine {
                 UnhandledRejectionInstaller(), // unhandled Promise rejections are logged
                 ConsoleModuleInstaller(),      // console namespace
                 NodeBuiltinModulesInstaller(), // native backing for require('util') etc.
-                RequireInstaller(),            // require() function
+                RequireInstaller { [weak moduleRoot] name throws(ExtensionError) in  // require() function
+                    guard let moduleRoot else { throw .disabled }
+                    return try moduleRoot.extensionModule(named: name)
+                },
                 TypeBridgesInstaller(),        // HSPoint, HSSize, HSRect, HSFont, HSAlert
                 .bundled(path: "engine.js", in: .main),  // EventEmitter class
-                ModuleRootInstaller(engineID: id),  // hs namespace
+                ModuleRootInstaller(moduleRoot: moduleRoot),  // hs namespace
             ])
         } catch {
             throw HammerspoonError(.vmCreation, msg: "Failed to install context components: \(error.localizedDescription)")
@@ -119,6 +126,7 @@ class JSEngine {
             context.globalObject.deleteProperty("_hs_expandPath")
             context.globalObject.deleteProperty("_hs_eval")
             context.globalObject.deleteProperty("_hs_configDir")
+            context.globalObject.deleteProperty("_hs_loadExtension")
 
             // Force a synchronous full GC cycle (mark → sweep → finalize) before
             // tearing down the VM. JSC's concurrent GC defers ObjC bridge finalizers
@@ -249,8 +257,11 @@ extension JSEngine: JSEngineProtocol {
 // MARK: - JSContextInstallable Implementations
 
 struct RequireInstaller: JSContextInstallable {
+    /// Returns the module for `require('ext:<name>')`, or nil where extensions aren't available
+    var loadExtension: ((String) throws(ExtensionError) -> any HSModuleAPI)?
+
     func install(in context: JSContext) throws {
-        // Five primitives used by require.js. They are captured in its IIFE closure
+        // Six primitives used by require.js. They are captured in its IIFE closure
         // and then deleted from global scope, so user code cannot reach them.
 
         let readFile: @convention(block) (String) -> String? = { path in
@@ -274,11 +285,29 @@ struct RequireInstaller: JSContextInstallable {
             return context.evaluateScript(source, withSourceURL: URL(fileURLWithPath: filename))
         }
 
+        // Throws a JS Error, with a `code`, if the extension can't be loaded
+        let loadExtension: @convention(block) (String) -> JSValue? = { [loadExtension] name in
+            guard let context = JSContext.current() else { return nil }
+            guard let loadExtension else {
+                context.exception = JSValue(newErrorFromMessage: "Extensions aren't available in this context", in: context)
+                return nil
+            }
+            do throws(ExtensionError) {
+                return JSValue(object: try loadExtension(name), in: context)
+            } catch {
+                let jsError = JSValue(newErrorFromMessage: error.description, in: context)
+                jsError?.setValue(error.code, forProperty: "code")
+                context.exception = jsError
+                return nil
+            }
+        }
+
         // swiftlint:disable comma
         context.setObject(readFile,   forKeyedSubscript: "_hs_readFile"   as NSString)
         context.setObject(fileExists, forKeyedSubscript: "_hs_fileExists" as NSString)
         context.setObject(expandPath, forKeyedSubscript: "_hs_expandPath" as NSString)
         context.setObject(evalScript, forKeyedSubscript: "_hs_eval"       as NSString)
+        context.setObject(loadExtension, forKeyedSubscript: "_hs_loadExtension" as NSString)
         // swiftlint:enable comma
 
         // The directory containing the user's config file, wherever they chose to put it.

@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import AXSwift
+import HammerspoonSDK
 
 /// Watcher object that holds the element, notification, and callback for a specific watch
 class HSAXWatcherObject {

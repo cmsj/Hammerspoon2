@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
+import HammerspoonSDK
 
 /// JavaScriptCore silently drops a rejected Promise that nothing handles, so an error in, say, a
 /// `fetch()` or `hs.spoons.use()` callers didn't `.catch()` would never be seen. This installer

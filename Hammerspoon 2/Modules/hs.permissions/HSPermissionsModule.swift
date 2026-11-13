@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import AVFoundation
+import HammerspoonSDK
 
 // MARK: - Declare our JavaScript API
 

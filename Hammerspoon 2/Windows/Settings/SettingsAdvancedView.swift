@@ -62,6 +62,13 @@ struct SettingsAdvancedView: View {
                         Toggle("Offer to report crashes on GitHub", isOn: Bindable(settingsManager).offerCrashReports)
                             .labelsHidden()
                     }
+                    GridRow {
+                        Text("Allow extensions:")
+                            .gridColumnAlignment(.trailing)
+                        Toggle("Allow extensions", isOn: Bindable(settingsManager).allowExtensions)
+                            .labelsHidden()
+                            .help("Lets your config load native code extensions with require('ext:name'). You're asked before each one loads for the first time.")
+                    }
 
                     GridRow {
                         Spacer()

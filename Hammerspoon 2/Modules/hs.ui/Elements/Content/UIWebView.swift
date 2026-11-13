@@ -9,6 +9,7 @@ import JavaScriptCoreExtras
 import SwiftUI
 import WebKit
 import _WebKit_SwiftUI
+import HammerspoonSDK
 
 // MARK: - Navigation Decider
 

@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// Load, install and update Spoons - packaged, reusable pieces of configuration.
 ///

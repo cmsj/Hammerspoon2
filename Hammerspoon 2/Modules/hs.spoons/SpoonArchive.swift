@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import HammerspoonSDK
 
 /// One file or directory listed in a zip archive's central directory
 nonisolated struct ZipEntry: Equatable, Sendable {

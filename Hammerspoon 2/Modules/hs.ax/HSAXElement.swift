@@ -9,6 +9,7 @@ import Foundation
 import JavaScriptCore
 import ApplicationServices
 import AXSwift
+import HammerspoonSDK
 
 /// Object representing an Accessibility element. You should not instantiate this directly, but rather, use the hs.ax methods to create these as required.
 @objc protocol HSAXElementAPI: HSTypeAPI, JSExport {

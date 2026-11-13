@@ -11,6 +11,7 @@
 import Testing
 import JavaScriptCore
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 @Suite("callCapturingException tests")
 struct CallCapturingExceptionTests {

@@ -1,10 +1,9 @@
 //
 //  JSCallback.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 
 import JavaScriptCore
-import JavaScriptCoreExtras
 
 /// Wraps a JS callback value using JSManagedValue to prevent the retain cycle
 /// that arises when a JS-exported Swift object stores a JSValue directly.
@@ -36,7 +35,7 @@ import JavaScriptCoreExtras
 /// callback?.value?.call(withArguments: [])
 /// ```
 @MainActor
-final class JSCallback {
+public final class JSCallback {
     private var managed: JSManagedValue?
     private weak var vm: JSVirtualMachine?
     private weak var context: JSContext?
@@ -44,12 +43,12 @@ final class JSCallback {
     /// Creates a JSCallback for a value passed through the JS→Swift bridge.
     ///
     /// Returns nil if the value is not an object/function.
-    init?(value: JSValue, owner: AnyObject, silentOnUndefined: Bool = false) {
+    public init?(value: JSValue, owner: AnyObject, silentOnUndefined: Bool = false) {
         if silentOnUndefined && value.isUndefined {
             // We were called from a place that allows optional callbacks, so we silently return with no error
             return nil
         }
-        guard value.isFunction else {
+        guard value.isCallable else {
             AKError("Unable to create JSCallback: value is not a function")
             return nil
         }
@@ -68,12 +67,12 @@ final class JSCallback {
 
     /// The current JavaScript value. May return nil if the value has been garbage collected
     /// because JS dropped all references to the owner.
-    var value: JSValue? { managed?.value }
+    public var value: JSValue? { managed?.value }
 
     /// Call the callback JavaScript function
     /// - Parameter arguments: An array of arguments to pass to the JavaScript function
     /// - Returns: Whatever the JavaScript callback returns
-    func call(withArguments arguments: [Any]!) -> JSValue! {
+    public func call(withArguments arguments: [Any]!) -> JSValue! {
         return value?.call(withArguments: arguments)
     }
 
@@ -83,7 +82,7 @@ final class JSCallback {
     /// - Parameters:
     ///   - oldOwner: The current owner
     ///   - newOwner: The new owner, which must be a JS-exported object
-    func transferOwnership(from oldOwner: AnyObject, to newOwner: AnyObject) {
+    public func transferOwnership(from oldOwner: AnyObject, to newOwner: AnyObject) {
         guard let managed, let vm else { return }
         vm.addManagedReference(managed, withOwner: newOwner)
         vm.removeManagedReference(managed, withOwner: oldOwner)
@@ -94,7 +93,7 @@ final class JSCallback {
     /// Call this before the owner is deallocated. Pass the owner explicitly — do not rely
     /// on a stored `weak var` to the owner, as weak references are zeroed before `deinit`
     /// body execution.
-    func detach(from owner: AnyObject) {
+    public func detach(from owner: AnyObject) {
         guard let managed = managed else { return }
         vm?.removeManagedReference(managed, withOwner: owner)
         self.managed = nil
@@ -220,5 +219,15 @@ private nonisolated final class GCSentinel: NSObject {
         Task { @MainActor [contextID, token] in
             DeferredManagedValueRelease.shared.cycleCompleted(contextID: contextID, token: token)
         }
+    }
+}
+
+extension JSValue {
+    /// Whether the value is a JS function. JavaScriptCore's ObjC API has no direct way to ask.
+    var isCallable: Bool {
+        guard isObject, let context else { return false }
+        let globalContext = context.jsGlobalContextRef
+        guard let object = unsafe JSValueToObject(globalContext, jsValueRef, nil) else { return false }
+        return unsafe JSObjectIsFunction(globalContext, object)
     }
 }

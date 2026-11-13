@@ -4,6 +4,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// HTTP client module for making network requests from JavaScript.
 ///

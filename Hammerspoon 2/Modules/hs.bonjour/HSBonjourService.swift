@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import Darwin
+import HammerspoonSDK
 
 // MARK: - Service API protocol
 

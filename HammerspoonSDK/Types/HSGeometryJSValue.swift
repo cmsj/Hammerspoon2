@@ -1,6 +1,6 @@
 //
 //  HSGeometryJSValue.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 //  Created by Chris Jones on 27/08/2026.
 //
@@ -20,7 +20,7 @@ import CoreGraphics
 
 extension JSValue {
     /// Resolves this JSValue to a center point, accepting either an HSPoint (its x/y) or an HSRect (the midpoint of its bounds)
-    func toGeometryCenter() -> CGPoint? {
+    public func toGeometryCenter() -> CGPoint? {
         if let point = toObjectOf(HSPoint.self) as? HSPoint {
             return CGPoint(from: point)
         } else if let rect = toObjectOf(HSRect.self) as? HSRect {
@@ -31,7 +31,7 @@ extension JSValue {
     }
 
     /// Resolves this JSValue to an (dx, dy) offset, accepting either an HSPoint (its x/y) or an HSSize (its w/h)
-    func toGeometryOffset() -> (dx: Double, dy: Double)? {
+    public func toGeometryOffset() -> (dx: Double, dy: Double)? {
         if let point = toObjectOf(HSPoint.self) as? HSPoint {
             return (point.x, point.y)
         } else if let size = toObjectOf(HSSize.self) as? HSSize {
@@ -41,7 +41,7 @@ extension JSValue {
     }
 
     /// Resolves this JSValue to an (sx, sy) scale factor pair, accepting a number (uniform scale), an HSSize (independent w/h scale), or an HSPoint (independent x/y scale)
-    func toGeometryScaleFactors() -> (sx: Double, sy: Double)? {
+    public func toGeometryScaleFactors() -> (sx: Double, sy: Double)? {
         if isNumber {
             let factor = toDouble()
             return (factor, factor)

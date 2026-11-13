@@ -8,6 +8,7 @@ import Foundation
 import JavaScriptCore
 import ObjectiveC
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 /// Checks that the API documented in the bundled api.json (generated from the `///` comments by
 /// `npm run docs:generate`) is the API JavaScript actually sees, in both directions: everything

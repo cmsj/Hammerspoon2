@@ -1,6 +1,6 @@
 //
 //  HSColor.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 //  Created by Claude Code on 12/02/2026.
 //
@@ -15,7 +15,7 @@ import Observation
 // ---------------------------------------------------------------
 
 /// Bridge type for working with colors in JavaScript
-@objc protocol HSColorAPI: HSTypeAPI, JSExport {
+@objc public protocol HSColorAPI: HSTypeAPI, JSExport {
     /// Create a color from RGB values
     /// - Parameters:
     ///   - r: Red component (0.0-1.0)
@@ -59,10 +59,10 @@ import Observation
 }
 
 @Observable
-@objc class HSColor: NSObject, HSColorAPI {
-    @objc var typeName = "HSColor"
+@objc public class HSColor: NSObject, HSColorAPI {
+    @objc public var typeName = "HSColor"
 
-    @objc func toString() -> String {
+    @objc public func toString() -> String {
         let ns = NSColor(color).usingColorSpace(.sRGB) ?? NSColor(color)
         let r = Int(ns.redComponent * 255)
         let g = Int(ns.greenComponent * 255)
@@ -70,11 +70,11 @@ import Observation
         return unsafe "<\(typeName): #\(String(format: "%02X%02X%02X", r, g, b))>"
     }
 
-    nonisolated override var description: String {
+    public nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
 
-    @objc func toJSON() -> [String: Any] {
+    @objc public func toJSON() -> [String: Any] {
         let ns = NSColor(color).usingColorSpace(.sRGB) ?? NSColor(color)
         return [
             "red": Double(ns.redComponent),
@@ -84,23 +84,23 @@ import Observation
         ]
     }
 
-    var color: Color
+    public var color: Color
 
     /// The colour for AppKit APIs
-    var nsColor: NSColor { NSColor(color) }
+    public var nsColor: NSColor { NSColor(color) }
 
-    init(color: Color) {
+    public init(color: Color) {
         self.color = color
         super.init()
     }
 
     // MARK: - Factory Methods
 
-    @objc static func rgb(_ r: Double, _ g: Double, _ b: Double, _ a: Double = 1.0) -> HSColor {
+    @objc public static func rgb(_ r: Double, _ g: Double, _ b: Double, _ a: Double = 1.0) -> HSColor {
         Color(.sRGB, red: r, green: g, blue: b, opacity: a).toBridge()
     }
 
-    @objc static func hex(_ hex: String) -> HSColor {
+    @objc public static func hex(_ hex: String) -> HSColor {
         guard let color = parseHex(hex) else {
             AKError("hs.ui: Invalid hex color: \(hex), using black")
             return Color.black.toBridge()
@@ -110,7 +110,7 @@ import Observation
 
     /// Parses a `#RGB`, `#RRGGBB` or `#RRGGBBAA` hex string (the `#` is optional), or returns
     /// `nil` if it isn't one
-    static func parseHex(_ hex: String) -> Color? {
+    public static func parseHex(_ hex: String) -> Color? {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         if hexSanitized.hasPrefix("#") {
             hexSanitized.removeFirst()
@@ -142,7 +142,7 @@ import Observation
         return Color(.sRGB, red: r, green: g, blue: b, opacity: a)
     }
 
-    @objc static func named(_ name: String) -> HSColor {
+    @objc public static func named(_ name: String) -> HSColor {
         let color: Color
 
         switch name.lowercased() {
@@ -167,7 +167,7 @@ import Observation
 
     // MARK: - Reactive Mutation
 
-    @objc func set(_ value: JSValue) {
+    @objc public func set(_ value: JSValue) {
         if let newColor = HSColor.fromJSValue(value) {
             color = newColor.color
         }
@@ -177,7 +177,7 @@ import Observation
 
     /// The AppKit colour for an HSColor or a valid hex string, or nil for anything else. Unlike
     /// `fromJSValue`, an invalid hex string is rejected rather than turned into black.
-    static func nsColor(from value: JSValue) -> NSColor? {
+    public static func nsColor(from value: JSValue) -> NSColor? {
         if value.isString {
             return value.toString().flatMap(parseHex).map { NSColor($0) }
         }
@@ -185,7 +185,7 @@ import Observation
     }
 
     /// Create an HSColor from a JSValue (supports hex strings or HSColor objects)
-    static func fromJSValue(_ value: JSValue) -> HSColor? {
+    public static func fromJSValue(_ value: JSValue) -> HSColor? {
         if value.isString, let hexString = value.toString() {
             return HSColor.hex(hexString)
         } else if let color = value.toObjectOf(HSColor.self) as? HSColor {
@@ -200,13 +200,13 @@ import Observation
 // ---------------------------------------------------------------
 
 extension Color: JSConvertible {
-    typealias BridgeType = HSColor
+    public typealias BridgeType = HSColor
 
-    init(from bridge: HSColor) {
+    public init(from bridge: HSColor) {
         self = bridge.color
     }
 
-    func toBridge() -> HSColor {
+    public func toBridge() -> HSColor {
         HSColor(color: self)
     }
 }
@@ -220,7 +220,7 @@ extension JSValue {
     /// Supports:
     /// - HSColor objects
     /// - Hex strings (e.g. "#FF0000" or "FF0000")
-    func toColor() -> Color? {
+    public func toColor() -> Color? {
         if let bridge = HSColor.fromJSValue(self) {
             return Color(from: bridge)
         }

@@ -8,6 +8,7 @@ import JavaScriptCore
 import AppKit          // NSWorkspace (volumes, eject, fileUTI)
 import Darwin          // POSIX stat/lstat/rmdir
 import UniformTypeIdentifiers
+import HammerspoonSDK
 
 // MARK: - JavaScript API
 

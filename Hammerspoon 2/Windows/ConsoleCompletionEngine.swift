@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import HammerspoonSDK
 
 /// Tab-completion engine for the Console input field.
 ///

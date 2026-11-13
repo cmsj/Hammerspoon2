@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// A single region of text recognized in an image.
 ///

@@ -5,6 +5,7 @@
 
 import AppKit
 import JavaScriptCore
+import HammerspoonSDK
 
 /// Builds `NSMenu`s from arrays of JS menu item objects, as accepted by `hs.menubar` and `hs.dockicon`.
 ///

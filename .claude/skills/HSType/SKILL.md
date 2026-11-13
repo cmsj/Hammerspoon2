@@ -10,7 +10,7 @@ categories with different rules. Choose the right one before writing any code.
 
 ---
 
-## Category 1 — Engine types (`Engine/Types/`)
+## Category 1 — Engine types (`HammerspoonSDK/Types/`)
 
 Engine types are **directly usable from JavaScript** — users can call their static
 factory methods or constructors at any time, without going through a module.
@@ -24,7 +24,14 @@ They are global JS objects registered at engine startup.
 
 ### File location
 
-`Hammerspoon 2/Engine/Types/HSFoo.swift`
+`HammerspoonSDK/Types/HSFoo.swift`
+
+Engine types live in the HammerspoonSDK framework, so third-party extensions can use them too.
+That makes them public API: the protocol, the class, and every member the app or an extension
+uses must be `public` (protocol members inherit the protocol's access). Once released, a type's
+public API can only grow; changing or removing anything needs an SDK major version bump (see
+`HSSDK.version`). Register the type in `TypeBridgesInstaller` (`Engine/InjectTypes.swift`), in
+the app.
 
 ### Structural template
 
@@ -35,7 +42,7 @@ import JavaScriptCore
 
 /// User-facing docstring for the type. The protocol docstring is what the
 /// docs generator reads — the class is hidden so its docstring is irrelevant.
-@objc protocol HSFooAPI: HSTypeAPI, JSExport {
+@objc public protocol HSFooAPI: HSTypeAPI, JSExport {
     // Declare every property and method the user can call from JavaScript.
     // All same @objc bridging rules as module API protocols apply.
 
@@ -49,23 +56,23 @@ import JavaScriptCore
 }
 
 // No @_documentation here — engine types are intentionally public
-@objc class HSFoo: NSObject, HSFooAPI {
-    @objc var typeName = "HSFoo"    // REQUIRED — satisfies HSTypeAPI
+@objc public class HSFoo: NSObject, HSFooAPI {
+    @objc public var typeName = "HSFoo"    // REQUIRED — satisfies HSTypeAPI
 
     // Internal storage (the wrapped native type)
-    var nativeThing: NativeFoo
+    public var nativeThing: NativeFoo
 
-    required init(x: Double) {
+    public required init(x: Double) {
         nativeThing = NativeFoo(x: x)
         super.init()
     }
 
-    var x: Double {
+    public var x: Double {
         get { nativeThing.x }
         set { nativeThing.x = newValue }
     }
 
-    @objc func doSomething() -> String { ... }
+    @objc public func doSomething() -> String { ... }
 }
 ```
 
@@ -76,13 +83,13 @@ CGRect, SwiftUI.Color, etc.), implement `JSConvertible` on the **native** type:
 
 ```swift
 extension CGPoint: JSConvertible {
-    typealias BridgeType = HSPoint
+    public typealias BridgeType = HSPoint
 
-    init(from bridge: HSPoint) {
+    public init(from bridge: HSPoint) {
         self.init(x: bridge.x, y: bridge.y)
     }
 
-    func toBridge() -> HSPoint {
+    public func toBridge() -> HSPoint {
         HSPoint(x: Double(x), y: Double(y))
     }
 }

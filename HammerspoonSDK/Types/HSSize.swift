@@ -1,6 +1,6 @@
 //
 //  HSSize.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 //  Created by Chris Jones on 04/11/2025.
 //
@@ -14,7 +14,7 @@ import CoreGraphics
 // ---------------------------------------------------------------
 
 /// This is a JavaScript object used to represent the size of a rectangle, as used in various places throughout Hammerspoon's API, particularly where dealing with portions of a display. Behind the scenes it is a wrapper for the CGSize type in Swift/ObjectiveC.
-@objc protocol HSSizeAPI: HSTypeAPI, JSExport {
+@objc public protocol HSSizeAPI: HSTypeAPI, JSExport {
     /// The width of the rectangle
     var w: Double { get set }
 
@@ -72,50 +72,50 @@ import CoreGraphics
     @objc func toJSON() -> [String: Any]
 }
 
-@objc class HSSize: NSObject, HSSizeAPI {
-    @objc var typeName = "HSSize"
+@objc public class HSSize: NSObject, HSSizeAPI {
+    @objc public var typeName = "HSSize"
 
-    @objc func toString() -> String {
+    @objc public func toString() -> String {
         return "<\(typeName): \(w)x\(h)>"
     }
 
-    nonisolated override var description: String {
+    public nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
 
-    @objc func toJSON() -> [String: Any] {
+    @objc public func toJSON() -> [String: Any] {
         ["w": w, "h": h]
     }
 
-    var size: CGSize
+    public var size: CGSize
 
-    var w: Double {
+    public var w: Double {
         get { Double(size.width) }
         set { size.width = CGFloat(newValue) }
     }
 
-    var h: Double {
+    public var h: Double {
         get { Double(size.height) }
         set { size.height = CGFloat(newValue) }
     }
 
-    required init(w: Double, h: Double) {
+    public required init(w: Double, h: Double) {
         size = CGSize(width: w, height: h)
     }
 
-    @objc func angle() -> Double {
+    @objc public func angle() -> Double {
         atan2(h, w)
     }
 
-    @objc func equals(_ other: HSSize) -> Bool {
+    @objc public func equals(_ other: HSSize) -> Bool {
         w == other.w && h == other.h
     }
 
-    @objc func floor() -> HSSize {
+    @objc public func floor() -> HSSize {
         HSSize(w: Foundation.floor(w), h: Foundation.floor(h))
     }
 
-    @objc func scale(_ factor: JSValue) -> HSSize {
+    @objc public func scale(_ factor: JSValue) -> HSSize {
         guard let (sx, sy) = factor.toGeometryScaleFactors() else {
             AKError("HSSize: scale() requires a number, HSSize or HSPoint")
             return HSSize(w: w, h: h)
@@ -130,13 +130,13 @@ import CoreGraphics
 
 // --- CGSize <-> HSSize ---
 extension CGSize: JSConvertible {
-    typealias BridgeType = HSSize
+    public typealias BridgeType = HSSize
 
-    init(from bridge: HSSize) {
+    public init(from bridge: HSSize) {
         self.init(width: bridge.w, height: bridge.h)
     }
 
-    func toBridge() -> HSSize {
+    public func toBridge() -> HSSize {
         HSSize(w: Double(width), h: Double(height))
     }
 }

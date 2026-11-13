@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// Module for communicating over raw TCP, UDP and Unix domain sockets.
 ///

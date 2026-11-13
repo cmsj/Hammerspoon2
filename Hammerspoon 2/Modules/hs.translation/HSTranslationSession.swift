@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 @unsafe @preconcurrency import Translation
+import HammerspoonSDK
 
 /// JavaScript-visible API for a translation session bound to a specific language pair.
 @objc protocol HSTranslationSessionAPI: HSTypeAPI, JSExport {

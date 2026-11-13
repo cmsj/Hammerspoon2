@@ -5,6 +5,7 @@
 
 import Foundation
 import CoreMIDI
+import HammerspoonSDK
 
 // MIDI 1.0-over-UMP (Universal MIDI Packet) codec, built on CoreMIDI's MIDIEventList
 // family (MIDIPacketList-based sending/receiving is deprecated in favor of this).

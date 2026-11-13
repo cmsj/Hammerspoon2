@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Sparkle
+@_spi(HammerspoonHost) import HammerspoonSDK
 
 @_documentation(visibility: private)
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -167,6 +168,13 @@ struct Hammerspoon2App: App {
     @State private var settingsManager = SettingsManager.shared
 
     init() {
+        // Everything logged through the SDK's AK* functions, by the app or an extension, goes
+        // to the Console
+        HSSDK.logHandler = { level, message in
+            HammerspoonLog.shared.log(level, message)
+        }
+        HSSDK.engineContextProvider = { JSEngine.shared.context }
+
         // Start the updater at launch, not on first use of the menu
         _ = AppUpdater.controller
     }

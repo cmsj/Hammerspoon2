@@ -12,6 +12,7 @@ import CoreLocation
 import UserNotifications
 import IOKit.hid
 import CoreBluetooth
+import HammerspoonSDK
 
 @_documentation(visibility: private)
 enum PermissionsState: Int {

@@ -7,6 +7,7 @@ import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
 import Darwin
+import HammerspoonSDK
 
 // MARK: - ICMP constants
 

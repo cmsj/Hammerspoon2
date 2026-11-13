@@ -8,6 +8,7 @@ import JavaScriptCore
 import AppKit
 import SwiftUI
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 @Suite("hs.canvas tests", .serialized)
 struct HSCanvasTests {

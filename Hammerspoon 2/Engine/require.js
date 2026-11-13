@@ -2,7 +2,7 @@
 
 // Hammerspoon 2 — CommonJS module system
 //
-// Six primitives are installed by Swift before this file is evaluated.
+// Seven primitives are installed by Swift before this file is evaluated.
 // They are captured in the IIFE closure and then deleted from global scope
 // so user code cannot reach or replace them.
 //
@@ -23,6 +23,7 @@
     const _evalScript = globalThis._hs_eval;
     const _configDir  = globalThis._hs_configDir;
     const _builtinModules = globalThis._hs_node_builtins;
+    const _loadExtension = globalThis._hs_loadExtension;
 
     delete globalThis._hs_readFile;
     delete globalThis._hs_fileExists;
@@ -30,6 +31,7 @@
     delete globalThis._hs_eval;
     delete globalThis._hs_configDir;
     delete globalThis._hs_node_builtins;
+    delete globalThis._hs_loadExtension;
 
     // Resolved absolute path → { exports, loaded, filename, id }
     const _cache = Object.create(null);
@@ -79,6 +81,12 @@
             const name = String(id);
             if (Object.prototype.hasOwnProperty.call(_builtinModules, name)) {
                 return _builtinModules[name];
+            }
+
+            // Third-party extensions: native code built against HammerspoonSDK, loaded from the
+            // Extensions folder next to the config file. Swift caches each module per engine.
+            if (name.startsWith('ext:')) {
+                return _loadExtension(name.slice(4));
             }
 
             const resolved = resolvePath(name, currentFile);

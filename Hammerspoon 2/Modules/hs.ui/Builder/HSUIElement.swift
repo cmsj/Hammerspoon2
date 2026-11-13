@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import HammerspoonSDK
 
 /// Protocol that all UI elements must conform to
 protocol HSUIElement {

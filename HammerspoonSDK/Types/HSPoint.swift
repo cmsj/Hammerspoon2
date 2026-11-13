@@ -1,6 +1,6 @@
 //
 //  CGGeometry.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 //  Created by Chris Jones on 03/11/2025.
 //
@@ -14,7 +14,7 @@ import CoreGraphics
 // ---------------------------------------------------------------
 
 /// This is a JavaScript object used to represent coordinates, or "points", as used in various places throughout Hammerspoon's API, particularly where dealing with positions on a screen. Behind the scenes it is a wrapper for the CGPoint type in Swift/ObjectiveC.
-@objc protocol HSPointAPI: HSTypeAPI, JSExport {
+@objc public protocol HSPointAPI: HSTypeAPI, JSExport {
     /// A coordinate for the x-axis position of this point
     var x: Double { get set }
 
@@ -136,42 +136,42 @@ import CoreGraphics
     @objc func toJSON() -> [String: Any]
 }
 
-@objc class HSPoint: NSObject, HSPointAPI {
-    @objc var typeName = "HSPoint"
+@objc public class HSPoint: NSObject, HSPointAPI {
+    @objc public var typeName = "HSPoint"
 
-    @objc func toString() -> String {
+    @objc public func toString() -> String {
         return "<\(typeName): (\(x), \(y))>"
     }
 
-    nonisolated override var description: String {
+    public nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
 
-    @objc func toJSON() -> [String: Any] {
+    @objc public func toJSON() -> [String: Any] {
         ["x": x, "y": y]
     }
 
-    var point: CGPoint
+    public var point: CGPoint
 
-    var x: Double {
+    public var x: Double {
         get { Double(point.x) }
         set { point.x = CGFloat(newValue) }
     }
 
-    var y: Double {
+    public var y: Double {
         get { Double(point.y) }
         set { point.y = CGFloat(newValue) }
     }
 
-    required init(x: Double, y: Double) {
+    public required init(x: Double, y: Double) {
         point = CGPoint(x: x, y: y)
     }
 
-    @objc func angle() -> Double {
+    @objc public func angle() -> Double {
         atan2(y, x)
     }
 
-    @objc func angleTo(_ other: JSValue) -> Double {
+    @objc public func angleTo(_ other: JSValue) -> Double {
         guard let otherCenter = other.toGeometryCenter() else {
             AKError("HSPoint: angleTo() requires an HSPoint or HSRect")
             return 0
@@ -179,7 +179,7 @@ import CoreGraphics
         return atan2(otherCenter.y - y, otherCenter.x - x)
     }
 
-    @objc func distance(_ other: JSValue) -> Double {
+    @objc public func distance(_ other: JSValue) -> Double {
         guard let otherCenter = other.toGeometryCenter() else {
             AKError("HSPoint: distance() requires an HSPoint or HSRect")
             return 0
@@ -189,19 +189,19 @@ import CoreGraphics
         return (dx * dx + dy * dy).squareRoot()
     }
 
-    @objc func equals(_ other: HSPoint) -> Bool {
+    @objc public func equals(_ other: HSPoint) -> Bool {
         x == other.x && y == other.y
     }
 
-    @objc func floor() -> HSPoint {
+    @objc public func floor() -> HSPoint {
         HSPoint(x: Foundation.floor(x), y: Foundation.floor(y))
     }
 
-    @objc func inside(_ rect: HSRect) -> Bool {
+    @objc public func inside(_ rect: HSRect) -> Bool {
         x >= rect.x && y >= rect.y && x <= rect.x + rect.w && y <= rect.y + rect.h
     }
 
-    @objc func move(_ offset: JSValue) -> HSPoint {
+    @objc public func move(_ offset: JSValue) -> HSPoint {
         guard let (dx, dy) = offset.toGeometryOffset() else {
             AKError("HSPoint: move() requires an HSPoint or HSSize")
             return HSPoint(x: x, y: y)
@@ -209,13 +209,13 @@ import CoreGraphics
         return HSPoint(x: x + dx, y: y + dy)
     }
 
-    @objc func normalize() -> HSPoint {
+    @objc public func normalize() -> HSPoint {
         let length = (x * x + y * y).squareRoot()
         guard length > 0 else { return HSPoint(x: 0, y: 0) }
         return HSPoint(x: x / length, y: y / length)
     }
 
-    @objc func rotateCCW(_ aroundPoint: HSPoint, _ times: Int = 1) -> HSPoint {
+    @objc public func rotateCCW(_ aroundPoint: HSPoint, _ times: Int = 1) -> HSPoint {
         var rx = x
         var ry = y
         for _ in 0..<max(times, 0) {
@@ -226,7 +226,7 @@ import CoreGraphics
         return HSPoint(x: rx, y: ry)
     }
 
-    @objc func scale(_ factor: JSValue) -> HSPoint {
+    @objc public func scale(_ factor: JSValue) -> HSPoint {
         guard let (sx, sy) = factor.toGeometryScaleFactors() else {
             AKError("HSPoint: scale() requires a number, HSSize or HSPoint")
             return HSPoint(x: x, y: y)
@@ -234,7 +234,7 @@ import CoreGraphics
         return HSPoint(x: x * sx, y: y * sy)
     }
 
-    @objc func vector(_ other: JSValue) -> HSPoint {
+    @objc public func vector(_ other: JSValue) -> HSPoint {
         guard let otherCenter = other.toGeometryCenter() else {
             AKError("HSPoint: vector() requires an HSPoint or HSRect")
             return HSPoint(x: 0, y: 0)
@@ -249,13 +249,13 @@ import CoreGraphics
 
 // --- CGPoint <-> HSPoint ---
 extension CGPoint: JSConvertible {
-    typealias BridgeType = HSPoint
+    public typealias BridgeType = HSPoint
 
-    init(from bridge: HSPoint) {
+    public init(from bridge: HSPoint) {
         self.init(x: bridge.x, y: bridge.y)
     }
 
-    func toBridge() -> HSPoint {
+    public func toBridge() -> HSPoint {
         HSPoint(x: Double(x), y: Double(y))
     }
 }

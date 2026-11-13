@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
+import HammerspoonSDK
 
 // This is called by the engine to inject types that we want to be available to JavaScript for users to directly instantiate.
 // For many types this is not the case, so you should not expect this list to be exhaustive, nor should you add a new HS type here

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import HammerspoonSDK
 
 @MainActor
 protocol WindowAccessorDelegate: AnyObject {

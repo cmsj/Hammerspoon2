@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// A configurable Spotlight search query that can be started, stopped, and queried for results.
 ///

@@ -1,6 +1,6 @@
 //
 //  JSFunction.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 
 import JavaScriptCore
@@ -8,7 +8,7 @@ import JavaScriptCore
 /// A type alias for JSValue representing a JavaScript function parameter.
 /// Using JSFunction (instead of JSValue) in @objc protocol signatures signals
 /// to callers and documentation tooling that a callable JS value is expected.
-typealias JSFunction = JSValue
+public typealias JSFunction = JSValue
 
 extension JSContext {
     /// Calls `body` and reports whether it raised a JS exception, leaving `self.exception`
@@ -28,7 +28,7 @@ extension JSContext {
     /// top-level evaluation. With no JS caller (e.g. native code running on a timer or
     /// notification) there is nothing to rethrow into, so it goes straight to the previous
     /// handler instead, and `self.exception` is left clear.
-    func callCapturingException(_ body: () -> JSValue?) -> JSValue? {
+    public func callCapturingException(_ body: () -> JSValue?) -> JSValue? {
         let previousHandler = exceptionHandler
         let hasJSCaller = JSContext.current() != nil
         var caught: JSValue?

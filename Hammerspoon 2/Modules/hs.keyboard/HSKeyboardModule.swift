@@ -8,6 +8,7 @@ import JavaScriptCore
 import IOKit
 import IOKit.hidsystem
 import IOKit.hid
+import HammerspoonSDK
 
 // MARK: - LED usage mapping
 

@@ -7,6 +7,7 @@ import JavaScriptCore
 import Network
 import Security
 import UniformTypeIdentifiers
+import HammerspoonSDK
 
 // MARK: - Protocol
 

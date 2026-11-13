@@ -5,6 +5,7 @@
 
 import Foundation
 import Synchronization
+import HammerspoonSDK
 
 /// Executes OSA scripts via the `HammerspoonOSAScriptHelper` XPC service.
 ///

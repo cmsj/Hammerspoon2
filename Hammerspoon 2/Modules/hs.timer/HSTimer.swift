@@ -7,6 +7,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// Object representing a timer. You should not instantiate these yourself, but rather, use the methods in hs.timer to create them for you.
 @objc protocol HSTimerAPI: HSTypeAPI, JSExport {

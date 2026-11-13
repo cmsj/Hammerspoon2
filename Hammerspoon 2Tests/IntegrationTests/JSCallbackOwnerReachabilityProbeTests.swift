@@ -22,6 +22,7 @@
 import Testing
 import JavaScriptCore
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 @objc protocol ProbeAPI: JSExport {
     @objc func register(_ fn: JSValue)

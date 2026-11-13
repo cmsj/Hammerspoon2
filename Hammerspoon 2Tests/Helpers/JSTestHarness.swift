@@ -10,6 +10,7 @@ import JavaScriptCore
 import JavaScriptCoreExtras
 import Testing
 @testable import Hammerspoon_2
+@_spi(HammerspoonHost) import HammerspoonSDK
 
 /// A test harness for JavaScript integration testing
 ///
@@ -303,12 +304,26 @@ class JSTestHarness {
 
     /// Load the full ModuleRoot as 'hs' (mimics real environment). It's shut down when the
     /// harness is, as JSEngine does on reload.
+    /// - Parameter extensionLoader: Loads extensions for `require('ext:<name>')`, which
+    ///   `installRequire()` sets up. Defaults to the app's shared loader.
     @discardableResult
-    func loadModuleRoot() -> ModuleRoot {
-        let moduleRoot = ModuleRoot(engineID: UUID())
+    func loadModuleRoot(extensionLoader: ExtensionLoader? = nil) -> ModuleRoot {
+        let moduleRoot = ModuleRoot(engineID: UUID(), extensionLoader: extensionLoader)
         self.moduleRoot = moduleRoot
         context.setObject(moduleRoot, forKeyedSubscript: "hs" as NSString)
         return moduleRoot
+    }
+
+    /// Installs `require()`, with `require('ext:<name>')` loading extensions through `moduleRoot`,
+    /// as JSEngine does. Call `loadModuleRoot()` first.
+    func installRequire() throws {
+        try context.install([
+            NodeBuiltinModulesInstaller(),
+            RequireInstaller { [weak moduleRoot] name throws(ExtensionError) in
+                guard let moduleRoot else { throw .disabled }
+                return try moduleRoot.extensionModule(named: name)
+            },
+        ])
     }
 
     // MARK: - Script Execution

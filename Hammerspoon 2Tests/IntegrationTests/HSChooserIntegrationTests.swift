@@ -6,6 +6,7 @@
 import Testing
 import JavaScriptCore
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 @Suite("hs.chooser tests")
 struct HSChooserTests {

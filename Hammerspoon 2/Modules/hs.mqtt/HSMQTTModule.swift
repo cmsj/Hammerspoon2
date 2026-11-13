@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
+import HammerspoonSDK
 
 // MARK: - JavaScript API
 

@@ -1,6 +1,6 @@
 //
 //  HSRect.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 //  Created by Chris Jones on 04/11/2025.
 //
@@ -14,7 +14,7 @@ import CoreGraphics
 // ---------------------------------------------------------------
 
 /// This is a JavaScript object used to represent a rectangle, as used in various places throughout Hammerspoon's API, particularly where dealing with portions of a display. Behind the scenes it is a wrapper for the CGRect type in Swift/ObjectiveC.
-@objc protocol HSRectAPI: HSTypeAPI, JSExport {
+@objc public protocol HSRectAPI: HSTypeAPI, JSExport {
     /// An x-axis coordinate for the top-left point of the rectangle
     var x: Double { get set }
 
@@ -168,51 +168,51 @@ import CoreGraphics
     @objc func toJSON() -> [String: Any]
 }
 
-@objc class HSRect: NSObject, HSRectAPI {
-    @objc var typeName = "HSRect"
+@objc public class HSRect: NSObject, HSRectAPI {
+    @objc public var typeName = "HSRect"
 
-    @objc func toString() -> String {
+    @objc public func toString() -> String {
         return "<\(typeName): (\(x), \(y)) \(w)x\(h)>"
     }
 
-    nonisolated override var description: String {
+    public nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
 
-    @objc func toJSON() -> [String: Any] {
+    @objc public func toJSON() -> [String: Any] {
         ["x": x, "y": y, "w": w, "h": h]
     }
 
-    var rect: CGRect
+    public var rect: CGRect
 
-    var x: Double {
+    public var x: Double {
         get { Double(rect.origin.x) }
         set { rect.origin.x = CGFloat(newValue) }
     }
-    var y: Double {
+    public var y: Double {
         get { Double(rect.origin.y) }
         set { rect.origin.y = CGFloat(newValue) }
     }
-    var w: Double {
+    public var w: Double {
         get { Double(rect.size.width) }
         set { rect.size.width = CGFloat(newValue) }
     }
-    var h: Double {
+    public var h: Double {
         get { Double(rect.size.height) }
         set { rect.size.height = CGFloat(newValue) }
     }
 
-    var origin: HSPoint {
+    public var origin: HSPoint {
         get { HSPoint(x: x, y: y) }
         set { rect.origin = newValue.point }
     }
 
-    var size: HSSize {
+    public var size: HSSize {
         get { HSSize(w: w, h: h) }
         set { rect.size = newValue.size }
     }
 
-    required init(x: Double, y: Double, w: Double, h: Double) {
+    public required init(x: Double, y: Double, w: Double, h: Double) {
         rect = CGRect(x: x, y: y, width: w, height: h)
     }
 
@@ -220,7 +220,7 @@ import CoreGraphics
         CGPoint(x: x + w / 2, y: y + h / 2)
     }
 
-    @objc func angleTo(_ other: JSValue) -> Double {
+    @objc public func angleTo(_ other: JSValue) -> Double {
         guard let otherCenter = other.toGeometryCenter() else {
             AKError("HSRect: angleTo() requires an HSPoint or HSRect")
             return 0
@@ -229,7 +229,7 @@ import CoreGraphics
         return atan2(otherCenter.y - c.y, otherCenter.x - c.x)
     }
 
-    @objc func distance(_ other: JSValue) -> Double {
+    @objc public func distance(_ other: JSValue) -> Double {
         guard let otherCenter = other.toGeometryCenter() else {
             AKError("HSRect: distance() requires an HSPoint or HSRect")
             return 0
@@ -240,11 +240,11 @@ import CoreGraphics
         return (dx * dx + dy * dy).squareRoot()
     }
 
-    @objc func equals(_ other: HSRect) -> Bool {
+    @objc public func equals(_ other: HSRect) -> Bool {
         x == other.x && y == other.y && w == other.w && h == other.h
     }
 
-    @objc func fit(_ bounds: HSRect) -> HSRect {
+    @objc public func fit(_ bounds: HSRect) -> HSRect {
         let scaleFactor = min(1, bounds.w / w, bounds.h / h)
         let newW = w * scaleFactor
         let newH = h * scaleFactor
@@ -255,11 +255,11 @@ import CoreGraphics
         return HSRect(x: newX, y: newY, w: newW, h: newH)
     }
 
-    @objc func floor() -> HSRect {
+    @objc public func floor() -> HSRect {
         HSRect(x: Foundation.floor(x), y: Foundation.floor(y), w: Foundation.floor(w), h: Foundation.floor(h))
     }
 
-    @objc func fromUnitRect(_ frame: HSRect) -> HSRect {
+    @objc public func fromUnitRect(_ frame: HSRect) -> HSRect {
         guard frame.w > 0, frame.h > 0 else {
             AKError("HSRect: fromUnitRect() requires a frame with a non-zero width and height")
             return HSRect(x: x, y: y, w: w, h: h)
@@ -270,15 +270,15 @@ import CoreGraphics
                       h: h * frame.h)
     }
 
-    @objc func inside(_ rect: HSRect) -> Bool {
+    @objc public func inside(_ rect: HSRect) -> Bool {
         x >= rect.x && y >= rect.y && (x + w) <= (rect.x + rect.w) && (y + h) <= (rect.y + rect.h)
     }
 
-    @objc func intersect(_ rect: HSRect) -> HSRect {
+    @objc public func intersect(_ rect: HSRect) -> HSRect {
         CGRect(from: self).intersection(CGRect(from: rect)).toBridge()
     }
 
-    @objc func move(_ offset: JSValue) -> HSRect {
+    @objc public func move(_ offset: JSValue) -> HSRect {
         guard let (dx, dy) = offset.toGeometryOffset() else {
             AKError("HSRect: move() requires an HSPoint or HSSize")
             return HSRect(x: x, y: y, w: w, h: h)
@@ -286,7 +286,7 @@ import CoreGraphics
         return HSRect(x: x + dx, y: y + dy, w: w, h: h)
     }
 
-    @objc func scale(_ factor: JSValue) -> HSRect {
+    @objc public func scale(_ factor: JSValue) -> HSRect {
         guard let (sx, sy) = factor.toGeometryScaleFactors() else {
             AKError("HSRect: scale() requires a number, HSSize or HSPoint")
             return HSRect(x: x, y: y, w: w, h: h)
@@ -301,7 +301,7 @@ import CoreGraphics
         return HSRect(x: c.x - newW / 2, y: c.y - newH / 2, w: newW, h: newH)
     }
 
-    @objc func toUnitRect(_ frame: HSRect) -> HSRect {
+    @objc public func toUnitRect(_ frame: HSRect) -> HSRect {
         guard frame.w > 0, frame.h > 0 else {
             AKError("HSRect: toUnitRect() requires a frame with a non-zero width and height")
             return HSRect(x: x, y: y, w: w, h: h)
@@ -316,11 +316,11 @@ import CoreGraphics
                       h: clamped.height / frame.h)
     }
 
-    @objc func union(_ rect: HSRect) -> HSRect {
+    @objc public func union(_ rect: HSRect) -> HSRect {
         CGRect(from: self).union(CGRect(from: rect)).toBridge()
     }
 
-    @objc func vector(_ other: JSValue) -> HSPoint {
+    @objc public func vector(_ other: JSValue) -> HSPoint {
         guard let otherCenter = other.toGeometryCenter() else {
             AKError("HSRect: vector() requires an HSPoint or HSRect")
             return HSPoint(x: 0, y: 0)
@@ -336,13 +336,13 @@ import CoreGraphics
 
 // --- CGRect <-> HSRect ---
 extension CGRect: JSConvertible {
-    typealias BridgeType = HSRect
+    public typealias BridgeType = HSRect
 
-    init(from bridge: HSRect) {
+    public init(from bridge: HSRect) {
         self.init(x: bridge.x, y: bridge.y, width: bridge.w, height: bridge.h)
     }
 
-    func toBridge() -> HSRect {
+    public func toBridge() -> HSRect {
         HSRect(x: Double(origin.x), y: Double(origin.y),
                w: Double(size.width), h: Double(size.height))
     }

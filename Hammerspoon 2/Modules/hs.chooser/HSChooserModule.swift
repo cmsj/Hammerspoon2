@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// # hs.chooser
 ///

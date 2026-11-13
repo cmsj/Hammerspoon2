@@ -7,6 +7,7 @@
 
 import Foundation
 import AppKit
+import HammerspoonSDK
 
 enum OnboardingError: LocalizedError {
     case directoryCreationFailed(path: String, underlying: Error)

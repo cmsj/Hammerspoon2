@@ -1,6 +1,6 @@
 //
 //  HSImage.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 //  Created by Claude Code on 26/02/2026.
 //
@@ -58,7 +58,7 @@ import Observation
 /// // Save to file
 /// img.saveToFile("/path/to/output.png")
 /// ```
-@objc protocol HSImageAPI: HSTypeAPI, JSExport {
+@objc public protocol HSImageAPI: HSTypeAPI, JSExport {
     /// Load an image from a file path
     /// - Parameter path: Path to the image file
     /// - Returns: An HSImage object, or null if the file couldn't be loaded
@@ -193,20 +193,20 @@ import Observation
 }
 
 @Observable
-@objc class HSImage: NSObject, HSImageAPI {
-    @objc var typeName = "HSImage"
+@objc public class HSImage: NSObject, HSImageAPI {
+    @objc public var typeName = "HSImage"
 
-    @objc func toString() -> String {
+    @objc public func toString() -> String {
         return "<\(typeName): \(Int(image.size.width))x\(Int(image.size.height))>"
     }
 
-    nonisolated override var description: String {
+    public nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
 
-    var image: NSImage
+    public var image: NSImage
 
-    init(image: NSImage) {
+    public init(image: NSImage) {
         self.image = image
         super.init()
         JSExtraMemory.report(Self.estimatedByteCount(of: image))
@@ -218,7 +218,7 @@ import Observation
     /// Other representations (app icons, symbols, PDFs) render on demand at the size the image is
     /// drawn, however large they say they can go: an app icon offers 2048x2048 but draws at
     /// 32x32 points. Those are counted at the image's size on a 2x display.
-    static func estimatedByteCount(of image: NSImage) -> Int {
+    public static func estimatedByteCount(of image: NSImage) -> Int {
         let drawnWidth = image.size.width * 2
         let drawnHeight = image.size.height * 2
         let drawnBytes = JSExtraMemory.byteCount(pixelsWide: drawnWidth, pixelsHigh: drawnHeight)
@@ -233,7 +233,7 @@ import Observation
 
     // MARK: - Factory Methods
 
-    @objc static func fromPath(_ path: String) -> HSImage? {
+    @objc public static func fromPath(_ path: String) -> HSImage? {
         let expandedPath = NSString(string: path).expandingTildeInPath
         guard let image = NSImage(contentsOfFile: expandedPath) else {
             AKError("HSImage: Failed to load image from path: \(path)")
@@ -242,7 +242,7 @@ import Observation
         return image.toBridge()
     }
 
-    @objc static func fromName(_ name: String) -> HSImage? {
+    @objc public static func fromName(_ name: String) -> HSImage? {
         guard let image = NSImage(named: NSImage.Name(name)) else {
             AKError("HSImage: Failed to find system image named: \(name)")
             return nil
@@ -250,7 +250,7 @@ import Observation
         return image.toBridge()
     }
 
-    @objc static func fromSymbol(_ name: String) -> HSImage? {
+    @objc public static func fromSymbol(_ name: String) -> HSImage? {
         guard let image = NSImage(systemSymbolName: name, accessibilityDescription: nil) else {
             AKError("HSImage: Failed to find symbol named: \(name)")
             return nil
@@ -258,7 +258,7 @@ import Observation
         return image.toBridge()
     }
 
-    @objc static func fromAppBundle(_ bundleID: String, _ withFallbackSymbol: String) -> HSImage? {
+    @objc public static func fromAppBundle(_ bundleID: String, _ withFallbackSymbol: String) -> HSImage? {
         let fallbackSymbol = withFallbackSymbol == "undefined" ? "questionmark.circle" : withFallbackSymbol
 
         if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
@@ -267,12 +267,12 @@ import Observation
         return NSImage(systemSymbolName: fallbackSymbol, accessibilityDescription: nil)?.toBridge()
     }
 
-    @objc static func iconForFile(_ path: String) -> HSImage? {
+    @objc public static func iconForFile(_ path: String) -> HSImage? {
         let expandedPath = NSString(string: path).expandingTildeInPath
         return NSWorkspace.shared.icon(forFile: expandedPath).toBridge()
     }
 
-    @objc static func iconForFileType(_ fileType: String) -> HSImage? {
+    @objc public static func iconForFileType(_ fileType: String) -> HSImage? {
         let image: NSImage
         if let uti = UTType(fileType) {
             image = NSWorkspace.shared.icon(for: uti)
@@ -285,13 +285,15 @@ import Observation
         return image.toBridge()
     }
 
-    @objc static func fromURL(_ urlString: String) -> JSPromise? {
+    @objc public static func fromURL(_ urlString: String) -> JSPromise? {
+        // The promise must belong to the calling context, or JS can't use it as a Promise
+        guard let context = JSContext.current() else { return nil }
         guard let url = URL(string: urlString) else {
             AKError("HSImage: Invalid URL: \(urlString)")
-            return JSEngine.shared.createRejectedPromise(with: "Invalid URL: \(urlString)")
+            return context.createRejectedPromise(with: "Invalid URL: \(urlString)")
         }
 
-        return JSEngine.shared.createPromise { holder in
+        return wrapAsyncInJSPromise(in: context) { holder in
             Task { @MainActor in
                 do {
                     let (data, _) = try await URLSession.shared.data(from: url)
@@ -311,7 +313,7 @@ import Observation
 
     // MARK: - Properties
 
-    @objc var size: HSSize {
+    @objc public var size: HSSize {
         get { image.size.toBridge() }
         set {
             image = resizeImage(image, to: newValue.size)
@@ -319,24 +321,24 @@ import Observation
         }
     }
 
-    @objc var name: String? {
+    @objc public var name: String? {
         get { image.name() }
         set { _ = image.setName(newValue) }
     }
 
-    @objc var template: Bool {
+    @objc public var template: Bool {
         get { image.isTemplate }
         set { image.isTemplate = newValue }
     }
 
     // MARK: - Image Manipulation
 
-    @objc func duplicate() -> HSImage? {
+    @objc public func duplicate() -> HSImage? {
         guard let copiedImage = image.copy() as? NSImage else { return nil }
         return copiedImage.toBridge()
     }
 
-    @objc func croppedCopy(_ rect: HSRect) -> HSImage? {
+    @objc public func croppedCopy(_ rect: HSRect) -> HSImage? {
         guard let croppedImage = cropImage(image, to: rect.rect) else {
             AKError("HSImage: Failed to crop image (rect may fall outside image bounds)")
             return nil
@@ -344,7 +346,7 @@ import Observation
         return croppedImage.toBridge()
     }
 
-    @objc func saveToFile(_ path: String) -> Bool {
+    @objc public func saveToFile(_ path: String) -> Bool {
         let url = URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
 
         let fileType: NSBitmapImageRep.FileType
@@ -374,7 +376,7 @@ import Observation
 
     // MARK: - Reactive Mutation
 
-    @objc func set(_ value: JSValue) {
+    @objc public func set(_ value: JSValue) {
         if let newImage = HSImage.fromJSValue(value) {
             image = newImage.image
         }
@@ -384,7 +386,7 @@ import Observation
 
     /// Create an HSImage from a JSValue (supports HSImage objects or file path strings).
     /// Used by the hs.ui builder.
-    static func fromJSValue(_ value: JSValue) -> HSImage? {
+    public static func fromJSValue(_ value: JSValue) -> HSImage? {
         if let hsImage = value.toObjectOf(HSImage.self) as? HSImage {
             return hsImage
         } else if value.isString, let path = value.toString() {
@@ -423,7 +425,7 @@ import Observation
 // ---------------------------------------------------------------
 
 extension NSImage {
-    func toBridge() -> HSImage {
+    public func toBridge() -> HSImage {
         HSImage(image: self)
     }
 }

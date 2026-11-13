@@ -9,6 +9,7 @@ import JavaScriptCoreExtras
 import CoreGraphics
 import AppKit
 import Carbon
+import HammerspoonSDK
 
 // MARK: - Module API
 

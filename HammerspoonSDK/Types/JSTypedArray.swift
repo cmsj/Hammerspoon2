@@ -1,6 +1,6 @@
 //
 //  JSTypedArray.swift
-//  Hammerspoon 2
+//  HammerspoonSDK
 //
 
 import Foundation
@@ -25,7 +25,7 @@ extension JSContext {
     /// Create a new `Uint8Array` in this context holding a copy of `bytes`.
     ///
     /// - Returns: The `Uint8Array`, or `nil` if JavaScriptCore could not allocate it.
-    func makeUint8Array<Bytes: Collection>(_ bytes: Bytes) -> JSValue? where Bytes.Element == UInt8 {
+    public func makeUint8Array<Bytes: Collection>(_ bytes: Bytes) -> JSValue? where Bytes.Element == UInt8 {
         let count = bytes.count
         // malloc(0) may legitimately return NULL, so always allocate at least one byte.
         guard let buffer = unsafe malloc(max(count, 1)) else { return nil }
@@ -55,7 +55,7 @@ extension JSContext {
 extension JSValue {
     /// If this value is a typed array (e.g. `Uint8Array`) or an `ArrayBuffer`, return a copy of
     /// the bytes it covers. Returns `nil` for any other value (including `DataView`).
-    var typedArrayBytes: [UInt8]? {
+    public var typedArrayBytes: [UInt8]? {
         let ctx = unsafe context.jsGlobalContextRef
         let ref = unsafe jsValueRef
         var exception: JSValueRef?

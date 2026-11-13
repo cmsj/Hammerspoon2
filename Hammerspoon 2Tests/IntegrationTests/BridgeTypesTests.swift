@@ -10,6 +10,7 @@ import JavaScriptCore
 import CoreGraphics
 import SwiftUI
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 /// Tests for JavaScript bridge types (HSPoint, HSSize, HSRect)
 ///

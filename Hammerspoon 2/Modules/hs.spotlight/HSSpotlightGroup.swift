@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// A grouped set of Spotlight results that share a common metadata attribute value.
 ///

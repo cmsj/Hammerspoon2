@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import CoreWLAN
+import HammerspoonSDK
 
 // MARK: - Enum <-> String helpers (nonisolated: called from both MainActor and background Task contexts)
 //

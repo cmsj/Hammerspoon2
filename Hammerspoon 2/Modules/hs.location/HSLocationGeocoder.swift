@@ -9,6 +9,7 @@ import Foundation
 import JavaScriptCore
 import CoreLocation
 import MapKit
+import HammerspoonSDK
 
 // MARK: - Geocoder API protocol
 

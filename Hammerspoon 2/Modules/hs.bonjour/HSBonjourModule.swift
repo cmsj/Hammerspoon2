@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import dnssd
+import HammerspoonSDK
 
 // MARK: - Module API protocol
 

@@ -7,6 +7,7 @@ import AppKit
 import Testing
 import JavaScriptCore
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 @Suite("hs.menubar tests")
 struct HSMenuBarTests {

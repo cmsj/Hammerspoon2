@@ -6,6 +6,7 @@
 import Foundation
 import AppKit
 import JavaScriptCore
+import HammerspoonSDK
 
 // MARK: - JavaScript API Protocol
 

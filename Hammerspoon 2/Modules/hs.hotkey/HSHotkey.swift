@@ -7,6 +7,7 @@ import Foundation
 import JavaScriptCore
 import AppKit
 import Carbon
+import HammerspoonSDK
 
 // MARK: - Protocol
 

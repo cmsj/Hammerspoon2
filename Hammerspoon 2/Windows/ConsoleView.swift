@@ -8,6 +8,7 @@
 import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
+@_spi(HammerspoonHost) import HammerspoonSDK
 
 class ConsoleViewModel: WindowAccessorDelegate {
     /// Applies `alpha` as soon as the window attaches, in case it becomes available

@@ -10,6 +10,7 @@ import JavaScriptCore
 import AppKit
 import ApplicationServices
 import AXSwift
+import HammerspoonSDK
 
 // MARK: - Declare our JavaScript API
 

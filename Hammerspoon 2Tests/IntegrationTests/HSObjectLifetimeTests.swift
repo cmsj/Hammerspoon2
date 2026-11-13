@@ -6,6 +6,7 @@
 import Testing
 import JavaScriptCore
 @testable import Hammerspoon_2
+@_spi(HammerspoonHost) import HammerspoonSDK
 
 /// Tests for the engine's object lifetime mechanisms: HSObjectTracker's active objects,
 /// ModuleRoot's module wrapper pinning, hs.activeObjects(), and the JSTestHarness teardown check.

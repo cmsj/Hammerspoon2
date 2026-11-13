@@ -4,7 +4,7 @@
  * Event Name Consistency Check
  *
  * Watcher modules declare the event names they emit as a Swift enum conforming to
- * `HSEventName` (see "Hammerspoon 2/Engine/HSEventName.swift"). At runtime that enum is the
+ * `HSEventName` (see "HammerspoonSDK/Module/HSEventName.swift"). At runtime that enum is the
  * list on()/once() validate against; in the docs, each on()/off()/once() docstring repeats the
  * names as a literal union for the TypeScript definitions. This checks the two agree:
  *

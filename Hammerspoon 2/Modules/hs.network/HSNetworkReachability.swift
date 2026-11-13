@@ -7,6 +7,7 @@ import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
 import Network
+import HammerspoonSDK
 
 // MARK: - Flag constants (matching SCNetworkReachabilityFlags raw values for API compatibility)
 

@@ -6,6 +6,7 @@
 import Foundation
 import ObjectiveC
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 /// The members of one of the app's JSExport protocols, as JavaScriptCore sees them, read from the
 /// Objective-C runtime. Only the protocol's own members are listed, not those of the protocols it
@@ -33,10 +34,10 @@ struct ExportedProtocol {
         return !next.isLowercase
     }
 
-    /// Every JSExport protocol (other than JSExport itself) declared in the app's Swift module and
-    /// adopted, directly or by inheritance, by a class in the app binary. System frameworks and
-    /// Swift packages (like JavaScriptCoreExtras, linked into the app binary) have JSExport
-    /// protocols of their own, which aren't ours to check.
+    /// Every JSExport protocol (other than JSExport itself) declared in the app's or the SDK's
+    /// Swift module and adopted, directly or by inheritance, by a class in their binaries. System
+    /// frameworks and Swift packages (like JavaScriptCoreExtras, linked into the app binary) have
+    /// JSExport protocols of their own, which aren't ours to check.
     static func all() throws -> [ExportedProtocol] {
         guard let jsExport = objc_getProtocol("JSExport") else { throw IntrospectionError.noJSExport }
         var seen = Set<String>()
@@ -44,23 +45,30 @@ struct ExportedProtocol {
         for cls in try appClasses() {
             for proto in NullReturnsInstaller.exportedProtocols(of: cls, jsExport: jsExport) {
                 let runtimeName = String(cString: protocol_getName(proto))
-                guard runtimeName.hasPrefix(modulePrefix), seen.insert(runtimeName).inserted else { continue }
-                result.append(ExportedProtocol(proto, name: String(runtimeName.dropFirst(modulePrefix.count))))
+                guard let prefix = modulePrefixes.first(where: runtimeName.hasPrefix),
+                      seen.insert(runtimeName).inserted else { continue }
+                result.append(ExportedProtocol(proto, name: String(runtimeName.dropFirst(prefix.count))))
             }
         }
         return result
     }
 
-    /// The Swift runtime names the app's @objc protocols `Hammerspoon_2.HSFooAPI`
-    private static let modulePrefix = String(String(reflecting: ModuleRoot.self).prefix { $0 != "." }) + "."
+    /// The Swift runtime names the app's @objc protocols `Hammerspoon_2.HSFooAPI`, and the SDK's
+    /// `HammerspoonSDK.HSFooAPI`
+    private static let modulePrefixes = [ModuleRoot.self, HSImage.self].map { cls in
+        String(String(reflecting: cls).prefix { $0 != "." }) + "."
+    }
 
-    /// Every class in the app binary
+    /// Every class in the app and SDK binaries
     static func appClasses() throws -> [AnyClass] {
-        guard let image = class_getImageName(ModuleRoot.self) else { throw IntrospectionError.noAppImage }
-        var classCount: UInt32 = 0
-        guard let classNames = objc_copyClassNamesForImage(image, &classCount) else { throw IntrospectionError.noAppImage }
-        defer { free(UnsafeMutableRawPointer(classNames)) }
-        return UnsafeBufferPointer(start: classNames, count: Int(classCount)).compactMap { objc_getClass($0) as? AnyClass }
+        let images = NullReturnsInstaller.builtInImages
+        guard images.count == 2 else { throw IntrospectionError.noAppImage }
+        return try images.flatMap { image in
+            var classCount: UInt32 = 0
+            guard let classNames = objc_copyClassNamesForImage(image, &classCount) else { throw IntrospectionError.noAppImage }
+            defer { free(UnsafeMutableRawPointer(classNames)) }
+            return UnsafeBufferPointer(start: classNames, count: Int(classCount)).compactMap { objc_getClass($0) as? AnyClass }
+        }
     }
 
     enum IntrospectionError: Error {

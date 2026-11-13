@@ -4,6 +4,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// Module for creating and managing HTTP servers.
 ///

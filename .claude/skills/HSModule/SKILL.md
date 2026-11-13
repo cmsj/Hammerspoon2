@@ -73,7 +73,7 @@ Stored `JSValue`s on a module are only for slots the module's hs.foo.js assigns 
 
 ## Child object tracking: HSObjectTracker
 
-When a module creates child objects that are returned to JavaScript (e.g. `HSTimer`, `HSHotkey`, `HSBonjourSearch`), it tracks them in an `HSObjectTracker<T>` (`Engine/HSObjectTracker.swift`). The tracker does two jobs:
+When a module creates child objects that are returned to JavaScript (e.g. `HSTimer`, `HSHotkey`, `HSBonjourSearch`), it tracks them in an `HSObjectTracker<T>` (`HammerspoonSDK/Lifetime/HSObjectTracker.swift`). The tracker does two jobs:
 
 - **Tracking (weak):** every child is added, so `shutdown()` can reach it. An inactive child the user drops is ordinary garbage.
 - **Active (pinned):** while a child has pending activity, the tracker holds its JS wrapper, so it stays alive with its callbacks (see **Object lifetime** below).
@@ -190,7 +190,7 @@ Rules:
 
 ## JS callback memory management
 
-When a JS-exported Swift object stores a JavaScript callback function, **always use `JSCallback` (`Engine/JSCallback.swift`), never a raw `JSValue`**.
+When a JS-exported Swift object stores a JavaScript callback function, **always use `JSCallback` (`HammerspoonSDK/Lifetime/JSCallback.swift`), never a raw `JSValue`**.
 
 **Why:** Storing a raw `JSValue` in a JS-exported Swift object creates a retain cycle that prevents the JS GC from ever collecting the object:
 > Swift object → JSValue → JSContext → JS wrapper → Swift object
@@ -609,7 +609,7 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
 
   Event names (issue #253):
   - Declare the event names as a Swift enum: `nonisolated enum HSXxxEvent: String, HSEventName { case ... }`
-    (see Engine/HSEventName.swift). Emit ONLY via `HSXxxEvent.foo.rawValue`, never a string literal, so
+    (see HammerspoonSDK/Module/HSEventName.swift). Emit ONLY via `HSXxxEvent.foo.rawValue`, never a string literal, so
     the compiler guarantees every emitted name is in the list.
   - Expose it as `/// SKIP_DOCS @objc var _eventNames: [String] { get }`, implemented as
     `HSXxxEvent.allNames`, and pass `hs.xxx._eventNames` as the 4th argument to `LazyWatcherEmitter` /

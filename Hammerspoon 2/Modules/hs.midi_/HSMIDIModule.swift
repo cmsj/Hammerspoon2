@@ -17,6 +17,7 @@
 import Foundation
 import JavaScriptCore
 import CoreMIDI
+import HammerspoonSDK
 
 // MARK: - CoreMIDI helpers (file-scope, no actor isolation needed)
 

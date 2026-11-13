@@ -9,6 +9,7 @@ import JavaScriptCoreExtras
 import AppKit
 import CoreGraphics
 import IOKit
+import HammerspoonSDK
 
 // MARK: - IOKit helpers (file-scope, no actor isolation needed)
 

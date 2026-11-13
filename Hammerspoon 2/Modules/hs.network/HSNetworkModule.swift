@@ -8,6 +8,7 @@ import JavaScriptCore
 import JavaScriptCoreExtras
 import Darwin
 import SystemConfiguration
+import HammerspoonSDK
 
 // MARK: - File-scope helpers (interface & address enumeration)
 
