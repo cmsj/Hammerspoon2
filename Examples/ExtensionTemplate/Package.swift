@@ -13,7 +13,7 @@ let sdkPath = Context.environment["HAMMERSPOON_SDK_PACKAGE"]
 let sdk: Package.Dependency = if let sdkPath {
     .package(path: sdkPath)
 } else {
-    .package(url: "https://github.com/cmsj/HammerspoonSDK", from: "1.3.0")
+    .package(url: "https://github.com/cmsj/HammerspoonSDK", from: "1.0.0")
 }
 // A local package is known by its directory's name
 let sdkPackage = sdkPath.map { URL(fileURLWithPath: $0).lastPathComponent } ?? "HammerspoonSDK"
