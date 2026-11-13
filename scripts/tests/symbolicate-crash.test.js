@@ -112,6 +112,9 @@ test('reads the version from the report, or from the form for helpers', () => {
     assert.equal(crashedVersion(helper, issueBody({ version: '_No response_', crashLog: '' })), null);
     assert.equal(crashedVersion(helper, issueBody({ version: '0.2.0; rm -rf /', crashLog: '' })), null);
     assert.equal(formField(issueBody({ crashLog: '' }), 'What were you doing when it crashed?'), null);
+    const markdown = parseIPS(abortText);
+    markdown.header.app_version = '[0.1.0](https://example.com) @someone';
+    assert.equal(crashedVersion(markdown, issueBody({ version: '0.2.0', crashLog: '' })), null);
 });
 
 test('lists the exception backtrace and crashed thread before the others', () => {

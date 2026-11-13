@@ -148,8 +148,8 @@ final class JSBreadcrumbs {
     }
 
     /// Records `label` as running, until the matching `pop()`.
-    func push(_ label: String) {
-        let time = Date().timeIntervalSince1970
+    func push(_ label: String, at date: Date = Date()) {
+        let time = date.timeIntervalSince1970
         if depth < Self.runningCapacity {
             write(label, time: time, toRecord: depth)
         }
@@ -293,12 +293,26 @@ final class JSBreadcrumbs {
 // implementations, so each calls the original by calling itself.
 extension JSValue {
     /// A function's name, for labels.
+    ///
+    /// Reading `name` can run JavaScript (a getter, or a Proxy's trap), so it's read through the
+    /// C API, which discards any exception instead of leaving it pending in the context.
     nonisolated var breadcrumbName: String {
-        guard isObject, let name = forProperty("name"), name.isString,
-              let string = name.toString(), !string.isEmpty else {
-            return "anonymous function"
+        let anonymous = "anonymous function"
+        guard isObject, let context else { return anonymous }
+        let ctx = context.jsGlobalContextRef
+        var exception: JSValueRef?
+        guard let object = unsafe JSValueToObject(ctx, jsValueRef, &exception), unsafe exception == nil else {
+            return anonymous
         }
-        return string
+        let key = JSStringCreateWithUTF8CString("name")
+        defer { JSStringRelease(key) }
+        guard let value = unsafe JSObjectGetProperty(ctx, object, key, &exception), unsafe exception == nil,
+              JSValueIsString(ctx, value), let string = unsafe JSValueToStringCopy(ctx, value, &exception) else {
+            return anonymous
+        }
+        defer { JSStringRelease(string) }
+        let name = JSStringCopyCFString(kCFAllocatorDefault, string) as String
+        return name.isEmpty ? anonymous : name
     }
 
     @objc(hs_breadcrumbCallWithArguments:)

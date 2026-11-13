@@ -190,6 +190,30 @@ struct JSBreadcrumbsTests {
         #expect(try snapshot().recent.map(\.label).contains(#"hs.test "fail" listener anonymous function"#))
     }
 
+    @Test("A listener or function whose name can't be read still runs")
+    func testThrowingNameGetter() throws {
+        defer { cleanUp() }
+        let running = SnapshotBox()
+        let harness = harness(capturingInto: running)
+        harness.eval("""
+            function badName() { snapshot(); }
+            Object.defineProperty(badName, "name", { get: function () { throw new Error("no name"); } });
+            var emitter = new EventEmitter();
+            emitter._label = "hs.test";
+            emitter.once("ping", badName);
+            """)
+        #expect(!harness.hasException)
+
+        try recording {
+            harness.evalValue("emitter")?.invokeMethod("emit", withArguments: ["ping"])
+            #expect(running.labels == ["call .emit", #"hs.test "ping" listener wrapped"#])
+
+            harness.evalValue("badName")?.call(withArguments: [])
+            #expect(running.labels == ["call anonymous function"])
+        }
+        #expect(!harness.hasException)
+    }
+
     @Test("engine.js doesn't leave its breadcrumb functions in the global scope")
     func testFunctionsAreHidden() {
         defer { cleanUp() }
@@ -247,6 +271,33 @@ struct JSBreadcrumbsTests {
 
     @Test("The app's crash reports get its breadcrumbs, its helpers' don't")
     func testManagerAddsBreadcrumbs() throws {
+        let found = try findReports(breadcrumbsSecondsAfterLaunch: 0.2)
+        let app = try #require(found.first { $0.processName == "Hammerspoon 2" })
+        let helper = try #require(found.first { $0.processName == "HammerspoonIPCBroker" })
+        #expect(app.summary(version: nil).contains("call onCrash"))
+        #expect(!helper.summary(version: nil).contains("JavaScript"))
+    }
+
+    @Test("Breadcrumbs left by an earlier or later process with the same pid aren't added",
+          arguments: [-3_600.0, 3_600.0])
+    func testManagerChecksProcessLifetime(secondsAfterLaunch: Double) throws {
+        let found = try findReports(breadcrumbsSecondsAfterLaunch: secondsAfterLaunch)
+        let app = try #require(found.first { $0.processName == "Hammerspoon 2" })
+        #expect(!app.summary(version: nil).contains("JavaScript"))
+    }
+
+    @Test("Reports say when their process launched and crashed")
+    func testReportDates() throws {
+        defer { cleanUp() }
+        let report = try CrashReportTests.fixture("abort")
+        let launch = try #require(report.launchDate)
+        let capture = try #require(report.captureDate)
+        #expect(abs(capture.timeIntervalSince(launch) - 0.398) < 0.001)
+    }
+
+    /// Writes both fixture reports, and breadcrumbs for each recorded `seconds` after its
+    /// process launched, then finds them as the app would.
+    func findReports(breadcrumbsSecondsAfterLaunch seconds: Double) throws -> [CrashReport] {
         let reports = directory.appending(path: "Reports", directoryHint: .isDirectory)
         let suiteName = "JSBreadcrumbsTests-\(UUID().uuidString)"
         defer {
@@ -257,18 +308,16 @@ struct JSBreadcrumbsTests {
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.set(Date.distantPast, forKey: CrashReportManager.lastCheckedKey)
 
-        // The fixtures' processes had pid 80641 (abort.ips) and 80642 (uncaught-exception.ips).
-        for (fixture, pid) in [("abort", Int32(80641)), ("uncaught-exception", Int32(80642))] {
+        for fixture in ["abort", "uncaught-exception"] {
             try CrashReportTests.fixtureText(fixture).write(to: reports.appending(path: "\(fixture).ips"), atomically: true, encoding: .utf8)
+            let report = try CrashReportTests.fixture(fixture)
+            let pid = try #require(report.pid)
+            let launch = try #require(report.launchDate)
             let breadcrumbs = try JSBreadcrumbs(file: JSBreadcrumbs.file(forProcess: pid, in: directory))
-            breadcrumbs.push("call onCrash")
+            breadcrumbs.push("call onCrash", at: launch.addingTimeInterval(seconds))
         }
 
         let manager = CrashReportManager(reportsDirectory: reports, breadcrumbsDirectory: directory, defaults: defaults)
-        let found = manager.newCrashReports(bundleIdentifier: CrashReportTests.bundleIdentifier)
-        let app = try #require(found.first { $0.report.processName == "Hammerspoon 2" }?.report)
-        let helper = try #require(found.first { $0.report.processName == "HammerspoonIPCBroker" }?.report)
-        #expect(app.summary(version: nil).contains("call onCrash"))
-        #expect(!helper.summary(version: nil).contains("JavaScript"))
+        return manager.newCrashReports(bundleIdentifier: CrashReportTests.bundleIdentifier).map(\.report)
     }
 }

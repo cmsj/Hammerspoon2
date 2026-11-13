@@ -110,6 +110,23 @@ nonisolated struct CrashReport {
     /// The process ID of the process that crashed.
     var pid: Int32? { (body["pid"] as? NSNumber)?.int32Value }
 
+    /// When the process that crashed was launched, if the report says in a form we understand.
+    var launchDate: Date? { (body["procLaunch"] as? String).flatMap(Self.parseDate) }
+
+    /// When the crash happened, if the report says in a form we understand.
+    var captureDate: Date? { captureTime.flatMap(Self.parseDate) }
+
+    /// Parses dates as they appear in reports, such as `2026-10-20 23:43:37.6376 +0100`.
+    private static func parseDate(_ string: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        for format in ["yyyy-MM-dd HH:mm:ss.SSSS Z", "yyyy-MM-dd HH:mm:ss.SS Z", "yyyy-MM-dd HH:mm:ss Z"] {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: string) { return date }
+        }
+        return nil
+    }
+
     /// Whether the crash was in the process with `bundleIdentifier`, or one of its helpers
     /// (whose identifiers start with it).
     func belongs(toBundleIdentifier bundleIdentifier: String) -> Bool {
@@ -213,6 +230,23 @@ nonisolated struct CrashReport {
     }
 
     // MARK: - JavaScript
+
+    /// Whether `snapshot`, from a breadcrumbs file with this report's process ID, could have
+    /// been recorded by the process that crashed. Process IDs get reused, so a file can belong to
+    /// an earlier process, or a later one may have replaced it. Its entries must all be from
+    /// while the crashed process was running. If the report's dates can't be read, it's assumed
+    /// to be the same process.
+    func couldHaveRecorded(_ snapshot: JSBreadcrumbs.Snapshot) -> Bool {
+        let times = (snapshot.running + snapshot.recent).map(\.time)
+        // The report's times are to the 0.1ms, but allow for clocks being read at different moments.
+        if let launchDate, let earliest = times.min(), earliest < launchDate.addingTimeInterval(-1) {
+            return false
+        }
+        if let captureDate, let latest = times.max(), latest > captureDate.addingTimeInterval(1) {
+            return false
+        }
+        return true
+    }
 
     /// The report with what JavaScript the crashed process was running added to it.
     func adding(javaScript snapshot: JSBreadcrumbs.Snapshot) -> CrashReport {
@@ -318,22 +352,54 @@ nonisolated struct CrashReport {
     /// The report as `.ips` text again, cut down to what's needed to symbolicate and
     /// understand it: identifiers are removed, other threads' backtraces are trimmed, and only
     /// the binary images that frames refer to are kept. If it's still longer than
-    /// `maximumLength`, other threads are trimmed further and then dropped.
+    /// `maximumLength`, other threads are trimmed further and then dropped, then long strings
+    /// (such as exception messages) are cut short, and finally everything but what's needed
+    /// to symbolicate and summarise the crash is dropped.
     func compactText(maximumLength: Int = CrashReport.maximumCompactLength) -> String {
-        // (frames kept per other thread, frames kept for the crashed thread and exception)
-        let levels: [(other: Int?, crashed: Int)] = [(30, 512), (10, 256), (nil, 256), (nil, 64)]
+        let levels: [CompactLevel] = [
+            CompactLevel(otherThreadFrames: 30, crashedFrames: 512),
+            CompactLevel(otherThreadFrames: 10, crashedFrames: 256),
+            CompactLevel(otherThreadFrames: nil, crashedFrames: 256),
+            CompactLevel(otherThreadFrames: nil, crashedFrames: 64),
+            CompactLevel(otherThreadFrames: nil, crashedFrames: 64, stringLimit: 256),
+            CompactLevel(otherThreadFrames: nil, crashedFrames: 64, stringLimit: 256, essentialOnly: true),
+        ]
         var text = ""
         for level in levels {
-            text = compactText(otherThreadFrames: level.other, crashedFrames: level.crashed)
+            text = compactText(level)
             if text.count <= maximumLength { break }
         }
         return text
     }
 
-    private func compactText(otherThreadFrames: Int?, crashedFrames: Int) -> String {
+    /// Body keys kept when nothing else will fit: what the summary and the symbolicator use.
+    static let essentialKeys: Set<String> = [
+        "procName", "codeSigningID", "pid", "captureTime", "procLaunch", "incident", "modelCode", "cpuType",
+        "bundleInfo", "exception", "termination", "asi", "faultingThread", "threads", "omittedThreads",
+        "lastExceptionBacktrace", "usedImages", javaScriptKey,
+    ]
+
+    private struct CompactLevel {
+        /// Frames kept per thread other than the crashed one, or nil to drop other threads
+        var otherThreadFrames: Int?
+        /// Frames kept for the crashed thread and the exception backtrace
+        var crashedFrames: Int
+        /// The longest string kept whole
+        var stringLimit: Int?
+        /// Whether to keep only `essentialKeys`
+        var essentialOnly = false
+    }
+
+    private func compactText(_ level: CompactLevel) -> String {
+        let otherThreadFrames = level.otherThreadFrames
+        let crashedFrames = level.crashedFrames
         let crashedIndex = faultingThreadIndex
         var images = ImageTable(original: usedImages)
         var compact = body
+        if level.essentialOnly {
+            compact = compact.filter { Self.essentialKeys.contains($0.key) }
+            compact["omittedKeys"] = true
+        }
         compact.removeValue(forKey: "usedImages")
 
         var keptThreads: [[String: Any]] = []
@@ -363,7 +429,24 @@ nonisolated struct CrashReport {
         }
         compact["usedImages"] = images.kept
 
+        if let limit = level.stringLimit {
+            return Self.json(header) + "\n" + Self.json(Self.truncatingStrings(compact, to: limit) as? [String: Any] ?? compact)
+        }
         return Self.json(header) + "\n" + Self.json(compact)
+    }
+
+    /// `value` with every string in it cut to at most `limit` characters.
+    private static func truncatingStrings(_ value: Any, to limit: Int) -> Any {
+        switch value {
+        case let string as String where string.count > limit:
+            return String(string.prefix(limit)) + "..."
+        case let dictionary as [String: Any]:
+            return dictionary.mapValues { truncatingStrings($0, to: limit) }
+        case let array as [Any]:
+            return array.map { truncatingStrings($0, to: limit) }
+        default:
+            return value
+        }
     }
 
     /// Keeps only the images that frames refer to, renumbering the frames to match.
@@ -432,22 +515,36 @@ nonisolated enum CrashReportIssue {
     ///   - crashLogPlaceholder: What the crash log field starts out as. The crash log itself
     ///     is far too long for a URL, so this tells the user how to add it
     static func url(for report: CrashReport, repository: URL, version: String?, crashLogPlaceholder: String) -> URL? {
-        for frameLimit in [15, 10, 5, 0] {
+        func urlString(summary: String) -> String {
             let fields: [(String, String)] = [
                 ("template", template),
                 ("title", report.issueTitle(version: version)),
                 (Field.version, version ?? ""),
                 (Field.macOSVersion, report.osVersion ?? ""),
-                (Field.summary, report.summary(version: version, frameLimit: frameLimit)),
+                (Field.summary, summary),
                 (Field.crashLog, crashLogPlaceholder),
             ]
             let query = fields.map { "\($0)=\(encode($1))" }.joined(separator: "&")
-            let string = repository.appending(path: "issues/new").absoluteString + "?" + query
-            if string.count <= maximumURLLength || frameLimit == 0 {
+            return repository.appending(path: "issues/new").absoluteString + "?" + query
+        }
+
+        for frameLimit in [15, 10, 5, 0] {
+            let string = urlString(summary: report.summary(version: version, frameLimit: frameLimit))
+            if string.count <= maximumURLLength {
                 return URL(string: string)
             }
         }
-        return nil
+
+        // Without frames, it's long messages (application-specific information, say) that are
+        // too long, so cut the summary short. Each character encodes to at most 12 characters.
+        var summary = report.summary(version: version, frameLimit: 0)
+        let note = "\n... (cut short; the crash log has the rest)"
+        var string = urlString(summary: summary + note)
+        while string.count > maximumURLLength, !summary.isEmpty {
+            summary.removeLast(min(summary.count, max(1, (string.count - maximumURLLength) / 12)))
+            string = urlString(summary: summary + note)
+        }
+        return URL(string: string)
     }
 
     /// Percent-encodes everything but unreserved characters. `URLComponents` leaves `+` alone,
