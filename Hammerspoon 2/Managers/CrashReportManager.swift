@@ -76,7 +76,8 @@ final class CrashReportManager {
                 if let incident = report.incidentID, !seenIncidents.insert(incident).inserted { continue }
                 // Helpers don't run JavaScript.
                 if report.codeSigningID == bundleIdentifier, let pid = report.pid,
-                   let snapshot = JSBreadcrumbs.snapshot(forProcess: pid, in: breadcrumbsDirectory) {
+                   let snapshot = JSBreadcrumbs.snapshot(forProcess: pid, in: breadcrumbsDirectory),
+                   report.couldHaveRecorded(snapshot) {
                     report = report.adding(javaScript: snapshot)
                 }
                 found.append((file, report, created))

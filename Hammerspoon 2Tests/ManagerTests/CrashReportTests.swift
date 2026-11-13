@@ -25,6 +25,15 @@ struct CrashReportTests {
         try CrashReport(text: fixtureText(name), redactingHomeDirectory: home)
     }
 
+    /// abort.ips with `count` extra application-specific messages, each `length` copies of
+    /// `character`.
+    static func fixtureWithLongMessages(count: Int, length: Int, character: Character) throws -> CrashReport {
+        let message = String(repeating: character, count: length)
+        let messages = Array(repeating: "\"\(message)\"", count: count).joined(separator: ", ")
+        let text = try fixtureText("abort").replacingOccurrences(of: #""abort() called""#, with: #""abort() called", "# + messages)
+        return try CrashReport(text: text, redactingHomeDirectory: home)
+    }
+
     @Suite("Parsing .ips files")
     struct ParsingTests {
         @Test("Reads what crashed from the app's report")
@@ -133,6 +142,16 @@ struct CrashReportTests {
             #expect(reparsed.crashedThreadFrames == report.crashedThreadFrames)
             #expect(short.contains(#""omittedThreads":1"#))
         }
+
+        @Test("Long messages are cut short when nothing else makes the report fit")
+        func testCompactCutsLongMessages() throws {
+            let report = try fixtureWithLongMessages(count: 100, length: 2_000, character: "x")
+            let compact = report.compactText()
+            #expect(compact.count <= CrashReport.maximumCompactLength)
+            let reparsed = try CrashReport(text: compact)
+            #expect(reparsed.crashedThreadFrames == report.crashedThreadFrames)
+            #expect(reparsed.applicationSpecificInformation.contains("libsystem_c.dylib: abort() called"))
+        }
     }
 
     @Suite("GitHub issues")
@@ -182,6 +201,18 @@ struct CrashReportTests {
             let summary = try #require(try Self.fields(url)[CrashReportIssue.Field.summary])
             #expect(summary != report.summary(version: "0.1.0"))
             #expect(summary.contains("Exception:   EXC_CRASH (SIGABRT)"))
+        }
+
+        @Test("Long messages are cut short when dropping frames isn't enough")
+        func testLongMessagesAreShortened() throws {
+            // Each "é" is 6 characters once percent-encoded.
+            let report = try fixtureWithLongMessages(count: 20, length: 500, character: "é")
+            let url = try #require(CrashReportIssue.url(for: report, repository: Self.repository,
+                                                        version: "0.1.0", crashLogPlaceholder: "Paste it here"))
+            #expect(url.absoluteString.count <= CrashReportIssue.maximumURLLength)
+            let summary = try #require(try Self.fields(url)[CrashReportIssue.Field.summary])
+            #expect(summary.hasPrefix("Process:     Hammerspoon 2"))
+            #expect(summary.hasSuffix("(cut short; the crash log has the rest)"))
         }
     }
 

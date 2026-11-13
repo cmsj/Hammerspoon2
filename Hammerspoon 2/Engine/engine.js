@@ -107,8 +107,13 @@ EventEmitter.prototype.once = function (event, listener) {
         emitter.removeListener(event, wrapped);
         listener.apply(this, arguments);
     }
-    // So a crash report names the listener, not this wrapper.
-    Object.defineProperty(wrapped, "name", { value: listener.name });
+    // So a crash report names the listener, not this wrapper. Only a label, so a listener whose
+    // name can't be read (a callable Proxy with a throwing getter, say) is still registered.
+    try {
+        Object.defineProperty(wrapped, "name", { value: String(listener.name) });
+    } catch (e) {
+        // Leave it named "wrapped".
+    }
     this._addListener("once", event, wrapped);
     return this;
 };

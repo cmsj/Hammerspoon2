@@ -102,14 +102,19 @@ function formField(body, label) {
     return null;
 }
 
-/** The version that crashed: the report's own, or (for helpers, which have none) the form's. */
+/**
+ * The version that crashed: the report's own, or (for helpers, which have none) the form's. Both
+ * come from the issue, and the version goes into the comment outside a code block, so anything
+ * that doesn't look like a version is ignored.
+ */
 function crashedVersion(report, issueBody) {
+    const isVersion = value => typeof value === 'string' && /^[0-9A-Za-z.+-]{1,64}$/.test(value);
     const own = report.header.app_version || (report.body.bundleInfo || {}).CFBundleShortVersionString;
     if (own) {
-        return own;
+        return isVersion(own) ? own : null;
     }
     const field = formField(issueBody || '', VERSION_FIELD);
-    return field && /^[0-9A-Za-z.+-]+$/.test(field) ? field : null;
+    return isVersion(field) ? field : null;
 }
 
 // --- Symbolication -----------------------------------------------------------------------------
