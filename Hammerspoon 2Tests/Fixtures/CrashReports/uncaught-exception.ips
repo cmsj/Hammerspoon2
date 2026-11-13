@@ -1,0 +1,619 @@
+{"app_name":"HammerspoonIPCBroker","timestamp":"2026-10-20 23:43:39.00 +0100","app_version":"","slice_uuid":"9d32208f-a3ce-3b44-b752-1fb780078e7b","build_version":"","platform":1,"share_with_app_devs":1,"is_first_party":1,"bug_type":"309","os_version":"macOS 27.0.1 (26A434)","roots_installed":0,"incident_id":"0937AB96-07B2-4B7C-97B2-5968E4158A1A","name":"HammerspoonIPCBroker"}
+{
+  "uptime": 380000,
+  "procRole": "Unspecified",
+  "version": 2,
+  "userID": 501,
+  "deployVersion": 210,
+  "modelCode": "Mac16,11",
+  "coalitionID": 2232,
+  "osVersion": {
+    "train": "macOS 27.0.1",
+    "build": "26A434",
+    "releaseType": "User"
+  },
+  "captureTime": "2026-10-20 23:43:38.2402 +0100",
+  "codeSigningMonitor": 2,
+  "incident": "0937AB96-07B2-4B7C-97B2-5968E4158A1A",
+  "pid": 80642,
+  "translated": false,
+  "cpuType": "ARM-64",
+  "procLaunch": "2026-10-20 23:43:37.9790 +0100",
+  "procStartAbsTime": 9303997054023,
+  "procExitAbsTime": 9304002195512,
+  "procName": "HammerspoonIPCBroker",
+  "procPath": "/Users/someone/Applications/Hammerspoon 2.app/Contents/MacOS/HammerspoonIPCBroker",
+  "parentProc": "launchd",
+  "parentPid": 1,
+  "coalitionName": "net.tenshu.Hammerspoon-2",
+  "crashReporterKey": "00000000-1111-2222-3333-444444444444",
+  "chargingStatus": {
+    "externalSourceConnected": true
+  },
+  "developerMode": 1,
+  "responsiblePid": 2464,
+  "responsibleProc": "T3 Code (Nightly)",
+  "codeSigningID": "net.tenshu.Hammerspoon-2.HammerspoonIPCBroker",
+  "codeSigningTeamID": "VQCYSNZB89",
+  "codeSigningFlags": 570425857,
+  "codeSigningValidationCategory": 10,
+  "codeSigningTrustLevel": 4294967295,
+  "codeSigningAuxiliaryInfo": 0,
+  "instructionByteStream": {
+    "beforePC": "fyMD1f17v6n9AwCR69//l78DAJH9e8Go/w9f1sADX9YQKYDSARAA1A==",
+    "atPC": "AwEAVH8jA9X9e7+p/QMAkeDf/5e/AwCR/XvBqP8PX9bAA1/WcAqA0g=="
+  },
+  "bootSessionUUID": "55555555-6666-7777-8888-999999999999",
+  "wakeTime": 746,
+  "sleepWakeUUID": "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
+  "sip": "enabled",
+  "exception": {
+    "codes": "0x0000000000000000, 0x0000000000000000",
+    "rawCodes": [
+      0,
+      0
+    ],
+    "type": "EXC_CRASH",
+    "signal": "SIGABRT"
+  },
+  "termination": {
+    "flags": 0,
+    "code": 6,
+    "namespace": "SIGNAL",
+    "indicator": "Abort trap: 6",
+    "byProc": "CrashFixture",
+    "byPid": 80642
+  },
+  "asi": {
+    "libsystem_c.dylib": [
+      "abort() called"
+    ],
+    "Hammerspoon 2": [
+      "Loading /Users/someone/.config/Hammerspoon2/init.js"
+    ]
+  },
+  "extMods": {
+    "caller": {
+      "thread_create": 0,
+      "thread_set_state": 0,
+      "task_for_pid": 0
+    },
+    "system": {
+      "thread_create": 0,
+      "thread_set_state": 834,
+      "task_for_pid": 31
+    },
+    "targeted": {
+      "thread_create": 0,
+      "thread_set_state": 0,
+      "task_for_pid": 0
+    },
+    "warnings": 0
+  },
+  "lastExceptionBacktrace": [
+    {
+      "imageOffset": 989364,
+      "symbol": "__exceptionPreprocess",
+      "symbolLocation": 164,
+      "imageIndex": 9
+    },
+    {
+      "imageOffset": 99852,
+      "symbol": "objc_exception_throw",
+      "symbolLocation": 88,
+      "imageIndex": 5
+    },
+    {
+      "imageOffset": 2196,
+      "imageIndex": 0
+    },
+    {
+      "imageOffset": 2108,
+      "imageIndex": 0
+    },
+    {
+      "imageOffset": 204416,
+      "symbol": "start",
+      "symbolLocation": 6688,
+      "imageIndex": 6
+    }
+  ],
+  "faultingThread": 0,
+  "threads": [
+    {
+      "triggered": true,
+      "id": 10537371,
+      "threadState": {
+        "x": [
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 6880970031
+          },
+          {
+            "value": 6122233280
+          },
+          {
+            "value": 110
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 17772550636695137939
+          },
+          {
+            "value": 17772550644314493203
+          },
+          {
+            "value": 2
+          },
+          {
+            "value": 4294967293
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 328
+          },
+          {
+            "value": 8617080088
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 6
+          },
+          {
+            "value": 259
+          },
+          {
+            "value": 8587477088,
+            "symbolLocation": 224,
+            "symbol": "_main_thread"
+          },
+          {
+            "value": 8554151936,
+            "symbolLocation": 0,
+            "symbol": "OBJC_IVAR_$_Object.isa"
+          },
+          {
+            "value": 8587483248,
+            "symbolLocation": 0,
+            "symbol": "vm_page_mask"
+          },
+          {
+            "value": 8587483232,
+            "symbolLocation": 0,
+            "symbol": "mach_task_self_"
+          },
+          {
+            "value": 6122238168
+          },
+          {
+            "value": 1
+          },
+          {
+            "value": 65535
+          },
+          {
+            "value": 4348428288
+          }
+        ],
+        "flavor": "ARM_THREAD_STATE64",
+        "lr": {
+          "value": 6881270140
+        },
+        "cpsr": {
+          "value": 1073741824
+        },
+        "fp": {
+          "value": 6122233136
+        },
+        "sp": {
+          "value": 6122233104
+        },
+        "esr": {
+          "value": 1442840704,
+          "description": "(Syscall)"
+        },
+        "pc": {
+          "value": 6881023568,
+          "matchesCrashFrame": 1
+        },
+        "far": {
+          "value": 0
+        }
+      },
+      "queue": "com.apple.main-thread",
+      "frames": [
+        {
+          "imageOffset": 38480,
+          "symbol": "__pthread_kill",
+          "symbolLocation": 8,
+          "imageIndex": 1
+        },
+        {
+          "imageOffset": 27004,
+          "symbol": "pthread_kill",
+          "symbolLocation": 296,
+          "imageIndex": 2
+        },
+        {
+          "imageOffset": 504920,
+          "symbol": "abort",
+          "symbolLocation": 148,
+          "imageIndex": 3
+        },
+        {
+          "imageOffset": 90884,
+          "symbol": "__abort_message",
+          "symbolLocation": 132,
+          "imageIndex": 4
+        },
+        {
+          "imageOffset": 13944,
+          "symbol": "demangling_terminate_handler()",
+          "symbolLocation": 296,
+          "imageIndex": 4
+        },
+        {
+          "imageOffset": 139568,
+          "symbol": "_objc_terminate()",
+          "symbolLocation": 156,
+          "imageIndex": 5
+        },
+        {
+          "imageOffset": 78512,
+          "symbol": "std::__terminate(void (*)())",
+          "symbolLocation": 16,
+          "imageIndex": 4
+        },
+        {
+          "imageOffset": 87996,
+          "symbol": "__cxxabiv1::failed_throw(__cxxabiv1::__cxa_exception*)",
+          "symbolLocation": 88,
+          "imageIndex": 4
+        },
+        {
+          "imageOffset": 8588,
+          "symbol": "__cxa_throw",
+          "symbolLocation": 92,
+          "imageIndex": 4
+        },
+        {
+          "imageOffset": 100212,
+          "symbol": "objc_exception_throw",
+          "symbolLocation": 448,
+          "imageIndex": 5
+        },
+        {
+          "imageOffset": 2196,
+          "imageIndex": 0
+        },
+        {
+          "imageOffset": 2108,
+          "imageIndex": 0
+        },
+        {
+          "imageOffset": 204416,
+          "symbol": "start",
+          "symbolLocation": 6688,
+          "imageIndex": 6
+        }
+      ]
+    },
+    {
+      "id": 10537373,
+      "name": "fixture.worker",
+      "threadState": {
+        "x": [
+          {
+            "value": 4
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 1
+          },
+          {
+            "value": 1
+          },
+          {
+            "value": 1
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 6122791572
+          },
+          {
+            "value": 6122791560
+          },
+          {
+            "value": 8587518920,
+            "symbolLocation": 0,
+            "symbol": "clock_sem"
+          },
+          {
+            "value": 3
+          },
+          {
+            "value": 17
+          },
+          {
+            "value": 1
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 4353433968
+          },
+          {
+            "value": 8587665008,
+            "symbolLocation": 0,
+            "symbol": "OBJC_METACLASS_$_NSThread"
+          },
+          {
+            "value": 8587665008,
+            "symbolLocation": 0,
+            "symbol": "OBJC_METACLASS_$_NSThread"
+          },
+          {
+            "value": 334
+          },
+          {
+            "value": 8617080136
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 6122794240
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          }
+        ],
+        "flavor": "ARM_THREAD_STATE64",
+        "lr": {
+          "value": 6879785044
+        },
+        "cpsr": {
+          "value": 2684354560
+        },
+        "fp": {
+          "value": 6122794192
+        },
+        "sp": {
+          "value": 6122794144
+        },
+        "esr": {
+          "value": 1442840704,
+          "description": "(Syscall)"
+        },
+        "pc": {
+          "value": 6881002248
+        },
+        "far": {
+          "value": 0
+        }
+      },
+      "frames": [
+        {
+          "imageOffset": 17160,
+          "symbol": "__semwait_signal",
+          "symbolLocation": 8,
+          "imageIndex": 1
+        },
+        {
+          "imageOffset": 57428,
+          "symbol": "nanosleep",
+          "symbolLocation": 220,
+          "imageIndex": 3
+        },
+        {
+          "imageOffset": 857748,
+          "symbol": "+[NSThread sleepForTimeInterval:]",
+          "symbolLocation": 152,
+          "imageIndex": 8
+        },
+        {
+          "imageOffset": 2136,
+          "imageIndex": 0
+        },
+        {
+          "imageOffset": 343208,
+          "symbol": "__NSThread__start__",
+          "symbolLocation": 732,
+          "imageIndex": 8
+        },
+        {
+          "imageOffset": 27904,
+          "symbol": "_pthread_start",
+          "symbolLocation": 136,
+          "imageIndex": 2
+        },
+        {
+          "imageOffset": 7404,
+          "symbol": "thread_start",
+          "symbolLocation": 8,
+          "imageIndex": 2
+        }
+      ]
+    }
+  ],
+  "usedImages": [
+    {
+      "source": "P",
+      "arch": "arm64",
+      "base": 4344643584,
+      "size": 16384,
+      "uuid": "9d32208f-a3ce-3b44-b752-1fb780078e7b",
+      "path": "/Users/someone/Applications/Hammerspoon 2.app/Contents/MacOS/HammerspoonIPCBroker",
+      "name": "HammerspoonIPCBroker"
+    },
+    {
+      "source": "P",
+      "arch": "arm64e",
+      "base": 6880985088,
+      "size": 256428,
+      "uuid": "f63bf418-8f75-34a4-aaf1-8caf2b9b6a05",
+      "path": "/usr/lib/system/libsystem_kernel.dylib",
+      "name": "libsystem_kernel.dylib"
+    },
+    {
+      "source": "P",
+      "arch": "arm64e",
+      "base": 6881243136,
+      "size": 51484,
+      "uuid": "5a1828c3-cbc2-3b85-bd07-c8ed10021a41",
+      "path": "/usr/lib/system/libsystem_pthread.dylib",
+      "name": "libsystem_pthread.dylib"
+    },
+    {
+      "source": "P",
+      "arch": "arm64e",
+      "base": 6879727616,
+      "size": 535716,
+      "uuid": "fba7b23e-aa60-3a90-9aa4-a7a2e0ad63ee",
+      "path": "/usr/lib/system/libsystem_c.dylib",
+      "name": "libsystem_c.dylib"
+    },
+    {
+      "source": "P",
+      "arch": "arm64e",
+      "base": 6880878592,
+      "size": 106240,
+      "uuid": "a21743ee-6e1c-3e74-97ea-7af793de4bdf",
+      "path": "/usr/lib/libc++abi.dylib",
+      "name": "libc++abi.dylib"
+    },
+    {
+      "source": "P",
+      "arch": "arm64e",
+      "base": 6876512256,
+      "size": 325112,
+      "uuid": "c0680df6-9900-3c29-a071-95a031686ef8",
+      "path": "/usr/lib/libobjc.A.dylib",
+      "name": "libobjc.A.dylib"
+    },
+    {
+      "source": "P",
+      "arch": "arm64e",
+      "base": 6877044736,
+      "size": 784100,
+      "uuid": "d341ddcb-7969-3a9c-8e03-0cf4751398a9",
+      "path": "/usr/lib/dyld",
+      "name": "dyld"
+    },
+    {
+      "size": 0,
+      "source": "A",
+      "base": 0,
+      "uuid": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "source": "P",
+      "arch": "arm64e",
+      "base": 6905819136,
+      "CFBundleShortVersionString": "6.9",
+      "CFBundleIdentifier": "com.apple.Foundation",
+      "size": 19649160,
+      "uuid": "4317f7c6-73d2-3be9-b010-f318f1198a1b",
+      "path": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "name": "Foundation",
+      "CFBundleVersion": "5027.0.69"
+    },
+    {
+      "source": "P",
+      "arch": "arm64e",
+      "base": 6881529856,
+      "CFBundleShortVersionString": "6.9",
+      "CFBundleIdentifier": "com.apple.CoreFoundation",
+      "size": 4787872,
+      "uuid": "727e905e-f344-3823-8e13-e7a096388321",
+      "path": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+      "name": "CoreFoundation",
+      "CFBundleVersion": "5027.0.69"
+    }
+  ],
+  "sharedCache": {
+    "base": 6872301568,
+    "size": 7410368512,
+    "uuid": "c284a291-b68b-3d0d-a1a0-3f866f87efdc"
+  },
+  "vmSummary": "ReadOnly portion of Libraries: Total=1.9G resident=0K(0%) swapped_out_or_unallocated=1.9G(100%)\nWritable regions: Total=210.6M written=352K(0%) resident=352K(0%) swapped_out=0K(0%) unallocated=210.2M(100%)\n\n                                VIRTUAL   REGION \nREGION TYPE                        SIZE    COUNT (non-coalesced) \n===========                     =======  ======= \nActivity Tracing                   256K        1 \nDeferred Reclaim                  64.0M        1 \nDispatch Continuations           112.0M        1 \nGuard                            385.0G        1 \nMalloc                            25.4M       11 \nMalloc Guard Page                 3312K        4 \nOS Alloc Once                       32K        1 \nStack                             8720K        2 \nStack Guard                       56.0M        2 \n__AUTH                            1497K      168 \n__AUTH_CONST                      18.7M      327 \n__CTF                               824        1 \n__DATA                            4765K      335 \n__DATA_CONST                      17.6M      325 \n__DATA_DIRTY                      1301K      286 \n__FONT_DATA                        2352        1 \n__LINKEDIT                         1.6G        2 \n__OBJC_RO                        118.0M        1 \n__OBJC_RW                         2735K        1 \n__TEXT                           301.6M      390 \n__TPRO_CONST                       132K        4 \npage table in kernel               352K        1 \nshared memory                       48K        2 \n===========                     =======  ======= \nTOTAL                            387.3G     1868 \n",
+  "legacyInfo": {
+    "threadTriggered": {
+      "queue": "com.apple.main-thread"
+    }
+  },
+  "logWritingSignature": "f1758eaa3614b2265e0b530ec224fb46fa150f29",
+  "bug_type": "309",
+  "roots_installed": 0,
+  "trmStatus": 8192,
+  "trialInfo": {
+    "rollouts": [
+      {
+        "rolloutId": "661464ecda55e5192b100804",
+        "factorPackIds": [],
+        "deploymentId": 240000005
+      },
+      {
+        "rolloutId": "67fd77fe1f9da9148f70d6ed",
+        "factorPackIds": [],
+        "deploymentId": 240000020
+      }
+    ],
+    "experiments": []
+  }
+}

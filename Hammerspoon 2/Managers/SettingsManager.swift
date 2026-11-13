@@ -150,6 +150,7 @@ final class SettingsManager {
         case consoleAlpha
         case reopenAction
         case importSpoonsOnOpen
+        case offerCrashReports
 
         var id: String { "\(self)" }
 
@@ -173,7 +174,7 @@ final class SettingsManager {
                 return 1.0
             case .reopenAction:
                 return ReopenAction.showConsole.rawValue
-            case .importSpoonsOnOpen:
+            case .importSpoonsOnOpen, .offerCrashReports:
                 return true
             }
         }
@@ -229,6 +230,14 @@ final class SettingsManager {
         }
     }
 
+    /// Whether to offer to report crashes on GitHub the next time the app launches.
+    var offerCrashReports: Bool {
+        didSet {
+            UserDefaults.standard.set(offerCrashReports, forKey: Keys.offerCrashReports.rawValue)
+            notifyDelegates()
+        }
+    }
+
     var reopenAction: ReopenAction {
         didSet {
             UserDefaults.standard.set(reopenAction.rawValue, forKey: Keys.reopenAction.rawValue)
@@ -259,7 +268,8 @@ final class SettingsManager {
             Keys.consoleAlwaysOnTop.rawValue: Keys.consoleAlwaysOnTop.defaultValue,
             Keys.consoleAlpha.rawValue: Keys.consoleAlpha.defaultValue,
             Keys.reopenAction.rawValue: Keys.reopenAction.defaultValue,
-            Keys.importSpoonsOnOpen.rawValue: Keys.importSpoonsOnOpen.defaultValue
+            Keys.importSpoonsOnOpen.rawValue: Keys.importSpoonsOnOpen.defaultValue,
+            Keys.offerCrashReports.rawValue: Keys.offerCrashReports.defaultValue
         ])
         configLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
             ?? (Keys.configLocation.defaultValue as! URL)
@@ -270,6 +280,7 @@ final class SettingsManager {
         consoleAlwaysOnTop = UserDefaults.standard.bool(forKey: Keys.consoleAlwaysOnTop.rawValue)
         consoleAlpha = min(max(UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue), 0.2), 1.0)
         importSpoonsOnOpen = UserDefaults.standard.bool(forKey: Keys.importSpoonsOnOpen.rawValue)
+        offerCrashReports = UserDefaults.standard.bool(forKey: Keys.offerCrashReports.rawValue)
 
         let dockMenuBehaviourString = UserDefaults.standard.string(forKey: Keys.dockMenuBehaviour.rawValue) ?? Keys.dockMenuBehaviour.defaultValue as! String
         dockMenuBehaviour = DockMenubarType(rawValue: dockMenuBehaviourString) ?? .both
@@ -338,6 +349,9 @@ final class SettingsManager {
         // outside the range the console UI allows, so displayed and applied opacity agree.
         let newConsoleAlpha = min(max(UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue), 0.2), 1.0)
         if newConsoleAlpha != consoleAlpha { consoleAlpha = newConsoleAlpha }
+
+        let newOfferCrashReports = UserDefaults.standard.bool(forKey: Keys.offerCrashReports.rawValue)
+        if newOfferCrashReports != offerCrashReports { offerCrashReports = newOfferCrashReports }
     }
 }
 
@@ -351,6 +365,7 @@ extension SettingsManager: SettingsManagerProtocol {
         consoleAlwaysOnTop = Keys.consoleAlwaysOnTop.defaultValue as! Bool
         consoleAlpha = Keys.consoleAlpha.defaultValue as! Double
         importSpoonsOnOpen = Keys.importSpoonsOnOpen.defaultValue as! Bool
+        offerCrashReports = Keys.offerCrashReports.defaultValue as! Bool
 
         let dockMenuType = DockMenubarType(rawValue: Keys.dockMenuBehaviour.defaultValue as! String)!
         dockMenuBehaviour = dockMenuType

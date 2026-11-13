@@ -56,6 +56,12 @@ struct SettingsAdvancedView: View {
                         Toggle("Install Spoons when opened", isOn: Bindable(settingsManager).importSpoonsOnOpen)
                             .labelsHidden()
                     }
+                    GridRow {
+                        Text("Offer to report crashes on GitHub:")
+                            .gridColumnAlignment(.trailing)
+                        Toggle("Offer to report crashes on GitHub", isOn: Bindable(settingsManager).offerCrashReports)
+                            .labelsHidden()
+                    }
 
                     GridRow {
                         Spacer()

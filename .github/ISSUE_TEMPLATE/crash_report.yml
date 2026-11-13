@@ -1,0 +1,49 @@
+name: Crash report
+description: Report a crash of Hammerspoon 2. After a crash, Hammerspoon 2 offers to fill this in for you.
+title: "Crash: "
+labels: ["crash"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a crash! A bot will reply with a symbolicated copy of the crash log, so we can see where in Hammerspoon 2's code it happened.
+
+        Please look over everything below before you submit it, since the issue will be public. Hammerspoon 2 has replaced your home folder's path with `~`, but anything else in the crash log (like the reason for an uncaught exception) is included as it was.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What were you doing when it crashed?
+      description: Anything that might help us reproduce it, like which part of your config was running, or a minimal init.js that crashes.
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Hammerspoon 2 version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: "macOS 27.0.1 (26A434)"
+    validations:
+      required: false
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Filled in by Hammerspoon 2.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: crash-log
+    attributes:
+      label: Crash log
+      description: |
+        Paste the crash log, or drag in the file Hammerspoon 2 showed you in Finder. If you're filing this by hand, crash logs are in `~/Library/Logs/DiagnosticReports` (named like `Hammerspoon 2-2026-10-20-123456.ips`); rename one to end in `.txt` to attach it.
+      render: text
+    validations:
+      required: true

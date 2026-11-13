@@ -23,6 +23,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         AppDelegate.instance = self
         ConsoleCompletionEngine.shared.prewarm()
+        // Before the config loads, so a config that crashes the app can still be reported.
+        CrashReportManager.shared.offerToReportNewCrashes()
         let managerManager = ManagerManager.shared
         do {
             try managerManager.boot()
