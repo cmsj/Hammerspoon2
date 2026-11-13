@@ -23,7 +23,9 @@ struct LoadedExtension {
 /// Before any of an extension's code runs, it checks that:
 /// - extensions are turned on in Settings (they're off by default),
 /// - the bundle's Info.plist names it, and asks for an SDK version this app provides,
-/// - its code signature is valid, and
+/// - its code signature is valid,
+/// - its code runs on this Mac, and was built with a recent enough Xcode (`minimumBuildSDK`),
+/// - it doesn't contain its own copy of the SDK, and
 /// - the user has allowed this exact build to load (they're asked the first time, and again
 ///   whenever it changes).
 ///
@@ -34,6 +36,13 @@ struct LoadedExtension {
 /// Module instances are created per engine by `ModuleRoot.extensionModule(named:)`; this only
 /// loads code, once per process.
 final class ExtensionLoader {
+    /// The oldest macOS SDK an extension may be built with. Swift binaries don't record the
+    /// compiler that built them, but they do record the SDK, which comes with one Xcode and so one
+    /// Swift compiler. The macOS 27 SDK comes with Xcode 27 and Swift 6.4, the first compiler whose
+    /// @objc thunks for `isolated deinit` don't trap when an object is released off the main
+    /// thread (#302), which JavaScriptCore's garbage collector does.
+    static let minimumBuildSDK = BuildVersion(27, 0)
+
     static let shared = ExtensionLoader(
         directory: { SettingsManager.shared.extensionsDirectory },
         isEnabled: { SettingsManager.shared.allowExtensions }
@@ -44,6 +53,8 @@ final class ExtensionLoader {
     private let approver: any ExtensionApprover
     private let approvals: ExtensionApprovals
     private let hostSDKVersion: HSSDKVersion
+    private let minimumBuildSDK: BuildVersion
+    private let hostOSVersion: BuildVersion
 
     private var loaded: [String: LoadedExtension] = [:]
 
@@ -64,16 +75,22 @@ final class ExtensionLoader {
     ///   - approver: Asks the user to allow an extension
     ///   - approvals: The builds the user has allowed
     ///   - hostSDKVersion: The SDK version this app provides
+    ///   - minimumBuildSDK: The oldest macOS SDK an extension may be built with
+    ///   - hostOSVersion: The version of macOS extensions must run on
     init(directory: @escaping () -> URL,
          isEnabled: @escaping () -> Bool,
          approver: any ExtensionApprover = AlertExtensionApprover(),
          approvals: ExtensionApprovals = ExtensionApprovals(),
-         hostSDKVersion: HSSDKVersion = HSSDK.version) {
+         hostSDKVersion: HSSDKVersion = HSSDK.version,
+         minimumBuildSDK: BuildVersion = ExtensionLoader.minimumBuildSDK,
+         hostOSVersion: BuildVersion = .currentOS) {
         self.directory = directory
         self.isEnabled = isEnabled
         self.approver = approver
         self.approvals = approvals
         self.hostSDKVersion = hostSDKVersion
+        self.minimumBuildSDK = minimumBuildSDK
+        self.hostOSVersion = hostOSVersion
     }
 
     /// Loads an extension's code, if it isn't loaded already.
@@ -93,6 +110,7 @@ final class ExtensionLoader {
 
         let manifest = try ExtensionManifest.read(name: name, in: directory(), hostSDKVersion: hostSDKVersion)
         let signature = try ExtensionSignature.verify(bundleAt: manifest.bundleURL, name: name)
+        try checkCanRun(manifest)
         try ensureApproved(manifest, signature: signature)
 
         do {
@@ -156,6 +174,45 @@ final class ExtensionLoader {
 
         exportedClasses += NullReturnsInstaller.findExportedClasses(inImage: image)
         return LoadedExtension(manifest: manifest, signature: signature, moduleType: moduleType, imagePath: image)
+    }
+
+    /// Checks, without loading it, that the extension's code can run here and was built with a
+    /// recent enough Xcode, and that it doesn't bring its own copy of the SDK. These are checked
+    /// before the user is asked to allow it, since they'd make it fail whatever the answer.
+    private func checkCanRun(_ manifest: ExtensionManifest) throws(ExtensionError) {
+        let name = manifest.name
+
+        // A second copy of the SDK would define all its classes a second time
+        if let copy = Self.bundledSDK(in: manifest.bundleURL) {
+            throw .bundlesSDK(name: name, at: copy)
+        }
+
+        let binary: ExtensionBinary
+        do {
+            binary = try ExtensionBinary.read(at: manifest.executableURL)
+        } catch {
+            throw .unsupportedBinary(name: name, reason: "its code, \(manifest.executableURL.lastPathComponent), isn't a 64-bit Mach-O binary")
+        }
+        guard binary.architectures.contains(ExtensionBinary.hostArchitecture) else {
+            throw .unsupportedBinary(name: name, reason: "its code isn't built for this Mac's processor")
+        }
+        if let minimumOS = binary.minimumOS, hostOSVersion < minimumOS {
+            throw .requiresNewerMacOS(name: name, required: minimumOS, current: hostOSVersion)
+        }
+        guard let sdk = binary.sdk, sdk >= minimumBuildSDK else {
+            throw .outdatedToolchain(name: name, sdk: binary.sdk, minimum: minimumBuildSDK)
+        }
+    }
+
+    /// A HammerspoonSDK.framework anywhere inside a bundle
+    private static func bundledSDK(in bundle: URL) -> URL? {
+        let contents = FileManager.default.enumerator(at: bundle, includingPropertiesForKeys: nil)
+        while let url = contents?.nextObject() as? URL {
+            if url.lastPathComponent == "HammerspoonSDK.framework" {
+                return url
+            }
+        }
+        return nil
     }
 
     /// Asks the user to allow the extension, unless they already have

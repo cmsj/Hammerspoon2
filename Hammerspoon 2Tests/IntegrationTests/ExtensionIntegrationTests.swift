@@ -92,14 +92,18 @@ private final class LoaderSetup {
     init(directory: URL = TestExtensionFixture.directory,
          enabled: Bool = true,
          approve: Bool = true,
-         hostSDKVersion: HSSDKVersion = HSSDK.version) {
+         hostSDKVersion: HSSDKVersion = HSSDK.version,
+         minimumBuildSDK: BuildVersion = ExtensionLoader.minimumBuildSDK,
+         hostOSVersion: BuildVersion = .currentOS) {
         approver = RecordingApprover(answer: approve)
         defaults = UserDefaults(suiteName: suiteName)!
         loader = ExtensionLoader(directory: { directory },
                                  isEnabled: { enabled },
                                  approver: approver,
                                  approvals: ExtensionApprovals(defaults: defaults),
-                                 hostSDKVersion: hostSDKVersion)
+                                 hostSDKVersion: hostSDKVersion,
+                                 minimumBuildSDK: minimumBuildSDK,
+                                 hostOSVersion: hostOSVersion)
     }
 
     isolated deinit {
@@ -159,6 +163,77 @@ struct ExtensionTests {
             let isPrivate: (String) -> Bool = { $0.hasSuffix(".private.swiftinterface") || $0.hasSuffix(".package.swiftinterface") }
             #expect(files.contains { $0.hasSuffix(".swiftinterface") && !isPrivate($0) }, "Extension authors need the public interface to build against: \(files)")
             #expect(!files.contains { isPrivate($0) || $0.hasSuffix(".swiftmodule") || $0 == "Project" }, "Only the public interface should ship: \(files)")
+        }
+    }
+
+    @Suite("Reading extension binaries")
+    struct BinaryTests {
+        /// A 64-bit Mach-O header for `cpuType`, with one LC_BUILD_VERSION command
+        private static func thinBinary(cpuType: Int32 = ExtensionBinary.hostArchitecture,
+                                       minimumOS: UInt32 = 0x1B_00_00, sdk: UInt32 = 0x1B_02_00) -> Data {
+            var data = Data()
+            func append(_ value: UInt32) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
+            append(0xFEED_FACF); append(UInt32(bitPattern: cpuType)); append(0); append(8)  // magic, cpu, subtype, MH_BUNDLE
+            append(1); append(24); append(0); append(0)                                      // ncmds, sizeofcmds, flags, reserved
+            append(0x32); append(24); append(1); append(minimumOS); append(sdk); append(0)   // LC_BUILD_VERSION
+            return data
+        }
+
+        @Test("The test extension's binary is read: its architecture, deployment target and SDK")
+        func readsFixture() throws {
+            let manifest = try ExtensionManifest.read(name: TestExtensionFixture.name, in: TestExtensionFixture.directory)
+            let binary = try ExtensionBinary.read(at: manifest.executableURL)
+            #expect(binary.architectures.contains(ExtensionBinary.hostArchitecture))
+            #expect(binary.minimumOS == BuildVersion(27, 0))
+            let sdk = try #require(binary.sdk)
+            #expect(sdk >= ExtensionLoader.minimumBuildSDK)
+        }
+
+        @Test("Versions are decoded from a thin binary")
+        func thin() throws {
+            let binary = try ExtensionBinary.parse(Self.thinBinary(minimumOS: 0x1A_04_01, sdk: 0x1B_02_00))
+            #expect(binary.minimumOS == BuildVersion(26, 4, 1))
+            #expect(binary.sdk == BuildVersion(27, 2))
+        }
+
+        @Test("A universal binary's slice for this Mac is found")
+        func universal() throws {
+            let other: Int32 = ExtensionBinary.hostArchitecture == ExtensionBinary.cpuTypeARM64 ? ExtensionBinary.cpuTypeX86_64 : ExtensionBinary.cpuTypeARM64
+            let slices = [(other, Self.thinBinary(cpuType: other, sdk: 0x0E_00_00)), (ExtensionBinary.hostArchitecture, Self.thinBinary())]
+            var data = Data()
+            func appendBE(_ value: UInt32) { withUnsafeBytes(of: value.bigEndian) { data.append(contentsOf: $0) } }
+            appendBE(0xCAFE_BABE); appendBE(UInt32(slices.count))
+            var offset = 4096
+            for (cpu, slice) in slices {
+                appendBE(UInt32(bitPattern: cpu)); appendBE(0); appendBE(UInt32(offset)); appendBE(UInt32(slice.count)); appendBE(12)
+                offset += 4096
+            }
+            for (index, (_, slice)) in slices.enumerated() {
+                data.append(Data(count: 4096 * (index + 1) - data.count))
+                data.append(slice)
+            }
+
+            let binary = try ExtensionBinary.parse(data)
+            #expect(Set(binary.architectures) == [other, ExtensionBinary.hostArchitecture])
+            #expect(binary.sdk == BuildVersion(27, 2))
+        }
+
+        @Test("A binary without this Mac's architecture has no versions to check")
+        func otherArchitecture() throws {
+            let other: Int32 = ExtensionBinary.hostArchitecture == ExtensionBinary.cpuTypeARM64 ? ExtensionBinary.cpuTypeX86_64 : ExtensionBinary.cpuTypeARM64
+            let binary = try ExtensionBinary.parse(Self.thinBinary(cpuType: other))
+            #expect(binary.architectures == [other])
+            #expect(binary.sdk == nil)
+        }
+
+        @Test("Files that aren't 64-bit Mach-O binaries are rejected")
+        func malformed() {
+            #expect(throws: ExtensionBinary.ParseError.notMachO) {
+                try ExtensionBinary.parse(Data("#!/bin/sh\necho hello\n".utf8))
+            }
+            #expect(throws: ExtensionBinary.ParseError.truncated) {
+                try ExtensionBinary.parse(Self.thinBinary().prefix(40))
+            }
         }
     }
 
@@ -244,6 +319,55 @@ struct ExtensionTests {
                 Issue.record("Expected invalidSignature, got \(String(describing: error))")
                 return
             }
+            #expect(setup.approver.requests.isEmpty)
+        }
+
+        @Test("An extension built with an older Xcode than the minimum is refused without asking")
+        func outdatedToolchain() throws {
+            let setup = LoaderSetup(minimumBuildSDK: BuildVersion(99, 0))
+            let error = #expect(throws: ExtensionError.self) {
+                try setup.loader.load(named: TestExtensionFixture.name)
+            }
+            guard case .outdatedToolchain(_, let sdk, let minimum) = error else {
+                Issue.record("Expected outdatedToolchain, got \(String(describing: error))")
+                return
+            }
+            #expect(sdk != nil)
+            #expect(minimum == BuildVersion(99, 0))
+            #expect(setup.approver.requests.isEmpty)
+        }
+
+        @Test("An extension that needs a later macOS is refused without asking")
+        func requiresNewerMacOS() {
+            let setup = LoaderSetup(hostOSVersion: BuildVersion(26, 4))
+            #expect(throws: ExtensionError.requiresNewerMacOS(name: TestExtensionFixture.name,
+                                                              required: BuildVersion(27, 0),
+                                                              current: BuildVersion(26, 4))) {
+                try setup.loader.load(named: TestExtensionFixture.name)
+            }
+            #expect(setup.approver.requests.isEmpty)
+        }
+
+        @Test("An extension with its own copy of the SDK is refused without asking")
+        func bundlesSDK() throws {
+            let directory = try TestExtensionFixture.copy(resign: false)
+            let bundle = ExtensionManifest.bundleURL(forName: TestExtensionFixture.name, in: directory)
+            // What embedding the framework in an Xcode bundle target does
+            let frameworks = bundle.appendingPathComponent("Contents/Frameworks")
+            try FileManager.default.createDirectory(at: frameworks, withIntermediateDirectories: true)
+            let appSDK = try #require(Bundle.main.privateFrameworksURL).appendingPathComponent("HammerspoonSDK.framework")
+            try FileManager.default.copyItem(at: appSDK, to: frameworks.appendingPathComponent("HammerspoonSDK.framework"))
+            try TestExtensionFixture.codesign(["--force", "--sign", "-", bundle.path])
+
+            let setup = LoaderSetup(directory: directory)
+            let error = #expect(throws: ExtensionError.self) {
+                try setup.loader.load(named: TestExtensionFixture.name)
+            }
+            guard case .bundlesSDK(_, let url) = error else {
+                Issue.record("Expected bundlesSDK, got \(String(describing: error))")
+                return
+            }
+            #expect(url.lastPathComponent == "HammerspoonSDK.framework")
             #expect(setup.approver.requests.isEmpty)
         }
 

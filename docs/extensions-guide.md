@@ -39,6 +39,10 @@ If an extension can't be loaded, `require()` throws an `Error` whose `code` says
 | `ERR_EXTENSION_INVALID_BUNDLE` | The bundle's Info.plist is incomplete or doesn't match its name |
 | `ERR_EXTENSION_INCOMPATIBLE_SDK` | It was built for an SDK version this copy of Hammerspoon 2 doesn't provide |
 | `ERR_EXTENSION_INVALID_SIGNATURE` | It isn't signed, or it changed after it was signed |
+| `ERR_EXTENSION_UNSUPPORTED_BINARY` | Its code isn't built for this Mac's processor |
+| `ERR_EXTENSION_OUTDATED_TOOLCHAIN` | It was built with an Xcode older than Hammerspoon 2 supports |
+| `ERR_EXTENSION_REQUIRES_NEWER_MACOS` | It needs a later version of macOS |
+| `ERR_EXTENSION_BUNDLES_SDK` | It contains its own copy of HammerspoonSDK.framework |
 | `ERR_EXTENSION_NOT_APPROVED` | You didn't allow it to load |
 | `ERR_EXTENSION_LOAD_FAILED` | Its code couldn't be loaded |
 | `ERR_EXTENSION_INVALID_PRINCIPAL_CLASS` | Its principal class isn't an extension module |
@@ -134,8 +138,15 @@ a complete working example, including the ticker.
 
 ### Rules
 
-These are the same rules Hammerspoon 2's own modules follow. The first three are checked when
+These are the same rules Hammerspoon 2's own modules follow. The first five are checked when
 the extension loads, and an extension that breaks them is refused.
+
+- **Build with Xcode 27 or later.** Older Swift compilers generate code that can crash
+  Hammerspoon 2 when JavaScript's garbage collector frees your objects. Swift binaries don't say
+  which compiler built them, so Hammerspoon 2 checks the macOS SDK the extension was built
+  with, which comes with the compiler: it must be the macOS 27 SDK or later.
+- **Link HammerspoonSDK.framework, but don't embed it.** A second copy would define every SDK
+  class twice.
 
 - **Give every Objective-C class a unique name.** All classes share one namespace with
   Hammerspoon 2 and every other extension, so give each `@objc` class an explicit, prefixed

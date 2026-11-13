@@ -25,6 +25,9 @@ nonisolated struct ExtensionManifest: Equatable {
     let sdkVersion: HSSDKVersion
     let principalClassName: String
 
+    /// The extension's compiled code
+    let executableURL: URL
+
     /// The JavaScript enhancement script, if the extension has one
     let enhancementScriptURL: URL?
 
@@ -85,7 +88,7 @@ nonisolated struct ExtensionManifest: Equatable {
         guard let principalClassName = plist["NSPrincipalClass"] as? String, !principalClassName.isEmpty else {
             throw .invalidBundle(name: name, reason: "its Info.plist has no NSPrincipalClass")
         }
-        guard plist["CFBundleExecutable"] is String else {
+        guard let executable = plist["CFBundleExecutable"] as? String, !executable.isEmpty, !executable.contains("/") else {
             throw .invalidBundle(name: name, reason: "its Info.plist has no CFBundleExecutable")
         }
 
@@ -96,6 +99,7 @@ nonisolated struct ExtensionManifest: Equatable {
                                  bundleURL: url,
                                  sdkVersion: sdkVersion,
                                  principalClassName: principalClassName,
+                                 executableURL: url.appendingPathComponent("Contents/MacOS/\(executable)"),
                                  enhancementScriptURL: hasScript ? scriptURL : nil)
     }
 }
