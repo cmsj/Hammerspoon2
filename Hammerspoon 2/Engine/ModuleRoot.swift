@@ -28,6 +28,10 @@ import JavaScriptCoreExtras
     /// ```
     @objc func collectGarbage()
 
+    /// Crash the app on purpose, to test crash reporting
+    /// SKIP_DOCS
+    @objc func _crash()
+
     /// Get every object that is currently active: running tasks, scheduled timers, started
     /// watchers and so on. An active object keeps running, and its callbacks keep being called,
     /// until it finishes or you stop it, whether or not you kept a reference to it. Use this to
@@ -252,6 +256,11 @@ import JavaScriptCoreExtras
         // For now we're using a private API synchronous garbage collector
 //        unsafe JavaScriptCore.JSGarbageCollect(JSContext.current().jsGlobalContextRef)
         unsafe JSSynchronousGarbageCollectForDebugging(JSContext.current().jsGlobalContextRef)
+    }
+
+    @objc func _crash() {
+        AKWarning("hs._crash() called, crashing on purpose")
+        fatalError("hs._crash() was called")
     }
 
     @objc func activeObjects() -> JSValue {

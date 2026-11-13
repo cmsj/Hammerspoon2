@@ -1,0 +1,52 @@
+name: Symbolicate Crash Report
+
+# Replies to crash report issues (.github/ISSUE_TEMPLATE/crash_report.yml) with a symbolicated
+# copy of the crash log, using the dSYMs that scripts/release/release.sh attaches to every
+# release. Editing the issue (say, to add a missing crash log) updates the reply.
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: Issue number to symbolicate
+        required: true
+
+# One run at a time per issue, so a quick edit can't race the first reply.
+concurrency:
+  group: crash-report-${{ github.event.issue.number || inputs.issue }}
+  cancel-in-progress: false
+
+jobs:
+  symbolicate:
+    name: Symbolicate
+    # Anyone can open an issue, so this runs on a GitHub-hosted runner, never a self-hosted one.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request == null &&
+       contains(github.event.issue.labels.*.name, 'crash') &&
+       (github.event.action != 'labeled' || github.event.label.name == 'crash'))
+    runs-on: macos-26
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Symbolicate and reply
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Passed through the environment, never interpolated into the script.
+          ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue }}
+        run: node scripts/symbolicate-crash.js --issue "$ISSUE_NUMBER"
