@@ -71,6 +71,8 @@ private enum TestExtensionFixture {
 private final class RecordingApprover: ExtensionApprover {
     var answer: Bool
     private(set) var requests: [String] = []
+    /// The Spoon each request's extension came with, if any
+    private(set) var spoons: [String?] = []
 
     init(answer: Bool) {
         self.answer = answer
@@ -78,6 +80,7 @@ private final class RecordingApprover: ExtensionApprover {
 
     func approve(_ manifest: ExtensionManifest, signature: ExtensionSignature) -> Bool {
         requests.append(manifest.name)
+        spoons.append(manifest.spoonName)
         return answer
     }
 }
@@ -97,7 +100,7 @@ private final class LoaderSetup {
          hostOSVersion: BuildVersion = .currentOS) {
         approver = RecordingApprover(answer: approve)
         defaults = UserDefaults(suiteName: suiteName)!
-        loader = ExtensionLoader(directory: { directory },
+        loader = ExtensionLoader(searchPaths: { ExtensionSearchPaths(userDirectory: directory) },
                                  isEnabled: { enabled },
                                  approver: approver,
                                  approvals: ExtensionApprovals(defaults: defaults),
@@ -398,13 +401,138 @@ struct ExtensionTests {
             #expect(changed.cdHash != original.cdHash)
             #expect(!ExtensionApprovals(defaults: setup.defaults).isApproved(TestExtensionFixture.name, signature: changed))
 
-            let changedSetupLoader = ExtensionLoader(directory: { directory }, isEnabled: { true },
+            let changedSetupLoader = ExtensionLoader(searchPaths: { ExtensionSearchPaths(userDirectory: directory) }, isEnabled: { true },
                                                      approver: setup.approver,
                                                      approvals: ExtensionApprovals(defaults: setup.defaults))
             #expect(throws: ExtensionError.notApproved(name: TestExtensionFixture.name)) {
                 try changedSetupLoader.load(named: TestExtensionFixture.name)
             }
             #expect(setup.approver.requests == [TestExtensionFixture.name])
+        }
+    }
+
+    @Suite("Extensions in Spoons")
+    struct SpoonTests {
+        /// A new temporary directory
+        private func makeDirectory() throws -> URL {
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("hs2-spoons-\(UUID().uuidString)", isDirectory: true)
+            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            return url
+        }
+
+        /// An empty extension bundle directory, which is all that locating one looks for
+        private func makeBundle(_ name: String, in directory: URL) throws {
+            try FileManager.default.createDirectory(at: ExtensionManifest.bundleURL(forName: name, in: directory),
+                                                    withIntermediateDirectories: true)
+        }
+
+        @Test("An extension in the user's own folder is used before a Spoon's")
+        func userFolderFirst() throws {
+            let user = try makeDirectory()
+            let spoon = try makeDirectory()
+            try makeBundle("com.example.foo", in: user)
+            try makeBundle("com.example.foo", in: spoon)
+            let paths = ExtensionSearchPaths(userDirectory: user, spoonDirectories: [.init(spoon: "Foo", directory: spoon)])
+
+            let location = try paths.locate("com.example.foo")
+            #expect(location.directory == user)
+            #expect(location.spoon == nil)
+        }
+
+        @Test("An extension only one Spoon provides is found there")
+        func oneSpoon() throws {
+            let paths = ExtensionSearchPaths(userDirectory: try makeDirectory(), spoonDirectories: [
+                .init(spoon: "Bar", directory: try makeDirectory()),
+                .init(spoon: "Foo", directory: try makeDirectory()),
+            ])
+            try makeBundle("com.example.foo", in: paths.spoonDirectories[1].directory)
+
+            let location = try paths.locate("com.example.foo")
+            #expect(location.spoon == "Foo")
+        }
+
+        @Test("An extension more than one Spoon provides is refused")
+        func ambiguous() throws {
+            let paths = ExtensionSearchPaths(userDirectory: try makeDirectory(), spoonDirectories: [
+                .init(spoon: "Bar", directory: try makeDirectory()),
+                .init(spoon: "Foo", directory: try makeDirectory()),
+            ])
+            for spoon in paths.spoonDirectories {
+                try makeBundle("com.example.foo", in: spoon.directory)
+            }
+            #expect(throws: ExtensionError.ambiguous(name: "com.example.foo", spoons: ["Bar", "Foo"])) {
+                try paths.locate("com.example.foo")
+            }
+        }
+
+        @Test("Installed Spoons with an Extensions folder are searched, in name order")
+        func installedSpoons() throws {
+            let spoons = try makeDirectory()
+            for name in ["Zed", "Alpha"] {
+                try FileManager.default.createDirectory(at: spoons.appendingPathComponent("\(name)/Extensions"), withIntermediateDirectories: true)
+            }
+            try FileManager.default.createDirectory(at: spoons.appendingPathComponent("NoExtensions"), withIntermediateDirectories: true)
+
+            let paths = ExtensionSearchPaths.installed(userDirectory: try makeDirectory(), spoonsDirectory: spoons)
+            #expect(paths.spoonDirectories.map(\.spoon) == ["Alpha", "Zed"])
+        }
+
+        @Test("The user is told which Spoon an extension comes with")
+        func approvalNamesSpoon() throws {
+            let spoonExtensions = try TestExtensionFixture.copy()
+            let setup = LoaderSetup(approve: false)
+            let loader = ExtensionLoader(searchPaths: {
+                ExtensionSearchPaths(userDirectory: FileManager.default.temporaryDirectory.appendingPathComponent("hs2-none-\(UUID().uuidString)"),
+                                     spoonDirectories: [.init(spoon: "Greeter", directory: spoonExtensions)])
+            }, isEnabled: { true }, approver: setup.approver, approvals: ExtensionApprovals(defaults: setup.defaults))
+
+            #expect(throws: ExtensionError.notApproved(name: TestExtensionFixture.name)) {
+                try loader.load(named: TestExtensionFixture.name)
+            }
+            #expect(setup.approver.spoons == ["Greeter"])
+        }
+
+        /// A minimal Spoon whose Extensions folder holds a copy of the test extension
+        private func makeSpoon(tamper: Bool) throws -> URL {
+            let spoon = try makeDirectory().appendingPathComponent("Greeter")
+            try FileManager.default.createDirectory(at: spoon, withIntermediateDirectories: true)
+            try #"{"name": "Greeter", "author": "Test", "version": "1.0", "description": "Says hello"}"#
+                .write(to: spoon.appendingPathComponent("spoon.json"), atomically: true, encoding: .utf8)
+            try "".write(to: spoon.appendingPathComponent("init.js"), atomically: true, encoding: .utf8)
+            try FileManager.default.moveItem(at: try TestExtensionFixture.copy(), to: spoon.appendingPathComponent("Extensions"))
+            if tamper {
+                let script = spoon.appendingPathComponent("Extensions/\(TestExtensionFixture.name).hsmodule/Contents/Resources/\(TestExtensionFixture.name).js")
+                try "ext.greet = () => 'tampered';".write(to: script, atomically: true, encoding: .utf8)
+            }
+            return spoon
+        }
+
+        private func makeSpoonManager(_ setup: LoaderSetup) throws -> SpoonManager {
+            let settings = MockSettingsManager()
+            settings.configLocation = try makeDirectory().appendingPathComponent("init.js")
+            return SpoonManager(settings: settings, extensionLoader: setup.loader)
+        }
+
+        @Test("A Spoon whose extension is intact can be installed, without asking about the extension")
+        func installsIntactExtension() throws {
+            let setup = LoaderSetup()
+            let plan = try makeSpoonManager(setup).planInstall(of: try makeSpoon(tamper: false), named: "Greeter")
+            #expect(plan.name == "Greeter")
+            #expect(setup.approver.requests.isEmpty)
+        }
+
+        @Test("A Spoon whose extension has been tampered with can't be installed")
+        func refusesTamperedExtension() throws {
+            let setup = LoaderSetup()
+            let manager = try makeSpoonManager(setup)
+            let spoon = try makeSpoon(tamper: true)
+            let error = #expect(throws: SpoonValidationError.self) {
+                try manager.planInstall(of: spoon, named: "Greeter")
+            }
+            guard case .unusableExtension(.invalidSignature) = error else {
+                Issue.record("Expected unusableExtension(invalidSignature), got \(String(describing: error))")
+                return
+            }
         }
     }
 
@@ -419,7 +547,7 @@ struct ExtensionTests {
             #expect(NSStringFromClass(loaded.moduleType) == "HS2TestExtensionModule")
 
             // A second loader with the same approvals doesn't ask either
-            let second = ExtensionLoader(directory: { TestExtensionFixture.directory }, isEnabled: { true },
+            let second = ExtensionLoader(searchPaths: { ExtensionSearchPaths(userDirectory: TestExtensionFixture.directory) }, isEnabled: { true },
                                          approver: setup.approver,
                                          approvals: ExtensionApprovals(defaults: setup.defaults))
             _ = try second.load(named: TestExtensionFixture.name)

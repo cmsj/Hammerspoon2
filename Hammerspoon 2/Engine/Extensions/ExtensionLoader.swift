@@ -44,11 +44,14 @@ final class ExtensionLoader {
     static let minimumBuildSDK = BuildVersion(27, 0)
 
     static let shared = ExtensionLoader(
-        directory: { SettingsManager.shared.extensionsDirectory },
+        searchPaths: {
+            ExtensionSearchPaths.installed(userDirectory: SettingsManager.shared.extensionsDirectory,
+                                           spoonsDirectory: SpoonManager.shared.spoonsDirectory)
+        },
         isEnabled: { SettingsManager.shared.allowExtensions }
     )
 
-    private let directory: () -> URL
+    private let searchPaths: () -> ExtensionSearchPaths
     private let isEnabled: () -> Bool
     private let approver: any ExtensionApprover
     private let approvals: ExtensionApprovals
@@ -70,21 +73,21 @@ final class ExtensionLoader {
     private(set) var exportedClasses: [NullReturnsInstaller.ExportedClass] = []
 
     /// - Parameters:
-    ///   - directory: Where extension bundles are found
+    ///   - searchPaths: Where extension bundles are found
     ///   - isEnabled: Whether extensions may be loaded at all
     ///   - approver: Asks the user to allow an extension
     ///   - approvals: The builds the user has allowed
     ///   - hostSDKVersion: The SDK version this app provides
     ///   - minimumBuildSDK: The oldest macOS SDK an extension may be built with
     ///   - hostOSVersion: The version of macOS extensions must run on
-    init(directory: @escaping () -> URL,
+    init(searchPaths: @escaping () -> ExtensionSearchPaths,
          isEnabled: @escaping () -> Bool,
          approver: any ExtensionApprover = AlertExtensionApprover(),
          approvals: ExtensionApprovals = ExtensionApprovals(),
          hostSDKVersion: HSSDKVersion = HSSDK.version,
          minimumBuildSDK: BuildVersion = ExtensionLoader.minimumBuildSDK,
          hostOSVersion: BuildVersion = .currentOS) {
-        self.directory = directory
+        self.searchPaths = searchPaths
         self.isEnabled = isEnabled
         self.approver = approver
         self.approvals = approvals
@@ -108,9 +111,11 @@ final class ExtensionLoader {
             return existing
         }
 
-        let manifest = try ExtensionManifest.read(name: name, in: directory(), hostSDKVersion: hostSDKVersion)
-        let signature = try ExtensionSignature.verify(bundleAt: manifest.bundleURL, name: name)
-        try checkCanRun(manifest)
+        guard ExtensionManifest.isValidName(name) else { throw .invalidName(name) }
+        let location = try searchPaths().locate(name)
+        let manifest = try ExtensionManifest.read(name: name, in: location.directory, hostSDKVersion: hostSDKVersion,
+                                                  spoonName: location.spoon)
+        let signature = try inspect(manifest)
         try ensureApproved(manifest, signature: signature)
 
         do {
@@ -121,6 +126,22 @@ final class ExtensionLoader {
         } catch {
             unusable[name] = error
             throw error
+        }
+    }
+
+    /// Checks every extension a Spoon comes with, as `load(named:)` would before asking the user,
+    /// without asking or loading anything. Used when a Spoon is installed, so a broken extension
+    /// is reported then, rather than when a config first requires it.
+    /// - Parameter spoon: The Spoon's directory
+    /// - Throws: `ExtensionError` for the first extension that couldn't be loaded
+    func checkExtensions(inSpoonAt spoon: URL) throws(ExtensionError) {
+        let directory = spoon.appendingPathComponent(ExtensionSearchPaths.spoonExtensionsFolder, isDirectory: true)
+        let bundles = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil,
+                                                                    options: [.skipsHiddenFiles])) ?? []
+        for bundle in bundles where bundle.pathExtension == ExtensionManifest.bundleExtension {
+            let manifest = try ExtensionManifest.read(name: bundle.deletingPathExtension().lastPathComponent, in: directory,
+                                                      hostSDKVersion: hostSDKVersion, spoonName: spoon.lastPathComponent)
+            _ = try inspect(manifest)
         }
     }
 
@@ -174,6 +195,14 @@ final class ExtensionLoader {
 
         exportedClasses += NullReturnsInstaller.findExportedClasses(inImage: image)
         return LoadedExtension(manifest: manifest, signature: signature, moduleType: moduleType, imagePath: image)
+    }
+
+    /// Checks the extension's signature, and that it can run here, without loading it
+    /// - Returns: Its verified signature
+    private func inspect(_ manifest: ExtensionManifest) throws(ExtensionError) -> ExtensionSignature {
+        let signature = try ExtensionSignature.verify(bundleAt: manifest.bundleURL, name: manifest.name)
+        try checkCanRun(manifest)
+        return signature
     }
 
     /// Checks, without loading it, that the extension's code can run here and was built with a

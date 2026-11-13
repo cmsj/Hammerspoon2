@@ -16,6 +16,8 @@ nonisolated enum ExtensionError: Error, Equatable, CustomStringConvertible {
     case invalidName(String)
     /// There is no bundle for the extension in the extensions directory
     case notFound(name: String, expectedAt: URL)
+    /// More than one installed Spoon provides the extension, and the user's Extensions folder doesn't
+    case ambiguous(name: String, spoons: [String])
     /// The bundle's Info.plist is missing something, or doesn't match its name
     case invalidBundle(name: String, reason: String)
     /// The extension was built against an SDK this copy of Hammerspoon 2 doesn't provide
@@ -47,6 +49,7 @@ nonisolated enum ExtensionError: Error, Equatable, CustomStringConvertible {
         case .disabled: "ERR_EXTENSIONS_DISABLED"
         case .invalidName: "ERR_EXTENSION_INVALID_NAME"
         case .notFound: "ERR_EXTENSION_NOT_FOUND"
+        case .ambiguous: "ERR_EXTENSION_AMBIGUOUS"
         case .invalidBundle: "ERR_EXTENSION_INVALID_BUNDLE"
         case .incompatibleSDK: "ERR_EXTENSION_INCOMPATIBLE_SDK"
         case .invalidSignature: "ERR_EXTENSION_INVALID_SIGNATURE"
@@ -69,7 +72,9 @@ nonisolated enum ExtensionError: Error, Equatable, CustomStringConvertible {
         case .invalidName(let name):
             "\"\(name)\" isn't a valid extension name. Names can only contain letters, digits, dots, hyphens and underscores, and must start with a letter or digit."
         case .notFound(let name, let expectedAt):
-            "Can't find the extension \(name). It should be at \(expectedAt.path)"
+            "Can't find the extension \(name). It should be at \(expectedAt.path), or in the Extensions folder of an installed Spoon."
+        case .ambiguous(let name, let spoons):
+            "More than one Spoon provides the extension \(name): \(spoons.joined(separator: ", ")). Remove it from all but one, or put the copy you want in your own Extensions folder, which is used first."
         case .invalidBundle(let name, let reason):
             "The extension \(name) isn't a valid extension bundle: \(reason)"
         case .incompatibleSDK(let name, let required, let available):

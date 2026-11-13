@@ -31,6 +31,9 @@ nonisolated struct ExtensionManifest: Equatable {
     /// The JavaScript enhancement script, if the extension has one
     let enhancementScriptURL: URL?
 
+    /// The Spoon the extension comes with, or nil if it's in the user's own Extensions folder
+    let spoonName: String?
+
     /// Whether `name` can be an extension name: letters, digits, dots, hyphens and underscores,
     /// starting with a letter or digit, so it's always a plain file name.
     static func isValidName(_ name: String) -> Bool {
@@ -50,10 +53,12 @@ nonisolated struct ExtensionManifest: Equatable {
     ///   - name: The extension's name
     ///   - directory: The extensions directory
     ///   - hostSDKVersion: The SDK version this copy of Hammerspoon 2 provides
+    ///   - spoonName: The Spoon whose Extensions folder `directory` is, if it's one
     /// - Throws: `ExtensionError` if the name is invalid, there's no bundle, or its Info.plist is
     ///   missing something, doesn't match, or asks for an SDK this copy doesn't provide
     /// - Returns: The manifest
-    static func read(name: String, in directory: URL, hostSDKVersion: HSSDKVersion = HSSDK.version) throws(ExtensionError) -> ExtensionManifest {
+    static func read(name: String, in directory: URL, hostSDKVersion: HSSDKVersion = HSSDK.version,
+                     spoonName: String? = nil) throws(ExtensionError) -> ExtensionManifest {
         guard isValidName(name) else { throw .invalidName(name) }
 
         let url = bundleURL(forName: name, in: directory)
@@ -100,6 +105,7 @@ nonisolated struct ExtensionManifest: Equatable {
                                  sdkVersion: sdkVersion,
                                  principalClassName: principalClassName,
                                  executableURL: url.appendingPathComponent("Contents/MacOS/\(executable)"),
-                                 enhancementScriptURL: hasScript ? scriptURL : nil)
+                                 enhancementScriptURL: hasScript ? scriptURL : nil,
+                                 spoonName: spoonName)
     }
 }

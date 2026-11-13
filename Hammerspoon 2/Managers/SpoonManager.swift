@@ -23,6 +23,7 @@ enum SpoonValidationError: LocalizedError {
     case invalidSpoonJSON(underlying: String)
     case emptyRequiredFields
     case missingInitJS
+    case unusableExtension(ExtensionError)
 
     var errorDescription: String? {
         switch self {
@@ -34,6 +35,8 @@ enum SpoonValidationError: LocalizedError {
             return "has an invalid spoon.json (name, author, version, and description must all be non-empty)"
         case .missingInitJS:
             return "has no init.js"
+        case .unusableExtension(let error):
+            return "comes with an extension that can't be used. \(error.description)"
         }
     }
 }
@@ -86,11 +89,19 @@ class SpoonManager {
 
     let fileSystem: FileSystemProtocol
     let settings: SettingsManagerProtocol
+    private let extensionLoaderOverride: ExtensionLoader?
 
+    /// Checks the extensions Spoons come with when they're installed
+    private var extensionLoader: ExtensionLoader { extensionLoaderOverride ?? .shared }
+
+    /// - Parameter extensionLoader: Checks the extensions in Spoons being installed. Defaults to
+    ///   the shared one.
     init(fileSystem: FileSystemProtocol = FileManager.default,
-         settings: SettingsManagerProtocol = SettingsManager.shared) {
+         settings: SettingsManagerProtocol = SettingsManager.shared,
+         extensionLoader: ExtensionLoader? = nil) {
         self.fileSystem = fileSystem
         self.settings = settings
+        self.extensionLoaderOverride = extensionLoader
     }
 
     /// Validates that `directory` is a well-formed Spoon: a spoon.json with non-empty name,
@@ -174,6 +185,16 @@ class SpoonManager {
         }
 
         let newMetadata = try validateSpoon(at: directory)
+
+        // A broken extension is reported now, rather than when a config first requires it
+        let extensions = directory.appendingPathComponent(ExtensionSearchPaths.spoonExtensionsFolder)
+        if fileSystem.fileExists(atPath: extensions.path) {
+            do {
+                try extensionLoader.checkExtensions(inSpoonAt: directory)
+            } catch {
+                throw SpoonValidationError.unusableExtension(error)
+            }
+        }
 
         let spoonsDir = spoonsDirectory
         let destination = spoonsDir.appendingPathComponent(name)

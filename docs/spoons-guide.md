@@ -412,6 +412,32 @@ Hammerspoon 2 recognize it as installable. Then either:
 - **Hand someone the bundle**, or a zip of it. Double-clicking it runs the install flow
   described above, and `hs.spoons.install()` can install the zip from any `https://` URL.
 
+## Spoons with native code
+
+A Spoon can come with [extensions](extensions-guide.html): native Swift code for anything
+JavaScript can't do. Put each extension's bundle in an `Extensions` folder inside the Spoon, and
+`require()` it from `init.js` as usual:
+
+```
+Greeter.spoon2/
+  spoon.json
+  init.js                              const native = require('ext:com.example.greeter')
+  Extensions/
+    com.example.greeter.hsmodule
+```
+
+When the Spoon is installed, Hammerspoon 2 checks that each extension in it is signed, unchanged
+since it was signed, built for this version of Hammerspoon 2, and built with a recent enough
+Xcode, and refuses to install the Spoon if one isn't. Users still have to turn on extensions in
+Settings, and allow each one the first time it loads, when they're told which Spoon it comes
+with. So document that your Spoon needs them, and catch the error `require()` throws if they
+don't. Spoons can't contain symbolic links, so an extension in a Spoon can't contain a
+framework.
+
+If more than one installed Spoon provides an extension with the same name, it can't be loaded
+until all but one are removed, unless the user puts a copy in their own `Extensions` folder,
+which is always used first. Give your extensions reverse-DNS names to avoid that.
+
 ## Differences from Hammerspoon 1 Spoons, in brief
 
 If you're coming from v1, the shape is familiar but several specifics changed:

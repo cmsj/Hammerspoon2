@@ -89,7 +89,7 @@ The API that modules are built on lives in its own framework target, `Hammerspoo
 
 Extension authors compile against the copy embedded in the app, which `scripts/trim-embedded-sdk.sh` (an app build phase) trims to the public `.swiftinterface`, removing the private interface and binary module that would expose the SPI.
 
-Extensions are loaded by `Engine/Extensions/ExtensionLoader.swift` for `require('ext:<name>')`, from `<config dir>/Extensions/<name>.hsmodule`, only when the `allowExtensions` setting is on, after a signature check and user approval, which is remembered per build (cdhash) and listed, for removal, in the Advanced tab of Settings. `docs/extensions-guide.md` is the authors' guide, and `Hammerspoon 2Tests/Helpers/TestExtension` is a test fixture built against the SDK like a third-party extension.
+Extensions are loaded by `Engine/Extensions/ExtensionLoader.swift` for `require('ext:<name>')`, from `<config dir>/Extensions/<name>.hsmodule` or an installed Spoon's `Extensions` folder (`ExtensionSearchPaths`), only when the `allowExtensions` setting is on, after a signature check and user approval, which is remembered per build (cdhash) and listed, for removal, in the Advanced tab of Settings. `docs/extensions-guide.md` is the authors' guide, and `Hammerspoon 2Tests/Helpers/TestExtension` is a test fixture built against the SDK like a third-party extension.
 
 ### Reactive Types (`HammerspoonSDK/Types/`)
 

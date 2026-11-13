@@ -31,7 +31,7 @@ struct AlertExtensionApprover: ExtensionApprover {
         alert.alertStyle = .warning
         alert.messageText = "Allow the extension \"\(manifest.name)\" to load?"
         alert.informativeText = """
-            Your config wants to load the extension at \(manifest.bundleURL.path). \(signer)
+            Your config wants to load the extension at \(manifest.bundleURL.path)\(manifest.spoonName.map { ", which comes with the Spoon \($0)" } ?? ""). \(signer)
 
             Extensions run their own code inside Hammerspoon 2, with all of the permissions you've given it, such as Accessibility and Input Monitoring. Only allow extensions from developers you trust.
 

@@ -18,6 +18,10 @@ const foo = require('ext:com.example.foo')
 foo.doSomething()
 ```
 
+Extensions can also come with [Spoons](spoons-guide.html#spoons-with-native-code), in the Spoon's
+own `Extensions` folder. `require()` looks in your `Extensions` folder first, then in your
+installed Spoons.
+
 The first time a config loads an extension, Hammerspoon 2 asks whether to allow it, and shows
 who signed it. An extension runs its own code inside Hammerspoon 2, with all of the permissions
 you've given Hammerspoon 2, such as Accessibility and Input Monitoring, so only allow extensions
@@ -35,7 +39,8 @@ If an extension can't be loaded, `require()` throws an `Error` whose `code` says
 | --- | --- |
 | `ERR_EXTENSIONS_DISABLED` | Extensions are turned off in Settings |
 | `ERR_EXTENSION_INVALID_NAME` | The name isn't a valid extension name |
-| `ERR_EXTENSION_NOT_FOUND` | There's no bundle for it in the Extensions folder |
+| `ERR_EXTENSION_NOT_FOUND` | There's no bundle for it in your Extensions folder or any installed Spoon |
+| `ERR_EXTENSION_AMBIGUOUS` | More than one installed Spoon provides it |
 | `ERR_EXTENSION_INVALID_BUNDLE` | The bundle's Info.plist is incomplete or doesn't match its name |
 | `ERR_EXTENSION_INCOMPATIBLE_SDK` | It was built for an SDK version this copy of Hammerspoon 2 doesn't provide |
 | `ERR_EXTENSION_INVALID_SIGNATURE` | It isn't signed, or it changed after it was signed |
