@@ -184,3 +184,15 @@ test("says when the release's dSYMs don't match the crashed build", onMac, () =>
     assert.match(comment, /No dSYM in that release matches `Hammerspoon 2`/);
     assert.match(comment, /Symbolicated 0 frames/);
 });
+
+test('shows the JavaScript the app was running', () => {
+    const report = parseIPS(abortText);
+    report.body.hammerspoonJavaScript = {
+        running: [{ time: '12:00:01.000', label: 'call .emit' }, { time: '12:00:01.002', label: 'hs.usb "added" listener onUSB' }],
+        recent: [{ time: '12:00:00.500', label: 'call tick\n```' }],
+    };
+    const comment = renderComment({ report, traces: backtraces(report), version: '0.1.0', notes: [] });
+    assert.match(comment, /JavaScript running \(innermost last\):\n {2}12:00:01\.000 {2}call \.emit\n {2}12:00:01\.002 {2}hs\.usb "added" listener onUSB/);
+    assert.match(comment, /Recent JavaScript \(newest last\):\n {2}12:00:00\.500 {2}call tick ```/);
+    assert.doesNotMatch(renderComment({ report: parseIPS(abortText), traces: [], version: '0.1.0', notes: [] }), /JavaScript/);
+});

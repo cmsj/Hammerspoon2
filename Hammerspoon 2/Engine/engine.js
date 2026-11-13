@@ -55,18 +55,35 @@ EventEmitter.prototype.removeListener = function (event, listener) {
     }
 };
 
-EventEmitter.prototype.emit = function (event) {
-    var i, listeners, length, args = [].slice.call(arguments, 1);
+// Each listener is recorded as running while it runs (JSBreadcrumbs.swift), so a crash report can
+// say which one it was. The native functions that do that are taken off the global scope here, as
+// require.js does with its primitives. Test harnesses that don't install them get no-ops.
+EventEmitter.prototype.emit = (function () {
+    var enter = typeof _hs_breadcrumbEnter === 'function' ? _hs_breadcrumbEnter : function () { return false; };
+    var exit = typeof _hs_breadcrumbExit === 'function' ? _hs_breadcrumbExit : function () {};
+    delete globalThis._hs_breadcrumbEnter;
+    delete globalThis._hs_breadcrumbExit;
 
-    if (typeof this.events[event] === 'object') {
-        listeners = this.events[event].slice();
-        length = listeners.length;
+    return function emit(event) {
+        var i, listeners, length, entered, args = [].slice.call(arguments, 1);
 
-        for (i = 0; i < length; i++) {
-            listeners[i].apply(this, args);
+        if (typeof this.events[event] === 'object') {
+            listeners = this.events[event].slice();
+            length = listeners.length;
+
+            for (i = 0; i < length; i++) {
+                entered = enter(this._label, event, listeners[i]);
+                try {
+                    listeners[i].apply(this, args);
+                } finally {
+                    if (entered) {
+                        exit();
+                    }
+                }
+            }
         }
-    }
-};
+    };
+})();
 
 // Node-style alias. Calls through `this.removeListener` (rather than being the same function
 // reference) so a subclass overriding removeListener - e.g. LazyWatcherEmitter below - is still
@@ -90,6 +107,8 @@ EventEmitter.prototype.once = function (event, listener) {
         emitter.removeListener(event, wrapped);
         listener.apply(this, arguments);
     }
+    // So a crash report names the listener, not this wrapper.
+    Object.defineProperty(wrapped, "name", { value: listener.name });
     this._addListener("once", event, wrapped);
     return this;
 };
