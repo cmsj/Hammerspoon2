@@ -399,6 +399,11 @@ nonisolated struct CrashReport {
         if level.essentialOnly {
             compact = compact.filter { Self.essentialKeys.contains($0.key) }
             compact["omittedKeys"] = true
+            // With strings cut short and one thread, the number of messages is all that's left
+            // unbounded.
+            if let asi = compact["asi"] as? [String: Any] {
+                compact["asi"] = asi.mapValues { ($0 as? [Any]).map { Array($0.prefix(20)) } ?? $0 }
+            }
         }
         compact.removeValue(forKey: "usedImages")
 

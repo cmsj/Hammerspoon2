@@ -143,9 +143,10 @@ struct CrashReportTests {
             #expect(short.contains(#""omittedThreads":1"#))
         }
 
-        @Test("Long messages are cut short when nothing else makes the report fit")
-        func testCompactCutsLongMessages() throws {
-            let report = try fixtureWithLongMessages(count: 100, length: 2_000, character: "x")
+        @Test("Long or many messages are cut short when nothing else makes the report fit",
+              arguments: [(100, 2_000), (10_000, 20)])
+        func testCompactCutsLongMessages(count: Int, length: Int) throws {
+            let report = try fixtureWithLongMessages(count: count, length: length, character: "x")
             let compact = report.compactText()
             #expect(compact.count <= CrashReport.maximumCompactLength)
             let reparsed = try CrashReport(text: compact)
