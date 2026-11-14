@@ -29,6 +29,10 @@ struct LoadedExtension {
 /// - the user has allowed this exact build to load (they're asked the first time, and again
 ///   whenever it changes).
 ///
+/// Those checks, the user's approval and loading are all done on a private copy of the bundle,
+/// so a bundle swapped for another while the user is being asked (the original stays writable by
+/// whatever installed it) can't get its code loaded.
+///
 /// Once it's loaded, it checks that its classes don't clash with existing ones and that its
 /// JSExport methods don't leak what they return. An extension that fails those can't be unloaded,
 /// so it stays unusable until Hammerspoon 2 restarts.
@@ -102,10 +106,22 @@ final class ExtensionLoader {
 
         guard ExtensionManifest.isValidName(name) else { throw .invalidName(name) }
         let location = try searchPaths().locate(name)
-        let manifest = try ExtensionManifest.read(name: name, in: location.directory, hostSDKVersion: hostSDKVersion,
-                                                  spoonName: location.spoon)
-        let signature = try inspect(manifest)
-        try ensureApproved(manifest, signature: signature)
+        let source = ExtensionManifest.bundleURL(forName: name, in: location.directory)
+        let snapshot = try Self.snapshot(name, from: source)
+        let manifest: ExtensionManifest
+        let signature: ExtensionSignature
+        do throws(ExtensionError) {
+            manifest = try ExtensionManifest.read(name: name, in: snapshot.directory, hostSDKVersion: hostSDKVersion,
+                                                  spoonName: location.spoon, sourceURL: source)
+            signature = try inspect(manifest)
+            guard signature.cdHash == snapshot.cdHash else {
+                throw .invalidSignature(name: name, reason: "it changed while it was being copied")
+            }
+            try ensureApproved(manifest, signature: signature)
+        } catch {
+            Self.discardSnapshot(snapshot.directory)
+            throw error
+        }
 
         do {
             let extensionInfo = try loadCode(of: manifest, signature: signature)
@@ -153,8 +169,9 @@ final class ExtensionLoader {
         } catch {
             throw .loadFailed(name: name, reason: error.localizedDescription)
         }
+        Self.loadedSnapshots[signature.cdHash] = manifest.bundleURL.deletingLastPathComponent()
 
-        // The bundle could have been replaced between checking its signature and loading it
+        // Only this process writes the copy, but check it's still the one that was approved
         guard ExtensionSignature.readUnverified(bundleAt: manifest.bundleURL)?.cdHash == signature.cdHash else {
             throw .invalidSignature(name: name, reason: "it changed while it was being loaded")
         }
@@ -185,6 +202,64 @@ final class ExtensionLoader {
         exportedClasses += NullReturnsInstaller.findExportedClasses(inImage: image)
         return LoadedExtension(manifest: manifest, signature: signature, moduleType: moduleType, imagePath: image)
     }
+
+    // MARK: - Snapshots
+
+    /// Where extension bundles are copied before they're checked and loaded: a directory per
+    /// process, holding a directory per copy.
+    static let snapshotsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent(Bundle.main.bundleIdentifier ?? "net.tenshu.Hammerspoon-2", isDirectory: true)
+        .appendingPathComponent("ExtensionSnapshots", isDirectory: true)
+
+    /// The copy each build whose code is in the process was loaded from, by cdhash
+    private static var loadedSnapshots: [String: URL] = [:]
+
+    private static var removedStaleSnapshots = false
+
+    /// Copies an extension's bundle into this process's snapshots directory. A copy whose code is
+    /// loaded is kept for the life of the process, since the code, and anything it reads from its
+    /// bundle, comes from it.
+    /// - Returns: The directory holding the copy, and the cdhash the source had when it was copied
+    private static func snapshot(_ name: String, from source: URL) throws(ExtensionError) -> (directory: URL, cdHash: String?) {
+        removeStaleSnapshots()
+        let cdHash = ExtensionSignature.readUnverified(bundleAt: source)?.cdHash
+        // A build whose code is loaded already (by another loader, such as another engine's) is
+        // used from where it was loaded, since copying it again would load its classes again
+        if let cdHash, let directory = loadedSnapshots[cdHash] {
+            return (directory, cdHash)
+        }
+        let directory = snapshotsDirectory
+            .appendingPathComponent(String(getpid()), isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true,
+                                                    attributes: [.posixPermissions: 0o700])
+            try FileManager.default.copyItem(at: source, to: ExtensionManifest.bundleURL(forName: name, in: directory))
+        } catch {
+            try? FileManager.default.removeItem(at: directory)
+            throw .loadFailed(name: name, reason: "it couldn't be copied to \(directory.path): \(error.localizedDescription)")
+        }
+        return (directory, cdHash)
+    }
+
+    /// Removes a copy that wasn't loaded
+    private static func discardSnapshot(_ directory: URL) {
+        guard !loadedSnapshots.values.contains(directory) else { return }
+        try? FileManager.default.removeItem(at: directory)
+    }
+
+    /// Removes the snapshots of processes that have exited, once per process
+    private static func removeStaleSnapshots() {
+        guard !removedStaleSnapshots else { return }
+        removedStaleSnapshots = true
+        let entries = (try? FileManager.default.contentsOfDirectory(atPath: snapshotsDirectory.path)) ?? []
+        for entry in entries {
+            guard let pid = pid_t(entry), pid != getpid(), kill(pid, 0) != 0, errno == ESRCH else { continue }
+            try? FileManager.default.removeItem(at: snapshotsDirectory.appendingPathComponent(entry, isDirectory: true))
+        }
+    }
+
+    // MARK: - Checks
 
     /// Checks the extension's signature, and that it can run here, without loading it
     /// - Returns: Its verified signature
@@ -239,7 +314,7 @@ final class ExtensionLoader {
 
     private func warnIfChanged(_ loadedExtension: LoadedExtension) {
         let name = loadedExtension.manifest.name
-        guard let current = ExtensionSignature.readUnverified(bundleAt: loadedExtension.manifest.bundleURL),
+        guard let current = ExtensionSignature.readUnverified(bundleAt: loadedExtension.manifest.sourceURL),
               current.cdHash != loadedExtension.signature.cdHash,
               reportedChanges[name] != current.cdHash else { return }
         reportedChanges[name] = current.cdHash

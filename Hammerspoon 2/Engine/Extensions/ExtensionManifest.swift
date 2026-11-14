@@ -21,7 +21,13 @@ nonisolated struct ExtensionManifest: Equatable {
     static let bundleExtension = "hsmodule"
 
     let name: String
+
+    /// The bundle that's checked and loaded. For an extension being loaded, that's a private copy
+    /// of the one at `sourceURL` (see `ExtensionLoader`).
     let bundleURL: URL
+
+    /// Where the bundle was found
+    let sourceURL: URL
     let sdkVersion: HSSDKVersion
     let principalClassName: String
 
@@ -54,11 +60,12 @@ nonisolated struct ExtensionManifest: Equatable {
     ///   - directory: The extensions directory
     ///   - hostSDKVersion: The SDK version this copy of Hammerspoon 2 provides
     ///   - spoonName: The Spoon whose Extensions folder `directory` is, if it's one
+    ///   - sourceURL: Where the bundle was found, if `directory` holds a copy of it
     /// - Throws: `ExtensionError` if the name is invalid, there's no bundle, or its Info.plist is
     ///   missing something, doesn't match, or asks for an SDK this copy doesn't provide
     /// - Returns: The manifest
     static func read(name: String, in directory: URL, hostSDKVersion: HSSDKVersion = HSSDK.version,
-                     spoonName: String? = nil) throws(ExtensionError) -> ExtensionManifest {
+                     spoonName: String? = nil, sourceURL: URL? = nil) throws(ExtensionError) -> ExtensionManifest {
         guard isValidName(name) else { throw .invalidName(name) }
 
         let url = bundleURL(forName: name, in: directory)
@@ -102,6 +109,7 @@ nonisolated struct ExtensionManifest: Equatable {
 
         return ExtensionManifest(name: name,
                                  bundleURL: url,
+                                 sourceURL: sourceURL ?? url,
                                  sdkVersion: sdkVersion,
                                  principalClassName: principalClassName,
                                  executableURL: url.appendingPathComponent("Contents/MacOS/\(executable)"),

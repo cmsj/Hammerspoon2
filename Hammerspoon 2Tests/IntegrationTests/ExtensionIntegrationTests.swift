@@ -14,16 +14,21 @@ import HammerspoonSDK
 /// The test extension (Helpers/TestExtension), which the test target's "Build Test Extension"
 /// phase builds next to the app.
 ///
-/// Its code can only be loaded into the test process once, from one place: a second copy at
-/// another path defines the same classes. So tests that load it use the built bundle where it
-/// is, and tests that need a broken or changed bundle use a copy that never gets as far as
-/// loading code.
+/// Its code can only be loaded into the test process once: a second build defines the same
+/// classes. The loader reuses the copy a build was loaded from, so tests that load it use the
+/// built bundle, or an unchanged copy, and tests that need a broken or changed bundle use a copy
+/// that never gets as far as loading code. A broken bundle keeps the cdhash of the build it was
+/// broken from, and so would be served by that build's loaded copy, so tests that break one start
+/// from a build of their own (`newBuild`).
 private enum TestExtensionFixture {
     static let name = "hs2.testextension"
 
     static var directory: URL {
         Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("TestExtensions")
     }
+
+    /// An Info.plist edit that makes a copy a build of its own, with a cdhash no other copy has
+    static let newBuild: (inout [String: Any]) -> Void = { $0["CFBundleVersion"] = UUID().uuidString }
 
     /// Copies the extension into a new extensions directory.
     /// - Parameters:
@@ -73,6 +78,10 @@ private final class RecordingApprover: ExtensionApprover {
     private(set) var requests: [String] = []
     /// The Spoon each request's extension came with, if any
     private(set) var spoons: [String?] = []
+    /// The manifest of each request
+    private(set) var manifests: [ExtensionManifest] = []
+    /// Called with each request, before it's answered
+    var onRequest: (ExtensionManifest) -> Void = { _ in }
 
     init(answer: Bool) {
         self.answer = answer
@@ -81,6 +90,8 @@ private final class RecordingApprover: ExtensionApprover {
     func approve(_ manifest: ExtensionManifest, signature: ExtensionSignature) -> Bool {
         requests.append(manifest.name)
         spoons.append(manifest.spoonName)
+        manifests.append(manifest)
+        onRequest(manifest)
         return answer
     }
 }
@@ -305,7 +316,7 @@ struct ExtensionTests {
 
         @Test("An extension changed after it was signed is refused without asking")
         func tampered() throws {
-            let directory = try TestExtensionFixture.copy()
+            let directory = try TestExtensionFixture.copy(editInfo: TestExtensionFixture.newBuild)
             let script = ExtensionManifest.bundleURL(forName: TestExtensionFixture.name, in: directory)
                 .appendingPathComponent("Contents/Resources/\(TestExtensionFixture.name).js")
             try "ext.greet = () => 'tampered';".write(to: script, atomically: true, encoding: .utf8)
@@ -388,6 +399,81 @@ struct ExtensionTests {
                 try changedSetupLoader.load(named: TestExtensionFixture.name)
             }
             #expect(setup.approver.requests == [TestExtensionFixture.name])
+        }
+    }
+
+    @Suite("Snapshots of extension bundles")
+    struct SnapshotTests {
+        @Test("The bundle that's checked, approved and loaded is a private copy")
+        func loadsCopy() throws {
+            let setup = LoaderSetup()
+            let loaded = try setup.loader.load(named: TestExtensionFixture.name)
+            let source = ExtensionManifest.bundleURL(forName: TestExtensionFixture.name, in: TestExtensionFixture.directory)
+            let snapshots = ExtensionLoader.snapshotsDirectory.appendingPathComponent(String(getpid())).path
+            #expect(loaded.manifest.sourceURL == source)
+            #expect(loaded.manifest.bundleURL.path.hasPrefix(snapshots))
+            #expect(loaded.imagePath.hasPrefix(snapshots))
+            #expect(setup.approver.manifests.map(\.sourceURL) == [source])
+        }
+
+        @Test("Changing the original while the user is asked doesn't change the copy")
+        func originalChangedDuringApproval() throws {
+            let directory = try TestExtensionFixture.copy(editInfo: TestExtensionFixture.newBuild)
+            let source = ExtensionManifest.bundleURL(forName: TestExtensionFixture.name, in: directory)
+            let script = "Contents/Resources/\(TestExtensionFixture.name).js"
+            let original = try String(contentsOf: source.appendingPathComponent(script), encoding: .utf8)
+
+            // Refused, so no code is loaded from the copy, which is a different build from the fixture.
+            // A refused copy is removed, so it's looked at while the user is being asked.
+            var copyScript: String?
+            var copyIsValid = false
+            let setup = LoaderSetup(directory: directory, approve: false)
+            setup.approver.onRequest = { manifest in
+                try? "ext.greet = () => 'swapped';".write(to: source.appendingPathComponent(script), atomically: true, encoding: .utf8)
+                copyScript = try? String(contentsOf: manifest.bundleURL.appendingPathComponent(script), encoding: .utf8)
+                copyIsValid = (try? ExtensionSignature.verify(bundleAt: manifest.bundleURL, name: manifest.name)) != nil
+            }
+            #expect(throws: ExtensionError.notApproved(name: TestExtensionFixture.name)) {
+                try setup.loader.load(named: TestExtensionFixture.name)
+            }
+
+            #expect(try #require(setup.approver.manifests.first).bundleURL != source)
+            #expect(copyScript == original)
+            #expect(copyIsValid)
+            #expect(try String(contentsOf: source.appendingPathComponent(script), encoding: .utf8) != original)
+        }
+
+        @Test("A broken copy of a build doesn't stop an intact copy of it being checked")
+        func brokenThenIntact() throws {
+            // Changing a resource leaves the cdhash alone, so these are two copies of one build
+            let intact = try TestExtensionFixture.copy(editInfo: TestExtensionFixture.newBuild)
+            let broken = FileManager.default.temporaryDirectory.appendingPathComponent("hs2-extensions-\(UUID().uuidString)")
+            try FileManager.default.copyItem(at: intact, to: broken)
+            try "ext.greet = () => 'tampered';".write(
+                to: ExtensionManifest.bundleURL(forName: TestExtensionFixture.name, in: broken)
+                    .appendingPathComponent("Contents/Resources/\(TestExtensionFixture.name).js"),
+                atomically: true, encoding: .utf8)
+
+            let error = #expect(throws: ExtensionError.self) {
+                try LoaderSetup(directory: broken, approve: false).loader.load(named: TestExtensionFixture.name)
+            }
+            guard case .invalidSignature = error else {
+                Issue.record("Expected invalidSignature, got \(String(describing: error))")
+                return
+            }
+
+            // Refused by the user, so it got as far as asking: its copy passed the checks
+            #expect(throws: ExtensionError.notApproved(name: TestExtensionFixture.name)) {
+                try LoaderSetup(directory: intact, approve: false).loader.load(named: TestExtensionFixture.name)
+            }
+        }
+
+        @Test("A build that's loaded is used from where it was loaded, by every loader")
+        func loadedBuildReused() throws {
+            let first = try LoaderSetup().loader.load(named: TestExtensionFixture.name)
+            let second = try LoaderSetup().loader.load(named: TestExtensionFixture.name)
+            #expect(second.manifest.bundleURL == first.manifest.bundleURL)
+            #expect(second.imagePath == first.imagePath)
         }
     }
 
@@ -479,7 +565,8 @@ struct ExtensionTests {
             try #"{"name": "Greeter", "author": "Test", "version": "1.0", "description": "Says hello"}"#
                 .write(to: spoon.appendingPathComponent("spoon.json"), atomically: true, encoding: .utf8)
             try "".write(to: spoon.appendingPathComponent("init.js"), atomically: true, encoding: .utf8)
-            try FileManager.default.moveItem(at: try TestExtensionFixture.copy(), to: spoon.appendingPathComponent("Extensions"))
+            let extensions = try TestExtensionFixture.copy(editInfo: tamper ? TestExtensionFixture.newBuild : { _ in })
+            try FileManager.default.moveItem(at: extensions, to: spoon.appendingPathComponent("Extensions"))
             if tamper {
                 let script = spoon.appendingPathComponent("Extensions/\(TestExtensionFixture.name).hsmodule/Contents/Resources/\(TestExtensionFixture.name).js")
                 try "ext.greet = () => 'tampered';".write(to: script, atomically: true, encoding: .utf8)
@@ -638,6 +725,21 @@ struct ExtensionTests {
         @Test("The extension's enhancement script runs with the module as ext")
         func enhancementScript() throws {
             let harness = try makeHarness()
+            #expect(harness.evalString("require('ext:hs2.testextension').greet('World')") == "Hello, World, from <hs2.testextension>")
+        }
+
+        @Test("If the enhancement script throws, require() throws, and the next require() starts again")
+        func enhancementScriptThrows() throws {
+            let harness = try makeHarness()
+            harness.eval("globalThis.__hs2TestExtensionScriptThrows = true")
+            #expect(harness.evalString("""
+                (function () {
+                    try { require('ext:hs2.testextension'); return 'no error'; }
+                    catch (e) { return e.message; }
+                })()
+                """) == "the test extension's script failed")
+
+            harness.eval("globalThis.__hs2TestExtensionScriptThrows = false")
             #expect(harness.evalString("require('ext:hs2.testextension').greet('World')") == "Hello, World, from <hs2.testextension>")
         }
 
