@@ -412,6 +412,7 @@ cmd_prepare() {
         -destination 'generic/platform=macOS' \
         -archivePath "$archive" \
         -clonedSourcePackagesDirPath "$PACKAGES_DIR" \
+        -skipPackagePluginValidation \
         MARKETING_VERSION="$VERSION" \
         CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
         > "$WORK/archive.log" 2>&1 \

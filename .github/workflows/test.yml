@@ -50,11 +50,15 @@ jobs:
       - name: Resolve Swift package dependencies
         run: xcodebuild -resolvePackageDependencies -scheme Development
 
+      # The SwiftLint build tool plugin needs approving in Xcode before it can run.
+      # xcodebuild can't ask, so these steps pass -skipPackagePluginValidation instead.
+
       - name: Build for testing
         run: |
           xcodebuild build-for-testing \
             -scheme Development \
             -destination 'platform=macOS' \
+            -skipPackagePluginValidation \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
@@ -70,6 +74,7 @@ jobs:
           set -o pipefail && xcodebuild test \
             -scheme Development \
             -destination 'platform=macOS' \
+            -skipPackagePluginValidation \
             -parallel-testing-enabled NO \
             -resultBundlePath TestResults.xcresult \
             CODE_SIGN_IDENTITY="" \

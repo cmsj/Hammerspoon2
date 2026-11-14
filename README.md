@@ -24,6 +24,8 @@ Pre-releases up to (and including) 0.0.6 target macOS 15.6 and support both Appl
 
 This is an Xcode project. Open `Hammerspoon 2.xcodeproj` in Xcode to build. To generate doc artifacts, run `npm install` in the top level of the repository.
 
+The code is linted with [SwiftLint](https://github.com/realm/SwiftLint) (rules in `.swiftlint.yml`), which runs as a Swift package build tool plugin. The first time you build, Xcode asks you to trust and enable `SwiftLintBuildToolPlugin`. Command line builds need the same approval, or `-skipPackagePluginValidation` passed to `xcodebuild`.
+
 ## License
 
 See the LICENSE file for details.

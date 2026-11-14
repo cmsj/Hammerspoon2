@@ -336,58 +336,60 @@ import JavaScriptCoreExtras
     }
 
     // Modules
-    @objc var appinfo: HSAppInfoModule { get { getOrCreate(name: "appinfo", type: HSAppInfoModule.self)}}
-    @objc var application: HSApplicationModule { get { getOrCreate(name: "application", type: HSApplicationModule.self)}}
-    @objc var chooser: HSChooserModule { get { getOrCreate(name: "chooser", type: HSChooserModule.self)}}
-    @objc var docs: HSDocsModule { get { getOrCreate(name: "docs", type: HSDocsModule.self)}}
-    @objc var dockicon: HSDockIconModule { get { getOrCreate(name: "dockicon", type: HSDockIconModule.self)}}
-    @objc var eventtap: HSEventTapModule { get { getOrCreate(name: "eventtap", type: HSEventTapModule.self)}}
-    @objc var audiodevice: HSAudioDeviceModule { get { getOrCreate(name: "audiodevice", type: HSAudioDeviceModule.self)}}
-    @objc var ax: HSAXModule { get { getOrCreate(name: "ax", type: HSAXModule.self)}}
-    @objc var bonjour: HSBonjourModule { get { getOrCreate(name: "bonjour", type: HSBonjourModule.self)}}
-    @objc var camera: HSCameraModule { get { getOrCreate(name: "camera", type: HSCameraModule.self)}}
-    @objc var canvas: HSCanvasModule { get { getOrCreate(name: "canvas", type: HSCanvasModule.self)}}
-    @objc var fs: HSFSModule { get { getOrCreate(name: "fs", type: HSFSModule.self)}}
-    @objc var hashing: HSHashModule { get { getOrCreate(name: "hashing", type: HSHashModule.self)}}
-    @objc var hotkey: HSHotkeyModule { get { getOrCreate(name: "hotkey", type: HSHotkeyModule.self)}}
-    @objc var keycodes: HSKeycodesModule { get { getOrCreate(name: "keycodes", type: HSKeycodesModule.self)}}
-    @objc var http: HSHTTPModule { get { getOrCreate(name: "http", type: HSHTTPModule.self)}}
-    @objc var httpserver: HSHTTPServerModule { get { getOrCreate(name: "httpserver", type: HSHTTPServerModule.self)}}
-    @objc var locale: HSLocaleModule { get { getOrCreate(name: "locale", type: HSLocaleModule.self)}}
-    @objc var location: HSLocationModule { get { getOrCreate(name: "location", type: HSLocationModule.self)}}
-    @objc var menubar: HSMenuBarModule { get { getOrCreate(name: "menubar", type: HSMenuBarModule.self)}}
-    @objc var midi: HSMIDIModule { get { getOrCreate(name: "midi", type: HSMIDIModule.self)}}
-    @objc var notify: HSNotifyModule { get { getOrCreate(name: "notify", type: HSNotifyModule.self)}}
-    @objc var ocr: HSOCRModule { get { getOrCreate(name: "ocr", type: HSOCRModule.self)}}
-    @objc var osascript: HSOSAScriptModule { get { getOrCreate(name: "osascript", type: HSOSAScriptModule.self)}}
-    @objc var pasteboard: HSPasteboardModule { get { getOrCreate(name: "pasteboard", type: HSPasteboardModule.self)}}
-    @objc var permissions: HSPermissionsModule { get { getOrCreate(name: "permissions", type: HSPermissionsModule.self)}}
-    @objc var screen: HSScreenModule { get { getOrCreate(name: "screen", type: HSScreenModule.self)}}
-    @objc var serial: HSSerialModule { get { getOrCreate(name: "serial", type: HSSerialModule.self)}}
-    @objc var sharing: HSSharingModule { get { getOrCreate(name: "sharing", type: HSSharingModule.self)}}
-    @objc var socket: HSSocketModule { get { getOrCreate(name: "socket", type: HSSocketModule.self)}}
-    @objc var spotlight: HSSpotlightModule { get { getOrCreate(name: "spotlight", type: HSSpotlightModule.self)}}
-    @objc var streamdeck: HSStreamDeckModule { get { getOrCreate(name: "streamdeck", type: HSStreamDeckModule.self)}}
-    @objc var task: HSTaskModule { get { getOrCreate(name: "task", type: HSTaskModule.self)}}
-    @objc var power: HSPowerModule { get { getOrCreate(name: "power", type: HSPowerModule.self)}}
-    @objc var timer: HSTimerModule { get { getOrCreate(name: "timer", type: HSTimerModule.self)}}
-    @objc var translation: HSTranslationModule { get { getOrCreate(name: "translation", type: HSTranslationModule.self)}}
-    @objc var ui: HSUIModule { get { getOrCreate(name: "ui", type: HSUIModule.self)}}
-    @objc var ipc: HSIPCModule { get { getOrCreate(name: "ipc", type: HSIPCModule.self)}}
-    @objc var urlevent: HSURLEventModule { get { getOrCreate(name: "urlevent", type: HSURLEventModule.self)}}
-    @objc var usb: HSUSBModule { get { getOrCreate(name: "usb", type: HSUSBModule.self)}}
-    @objc var bluetooth: HSBluetoothModule { get { getOrCreate(name: "bluetooth", type: HSBluetoothModule.self)}}
-    @objc var mqtt: HSMQTTModule { get { getOrCreate(name: "mqtt", type: HSMQTTModule.self)}}
-    @objc var keyboard: HSKeyboardModule { get { getOrCreate(name: "keyboard", type: HSKeyboardModule.self)}}
-    @objc var shortcuts: HSShortcutsModule { get { getOrCreate(name: "shortcuts", type: HSShortcutsModule.self)}}
-    @objc var sound: HSSoundModule { get { getOrCreate(name: "sound", type: HSSoundModule.self)}}
-    @objc var network: HSNetworkModule { get { getOrCreate(name: "network", type: HSNetworkModule.self)}}
-    @objc var window: HSWindowModule { get { getOrCreate(name: "window", type: HSWindowModule.self)}}
-    @objc var mouse: HSMouseModule { get { getOrCreate(name: "mouse", type: HSMouseModule.self)}}
-    @objc var plist: HSPlistModule { get { getOrCreate(name: "plist", type: HSPlistModule.self)}}
-    @objc var userdefaults: HSUserDefaultsModule { get { getOrCreate(name: "userdefaults", type: HSUserDefaultsModule.self)}}
-    @objc var wifi: HSWifiModule { get { getOrCreate(name: "wifi", type: HSWifiModule.self)}}
-    @objc var spoons: HSSpoonsModule { get { getOrCreate(name: "spoons") { HSSpoonsModule(engineID: engineID, spoonManager: spoonManager) }}}
+    // swiftlint:disable colon opening_brace comma
+    @objc var appinfo:      HSAppInfoModule         { getOrCreate(name: "appinfo",      type: HSAppInfoModule.self)}
+    @objc var application:  HSApplicationModule     { getOrCreate(name: "application",  type: HSApplicationModule.self)}
+    @objc var chooser:      HSChooserModule         { getOrCreate(name: "chooser",      type: HSChooserModule.self)}
+    @objc var docs:         HSDocsModule            { getOrCreate(name: "docs",         type: HSDocsModule.self)}
+    @objc var dockicon:     HSDockIconModule        { getOrCreate(name: "dockicon",     type: HSDockIconModule.self)}
+    @objc var eventtap:     HSEventTapModule        { getOrCreate(name: "eventtap",     type: HSEventTapModule.self)}
+    @objc var audiodevice:  HSAudioDeviceModule     { getOrCreate(name: "audiodevice",  type: HSAudioDeviceModule.self)}
+    @objc var ax:           HSAXModule              { getOrCreate(name: "ax",           type: HSAXModule.self)}
+    @objc var bonjour:      HSBonjourModule         { getOrCreate(name: "bonjour",      type: HSBonjourModule.self)}
+    @objc var camera:       HSCameraModule          { getOrCreate(name: "camera",       type: HSCameraModule.self)}
+    @objc var canvas:       HSCanvasModule          { getOrCreate(name: "canvas",       type: HSCanvasModule.self)}
+    @objc var fs:           HSFSModule              { getOrCreate(name: "fs",           type: HSFSModule.self)}
+    @objc var hashing:      HSHashModule            { getOrCreate(name: "hashing",      type: HSHashModule.self)}
+    @objc var hotkey:       HSHotkeyModule          { getOrCreate(name: "hotkey",       type: HSHotkeyModule.self)}
+    @objc var keycodes:     HSKeycodesModule        { getOrCreate(name: "keycodes",     type: HSKeycodesModule.self)}
+    @objc var http:         HSHTTPModule            { getOrCreate(name: "http",         type: HSHTTPModule.self)}
+    @objc var httpserver:   HSHTTPServerModule      { getOrCreate(name: "httpserver",   type: HSHTTPServerModule.self)}
+    @objc var locale:       HSLocaleModule          { getOrCreate(name: "locale",       type: HSLocaleModule.self)}
+    @objc var location:     HSLocationModule        { getOrCreate(name: "location",     type: HSLocationModule.self)}
+    @objc var menubar:      HSMenuBarModule         { getOrCreate(name: "menubar",      type: HSMenuBarModule.self)}
+    @objc var midi:         HSMIDIModule            { getOrCreate(name: "midi",         type: HSMIDIModule.self)}
+    @objc var notify:       HSNotifyModule          { getOrCreate(name: "notify",       type: HSNotifyModule.self)}
+    @objc var ocr:          HSOCRModule             { getOrCreate(name: "ocr",          type: HSOCRModule.self)}
+    @objc var osascript:    HSOSAScriptModule       { getOrCreate(name: "osascript",    type: HSOSAScriptModule.self)}
+    @objc var pasteboard:   HSPasteboardModule      { getOrCreate(name: "pasteboard",   type: HSPasteboardModule.self)}
+    @objc var permissions:  HSPermissionsModule     { getOrCreate(name: "permissions",  type: HSPermissionsModule.self)}
+    @objc var screen:       HSScreenModule          { getOrCreate(name: "screen",       type: HSScreenModule.self)}
+    @objc var serial:       HSSerialModule          { getOrCreate(name: "serial",       type: HSSerialModule.self)}
+    @objc var sharing:      HSSharingModule         { getOrCreate(name: "sharing",      type: HSSharingModule.self)}
+    @objc var socket:       HSSocketModule          { getOrCreate(name: "socket",       type: HSSocketModule.self)}
+    @objc var spotlight:    HSSpotlightModule       { getOrCreate(name: "spotlight",    type: HSSpotlightModule.self)}
+    @objc var streamdeck:   HSStreamDeckModule      { getOrCreate(name: "streamdeck",   type: HSStreamDeckModule.self)}
+    @objc var task:         HSTaskModule            { getOrCreate(name: "task",         type: HSTaskModule.self)}
+    @objc var power:        HSPowerModule           { getOrCreate(name: "power",        type: HSPowerModule.self)}
+    @objc var timer:        HSTimerModule           { getOrCreate(name: "timer",        type: HSTimerModule.self)}
+    @objc var translation:  HSTranslationModule     { getOrCreate(name: "translation",  type: HSTranslationModule.self)}
+    @objc var ui:           HSUIModule              { getOrCreate(name: "ui",           type: HSUIModule.self)}
+    @objc var ipc:          HSIPCModule             { getOrCreate(name: "ipc",          type: HSIPCModule.self)}
+    @objc var urlevent:     HSURLEventModule        { getOrCreate(name: "urlevent",     type: HSURLEventModule.self)}
+    @objc var usb:          HSUSBModule             { getOrCreate(name: "usb",          type: HSUSBModule.self)}
+    @objc var bluetooth:    HSBluetoothModule       { getOrCreate(name: "bluetooth",    type: HSBluetoothModule.self)}
+    @objc var mqtt:         HSMQTTModule            { getOrCreate(name: "mqtt",         type: HSMQTTModule.self)}
+    @objc var keyboard:     HSKeyboardModule        { getOrCreate(name: "keyboard",     type: HSKeyboardModule.self)}
+    @objc var shortcuts:    HSShortcutsModule       { getOrCreate(name: "shortcuts",    type: HSShortcutsModule.self)}
+    @objc var sound:        HSSoundModule           { getOrCreate(name: "sound",        type: HSSoundModule.self)}
+    @objc var network:      HSNetworkModule         { getOrCreate(name: "network",      type: HSNetworkModule.self)}
+    @objc var window:       HSWindowModule          { getOrCreate(name: "window",       type: HSWindowModule.self)}
+    @objc var mouse:        HSMouseModule           { getOrCreate(name: "mouse",        type: HSMouseModule.self)}
+    @objc var plist:        HSPlistModule           { getOrCreate(name: "plist",        type: HSPlistModule.self)}
+    @objc var userdefaults: HSUserDefaultsModule    { getOrCreate(name: "userdefaults", type: HSUserDefaultsModule.self)}
+    @objc var wifi:         HSWifiModule            { getOrCreate(name: "wifi",         type: HSWifiModule.self)}
+    @objc var spoons:       HSSpoonsModule          { getOrCreate(name: "spoons") { HSSpoonsModule(engineID: engineID, spoonManager: spoonManager) }}
+    // swiftlint:enable colon opening_brace comma
 }
 
 // MARK: - JSContextInstallable

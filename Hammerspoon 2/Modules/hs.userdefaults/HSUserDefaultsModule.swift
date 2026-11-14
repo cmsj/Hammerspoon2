@@ -229,6 +229,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
         AKDebug("hs.userdefaults.off(): Stopped watching '\(key)'")
     }
 
+    // swiftlint:disable:next block_based_kvo
     nonisolated override func observeValue(
         forKeyPath keyPath: String?,
         of object: Any?,
