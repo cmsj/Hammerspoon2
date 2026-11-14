@@ -47,7 +47,7 @@
 #   1. tags the release's commit and pushes the tag
 #   2. creates the GitHub release with the notes and assets (as a draft until
 #      every asset is uploaded and checked) and publishes it
-#   2a. if SDK_PACKAGE_REPO is set, publishes the HammerspoonSDK Swift package
+#   2a. unless SDK_PACKAGE_REPO is empty, publishes the HammerspoonSDK Swift package
 #      for this release: a Package.swift pointing at the release's SDK asset,
 #      committed and tagged <version> in that repository
 #   3. commits appcast.xml to gh-pages and pushes it
@@ -78,7 +78,9 @@
 #   DELTA_COUNT         previous releases to build deltas from (default: 3)
 #   SDK_PACKAGE_REPO    owner/name of the HammerspoonSDK Swift package's GitHub
 #                       repository, which execute publishes each release's SDK
-#                       to (default: unset, which skips that step)
+#                       to (default: cmsj/HammerspoonSDK, which the extensions
+#                       guide and Examples/ExtensionTemplate point authors at;
+#                       set it to "" to skip that step)
 
 set -euo pipefail
 
@@ -97,7 +99,7 @@ PAGES_WORKFLOW="pages-deploy.yml"
 NOTARY_PROFILE="${NOTARY_PROFILE:-hammerspoon2-notary}"
 SPARKLE_KEY_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-ed25519}"
 DELTA_COUNT="${DELTA_COUNT:-3}"
-SDK_PACKAGE_REPO="${SDK_PACKAGE_REPO:-}"
+SDK_PACKAGE_REPO="${SDK_PACKAGE_REPO-cmsj/HammerspoonSDK}"
 SDK_TEMPLATES="$REPO_ROOT/scripts/sdk/package"
 
 usage() {
@@ -194,6 +196,10 @@ check_github() {
         || die "your GitHub account can't push to $GH_REPO, so it can't tag or release"
     gh workflow view "$PAGES_WORKFLOW" >/dev/null 2>&1 \
         || die "$PAGES_WORKFLOW isn't on $GH_REPO's default branch, and execute needs it to deploy the appcast"
+    if [ -n "$SDK_PACKAGE_REPO" ]; then
+        [ "$(gh api "repos/$SDK_PACKAGE_REPO" --jq .permissions.push 2>/dev/null)" = "true" ] \
+            || die "$SDK_PACKAGE_REPO doesn't exist or your GitHub account can't push to it, so execute can't publish the HammerspoonSDK package (create it, or set SDK_PACKAGE_REPO=\"\" to skip that step)"
+    fi
 }
 
 # Check the Sparkle signing key is in the keychain and matches the app's.
@@ -784,7 +790,8 @@ step_sdk_package() {
     if ! git -C "$checkout" rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
         git -C "$checkout" tag -a "$VERSION" -m "HammerspoonSDK from $APP_NAME $VERSION"
     fi
-    git -C "$checkout" push --quiet origin HEAD "refs/tags/$VERSION"
+    # By name, since a clone of the still-empty repository has no branch to follow
+    git -C "$checkout" push --quiet origin HEAD:refs/heads/main "refs/tags/$VERSION"
 }
 
 step_appcast() {
@@ -953,7 +960,7 @@ cmd_execute() {
 
     local sdk_state
     if [ -z "$SDK_PACKAGE_REPO" ]; then
-        sdk_state="skipped (SDK_PACKAGE_REPO isn't set)"
+        sdk_state="skipped (SDK_PACKAGE_REPO is empty)"
     elif sdk_package_published; then
         sdk_state="done"
     else
