@@ -23,11 +23,11 @@ import SwiftUI
 /// mirroring v1's single-`mouseCallback`-with-topmost-element-wins model.
 struct HSCanvasRenderView: View {
     var store: CanvasElementStore
-    var onMouseEvent: ((_ message: String, _ id: Any, _ x: Double, _ y: Double) -> Void)? = nil
+    var onMouseEvent: ((_ message: String, _ id: Any, _ x: Double, _ y: Double) -> Void)?
     /// Set by `HSCanvasDragHostingView`, and fed each left mouse-down by `HSCanvasWindow`.
     /// `nil` when rendered without a hosting view (`imageFromCanvas()`), where there are
     /// no clicks to deliver.
-    var pressState: HSCanvasPressState? = nil
+    var pressState: HSCanvasPressState?
 
     /// Sentinel id passed to `onMouseEvent` for whole-canvas tracking (`canvasMouseEvents`)
     /// when no individual element was hit.

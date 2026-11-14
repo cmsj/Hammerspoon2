@@ -347,11 +347,11 @@ private enum HSWifiError: LocalizedError {
     private let client = CWWiFiClient()
     private var watcherCallbacks: [String: JSCallback] = [:]
 
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSWifiEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -626,6 +626,7 @@ nonisolated enum HSWifiEvent: String, HSEventName {
 
     var cwEventType: CWEventType {
         switch self {
+        // swiftlint:disable force_unwrapping
         case .powerChange: CWEventType(rawValue: 1)!
         case .ssidChange: CWEventType(rawValue: 2)!
         case .bssidChange: CWEventType(rawValue: 3)!
@@ -634,6 +635,7 @@ nonisolated enum HSWifiEvent: String, HSEventName {
         case .linkQualityChange: CWEventType(rawValue: 6)!
         case .modeChange: CWEventType(rawValue: 7)!
         case .scanCacheUpdated: CWEventType(rawValue: 8)!
+        // swiftlint:enable force_unwrapping
         }
     }
 }

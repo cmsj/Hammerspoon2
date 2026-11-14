@@ -667,6 +667,7 @@ import Carbon
     // Device-independent masks (high word of CGEventFlags.rawValue)
     // Device-specific left/right masks (low word, NX_DEVICE*KEYMASK from IOLLEvent.h)
     let _modifierFlags: [String: Int] = [
+        // swiftlint:disable colon
         "capslock": Int(CGEventFlags.maskAlphaShift.rawValue),
         "shift":    Int(CGEventFlags.maskShift.rawValue),
         "ctrl":     Int(CGEventFlags.maskControl.rawValue),
@@ -686,6 +687,7 @@ import Carbon
         "leftAlt":    0x00000020,
         "rightAlt":   0x00000040,
         "rightCtrl":  0x00002000,
+        // swiftlint:enable colon
     ]
 
     @objc var eventTypes: [String: Int] {
@@ -1196,6 +1198,7 @@ import Carbon
             return event
         }
         for case let hotkey? in enabledTapHotkeys.map(\.hotkey) {
+            // swiftlint:disable:next for_where
             if hotkey.matches(keyCode: eventKeyCode, maskedFlags: maskedFlags, rawFlagsValue: rawFlagsValue) {
                 heldTapHotkeys[eventKeyCode] = hotkey
                 hotkey.trigger(type: .keyDown)
@@ -1210,6 +1213,7 @@ import Carbon
 
 private enum EventTapModifierMapper {
     // Device-specific left/right bits from IOKit/hidsystem/IOLLEvent.h (NX_DEVICE*KEYMASK).
+    // swiftlint:disable colon
     private static let leftCtrlBit:   UInt64 = 0x00000001
     private static let leftShiftBit:  UInt64 = 0x00000002
     private static let rightShiftBit: UInt64 = 0x00000004
@@ -1218,6 +1222,7 @@ private enum EventTapModifierMapper {
     private static let leftAltBit:    UInt64 = 0x00000020
     private static let rightAltBit:   UInt64 = 0x00000040
     private static let rightCtrlBit:  UInt64 = 0x00002000
+    // swiftlint:enable colon
 
     /// Parses an array of modifier name strings into (CGEventFlags, deviceBits), or nil on error.
     static func parse(_ mods: [String]) -> (CGEventFlags, UInt64)? {

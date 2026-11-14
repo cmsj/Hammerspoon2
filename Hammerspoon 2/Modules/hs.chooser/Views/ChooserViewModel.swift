@@ -57,24 +57,24 @@ final class ChooserViewModel {
     // MARK: - Styling
 
     /// Panel background color. `nil` uses the default glass/material effect.
-    var backgroundColor: Color? = nil
+    var backgroundColor: Color?
     /// Panel corner radius, in points.
     var cornerRadius: CGFloat = 14
     /// Panel border color. `nil` draws no border.
-    var borderColor: Color? = nil
+    var borderColor: Color?
     /// Panel border width, in points. Has no effect unless `borderColor` is set.
     var borderWidth: CGFloat = 1
     /// Result row title color. `nil` uses the system primary label color.
-    var textColor: Color? = nil
+    var textColor: Color?
     /// Result row subtitle color. `nil` uses the system secondary label color.
-    var subTextColor: Color? = nil
+    var subTextColor: Color?
     /// Color of text typed into the search field. `nil` uses the system primary label color.
-    var queryColor: Color? = nil
+    var queryColor: Color?
     /// Color of the placeholder text (and search icon) shown in an empty search field.
     /// `nil` uses the system secondary label color.
-    var placeholderColor: Color? = nil
+    var placeholderColor: Color?
     /// Background tint of the highlighted row. `nil` uses a translucent accent-color tint.
-    var selectionColor: Color? = nil
+    var selectionColor: Color?
     /// Result row title font size, in points.
     var textSize: CGFloat = 14
     /// Result row subtitle font size, in points.

@@ -129,8 +129,7 @@ private nonisolated final class HSIPCClient: Sendable {
     func connect(minLogLevel: Int) async throws -> HSIPCHelloReply {
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try session.send(HSIPCClientToBroker.hello(protocolVersion: HSIPC.protocolVersion, minLogLevel: minLogLevel)) {
-                    (result: Result<HSIPCHelloReply, any Error>) in
+                try session.send(HSIPCClientToBroker.hello(protocolVersion: HSIPC.protocolVersion, minLogLevel: minLogLevel)) { (result: Result<HSIPCHelloReply, any Error>) in
                     continuation.resume(with: result)
                 }
             } catch {
@@ -168,10 +167,12 @@ private nonisolated final class HSIPCClient: Sendable {
 // MARK: - Argument parsing
 
 private var flags = Flags()
+// swiftlint:disable comma
 private let logLevelFlag = flags.string("l", "log-level", description: "Show log messages at or above this level.\nLevels: garbage  debug  info  warning  error  javascript\nDefault: none (no log messages shown)")
 private let noPromptFlag = flags.option(nil, "no-prompt",   description: "Suppress 'hs2> ' prompt (useful when piping input)")
 private let versionFlag  = flags.option(nil, "version",     description: "Show the version of hs2 and exit")
 private let helpFlag     = flags.option("h", "help",        description: "Show this help")
+// swiftlint:enable comma
 
 if let failure = flags.parsingFailure() {
     writeStderr("error: \(failure)\n")

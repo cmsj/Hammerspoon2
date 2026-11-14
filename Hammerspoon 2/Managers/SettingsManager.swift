@@ -155,7 +155,7 @@ final class SettingsManager {
         var id: String { "\(self)" }
 
         var defaultValue: Any {
-            switch(self) {
+            switch self {
             case .configLocation:
                 return URL(filePath: NSString("~/.config/Hammerspoon2/init.js").expandingTildeInPath)
             case .consoleHistoryLength:
@@ -271,6 +271,8 @@ final class SettingsManager {
             Keys.importSpoonsOnOpen.rawValue: Keys.importSpoonsOnOpen.defaultValue,
             Keys.offerCrashReports.rawValue: Keys.offerCrashReports.defaultValue
         ])
+
+        // swiftlint:disable force_cast
         configLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
             ?? (Keys.configLocation.defaultValue as! URL)
         consoleHistoryLength = UserDefaults.standard.integer(forKey: Keys.consoleHistoryLength.rawValue)
@@ -287,6 +289,7 @@ final class SettingsManager {
 
         let reopenActionString = UserDefaults.standard.string(forKey: Keys.reopenAction.rawValue) ?? Keys.reopenAction.defaultValue as! String
         reopenAction = ReopenAction(rawValue: reopenActionString) ?? .showConsole
+        // swiftlint:enable force_cast
 
         // didSet does not fire for assignments made inside this initializer, so the
         // AKGarbage gate needs to be seeded explicitly to match the persisted value.
@@ -309,8 +312,8 @@ final class SettingsManager {
     }
 
     private func syncFromUserDefaults() {
-        let newConfigLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
-            ?? (Keys.configLocation.defaultValue as! URL)
+        // swiftlint:disable:next force_cast
+        let newConfigLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue) ?? (Keys.configLocation.defaultValue as! URL)
         if newConfigLocation != configLocation { configLocation = newConfigLocation }
 
         let newConsoleHistoryLength = UserDefaults.standard.integer(forKey: Keys.consoleHistoryLength.rawValue)
@@ -358,6 +361,7 @@ final class SettingsManager {
 // MARK: - SettingsManagerProtocol Conformance
 extension SettingsManager: SettingsManagerProtocol {
     func resetToDefaults() {
+        // swiftlint:disable force_cast
         configLocation = Keys.configLocation.defaultValue as! URL
         consoleHistoryLength = Keys.consoleHistoryLength.defaultValue as! Int
         relaunchOnReload = Keys.relaunchOnReload.defaultValue as! Bool
@@ -367,9 +371,11 @@ extension SettingsManager: SettingsManagerProtocol {
         importSpoonsOnOpen = Keys.importSpoonsOnOpen.defaultValue as! Bool
         offerCrashReports = Keys.offerCrashReports.defaultValue as! Bool
 
+        // swiftlint:disable force_unwrapping
         let dockMenuType = DockMenubarType(rawValue: Keys.dockMenuBehaviour.defaultValue as! String)!
         dockMenuBehaviour = dockMenuType
 
         reopenAction = ReopenAction(rawValue: Keys.reopenAction.defaultValue as! String)!
+        // swiftlint:enable force_cast force_unwrapping
     }
 }

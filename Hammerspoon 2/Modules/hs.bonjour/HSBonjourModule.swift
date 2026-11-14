@@ -146,6 +146,7 @@ import dnssd
     let engineID: UUID
 
     @objc var serviceTypes: [String: String] = [
+        // swiftlint:disable colon
         "airplay":      "_airplay._tcp.",
         "airport":      "_airport._tcp.",
         "afp":          "_afpovertcp._tcp.",
@@ -169,6 +170,7 @@ import dnssd
         "telnet":       "_telnet._tcp.",
         "vnc":          "_rfb._tcp.",
         "workstation":  "_workstation._tcp.",
+        // swiftlint:enable colon
     ]
 
     // Running searches, and found services that are resolving or monitored, are kept alive by
@@ -289,6 +291,7 @@ import dnssd
                 unsafe DNSServiceRefDeallocate(sdRef)
                 // takeRetainedValue() releases the +1 from passRetained above.
                 let result = unsafe Unmanaged<NSMutableSet>.fromOpaque(ctxPtr).takeRetainedValue()
+                // swiftlint:disable:next force_cast
                 holder.resolveWith(result.allObjects as! [String])
             }
         }
@@ -350,4 +353,3 @@ private class AdvertisedService: NSObject, NetServiceDelegate {
         callback = nil
     }
 }
-

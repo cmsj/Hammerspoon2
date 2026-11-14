@@ -27,10 +27,10 @@ private struct ReactiveVideoPlayer: View {
 /// A UI element that plays video via an HSVideo object
 class UIVideo: HSUIElement, FrameModifiable, OpacityModifiable, InteractiveModifiable {
     var hsVideo: HSVideo?
-    var elementFrame: UIFrame? = nil
+    var elementFrame: UIFrame?
     var elementOpacity: Double = 1.0
-    var clickCallback: (() -> Void)? = nil
-    var hoverCallback: ((Bool) -> Void)? = nil
+    var clickCallback: (() -> Void)?
+    var hoverCallback: ((Bool) -> Void)?
 
     init(hsVideo: HSVideo?) {
         self.hsVideo = hsVideo

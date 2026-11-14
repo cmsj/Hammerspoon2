@@ -59,6 +59,7 @@ enum WindowCollectionBehavior {
     /// - Returns: A message naming the conflicting flags, or nil if there are none
     static func conflict(in behavior: NSWindow.CollectionBehavior) -> String? {
         for group in exclusiveGroups {
+            // swiftlint:disable:next force_unwrapping
             let present = group.filter { behavior.contains(named[$0]!) }
             if present.count > 1 {
                 return "'\(present[0])' and '\(present[1])' cannot be combined"

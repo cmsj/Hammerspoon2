@@ -15,7 +15,7 @@ nonisolated struct CompletionItem: Sendable {
     let isProperty: Bool
 
     var formatted: String {
-        if isProperty         { return name }
+        if isProperty { return name }
         if paramNames.isEmpty { return "\(name)()" }
         return "\(name)(\(paramNames.joined(separator: ", ")))"
     }

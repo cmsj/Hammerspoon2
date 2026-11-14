@@ -119,9 +119,9 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     private var watcherCallbacks: [String: JSCallback] = [:]
 
     @objc var _watcherEmitter: JSFunction?
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
 
     required init(engineID: UUID) {
         self.engineID = engineID

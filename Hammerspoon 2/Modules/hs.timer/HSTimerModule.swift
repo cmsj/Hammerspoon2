@@ -187,10 +187,10 @@ import JavaScriptCore
     }
 
     // MARK: - Swift-retained storage for JS-defined functions
-    @objc var doUntil: JSFunction? = nil
-    @objc var doWhile: JSFunction? = nil
-    @objc var waitUntil: JSFunction? = nil
-    @objc var waitWhile: JSFunction? = nil
+    @objc var doUntil: JSFunction?
+    @objc var doWhile: JSFunction?
+    @objc var waitUntil: JSFunction?
+    @objc var waitWhile: JSFunction?
 
     // MARK: - Timer constructors
 

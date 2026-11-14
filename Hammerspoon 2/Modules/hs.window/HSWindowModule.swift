@@ -187,15 +187,15 @@ import AXSwift
     ]
 
     // MARK: - Swift-retained storage for JS-defined functions
-    @objc var focused: JSFunction? = nil
-    @objc var findByTitle: JSFunction? = nil
-    @objc var currentWindows: JSFunction? = nil
-    @objc var moveToLeftHalf: JSFunction? = nil
-    @objc var moveToRightHalf: JSFunction? = nil
-    @objc var maximize: JSFunction? = nil
-    @objc var cycleWindows: JSFunction? = nil
-    @objc var grid: JSValue? = nil
-    @objc var tiling: JSValue? = nil
+    @objc var focused: JSFunction?
+    @objc var findByTitle: JSFunction?
+    @objc var currentWindows: JSFunction?
+    @objc var moveToLeftHalf: JSFunction?
+    @objc var moveToRightHalf: JSFunction?
+    @objc var maximize: JSFunction?
+    @objc var cycleWindows: JSFunction?
+    @objc var grid: JSValue?
+    @objc var tiling: JSValue?
 
     // MARK: - Helper Methods
     private func checkAccessibility() -> Bool {
@@ -338,10 +338,8 @@ import AXSwift
         }
 
         // Add other apps
-        for app in candidateApplications() {
-            if !orderedApps.contains(app) {
-                orderedApps.append(app)
-            }
+        for app in candidateApplications() where !orderedApps.contains(app) {
+            orderedApps.append(app)
         }
 
         let windowServerIDs = WindowEnumerator.windowServerWindowIDs()

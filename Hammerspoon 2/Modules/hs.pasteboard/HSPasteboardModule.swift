@@ -331,13 +331,13 @@ nonisolated enum HSPasteboardEvent: String, HSEventName {
     let engineID: UUID
 
     @objc var watcherInterval: Double = 0.5
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSPasteboardEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
 
-    private var watcherTimer: Timer? = nil
+    private var watcherTimer: Timer?
     private var watcherCallback: JSCallback?
     private var lastChangeCount: Int = 0
 

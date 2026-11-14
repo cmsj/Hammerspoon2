@@ -1107,8 +1107,11 @@ private struct UIWebViewToolbarEntryView: View {
 
         case .reload:
             Button {
-                if page.isLoading { page.stopLoading() }
-                else { _ = page.reload() }
+                if page.isLoading {
+                    page.stopLoading()
+                } else {
+                    _ = page.reload()
+                }
             } label: {
                 Image(systemName: page.isLoading ? "xmark" : "arrow.clockwise")
             }

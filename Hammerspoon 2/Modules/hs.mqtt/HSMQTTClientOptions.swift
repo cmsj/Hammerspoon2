@@ -240,7 +240,7 @@ struct HSMQTTClientOptions {
                 kSecMatchLimit: kSecMatchLimitAll,
             ]
             var result: CFTypeRef?
-            guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+            guard unsafe SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
                   let certificates = result as? [SecCertificate], !certificates.isEmpty else {
                 throw HSMQTTError("caCertificate: there's no certificate named '\(name)' in the keychain")
             }

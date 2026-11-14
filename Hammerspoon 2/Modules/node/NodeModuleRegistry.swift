@@ -14,6 +14,7 @@ import JavaScriptCoreExtras
 /// module means adding its native object here — no changes to `require.js` are needed.
 struct NodeBuiltinModulesInstaller: JSContextInstallable {
     func install(in context: JSContext) throws {
+        // swiftlint:disable:next force_unwrapping
         let builtins = JSValue(newObjectIn: context)!
         builtins.setObject(NodeUtilModule(), forKeyedSubscript: "util" as NSString)
         builtins.setObject(try NodeSQLiteModule.makeExports(in: context), forKeyedSubscript: "node:sqlite" as NSString)

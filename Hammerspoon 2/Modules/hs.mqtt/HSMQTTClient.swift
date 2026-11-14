@@ -198,7 +198,6 @@ import Network
     @objc var _eventNames: [String] { get }
 }
 
-
 // MARK: - Implementation
 
 /// Events emitted by an HSMQTTClient's watcher
@@ -229,7 +228,7 @@ nonisolated enum HSMQTTClientEvent: String, HSEventName {
     private var watcherCallback: JSCallback? {
         didSet { updateActivity() }
     }
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSMQTTClientEvent.allNames }
 
     private let connection: MQTTClient

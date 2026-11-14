@@ -74,12 +74,12 @@ import JavaScriptCoreExtras
     private var tasks = HSObjectTracker<HSTask>()
 
     // Swift-retained storage for JS-defined functions
-    @objc var runAsync: JSFunction? = nil
-    @objc var shell: JSFunction? = nil
-    @objc var parallel: JSFunction? = nil
-    @objc var sequence: JSFunction? = nil
-    @objc var builder: JSFunction? = nil
-    @objc var TaskBuilder: JSFunction? = nil
+    @objc var runAsync: JSFunction?
+    @objc var shell: JSFunction?
+    @objc var parallel: JSFunction?
+    @objc var sequence: JSFunction?
+    @objc var builder: JSFunction?
+    @objc var TaskBuilder: JSFunction?
 
     // MARK: - Module lifecycle
     required init(engineID: UUID) {

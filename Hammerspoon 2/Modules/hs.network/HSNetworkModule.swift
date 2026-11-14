@@ -33,11 +33,11 @@ private func addressString(from addr: UnsafeMutablePointer<sockaddr>) -> String?
 
 private struct NetworkSnapshot {
     let interfaces: [[String: Any]]
-    let addresses:  [[String: Any]]
+    let addresses: [[String: Any]]
 }
 
 private func snapshotNetwork() -> NetworkSnapshot {
-    var ifap: UnsafeMutablePointer<ifaddrs>? = nil
+    var ifap: UnsafeMutablePointer<ifaddrs>?
     guard unsafe getifaddrs(&ifap) == 0, let root = unsafe ifap else {
         return NetworkSnapshot(interfaces: [], addresses: [])
     }
@@ -46,7 +46,7 @@ private func snapshotNetwork() -> NetworkSnapshot {
     let displayNames = buildDisplayNameMap()
     var seenNames = Set<String>()
     var interfaces: [[String: Any]] = []
-    var addresses:  [[String: Any]] = []
+    var addresses: [[String: Any]] = []
 
     var ifa: UnsafeMutablePointer<ifaddrs>? = unsafe root
     while let current = unsafe ifa {
@@ -56,10 +56,10 @@ private func snapshotNetwork() -> NetworkSnapshot {
         if !seenNames.contains(name) {
             seenNames.insert(name)
             var entry: [String: Any] = [
-                "name":      name,
+                "name": name,
                 "isLoopback": (flags & UInt32(IFF_LOOPBACK)) != 0,
-                "isUp":       (flags & UInt32(IFF_UP))       != 0,
-                "isRunning":  (flags & UInt32(IFF_RUNNING))  != 0
+                "isUp": (flags & UInt32(IFF_UP))       != 0,
+                "isRunning": (flags & UInt32(IFF_RUNNING))  != 0
             ]
             if let displayName = displayNames[name] {
                 entry["displayName"] = displayName
@@ -73,8 +73,8 @@ private func snapshotNetwork() -> NetworkSnapshot {
                 if let addrStr = unsafe addressString(from: addr) {
                     addresses.append([
                         "interface": name,
-                        "address":   addrStr,
-                        "family":    family == UInt8(AF_INET) ? "ipv4" : "ipv6"
+                        "address": addrStr,
+                        "family": family == UInt8(AF_INET) ? "ipv4" : "ipv6"
                     ])
                 }
             }
@@ -392,6 +392,7 @@ private func queryPrimaryInterface() -> String? {
 
     @objc var reachabilityFlags: [String: Int] {
         [
+            // swiftlint:disable colon
             "transientConnection":  Int(kFlagTransientConnection),
             "reachable":            Int(kFlagReachable),
             "connectionRequired":   Int(kFlagConnectionRequired),
@@ -400,6 +401,7 @@ private func queryPrimaryInterface() -> String? {
             "connectionOnDemand":   Int(kFlagConnectionOnDemand),
             "isLocalAddress":       Int(kFlagIsLocalAddress),
             "isDirect":             Int(kFlagIsDirect)
+            // swiftlint:enable colon
         ]
     }
 
@@ -443,6 +445,7 @@ private func queryPrimaryInterface() -> String? {
         case nil, "", "undefined":
             pat = ".*"
         default:
+            // swiftlint:disable:next force_unwrapping
             pat = pattern!
         }
         guard let result = SCDynamicStoreCopyMultiple(store, nil, [pat] as CFArray) as? [String: Any] else { return [:] }
@@ -513,7 +516,7 @@ private func queryPrimaryInterface() -> String? {
         case "ipv6":
             aiFamily = AF_INET6
         default:
-            return context.createRejectedPromise(with: "hs.network.resolve(): unknown family '\(family!)'. Use \"ipv4\", \"ipv6\", or \"both\".")
+            return context.createRejectedPromise(with: "hs.network.resolve(): unknown family '\(family ?? "unknown")'. Use \"ipv4\", \"ipv6\", or \"both\".")
         }
 
         return wrapAsyncInJSPromise(in: context) { holder in
@@ -540,6 +543,7 @@ private func queryPrimaryInterface() -> String? {
                 callbackValue = options
             } else if options.isObject {
                 let c = options.objectForKeyedSubscript("count")
+                // swiftlint:disable force_unwrapping
                 if c != nil && c!.isNumber { count = max(1, Int(c!.toInt32())) }
 
                 let i = options.objectForKeyedSubscript("interval")
@@ -559,6 +563,7 @@ private func queryPrimaryInterface() -> String? {
 
                 let cb = options.objectForKeyedSubscript("callback")
                 if cb != nil && cb!.isFunction { callbackValue = cb }
+                // swiftlint:enable force_unwrapping
             }
         }
 

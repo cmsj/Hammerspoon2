@@ -124,12 +124,14 @@ import AppKit
 
     @objc var builtinServices: [String: String] {
         [
+            // swiftlint:disable colon
             "mail":              NSSharingService.Name.composeEmail.rawValue,
             "message":           NSSharingService.Name.composeMessage.rawValue,
             "airdrop":           NSSharingService.Name.sendViaAirDrop.rawValue,
             "safariReadingList": NSSharingService.Name.addToSafariReadingList.rawValue,
             "photos":            NSSharingService.Name.addToIPhoto.rawValue,
             "desktopPicture":    NSSharingService.Name.useAsDesktopPicture.rawValue,
+            // swiftlint:enable colon
         ]
     }
 

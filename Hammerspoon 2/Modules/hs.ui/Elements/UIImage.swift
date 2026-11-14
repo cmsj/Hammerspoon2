@@ -36,12 +36,12 @@ private struct ReactiveImageView: View {
 /// A UI element that displays an image
 class UIImage: HSUIElement, FrameModifiable, OpacityModifiable, InteractiveModifiable {
     var hsImage: HSImage?
-    var elementFrame: UIFrame? = nil
+    var elementFrame: UIFrame?
     var elementOpacity: Double = 1.0
     var resizable: Bool = false
     var aspectRatio: ContentMode = .fit
-    var clickCallback: (() -> Void)? = nil
-    var hoverCallback: ((Bool) -> Void)? = nil
+    var clickCallback: (() -> Void)?
+    var hoverCallback: ((Bool) -> Void)?
 
     init(hsImage: HSImage?) {
         self.hsImage = hsImage

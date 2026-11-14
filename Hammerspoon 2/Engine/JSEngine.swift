@@ -62,7 +62,7 @@ class JSEngine {
         unsafe objc_setAssociatedObject(context, &contextTrackerKey, ContextLifetimeTracker(id: id), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 
         // Set up exception handler to catch JavaScript errors
-        context.exceptionHandler = { context, exception in
+        context.exceptionHandler = { _, exception in
             if let exception = exception {
                 AKError("JavaScript Exception: \(exception.toString() ?? "unknown")")
                 if let stack = exception.objectForKeyedSubscript("stack") {
@@ -274,10 +274,12 @@ struct RequireInstaller: JSContextInstallable {
             return context.evaluateScript(source, withSourceURL: URL(fileURLWithPath: filename))
         }
 
+        // swiftlint:disable comma
         context.setObject(readFile,   forKeyedSubscript: "_hs_readFile"   as NSString)
         context.setObject(fileExists, forKeyedSubscript: "_hs_fileExists" as NSString)
         context.setObject(expandPath, forKeyedSubscript: "_hs_expandPath" as NSString)
         context.setObject(evalScript, forKeyedSubscript: "_hs_eval"       as NSString)
+        // swiftlint:enable comma
 
         // The directory containing the user's config file, wherever they chose to put it.
         let configDir = SettingsManager.shared.configLocation.deletingLastPathComponent().path
@@ -289,4 +291,3 @@ struct RequireInstaller: JSContextInstallable {
         context.evaluateScript(try String(contentsOf: requireURL, encoding: .utf8), withSourceURL: requireURL)
     }
 }
-

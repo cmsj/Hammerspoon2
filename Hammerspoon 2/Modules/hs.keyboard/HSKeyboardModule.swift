@@ -111,11 +111,13 @@ private func registryEntryID(for device: IOHIDDevice) -> UInt64? {
 private func deviceInfo(for device: IOHIDDevice) -> [String: Any]? {
     guard let entryID = registryEntryID(for: device) else { return nil }
     var info: [String: Any] = [
+        // swiftlint:disable colon
         "keyboardID":  Double(entryID),
         "productName": (IOHIDDeviceGetProperty(device, kIOHIDProductKey as CFString) as? String) ?? "",
         "vendorName":  (IOHIDDeviceGetProperty(device, kIOHIDManufacturerKey as CFString) as? String) ?? "",
         "productID":   (IOHIDDeviceGetProperty(device, kIOHIDProductIDKey as CFString) as? Int) ?? 0,
         "vendorID":    (IOHIDDeviceGetProperty(device, kIOHIDVendorIDKey as CFString) as? Int) ?? 0
+        // swiftlint:enable colon
     ]
     if let serial = IOHIDDeviceGetProperty(device, kIOHIDSerialNumberKey as CFString) as? String, !serial.isEmpty {
         info["serialNumber"] = serial

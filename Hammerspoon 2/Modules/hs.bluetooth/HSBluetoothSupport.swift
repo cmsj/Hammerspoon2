@@ -63,6 +63,7 @@ nonisolated enum HSBluetoothUUID {
     static func parse(_ string: String) -> CBUUID? {
         var s = string.trimmingCharacters(in: .whitespaces)
         if s.lowercased().hasPrefix("0x") { s = String(s.dropFirst(2)) }
+        // swiftlint:disable:next control_statement
         if (s.count == 4 || s.count == 8), s.allSatisfy(\.isHexDigit) {
             return CBUUID(string: s.uppercased())
         }

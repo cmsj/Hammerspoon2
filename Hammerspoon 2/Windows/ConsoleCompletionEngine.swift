@@ -30,6 +30,7 @@ import Foundation
     // MARK: - Result type
 
     struct Result {
+        // swiftlint:disable:next nesting
         struct Candidate {
             /// Bare name, used for stem filtering and LCP computation.
             let name: String
@@ -95,7 +96,7 @@ import Foundation
 
     // MARK: - API data
 
-    private var apiData: APICompletionData? = nil
+    private var apiData: APICompletionData?
 
     // MARK: - Entry point
 
@@ -330,8 +331,8 @@ private struct APICompletionItem {
     let isProperty: Bool
 
     var formattedCompletion: String {
-        if isProperty          { return name }
-        if paramNames.isEmpty  { return "\(name)()" }
+        if isProperty { return name }
+        if paramNames.isEmpty { return "\(name)()" }
         return "\(name)(\(paramNames.joined(separator: ", ")))"
     }
 }
@@ -349,9 +350,9 @@ private nonisolated struct APICompletionData {
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let modules = json["modules"] as? [[String: Any]] else { return nil }
 
-        var modItems:  [String: [APICompletionItem]] = [:]
+        var modItems: [String: [APICompletionItem]] = [:]
         var instItems: [String: [APICompletionItem]] = [:]
-        var retTypes:  [String: String] = [:]
+        var retTypes: [String: String] = [:]
 
         for module in modules {
             guard let moduleName = module["name"] as? String else { continue }

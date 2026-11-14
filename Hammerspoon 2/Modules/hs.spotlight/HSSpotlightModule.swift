@@ -234,17 +234,20 @@ import JavaScriptCore
 
     @objc var scope: [String: [String]] {
         [
+            // swiftlint:disable colon
             "home":      [NSMetadataQueryUserHomeScope],
             "computer":  [NSMetadataQueryLocalComputerScope],
             "network":   [NSMetadataQueryNetworkScope],
             "applications": ["/Applications", "/System/Applications", "~/Applications"],
             "icloud":    [NSMetadataQueryUbiquitousDocumentsScope],
             "icloudData": [NSMetadataQueryUbiquitousDataScope],
+            // swiftlint:enable colon
         ]
     }
 
     @objc var attribute: [String: String] {
         [
+            // swiftlint:disable colon
             "path":             "kMDItemPath",
             "displayName":      "kMDItemDisplayName",
             "fsName":           "kMDItemFSName",
@@ -265,6 +268,7 @@ import JavaScriptCore
             "pixelHeight":      "kMDItemPixelHeight",
             "whereFroms":       "kMDItemWhereFroms",
             "bundleIdentifier": "kMDItemCFBundleIdentifier",
+            // swiftlint:enable colon
         ]
     }
 }

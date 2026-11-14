@@ -123,7 +123,7 @@ class HSOSAScriptXPCHelper {
                                using: [])
 
         let compiled = signposter.withIntervalSignpost("Compile", id: signpostID) { () -> HSOSAResponse? in
-            var compileError: NSDictionary? = nil
+            var compileError: NSDictionary?
             guard script.compileAndReturnError(&compileError) else {
                 let message = errorMessage(from: compileError, fallback: "Compilation failed")
                 logger.error("Compilation failed: \(message)")
@@ -135,7 +135,7 @@ class HSOSAScriptXPCHelper {
             return compileFailure
         }
 
-        var execError: NSDictionary? = nil
+        var execError: NSDictionary?
         let executed = signposter.withIntervalSignpost("Execute", id: signpostID) {
             script.executeAndReturnError(&execError)
         }

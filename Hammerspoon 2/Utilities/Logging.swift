@@ -10,8 +10,6 @@ import JavaScriptCore
 import Synchronization
 import os
 
-
-
 @_documentation(visibility: private)
 struct HammerspoonLogEntry: Identifiable, Equatable, Hashable {
     let id = UUID()
@@ -25,16 +23,14 @@ struct HammerspoonLogEntry: Identifiable, Equatable, Hashable {
     let msg: String
 
     var levelString: String {
-        get {
-            return self.logType.asString
-        }
+        return self.logType.asString
     }
 }
 
 @_documentation(visibility: private)
 extension Logger {
     /// Using your bundle identifier is a great way to ensure a unique identifier.
-    private static let subsystem = Bundle.main.bundleIdentifier!
+    private static let subsystem = Bundle.main.bundleIdentifier! // swiftlint:disable:this force_unwrapping
 
     /// Logs for Hammerspoon
     static let Hammerspoon = Logger(subsystem: subsystem, category: "Hammerspoon")
@@ -43,7 +39,7 @@ extension Logger {
 @_documentation(visibility: private)
 @Observable
 @MainActor
-final class HammerspoonLog: Sendable {
+final class HammerspoonLog {
     static let shared = HammerspoonLog()
 
     /// `.Garbage` entries (module lifecycle/GC diagnostics) are extremely high volume

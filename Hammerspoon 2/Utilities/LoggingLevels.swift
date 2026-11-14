@@ -5,7 +5,6 @@
 //  Created by Chris Jones on 31/08/2026.
 //
 
-
 @_documentation(visibility: private)
 enum HammerspoonLogType: Int, CaseIterable, Identifiable {
     // Raw values are deliberately spaced out so future cases can be inserted
@@ -21,7 +20,7 @@ enum HammerspoonLogType: Int, CaseIterable, Identifiable {
 
     var id: Self { self }
     var asString: String {
-        switch (self) {
+        switch self {
         case .Garbage:
             return "Garbage"
         case .Debug:

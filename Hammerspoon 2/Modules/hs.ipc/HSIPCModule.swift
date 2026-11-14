@@ -193,7 +193,8 @@ import JavaScriptCore
     }
 
     @objc func installBinary(_ directoryVal: JSValue) -> Bool {
-        let directory = directoryVal.isString ? directoryVal.toString()! : "/usr/local/bin"
+        // swiftlint:disable:next force_unwrapping
+        let directory: String = directoryVal.isString ? directoryVal.toString()! : "/usr/local/bin"
 
         guard let sourceURL = bundledHSBinaryURL() else {
             AKError("hs.ipc.installBinary(): Cannot find 'hs2' binary in the app bundle. Ensure the 'hs2' target has been built.")
@@ -224,6 +225,7 @@ import JavaScriptCore
     }
 
     @objc func uninstallBinary(_ directoryVal: JSValue) -> Bool {
+        // swiftlint:disable:next force_unwrapping
         let directory = directoryVal.isString ? directoryVal.toString()! : "/usr/local/bin"
         let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs2")
         let fm = FileManager.default
@@ -252,6 +254,7 @@ import JavaScriptCore
     }
 
     @objc func isBinaryInstalled(_ directoryVal: JSValue) -> Bool {
+        // swiftlint:disable:next force_unwrapping
         let directory = directoryVal.isString ? directoryVal.toString()! : "/usr/local/bin"
         let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs2")
         let fm = FileManager.default

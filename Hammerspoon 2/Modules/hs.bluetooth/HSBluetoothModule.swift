@@ -202,12 +202,12 @@ nonisolated enum HSBluetoothEvent: String, HSEventName {
     let peripherals = HSObjectTracker<HSBluetoothPeripheral>()
 
     // Module-level watcher
-    @objc var _watcherEmitter: JSFunction? = nil
-    @objc var _makeObjectEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
+    @objc var _makeObjectEmitter: JSFunction?
     @objc var _eventNames: [String] { HSBluetoothEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
     private var watcherCallbacks: [String: JSCallback] = [:]
 
     // IOBluetooth connect/disconnect notifications, shared by the module's watcher and every

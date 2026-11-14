@@ -20,7 +20,7 @@ import CoreGraphics
 
     /// The height of the rectangle
     var h: Double { get set }
-    
+
     /// Create a new HSSize object
     /// - Parameters:
     ///   - w: The width of the rectangle
@@ -140,4 +140,3 @@ extension CGSize: JSConvertible {
         HSSize(w: Double(width), h: Double(height))
     }
 }
-

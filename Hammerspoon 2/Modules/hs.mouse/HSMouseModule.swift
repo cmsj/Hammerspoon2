@@ -300,10 +300,8 @@ private func openHIDEventDriver() -> io_connect_t {
         // NSEvent.mouseLocation is in AppKit coordinates (y-up from bottom of primary screen).
         // NSScreen.frame is also in AppKit coordinates, so the containment check is direct.
         let loc = NSEvent.mouseLocation
-        for screen in NSScreen.screens {
-            if screen.frame.contains(loc) {
-                return HSScreen(screen: screen)
-            }
+        for screen in NSScreen.screens where screen.frame.contains(loc) {
+            return HSScreen(screen: screen)
         }
         return nil
     }
@@ -398,10 +396,8 @@ private func openHIDEventDriver() -> io_connect_t {
             ("contextualMenu", .contextualMenu),
         ]
 
-        for (typeName, cursor) in knownCursors {
-            if cursor.image.tiffRepresentation == currentTiff {
-                return typeName
-            }
+        for (typeName, cursor) in knownCursors where cursor.image.tiffRepresentation == currentTiff {
+            return typeName
         }
         return "unknown"
     }

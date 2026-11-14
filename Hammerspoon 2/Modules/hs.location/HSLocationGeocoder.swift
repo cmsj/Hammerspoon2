@@ -66,6 +66,7 @@ import MapKit
 
     static func placemarkTable(from item: MKMapItem) -> [String: Any] {
         var d: [String: Any] = [:]
+        // swiftlint:disable opening_brace
         if let name = item.name                    { d["name"]         = name }
         if let addr = item.address {
             d["fullAddress"] = addr.fullAddress
@@ -76,6 +77,7 @@ import MapKit
             if let country = reps.regionName       { d["country"]      = country }
             if let region  = reps.region           { d["countryCode"]  = region.identifier }
         }
+        // swiftlint:enable opening_brace
         d["location"] = HSLocationModule.locationTable(from: item.location)
         return d
     }

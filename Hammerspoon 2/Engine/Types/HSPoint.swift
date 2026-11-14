@@ -20,7 +20,7 @@ import CoreGraphics
 
     /// A coordinate for the y-axis position of this point
     var y: Double { get set }
-    
+
     /// Create a new HSPoint object
     /// - Parameters:
     ///   - x: A coordinate for this point on the x-axis
@@ -259,5 +259,3 @@ extension CGPoint: JSConvertible {
         HSPoint(x: Double(x), y: Double(y))
     }
 }
-
-

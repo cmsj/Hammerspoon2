@@ -118,6 +118,7 @@ enum HSFSSupport {
                     + Double(st.st_mtimespec.tv_nsec) / 1_000_000_000
 
         return [
+            // swiftlint:disable colon
             "size":             Int(st.st_size),
             "type":             typeName(forMode: st.st_mode),
             "permissions":      Int(st.st_mode & 0o7777),
@@ -126,6 +127,7 @@ enum HSFSSupport {
             "inode":            Int(st.st_ino),
             "creationDate":     creationDate,
             "modificationDate": modDate,
+            // swiftlint:enable colon
         ]
     }
 

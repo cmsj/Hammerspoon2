@@ -179,12 +179,12 @@ import JavaScriptCoreExtras
         super.init()
     }
 
-    private func getOrCreate<T>(name: String, type: T.Type) -> T where T:HSModuleAPI {
+    private func getOrCreate<T>(name: String, type: T.Type) -> T where T: HSModuleAPI {
         getOrCreate(name: name) { type.init(engineID: engineID) }
     }
 
     /// - Parameter make: Creates the module, for one that needs more than its engine ID
-    private func getOrCreate<T>(name: String, make: () -> T) -> T where T:HSModuleAPI {
+    private func getOrCreate<T>(name: String, make: () -> T) -> T where T: HSModuleAPI {
         if let result = modules[name] as? T {
             pinWrapper(of: result, named: name)
             return result
@@ -264,8 +264,11 @@ import JavaScriptCoreExtras
     }
 
     @objc func activeObjects() -> JSValue {
+        // swiftlint:disable force_unwrapping
         let context = JSContext.current()!
         let result = JSValue(newArrayIn: context)!
+        // swiftlint:enable force_unwrapping
+
         for (index, wrapper) in HSActiveObjects.wrappers(in: context).enumerated() {
             result.setValue(wrapper, at: index)
         }
@@ -274,13 +277,13 @@ import JavaScriptCoreExtras
 
     // MARK: - Console
     @objc func openConsole() {
-        if let url = URL(string:"hammerspoon2://openConsole") {
+        if let url = URL(string: "hammerspoon2://openConsole") {
             NSWorkspace.shared.open(url)
         }
     }
 
     @objc func closeConsole() {
-        if let url = URL(string:"hammerspoon2://closeConsole") {
+        if let url = URL(string: "hammerspoon2://closeConsole") {
             NSWorkspace.shared.open(url)
         }
     }

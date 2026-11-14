@@ -183,6 +183,7 @@ nonisolated extension KeyCodeTable {
 
     /// Keys with a fixed name, whatever the layout.
     static let namedKeys: [(String, Int)] = [
+        // swiftlint:disable comma
         // Control / editing
         ("return",        kVK_Return),        // 36
         ("tab",           kVK_Tab),           // 48
@@ -267,10 +268,13 @@ nonisolated extension KeyCodeTable {
         ("pad,",       kVK_JIS_KeypadComma),  // 95
         ("eisu",       kVK_JIS_Eisu),         // 102
         ("kana",       kVK_JIS_Kana),         // 104
+
+        // swiftlint:enable comma
     ]
 
     /// Word names for punctuation. Each means the character, wherever the layout puts it.
     static let characterAliases: [String: String] = [
+        // swiftlint:disable colon
         "minus":        "-",
         "equal":        "=",
         "leftbracket":  "[",
@@ -282,6 +286,7 @@ nonisolated extension KeyCodeTable {
         "period":       ".",
         "slash":        "/",
         "grave":        "`",
+        // swiftlint:enable colon
     ]
 
     /// US-ANSI key positions, used for characters the current layout doesn't type.

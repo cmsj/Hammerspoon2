@@ -20,17 +20,17 @@ private func caAddr(
 }
 
 private func caHasProperty(_ objectID: AudioObjectID,
-                            _ selector: AudioObjectPropertySelector,
-                            _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
-                            _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain) -> Bool {
+                           _ selector: AudioObjectPropertySelector,
+                           _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+                           _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain) -> Bool {
     var a = caAddr(selector, scope, element)
     return unsafe AudioObjectHasProperty(objectID, &a)
 }
 
 private func caIsPropertySettable(_ objectID: AudioObjectID,
-                                   _ selector: AudioObjectPropertySelector,
-                                   _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
-                                   _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain) -> Bool {
+                                  _ selector: AudioObjectPropertySelector,
+                                  _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+                                  _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain) -> Bool {
     var a = caAddr(selector, scope, element)
     var settable: DarwinBoolean = false
     guard unsafe AudioObjectIsPropertySettable(objectID, &a, &settable) == noErr else { return false }
@@ -38,9 +38,9 @@ private func caIsPropertySettable(_ objectID: AudioObjectID,
 }
 
 private func caGetUInt32(_ objectID: AudioObjectID,
-                          _ selector: AudioObjectPropertySelector,
-                          _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
-                          _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain) -> UInt32? {
+                         _ selector: AudioObjectPropertySelector,
+                         _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+                         _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain) -> UInt32? {
     var a = caAddr(selector, scope, element)
     var size = UInt32(MemoryLayout<UInt32>.size)
     var value: UInt32 = 0
@@ -49,9 +49,9 @@ private func caGetUInt32(_ objectID: AudioObjectID,
 }
 
 private func caGetFloat32(_ objectID: AudioObjectID,
-                           _ selector: AudioObjectPropertySelector,
-                           _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
-                           _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain) -> Float32? {
+                          _ selector: AudioObjectPropertySelector,
+                          _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+                          _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain) -> Float32? {
     var a = caAddr(selector, scope, element)
     var size = UInt32(MemoryLayout<Float32>.size)
     var value: Float32 = 0
@@ -60,9 +60,9 @@ private func caGetFloat32(_ objectID: AudioObjectID,
 }
 
 private func caGetFloat64(_ objectID: AudioObjectID,
-                           _ selector: AudioObjectPropertySelector,
-                           _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
-                           _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain) -> Float64? {
+                          _ selector: AudioObjectPropertySelector,
+                          _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+                          _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain) -> Float64? {
     var a = caAddr(selector, scope, element)
     var size = UInt32(MemoryLayout<Float64>.size)
     var value: Float64 = 0
@@ -71,24 +71,24 @@ private func caGetFloat64(_ objectID: AudioObjectID,
 }
 
 private func caGetString(_ objectID: AudioObjectID,
-                          _ selector: AudioObjectPropertySelector,
-                          _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> String? {
+                         _ selector: AudioObjectPropertySelector,
+                         _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> String? {
     var a = caAddr(selector, scope)
     var size = unsafe UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
-    var unmanaged: Unmanaged<CFString>? = nil
+    var unmanaged: Unmanaged<CFString>?
 
     guard unsafe AudioObjectGetPropertyData(objectID, &a, 0, nil, &size, &unmanaged) == noErr else { return nil }
     guard unsafe unmanaged != nil else { return nil }
 
-    return unsafe unmanaged!.takeRetainedValue() as String
+    return unsafe unmanaged?.takeRetainedValue() as? String ?? nil
 }
 
 @discardableResult
 private func caSetUInt32(_ objectID: AudioObjectID,
-                          _ selector: AudioObjectPropertySelector,
-                          _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
-                          _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain,
-                          value: UInt32) -> Bool {
+                         _ selector: AudioObjectPropertySelector,
+                         _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+                         _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain,
+                         value: UInt32) -> Bool {
     var a = caAddr(selector, scope, element)
     var v = value
     return unsafe AudioObjectSetPropertyData(objectID, &a, 0, nil, UInt32(MemoryLayout<UInt32>.size), &v) == noErr
@@ -96,10 +96,10 @@ private func caSetUInt32(_ objectID: AudioObjectID,
 
 @discardableResult
 private func caSetFloat32(_ objectID: AudioObjectID,
-                           _ selector: AudioObjectPropertySelector,
-                           _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
-                           _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain,
-                           value: Float32) -> Bool {
+                          _ selector: AudioObjectPropertySelector,
+                          _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+                          _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain,
+                          value: Float32) -> Bool {
     var a = caAddr(selector, scope, element)
     var v = value
     return unsafe AudioObjectSetPropertyData(objectID, &a, 0, nil, UInt32(MemoryLayout<Float32>.size), &v) == noErr
@@ -107,18 +107,18 @@ private func caSetFloat32(_ objectID: AudioObjectID,
 
 @discardableResult
 private func caSetFloat64(_ objectID: AudioObjectID,
-                           _ selector: AudioObjectPropertySelector,
-                           _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
-                           _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain,
-                           value: Float64) -> Bool {
+                          _ selector: AudioObjectPropertySelector,
+                          _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+                          _ element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain,
+                          value: Float64) -> Bool {
     var a = caAddr(selector, scope, element)
     var v = value
     return unsafe AudioObjectSetPropertyData(objectID, &a, 0, nil, UInt32(MemoryLayout<Float64>.size), &v) == noErr
 }
 
 private func caGetUInt32Array(_ objectID: AudioObjectID,
-                               _ selector: AudioObjectPropertySelector,
-                               _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> [UInt32] {
+                              _ selector: AudioObjectPropertySelector,
+                              _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> [UInt32] {
     var a = caAddr(selector, scope)
     var size: UInt32 = 0
     guard unsafe AudioObjectGetPropertyDataSize(objectID, &a, 0, nil, &size) == noErr, size > 0 else { return [] }
@@ -151,10 +151,10 @@ private func caChannelCount(_ objectID: AudioObjectID, scope: AudioObjectPropert
 
 /// Get the name for a data source ID using an `AudioValueTranslation`.
 private func caDataSourceName(_ objectID: AudioObjectID,
-                               sourceID: UInt32,
-                               scope: AudioObjectPropertyScope) -> String {
+                              sourceID: UInt32,
+                              scope: AudioObjectPropertyScope) -> String {
     var inputID = sourceID
-    var outputName: CFString? = nil
+    var outputName: CFString?
     withUnsafeMutablePointer(to: &inputID) { inputPtr in
         withUnsafeMutablePointer(to: &outputName) { outputPtr in
             var translation = unsafe AudioValueTranslation(
@@ -677,7 +677,7 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
     // MARK: - Channels
 
     @objc var outputChannels: Int { caChannelCount(objectID, scope: kAudioDevicePropertyScopeOutput) }
-    @objc var inputChannels: Int  { caChannelCount(objectID, scope: kAudioDevicePropertyScopeInput) }
+    @objc var inputChannels: Int { caChannelCount(objectID, scope: kAudioDevicePropertyScopeInput) }
 
     // MARK: - Output volume & mute
 
@@ -689,7 +689,7 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
         guard scalar >= 0 && scalar <= 1 else {
             // Only a value v1's 0-100 scale could have meant gets the conversion hint
             let hint = property != "balance" && scalar.isFinite && scalar > 1 && scalar <= 100
-                ? " (Hammerspoon v1 used 0-100, so use \(scalar / 100) for \(scalar)%)" : ""
+            ? " (Hammerspoon v1 used 0-100, so use \(scalar / 100) for \(scalar)%)" : ""
             AKError("hs.audiodevice: \(property) must be between 0.0 and 1.0, not \(scalar)\(hint). Leaving it unchanged.")
             return false
         }
@@ -842,7 +842,7 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
 
     // MARK: - Per-device watcher
 
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSAudioDevicePropertyEvent.allNames }
     // Registrations keyed by event name: each value holds the CoreAudio address and
     // the heap-allocated ObjC block (stored to guarantee pointer equality on removal).
@@ -864,8 +864,8 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
     private func ensureWatcherEmitter(_ ctx: JSContext) -> JSValue? {
         if _watcherEmitter == nil {
             guard let emitterFactory = ctx.objectForKeyedSubscript("hs")?
-                    .objectForKeyedSubscript("audiodevice")?
-                    .objectForKeyedSubscript("_makeDeviceEmitter"),
+                .objectForKeyedSubscript("audiodevice")?
+                .objectForKeyedSubscript("_makeDeviceEmitter"),
                   emitterFactory.isFunction else {
                 ctx.exception = JSValue(
                     newErrorFromMessage: "hs.audiodevice device: device watcher emitter factory is unavailable",
@@ -913,6 +913,7 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
         watcherCallback = JSCallback(value: listener, owner: self)
 
         let candidates: [(AudioObjectPropertySelector, AudioObjectPropertyScope, HSAudioDevicePropertyEvent)] = [
+            // swiftlint:disable comma
             (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, .outputVolume),
             (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeInput,  .inputVolume),
             (kAudioDevicePropertyMute,         kAudioDevicePropertyScopeOutput, .outputMute),
@@ -924,6 +925,7 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
             (kAudioDevicePropertyDeviceIsRunningSomewhere, kAudioObjectPropertyScopeGlobal, .inUse),
             (kAudioDevicePropertyJackIsConnected, jackScope,                    .jack),
             (kAudioDevicePropertyDeviceHasChanged, kAudioObjectPropertyScopeGlobal, .configuration),
+            // swiftlint:enable comma
         ]
 
         for (selector, scope, event) in candidates {
@@ -975,7 +977,7 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
         switch event {
         case .outputVolume: value = volume
         case .inputVolume: value = inputVolume
-        // Read directly rather than through muted/inputMuted, which report a failed read as false
+            // Read directly rather than through muted/inputMuted, which report a failed read as false
         case .outputMute: value = caGetUInt32(objectID, kAudioDevicePropertyMute, kAudioDevicePropertyScopeOutput).map { $0 == 1 }
         case .inputMute: value = caGetUInt32(objectID, kAudioDevicePropertyMute, kAudioDevicePropertyScopeInput).map { $0 == 1 }
         case .sampleRate: value = sampleRate
@@ -996,8 +998,7 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
         _watcherEmitter = nil
         guard unsafe !deviceRegistrations.isEmpty else { return }
         for eventName in unsafe Array(deviceRegistrations.keys) {
-            guard unsafe deviceRegistrations[eventName] != nil else { continue }
-            var registration = unsafe deviceRegistrations[eventName]!
+            guard var registration = unsafe deviceRegistrations[eventName] else { continue }
             unsafe AudioObjectRemovePropertyListenerBlock(objectID, &registration.address, .main, registration.block)
         }
         unsafe deviceRegistrations.removeAll()

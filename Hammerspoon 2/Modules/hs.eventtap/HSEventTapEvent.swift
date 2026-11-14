@@ -266,6 +266,7 @@ import Carbon
 extension CGEventFlags {
     // Device-specific left/right modifier bits embedded in the low word of CGEventFlags.rawValue.
     // Values from IOKit/hidsystem/IOLLEvent.h (NX_DEVICE*KEYMASK constants).
+    // swiftlint:disable colon
     private static let leftCtrlMask:   UInt64 = 0x00000001
     private static let leftShiftMask:  UInt64 = 0x00000002
     private static let rightShiftMask: UInt64 = 0x00000004
@@ -274,6 +275,7 @@ extension CGEventFlags {
     private static let leftAltMask:    UInt64 = 0x00000020
     private static let rightAltMask:   UInt64 = 0x00000040
     private static let rightCtrlMask:  UInt64 = 0x00002000
+    // swiftlint:enable colon
 
     /// Every bit that `from(modifierNames:)` can set: the modifier masks and their device bits.
     private static let allModifierBits: UInt64 =
@@ -313,7 +315,7 @@ extension CGEventFlags {
             if raw & rightCtrlMask != 0 { names.append("rightCtrl") }
         }
         if flags.contains(.maskSecondaryFn) { names.append("fn") }
-        if flags.contains(.maskAlphaShift)  { names.append("capslock") }
+        if flags.contains(.maskAlphaShift) { names.append("capslock") }
         return names
     }
 

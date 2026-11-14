@@ -30,14 +30,14 @@ struct SettingsConsoleView: View {
                         Text("Minimum log level:")
                             .gridColumnAlignment(.trailing)
                         Picker("", selection: $minimumLogLevel) {
-                            ForEach(HammerspoonLogType.allCases.filter { $0 != .Autocomplete }){ item in
+                            ForEach(HammerspoonLogType.allCases.filter { $0 != .Autocomplete }) { item in
                                 Text(item.asString)
                             }
                         }
                         .labelsHidden()
                         .gridColumnAlignment(.leading)
                     }
-                    GridRow() {
+                    GridRow {
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("Enable garbage collection logging:")
                             Text("Requires Console log level “Garbage”.")
@@ -55,14 +55,14 @@ struct SettingsConsoleView: View {
                             .gridCellColumns(2)
                     }
 
-                    GridRow() {
+                    GridRow {
                         Text("Keep console window on top:")
                             .gridColumnAlignment(.trailing)
                         Toggle("", isOn: $settingsManager.consoleAlwaysOnTop)
                             .labelsHidden()
                             .gridColumnAlignment(.leading)
                     }
-                    GridRow() {
+                    GridRow {
                         Text("Console window opacity:")
                             .gridColumnAlignment(.trailing)
                         HStack {

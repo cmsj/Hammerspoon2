@@ -228,11 +228,11 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
     private(set) var names: [String: String] = [:]
 
     // MARK: - Watcher
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSKeycodesEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
     private var watcherCallback: JSCallback?
     private var sourceChangeObserver: NSObjectProtocol?
 
@@ -406,16 +406,14 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
 
     private func selectInputSource(where propertyKey: CFString, equals value: String, ofType type: String) -> Bool {
         let candidates = inputSources(ofType: type)
-        for source in candidates {
-            if tisStringProperty(of: source, key: propertyKey) == value {
-                let status = TISSelectInputSource(source)
-                if status == noErr {
-                    AKDebug("hs.keycodes: selected input source '\(value)'")
-                    return true
-                }
-                AKError("hs.keycodes: TISSelectInputSource('\(value)') failed (\(status))")
-                return false
+        for source in candidates where tisStringProperty(of: source, key: propertyKey) == value {
+            let status = TISSelectInputSource(source)
+            if status == noErr {
+                AKDebug("hs.keycodes: selected input source '\(value)'")
+                return true
             }
+            AKError("hs.keycodes: TISSelectInputSource('\(value)') failed (\(status))")
+            return false
         }
         AKWarning("hs.keycodes: no input source found matching '\(value)'")
         return false

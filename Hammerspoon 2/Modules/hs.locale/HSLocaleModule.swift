@@ -216,11 +216,11 @@ nonisolated enum HSLocaleEvent: String, HSEventName {
     let engineID: UUID
 
     // MARK: - Watcher
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSLocaleEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
     private var watcherCallback: JSCallback?
     private var localeChangeObserver: NSObjectProtocol?
 
@@ -272,6 +272,7 @@ nonisolated enum HSLocaleEvent: String, HSEventName {
         case nil, "", "undefined", "null":
             locale = Locale.current
         default:
+            // swiftlint:disable:next force_unwrapping
             locale = Locale(identifier: identifier!)
         }
         return localeDetails(locale)
@@ -286,8 +287,10 @@ nonisolated enum HSLocaleEvent: String, HSEventName {
         case nil, "", "undefined", "null":
             baseLocale = Locale.current
         default:
+            // swiftlint:disable force_unwrapping
             guard available.contains(baseLocaleCode!) else { return nil }
             baseLocale = Locale(identifier: baseLocaleCode!)
+            // swiftlint:enable force_unwrapping
         }
 
         guard let localName = baseLocale.localizedString(forLanguageCode: localeCode),

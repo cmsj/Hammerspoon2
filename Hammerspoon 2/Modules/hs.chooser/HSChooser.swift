@@ -1013,7 +1013,7 @@ import SwiftUI
         // Left in `extra`, so the choice round-trips to onSelect with it intact
         let showsContextMenu = dict["contextMenu"] as? Bool ?? true
 
-        var image: NSImage? = nil
+        var image: NSImage?
         if let hsImg = dict["image"] as? HSImage {
             image = hsImg.image
         } else if let nsImg = dict["image"] as? NSImage {

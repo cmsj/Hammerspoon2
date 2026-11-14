@@ -24,11 +24,11 @@ private struct ReactiveButton: View {
     let action: (() -> Void)?
 
     var body: some View {
-        Button(action: { action?() }) {
+        Button(action: { action?() }, label: {
             Text(label.value)
                 .font(font)
                 .foregroundStyle(foreground)
-        }
+        })
         .buttonStyle(.plain)
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -49,15 +49,15 @@ private struct ReactiveButton: View {
 class UIButton: ShapeModifiable, FrameModifiable, OpacityModifiable, InteractiveModifiable, TextModifiable {
     var label: HSString
     var font: Font = .body
-    var foregroundColor: HSColor? = nil
-    var fillColor: HSColor? = nil
-    var strokeColor: HSColor? = nil
+    var foregroundColor: HSColor?
+    var fillColor: HSColor?
+    var strokeColor: HSColor?
     var strokeWidth: CGFloat = 1.0
     var cornerRadius: CGFloat = 8.0
-    var elementFrame: UIFrame? = nil
+    var elementFrame: UIFrame?
     var elementOpacity: Double = 1.0
-    var clickCallback: (() -> Void)? = nil
-    var hoverCallback: ((Bool) -> Void)? = nil
+    var clickCallback: (() -> Void)?
+    var hoverCallback: ((Bool) -> Void)?
 
     init(label: HSString) {
         self.label = label
