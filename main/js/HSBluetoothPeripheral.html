@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSBluetoothPeripheral - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="canvas-guide.html" class="">hs.canvas</a>
+                    <a href="typescript-guide.html" class="">TypeScript</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSBluetoothPeripheral</span>
+</nav>
+<div class="page-header">
+    <h1>HSBluetoothPeripheral</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>A Bluetooth Low Energy (BLE) peripheral, found by <code>hs.bluetooth.scan()</code> or through a paired device&#39;s <code>lowEnergyPeripheral()</code>.</p>
+<p>Obtain peripherals from the <code>hs.bluetooth</code> module; do not instantiate them directly. A
+peripheral is identified by its <code>identifier</code>, and the same peripheral is returned as the same
+object for as long as you hold on to it.</p>
+<p>Call <code>connect()</code> before using its GATT services. A connected peripheral stays connected, and
+keeps delivering its events, until you call <code>disconnect()</code>, even if you drop your reference to it.</p>
+<pre><code class="language-javascript">const [sensor] = await hs.bluetooth.scan({ seconds: 5, services: [&quot;181A&quot;] })
+await sensor.connect()
+const bytes = await sensor.readValue(&quot;181A&quot;, &quot;2A6E&quot;)
+sensor.on(&quot;value&quot;, (service, characteristic, value) =&gt; console.log(characteristic + &quot;: &quot; + value))
+await sensor.subscribe(&quot;181A&quot;, &quot;2A6E&quot;)
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="typeName">
+        <h3><a href="#typeName">typeName</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The type name for JavaScript introspection. Always `&quot;HSBluetoothPeripheral&quot;`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L31" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:31</a>
+        </div>
+    </div>
+    <div class="property" id="identifier">
+        <h3><a href="#identifier">identifier</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The peripheral&#39;s identifier, a UUID that macOS assigns in place of its Bluetooth address, which it doesn&#39;t reveal. It is stable on this Mac, but differs between Macs.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L39" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:39</a>
+        </div>
+    </div>
+    <div class="property" id="name">
+        <h3><a href="#name">name</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The peripheral&#39;s name, or `null` if it hasn&#39;t reported one.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L47" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:47</a>
+        </div>
+    </div>
+    <div class="property" id="isConnected">
+        <h3><a href="#isConnected">isConnected</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether Hammerspoon is connected to the peripheral.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L54" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:54</a>
+        </div>
+    </div>
+    <div class="property" id="rssi">
+        <h3><a href="#rssi">rssi</a></h3>
+        <div class="prop-type">NSNumber</div>
+        <div class="description">The last known signal strength in dBm, or `null` if there is none. It is updated by `hs.bluetooth.scan()` and `readRSSI()`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L62" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:62</a>
+        </div>
+    </div>
+    <div class="property" id="lastSeen">
+        <h3><a href="#lastSeen">lastSeen</a></h3>
+        <div class="prop-type">NSNumber</div>
+        <div class="description">When the peripheral was last seen, in Unix seconds: in a scan, or while connected. `null` if unknown.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L69" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:69</a>
+        </div>
+    </div>
+    <div class="property" id="advertisement">
+        <h3><a href="#advertisement">advertisement</a></h3>
+        <div class="prop-type">[String: Any]</div>
+        <div class="description">The peripheral&#39;s last advertisement, if a scan has seen one, otherwise `null`.
+The object has `localName` (string or `null`), `isConnectable` (boolean or `null`), `txPower` (number or `null`), `serviceUUIDs` (string[]), `manufacturerData` (Uint8Array or `null`) and `serviceData` (an object mapping service UUIDs to Uint8Array).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L80" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:80</a>
+        </div>
+    </div>
+    <div class="property" id="batteryLevel">
+        <h3><a href="#batteryLevel">batteryLevel</a></h3>
+        <div class="prop-type">NSNumber</div>
+        <div class="description">The battery level last read by `readBatteryLevel()`, as a percentage, or `null` if it hasn&#39;t been read.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L87" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:87</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="readBatteryLevel">
+        <h3>
+<a href="#readBatteryLevel">readBatteryLevel() -> Promise&lt;number | null&gt;</a>
+        </h3>
+
+        <div class="description">Reads the peripheral&#39;s battery level from its standard GATT Battery service. The peripheral must be connected.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">readBatteryLevel() -> Promise&lt;number | null&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;number | null&gt;</div>
+        <div class="return-desc">A Promise resolving to the battery percentage, or `null` if the peripheral has no Battery service</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">await peripheral.connect()
+console.log(peripheral.name + &quot;: &quot; + await peripheral.readBatteryLevel() + &quot;%&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L96" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:96</a>
+        </div>
+    </div>
+    <div class="method" id="connect">
+        <h3>
+<a href="#connect">connect() -> Promise&lt;HSBluetoothPeripheral&gt;</a>
+        </h3>
+
+        <div class="description">Connects Hammerspoon to the peripheral, so its GATT services can be used. It stays connected until `disconnect()` is called, even if you drop your reference to it.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">connect() -> Promise&lt;HSBluetoothPeripheral&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;HSBluetoothPeripheral&gt;</div>
+        <div class="return-desc">A Promise resolving to this peripheral once it&#39;s connected, or rejecting if the connection fails or takes longer than 20 seconds</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">await sensor.connect()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L104" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:104</a>
+        </div>
+    </div>
+    <div class="method" id="disconnect">
+        <h3>
+<a href="#disconnect">disconnect() -> Promise&lt;HSBluetoothPeripheral&gt;</a>
+        </h3>
+
+        <div class="description">Disconnects Hammerspoon from the peripheral. If macOS has its own connection to it (e.g. a paired keyboard), that connection stays.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">disconnect() -> Promise&lt;HSBluetoothPeripheral&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;HSBluetoothPeripheral&gt;</div>
+        <div class="return-desc">A Promise resolving to this peripheral once it&#39;s disconnected</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">await sensor.disconnect()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L112" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:112</a>
+        </div>
+    </div>
+    <div class="method" id="readRSSI">
+        <h3>
+<a href="#readRSSI">readRSSI() -> Promise&lt;number&gt;</a>
+        </h3>
+
+        <div class="description">Reads the current signal strength of a connected peripheral.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">readRSSI() -> Promise&lt;number&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;number&gt;</div>
+        <div class="return-desc">A Promise resolving to the signal strength in dBm, or rejecting if the peripheral isn&#39;t connected</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(await sensor.readRSSI() + &quot; dBm&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L120" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:120</a>
+        </div>
+    </div>
+    <div class="method" id="discoverServices">
+        <h3>
+<a href="#discoverServices">discoverServices() -> Promise&lt;string[]&gt;</a>
+        </h3>
+
+        <div class="description">Discovers the GATT services of a connected peripheral.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">discoverServices() -> Promise&lt;string[]&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;string[]&gt;</div>
+        <div class="return-desc">A Promise resolving to the UUIDs of the peripheral&#39;s services, e.g. `[&quot;180A&quot;, &quot;180F&quot;]`</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">await sensor.connect()
+console.log((await sensor.discoverServices()).join(&quot;, &quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L129" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:129</a>
+        </div>
+    </div>
+    <div class="method" id="discoverCharacteristics">
+        <h3>
+<a href="#discoverCharacteristics">discoverCharacteristics(service) -> Promise&lt;{uuid: string, properties: string[], isNotifying: boolean}[]&gt;</a>
+        </h3>
+
+        <div class="description">Discovers the characteristics of one of a connected peripheral&#39;s GATT services.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">discoverCharacteristics(service) -> Promise&lt;{uuid: string, properties: string[], isNotifying: boolean}[]&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">service</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The service UUID: 16-bit (`&quot;180F&quot;`), 32-bit, or 128-bit</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;{uuid: string, properties: string[], isNotifying: boolean}[]&gt;</div>
+        <div class="return-desc">A Promise resolving to the service&#39;s characteristics. `properties` lists what each supports: `&quot;read&quot;`, `&quot;write&quot;`, `&quot;writeWithoutResponse&quot;`, `&quot;notify&quot;`, `&quot;indicate&quot;`, `&quot;broadcast&quot;`, `&quot;authenticatedSignedWrites&quot;` and `&quot;extendedProperties&quot;`</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const chars = await sensor.discoverCharacteristics(&quot;180F&quot;)
+chars.forEach(c =&gt; console.log(c.uuid + &quot;: &quot; + c.properties.join(&quot;, &quot;)))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L139" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:139</a>
+        </div>
+    </div>
+    <div class="method" id="readValue">
+        <h3>
+<a href="#readValue">readValue(service, characteristic) -> Promise&lt;Uint8Array&gt;</a>
+        </h3>
+
+        <div class="description">Reads the value of a GATT characteristic of a connected peripheral. The service and characteristic are discovered first if needed.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">readValue(service, characteristic) -> Promise&lt;Uint8Array&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">service</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The service UUID, e.g. `&quot;180F&quot;`</td>
+                </tr>
+                <tr>
+                    <td class="param-name">characteristic</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The characteristic UUID, e.g. `&quot;2A19&quot;`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;Uint8Array&gt;</div>
+        <div class="return-desc">A Promise resolving to the characteristic&#39;s value</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const value = await peripheral.readValue(&quot;180F&quot;, &quot;2A19&quot;)
+console.log(&quot;Battery: &quot; + value[0] + &quot;%&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L151" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:151</a>
+        </div>
+    </div>
+    <div class="method" id="writeValue">
+        <h3>
+<a href="#writeValue">writeValue(service, characteristic, value, options) -> Promise&lt;void&gt;</a>
+        </h3>
+
+        <div class="description">Writes the value of a GATT characteristic of a connected peripheral. Writes to one characteristic are sent in the order they&#39;re made.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">writeValue(service, characteristic, value, options) -> Promise&lt;void&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">service</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The service UUID</td>
+                </tr>
+                <tr>
+                    <td class="param-name">characteristic</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The characteristic UUID</td>
+                </tr>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">The bytes to write. A string is written as UTF-8</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">[String: Any]</td>
+                    <td class="param-desc">With `withoutResponse: true`, write without asking the peripheral to confirm it, which is faster but can&#39;t tell whether it arrived. Defaults to `false`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;void&gt;</div>
+        <div class="return-desc">A Promise resolving once the peripheral has accepted the write (or, without a response, once it has been sent)</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">await lamp.writeValue(&quot;FFE5&quot;, &quot;FFE9&quot;, [0x56, 0xFF, 0x00, 0x00, 0x00, 0xF0, 0xAA])
+await lamp.writeValue(&quot;FFE5&quot;, &quot;FFE9&quot;, frame, { withoutResponse: true })</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L165" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:165</a>
+        </div>
+    </div>
+    <div class="method" id="subscribe">
+        <h3>
+<a href="#subscribe">subscribe(service, characteristic) -> Promise&lt;void&gt;</a>
+        </h3>
+
+        <div class="description">Subscribes to a GATT characteristic of a connected peripheral, so each new value is delivered as a `&quot;value&quot;` event (see `on()`).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">subscribe(service, characteristic) -> Promise&lt;void&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">service</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The service UUID</td>
+                </tr>
+                <tr>
+                    <td class="param-name">characteristic</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The characteristic UUID, which must support `&quot;notify&quot;` or `&quot;indicate&quot;`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;void&gt;</div>
+        <div class="return-desc">A Promise resolving once the peripheral has started sending values</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">heartStrap.on(&quot;value&quot;, (service, characteristic, value) =&gt; console.log(&quot;Heart rate: &quot; + value[1]))
+await heartStrap.subscribe(&quot;180D&quot;, &quot;2A37&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L177" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:177</a>
+        </div>
+    </div>
+    <div class="method" id="unsubscribe">
+        <h3>
+<a href="#unsubscribe">unsubscribe(service, characteristic) -> Promise&lt;void&gt;</a>
+        </h3>
+
+        <div class="description">Stops a subscription started by `subscribe()`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">unsubscribe(service, characteristic) -> Promise&lt;void&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">service</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The service UUID</td>
+                </tr>
+                <tr>
+                    <td class="param-name">characteristic</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The characteristic UUID</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;void&gt;</div>
+        <div class="return-desc">A Promise resolving once the peripheral has stopped sending values</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">await heartStrap.unsubscribe(&quot;180D&quot;, &quot;2A37&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L188" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:188</a>
+        </div>
+    </div>
+    <div class="method" id="on">
+        <h3>
+<a href="#on">on(event, listener) -> None</a>
+        </h3>
+
+        <div class="description">Register a listener for this peripheral&#39;s events.
+A peripheral with listeners keeps working after you drop your reference to it.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">on(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">event</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The event to listen for</td>
+                </tr>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called when the event occurs</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    sensor.on(&#39;disconnected&#39;, () =&gt; console.log(sensor.name + &quot; went away&quot;))
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L209" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:209</a>
+        </div>
+    </div>
+    <div class="method" id="off">
+        <h3>
+<a href="#off">off(event, listener) -> None</a>
+        </h3>
+
+        <div class="description">Remove a previously registered listener for this peripheral&#39;s events.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">off(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">event</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The event the listener was registered for</td>
+                </tr>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">The function originally passed to `on`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">sensor.off(&#39;value&#39;, myListener)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L219" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:219</a>
+        </div>
+    </div>
+    <div class="method" id="once">
+        <h3>
+<a href="#once">once(event, listener) -> None</a>
+        </h3>
+
+        <div class="description">Register a listener that fires at most once for one of this peripheral&#39;s events.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">once(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">event</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The event to listen for</td>
+                </tr>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called once, then automatically removed</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    sensor.once(&#39;connected&#39;, () =&gt; console.log(&quot;Connected to &quot; + sensor.name))
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L234" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:234</a>
+        </div>
+    </div>
+    <div class="method" id="toJSON">
+        <h3>
+<a href="#toJSON">toJSON() -> {[key: string]: any}</a>
+        </h3>
+
+        <div class="description">Returns a plain object describing this peripheral, for JSON serialisation
+`JSON.stringify()` calls this automatically, so you rarely need to call it yourself.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toJSON() -> {[key: string]: any}</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: any}</div>
+        <div class="return-desc">An object with the peripheral&#39;s `identifier`, `name`, `isConnected`, `rssi`, `lastSeen` and `batteryLevel`</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(JSON.stringify(await hs.bluetooth.scan(), null, 2))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothPeripheral.swift#L256" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothPeripheral.swift:256</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSBluetoothPeripheral');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

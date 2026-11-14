@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSUDPSocket - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="canvas-guide.html" class="">hs.canvas</a>
+                    <a href="typescript-guide.html" class="">TypeScript</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSUDPSocket</span>
+</nav>
+<div class="page-header">
+    <h1>HSUDPSocket</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>A UDP socket, created by <code>hs.socket.createUDP()</code>.</p>
+<p>A UDP socket can send datagrams to any host, or be connected to a single peer, and can
+receive datagrams once it has a local port: either one chosen with <code>bind()</code>, or one the system
+assigns when it first connects or sends.</p>
+<p>IPv4 and IPv6 are both supported, using a separate system socket for each.</p>
+<p>Do not instantiate <code>HSUDPSocket</code> directly - use <code>hs.socket.createUDP()</code>.</p>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="identifier">
+        <h3><a href="#identifier">identifier</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">A unique identifier for this socket (UUID string).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L32" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:32</a>
+        </div>
+    </div>
+    <div class="property" id="isBound">
+        <h3><a href="#isBound">isBound</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the socket has been bound to a local port with `bind()`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L39" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:39</a>
+        </div>
+    </div>
+    <div class="property" id="isConnected">
+        <h3><a href="#isConnected">isConnected</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the socket is connected to a single peer with `connect()`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:46</a>
+        </div>
+    </div>
+    <div class="property" id="isReceiving">
+        <h3><a href="#isReceiving">isReceiving</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the socket is currently receiving datagrams.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L53" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:53</a>
+        </div>
+    </div>
+    <div class="property" id="localPort">
+        <h3><a href="#localPort">localPort</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The local port the socket is using, or 0 if it doesn&#39;t have one yet.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L60" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:60</a>
+        </div>
+    </div>
+    <div class="property" id="broadcast">
+        <h3><a href="#broadcast">broadcast</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the socket may send to broadcast addresses (e.g. `255.255.255.255`). Defaults to
+`false`. Broadcasts are IPv4 only.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L69" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:69</a>
+        </div>
+    </div>
+    <div class="property" id="reusePort">
+        <h3><a href="#reusePort">reusePort</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether other sockets may bind to the same port, e.g. so several programs can receive the
+same broadcasts. Defaults to `false`. Set it before calling `bind()`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L78" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:78</a>
+        </div>
+    </div>
+    <div class="property" id="ipv4Enabled">
+        <h3><a href="#ipv4Enabled">ipv4Enabled</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the socket uses IPv4. Defaults to `true`. Set it before the socket binds,
+connects or sends.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L86" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:86</a>
+        </div>
+    </div>
+    <div class="property" id="ipv6Enabled">
+        <h3><a href="#ipv6Enabled">ipv6Enabled</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the socket uses IPv6. Defaults to `true`. Set it before the socket binds,
+connects or sends.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L94" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:94</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="setCallback">
+        <h3>
+<a href="#setCallback">setCallback(callback) -> HSUDPSocket</a>
+        </h3>
+
+        <div class="description">Sets the callback that receives this socket&#39;s events.
+sender&#39;s address, as `{host, port, family}`, where family is `&quot;ipv4&quot;` or `&quot;ipv6&quot;`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setCallback(callback) -> HSUDPSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function | null</td>
+                    <td class="param-desc">The event handler, or `null` to remove it.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUDPSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">udp.setCallback((event, sock, data, address) =&gt; {
+    if (event === &quot;data&quot;) console.log(address.host + &quot; sent &quot; + hs.socket.decodeText(data))
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L112" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:112</a>
+        </div>
+    </div>
+    <div class="method" id="bind">
+        <h3>
+<a href="#bind">bind(port, address) -> HSUDPSocket</a>
+        </h3>
+
+        <div class="description">Binds the socket to a local port, so it can receive datagrams sent to that port. Call it
+before `connect()` or sending.
+By default the socket binds on all network interfaces. Pass one of this Mac&#39;s IP addresses
+to bind only to that address (and so only to the interface that has it). Use
+`hs.network.addresses()` to find an interface&#39;s addresses.
+If the interface&#39;s address can change (e.g. it comes from DHCP), watch
+`State:/Network/Interface/&lt;name&gt;/IPv4` with `hs.network.configurationWatcher()` and bind again
+when it does.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">bind(port, address) -> HSUDPSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">port</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The UDP port to bind to, or 0 to let the system choose one (see `localPort`).</td>
+                </tr>
+                <tr>
+                    <td class="param-name">address</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A local IPv4 or IPv6 address to bind to, e.g. `&quot;127.0.0.1&quot;` or `&quot;192.168.1.20&quot;`. Defaults to all addresses.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUDPSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">A socket bound to an address only uses that address&#39;s family (IPv4 or IPv6), and doesn&#39;t receive broadcasts</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.socket.createUDP().setCallback(handler).bind(9999).receive()
+
+// Only on the Wi-Fi interface&#39;s IPv4 address
+const wifi = hs.network.addresses().find(a =&gt; a.interface === &quot;en0&quot; &amp;&amp; a.family === &quot;ipv4&quot;)
+hs.socket.createUDP().setCallback(handler).bind(9999, wifi.address).receive()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L136" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:136</a>
+        </div>
+    </div>
+    <div class="method" id="connect">
+        <h3>
+<a href="#connect">connect(host, port) -> HSUDPSocket</a>
+        </h3>
+
+        <div class="description">Connects the socket to a single peer. Afterwards, `send()` needs no host and port, and only
+datagrams from that peer are received. The callback receives `&quot;connected&quot;` once the host
+has been looked up.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">connect(host, port) -> HSUDPSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">host</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The host name or IP address of the peer.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">port</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The peer&#39;s UDP port.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUDPSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.socket.createUDP().connect(&quot;192.168.1.10&quot;, 9999).send(&quot;hello&quot;).receive()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L149" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:149</a>
+        </div>
+    </div>
+    <div class="method" id="send">
+        <h3>
+<a href="#send">send(text, host, port) -> HSUDPSocket</a>
+        </h3>
+
+        <div class="description">Sends text, encoded as UTF-8, as one datagram.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">send(text, host, port) -> HSUDPSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">text</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The text to send.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">host</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The host name or IP address to send to. Omit it if the socket is connected.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">port</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The UDP port to send to. Omit it if the socket is connected.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUDPSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">udp.send(&quot;hello&quot;, &quot;127.0.0.1&quot;, 9999)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L161" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:161</a>
+        </div>
+    </div>
+    <div class="method" id="sendBytes">
+        <h3>
+<a href="#sendBytes">sendBytes(bytes, host, port) -> HSUDPSocket</a>
+        </h3>
+
+        <div class="description">Sends raw bytes as one datagram.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">sendBytes(bytes, host, port) -> HSUDPSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">bytes</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">The bytes to send. Any typed array is accepted.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">host</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The host name or IP address to send to. Omit it if the socket is connected.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">port</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The UDP port to send to. Omit it if the socket is connected.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUDPSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">udp.sendBytes(new Uint8Array([0xFF, 0x00]), &quot;127.0.0.1&quot;, 9999)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L173" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:173</a>
+        </div>
+    </div>
+    <div class="method" id="receive">
+        <h3>
+<a href="#receive">receive() -> HSUDPSocket</a>
+        </h3>
+
+        <div class="description">Starts delivering every datagram that arrives to the callback, until `pause()` or
+`close()`. The socket must have a local port first (see `bind()`).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">receive() -> HSUDPSocket</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUDPSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">A receiving socket, and its callback, stay alive until it stops receiving, even if you don&#39;t keep a reference to it</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">udp.bind(9999).receive()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L184" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:184</a>
+        </div>
+    </div>
+    <div class="method" id="receiveOne">
+        <h3>
+<a href="#receiveOne">receiveOne() -> HSUDPSocket</a>
+        </h3>
+
+        <div class="description">Delivers the next datagram that arrives to the callback, then stops receiving.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">receiveOne() -> HSUDPSocket</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUDPSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">A receiving socket, and its callback, stay alive until it stops receiving, even if you don&#39;t keep a reference to it</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">udp.send(&quot;ping&quot;, &quot;127.0.0.1&quot;, 9999).receiveOne()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L194" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:194</a>
+        </div>
+    </div>
+    <div class="method" id="pause">
+        <h3>
+<a href="#pause">pause() -> HSUDPSocket</a>
+        </h3>
+
+        <div class="description">Stops receiving datagrams. Datagrams that arrive meanwhile are queued by the system (up to
+its buffer size) and delivered once you receive again.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">pause() -> HSUDPSocket</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUDPSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">udp.pause()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L203" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:203</a>
+        </div>
+    </div>
+    <div class="method" id="close">
+        <h3>
+<a href="#close">close() -> HSUDPSocket</a>
+        </h3>
+
+        <div class="description">Closes the socket immediately, discarding any sends still waiting for a host lookup. The
+socket can be bound, connected or used to send again afterwards.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">close() -> HSUDPSocket</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUDPSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">udp.close()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L212" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:212</a>
+        </div>
+    </div>
+    <div class="method" id="destroy">
+        <h3>
+<a href="#destroy">destroy() -> None</a>
+        </h3>
+
+        <div class="description">Closes the socket and releases its callback.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">destroy() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">udp.destroy()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSUDPSocket.swift#L219" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSUDPSocket.swift:219</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSUDPSocket');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
