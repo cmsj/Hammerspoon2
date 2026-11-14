@@ -13,6 +13,8 @@ Hammerspoon 2 is a macOS app written in Swift, that bridges various macOS system
 xcodebuild build -target "Hammerspoon 2" -scheme "Development" -destination 'platform=macOS'
 ```
 
+SwiftLint runs on every build as an SPM build tool plugin (`SwiftLintBuildToolPlugin` from SwiftLintPlugins, rules in `.swiftlint.yml`), and its violations show up as build warnings/errors. If `xcodebuild` fails at "Validate plug-in “SwiftLintBuildToolPlugin”", the plugin hasn't been trusted in Xcode on this machine yet: pass `-skipPackagePluginValidation`.
+
 **Prefer running tests in a VM:** `xcodebuild test` on the host takes over the developer's screen, keyboard and mouse. `scripts/vm/hs2vm test [xcodebuild args]` runs the same tests in a headless Tart macOS VM instead — use the `/HSVMTest` skill, which also covers installing and driving a build in a VM. The commands below run tests on the host.
 
 **Run all tests:**

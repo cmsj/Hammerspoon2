@@ -348,7 +348,6 @@
 			buildConfigurationList = 4F5641A42E8333840099EB4C /* Build configuration list for PBXNativeTarget "Hammerspoon 2" */;
 			buildPhases = (
 				4FB6657D306BE916001B87E9 /* Highlight TODO/FIXME */,
-				4F5C1A7E2F00000000000001 /* SwiftLint */,
 				336D11A35383A7FA66D4E288 /* Generate API Documentation */,
 				4F56417F2E8333830099EB4C /* Sources */,
 				4F5641802E8333830099EB4C /* Frameworks */,
@@ -360,6 +359,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4F5C1A7E2F00000000000022 /* PBXTargetDependency */,
 				4F947D912F563FCF00DD814E /* PBXTargetDependency */,
 				4FE4C00B2F0000000000000B /* PBXTargetDependency */,
 				4FB20C122F00000000000012 /* PBXTargetDependency */,
@@ -413,6 +413,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4F5C1A7E2F00000000000032 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				4F947D882F563FCF00DD814E /* HammerspoonOSAScriptHelper */,
@@ -435,6 +436,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4F5C1A7E2F00000000000042 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				4FB20C072F00000000000007 /* HammerspoonIPCBroker */,
@@ -457,6 +459,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4F5C1A7E2F00000000000052 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				4FE4C0022F00000000000002 /* hs2 */,
@@ -512,6 +515,7 @@
 				4FACE0012F12345678900000 /* XCRemoteSwiftPackageReference "javascript-core-extras" */,
 				4FCE0A012F00000000000001 /* XCRemoteSwiftPackageReference "swift-commandlinekit" */,
 				4FA0A0012F00000000000001 /* XCRemoteSwiftPackageReference "swift-mqtt" */,
+				4F5C1A7E2F00000000000010 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4F5641842E8333830099EB4C /* Products */;
@@ -630,25 +634,6 @@
 			shellPath = /bin/sh;
 			shellScript = "TAGS=\"TODO:|FIXME:\"\nERRORTAG=\"ERROR:\"\nfind \"${SRCROOT}\" -path \"${SRCROOT}/build\" -prune -o \\( -name \"*.h\" -or -name \"*.m\" -or -name \"*.swift\" \\) -print0 | xargs -0 egrep --with-filename --line-number --only-matching \"($TAGS).*\\$|($ERRORTAG).*\\$\" | perl -p -e \"s/($TAGS)/ warning: \\$1/\" | perl -p -e \"s/($ERRORTAG)/ error: \\$1/\"\n\n\n";
 		};
-		4F5C1A7E2F00000000000001 /* SwiftLint */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = SwiftLint;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/scripts/swiftlint.sh\"\n";
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -709,6 +694,22 @@
 			isa = PBXTargetDependency;
 			target = 4FE4C0032F00000000000003 /* hs2 */;
 			targetProxy = 4FE4C00A2F0000000000000A /* PBXContainerItemProxy */;
+		};
+		4F5C1A7E2F00000000000022 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 4F5C1A7E2F00000000000021 /* SwiftLintBuildToolPlugin */;
+		};
+		4F5C1A7E2F00000000000032 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 4F5C1A7E2F00000000000031 /* SwiftLintBuildToolPlugin */;
+		};
+		4F5C1A7E2F00000000000042 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 4F5C1A7E2F00000000000041 /* SwiftLintBuildToolPlugin */;
+		};
+		4F5C1A7E2F00000000000052 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 4F5C1A7E2F00000000000051 /* SwiftLintBuildToolPlugin */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1287,6 +1288,14 @@
 				kind = branch;
 			};
 		};
+		4F5C1A7E2F00000000000010 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SimplyDanny/SwiftLintPlugins";
+			requirement = {
+				kind = exactVersion;
+				version = 0.65.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1314,6 +1323,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4FA0A0012F00000000000001 /* XCRemoteSwiftPackageReference "swift-mqtt" */;
 			productName = MQTT;
+		};
+		4F5C1A7E2F00000000000021 /* SwiftLintBuildToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4F5C1A7E2F00000000000010 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
+			productName = "plugin:SwiftLintBuildToolPlugin";
+		};
+		4F5C1A7E2F00000000000031 /* SwiftLintBuildToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4F5C1A7E2F00000000000010 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
+			productName = "plugin:SwiftLintBuildToolPlugin";
+		};
+		4F5C1A7E2F00000000000041 /* SwiftLintBuildToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4F5C1A7E2F00000000000010 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
+			productName = "plugin:SwiftLintBuildToolPlugin";
+		};
+		4F5C1A7E2F00000000000051 /* SwiftLintBuildToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4F5C1A7E2F00000000000010 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
+			productName = "plugin:SwiftLintBuildToolPlugin";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

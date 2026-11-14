@@ -273,6 +273,7 @@ host_build() {
     if ! xcodebuild build-for-testing \
             -scheme Development -destination 'platform=macOS' \
             -derivedDataPath "$VM_ROOT/DerivedData" \
+            -skipPackagePluginValidation \
             CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
             >"$build_log" 2>&1; then
         grep -E 'error:|BUILD FAILED' "$build_log" | tail -20 >&2

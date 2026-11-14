@@ -8,7 +8,7 @@
 import SwiftUI
 
 @MainActor
-protocol WindowAccessorDelegate {
+protocol WindowAccessorDelegate: AnyObject {
     var window: NSWindow? { get set }
 }
 
