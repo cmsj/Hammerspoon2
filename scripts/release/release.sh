@@ -199,6 +199,16 @@ check_github() {
     if [ -n "$SDK_PACKAGE_REPO" ]; then
         [ "$(gh api "repos/$SDK_PACKAGE_REPO" --jq .permissions.push 2>/dev/null)" = "true" ] \
             || die "$SDK_PACKAGE_REPO doesn't exist or your GitHub account can't push to it, so execute can't publish the HammerspoonSDK package (create it, or set SDK_PACKAGE_REPO=\"\" to skip that step)"
+        # The SDK package is tagged with the app's version, so a release older than the package
+        # version the extension template asks for would publish one the template can't use
+        local template_sdk
+        template_sdk="$(sed -n 's|.*\.package(url: "https://github.com/[^"]*", from: "\([^"]*\)").*|\1|p' \
+            "$REPO_ROOT/Examples/ExtensionTemplate/Package.swift")"
+        [ -n "$template_sdk" ] || die "can't find the HammerspoonSDK version Examples/ExtensionTemplate/Package.swift asks for"
+        # Compared with three parts each, since sort -V puts 1.0 before 1.0.0
+        local pad='s/^[0-9]*$/&.0.0/; s/^[0-9]*\.[0-9]*$/&.0/'
+        [ "$(printf '%s\n%s\n' "$template_sdk" "$VERSION" | sed "$pad" | sort -V | head -1)" = "$(sed "$pad" <<<"$template_sdk")" ] \
+            || die "the extension template needs HammerspoonSDK $template_sdk or later, but the package would be tagged $VERSION (set SDK_PACKAGE_REPO=\"\" to release without publishing it)"
     fi
 }
 
@@ -406,16 +416,6 @@ cmd_prepare() {
     sdk_state="$("$REPO_ROOT/scripts/sdk/check-api.sh" version)"
     [[ "$sdk_state" == *"(recorded)" ]] \
         || die "the API of HammerspoonSDK ${sdk_state%% *} hasn't been recorded. Build the app, run scripts/sdk/check-api.sh record <Hammerspoon 2.app>, and commit and push the file it adds to scripts/sdk/api/"
-    # The SDK package is tagged with the app's version, so a release older than the package
-    # version the extension template asks for would publish one the template can't use
-    local template_sdk
-    template_sdk="$(sed -n 's|.*\.package(url: "https://github.com/[^"]*", from: "\([^"]*\)").*|\1|p' \
-        "$REPO_ROOT/Examples/ExtensionTemplate/Package.swift")"
-    [ -n "$template_sdk" ] || die "can't find the HammerspoonSDK version Examples/ExtensionTemplate/Package.swift asks for"
-    # Compared with three parts each, since sort -V puts 1.0 before 1.0.0
-    local pad='s/^[0-9]*$/&.0.0/; s/^[0-9]*\.[0-9]*$/&.0/'
-    [ "$(printf '%s\n%s\n' "$template_sdk" "$VERSION" | sed "$pad" | sort -V | head -1)" = "$(sed "$pad" <<<"$template_sdk")" ] \
-        || die "the extension template needs HammerspoonSDK $template_sdk or later, but the package would be tagged $VERSION"
 
     resolve_packages
     check_sparkle_key
