@@ -94,6 +94,9 @@ env.addFilter('formatType', function(swiftType, promiseType) {
 });
 
 env.addGlobal('THROWS_DESCRIPTION', THROWS_DESCRIPTION);
+// The slugs of the guides whose sources exist. publish-docs.yml builds older releases' docs with
+// these templates, and a release from before a guide was written mustn't link to it.
+env.addGlobal('availableGuides', GUIDES.filter(guide => fs.existsSync(guide.sourcePath)).map(guide => guide.slug));
 
 env.addFilter('formatReturnType', function(returns) {
     if (!returns) return 'void';

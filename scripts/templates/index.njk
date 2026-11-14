@@ -17,30 +17,42 @@
 </p>
 
 <div class="grid" style="margin-bottom: 2rem;">
+    {% if 'getting-started' in availableGuides %}
     <a href="getting-started.html" class="card">
         <h3>New to Hammerspoon 2?</h3>
         <p>Start with the Getting Started guide — hotkeys, object lifecycle, watchers, and hs.ui.</p>
     </a>
+    {% endif %}
+    {% if 'spoons-guide' in availableGuides %}
     <a href="spoons-guide.html" class="card">
         <h3>Installing or writing a Spoon?</h3>
         <p>Learn how to install and use Spoons, and how to write your own with a worked example.</p>
     </a>
+    {% endif %}
+    {% if 'canvas-guide' in availableGuides %}
     <a href="canvas-guide.html" class="card">
         <h3>Drawing with hs.canvas?</h3>
         <p>The element/property reference and worked examples for shapes, text, images, and gradients.</p>
     </a>
+    {% endif %}
+    {% if 'typescript-guide' in availableGuides %}
     <a href="typescript-guide.html" class="card">
         <h3>Prefer TypeScript?</h3>
         <p>Write your config in TypeScript with full autocomplete, using the ambient hammerspoon.d.ts globals.</p>
     </a>
+    {% endif %}
+    {% if 'extensions-guide' in availableGuides %}
     <a href="extensions-guide.html" class="card">
         <h3>Need native code?</h3>
         <p>Use extensions, or write your own in Swift against the HammerspoonSDK framework.</p>
     </a>
+    {% endif %}
+    {% if 'migration-guide' in availableGuides %}
     <a href="migration-guide.html" class="card">
         <h3>Coming from Hammerspoon 1?</h3>
         <p>Read the migration guide for what moved, what changed, and what was removed.</p>
     </a>
+    {% endif %}
 </div>
 
 <h2 class="section-heading">Modules</h2>

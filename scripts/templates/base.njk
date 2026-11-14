@@ -38,12 +38,24 @@
             <div class="nav-section" id="guides-section">
                 <div class="nav-section-label">GUIDES</div>
                 <div class="nav-guides">
+                    {% if 'getting-started' in availableGuides %}
                     <a href="getting-started.html" class="{{ 'active' if currentPage == 'getting-started' }}">Getting Started</a>
+                    {% endif %}
+                    {% if 'spoons-guide' in availableGuides %}
                     <a href="spoons-guide.html" class="{{ 'active' if currentPage == 'spoons-guide' }}">Spoons</a>
+                    {% endif %}
+                    {% if 'canvas-guide' in availableGuides %}
                     <a href="canvas-guide.html" class="{{ 'active' if currentPage == 'canvas-guide' }}">hs.canvas</a>
+                    {% endif %}
+                    {% if 'typescript-guide' in availableGuides %}
                     <a href="typescript-guide.html" class="{{ 'active' if currentPage == 'typescript-guide' }}">TypeScript</a>
+                    {% endif %}
+                    {% if 'extensions-guide' in availableGuides %}
                     <a href="extensions-guide.html" class="{{ 'active' if currentPage == 'extensions-guide' }}">Extensions</a>
+                    {% endif %}
+                    {% if 'migration-guide' in availableGuides %}
                     <a href="migration-guide.html" class="{{ 'active' if currentPage == 'migration-guide' }}">Migrating from v1</a>
+                    {% endif %}
                 </div>
             </div>
             <div class="nav-section" id="modules-section">
