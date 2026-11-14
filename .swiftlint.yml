@@ -1,0 +1,14 @@
+opt_in_rules:
+  - force_unwrapping
+
+disabled_rules:
+  - line_length
+  - identifier_name
+
+force_unwrapping:
+  severity: error
+
+excluded:
+  - build
+  - scripts
+  - "Hammerspoon 2Tests"
