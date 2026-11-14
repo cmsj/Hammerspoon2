@@ -9,7 +9,6 @@ import Foundation
 import JavaScriptCore
 
 /// An object a module hands to JavaScript, such as an `HSTimer` or an `HSColor`.
-@_documentation(visibility: private)
 @objc public protocol HSTypeAPI: JSExport {
     /// The type's name as JavaScript sees it, such as `"HSTimer"`
     @objc var typeName: String { get }

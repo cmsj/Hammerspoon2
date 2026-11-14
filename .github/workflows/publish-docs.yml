@@ -34,24 +34,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  version:
     runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.version.outputs.name }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref || github.ref }}
-          fetch-depth: 0
-
-      - name: Overlay doc-generation scripts from main
-        run: |
-          # The target ref may be an older tag that predates certain scripts.
-          # Always use scripts/, package.json, and package-lock.json from main
-          # so we run the latest documentation tooling against any source version.
-          git fetch origin main --depth=1
-          git checkout origin/main -- scripts/ package.json package-lock.json
-
       - name: Determine version name
         id: version
         run: |
@@ -69,6 +57,75 @@ jobs:
           else
             echo "name=main" >> $GITHUB_OUTPUT
           fi
+
+  # The HammerspoonSDK's Swift API docs, built with DocC, which needs macOS and Xcode
+  sdk-docs:
+    runs-on: xcode-27
+    needs: version
+    permissions:
+      contents: read
+    outputs:
+      built: ${{ steps.build.outputs.built }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Overlay doc-generation scripts from main
+        run: |
+          git fetch origin main --depth=1
+          git checkout origin/main -- scripts/
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Build the SDK docs
+        id: build
+        run: |
+          # Releases from before the SDK existed have no SDK docs
+          if [ ! -d HammerspoonSDK/HammerspoonSDK.docc ]; then
+            echo "built=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          scripts/sdk/build-docs.sh sdk-docs \
+            "${{ github.event.repository.name }}/${{ needs.version.outputs.name }}/sdk"
+          echo "built=true" >> $GITHUB_OUTPUT
+
+      - name: Upload the SDK docs
+        if: steps.build.outputs.built == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-docs
+          path: sdk-docs
+          retention-days: 1
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [version, sdk-docs]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Overlay doc-generation scripts from main
+        run: |
+          # The target ref may be an older tag that predates certain scripts.
+          # Always use scripts/, package.json, and package-lock.json from main
+          # so we run the latest documentation tooling against any source version.
+          git fetch origin main --depth=1
+          git checkout origin/main -- scripts/ package.json package-lock.json
+
+      - name: Download the SDK docs
+        if: needs.sdk-docs.outputs.built == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: sdk-docs
+          path: sdk-docs
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -102,7 +159,7 @@ jobs:
 
       - name: Install new version docs into site
         run: |
-          VERSION="${{ steps.version.outputs.name }}"
+          VERSION="${{ needs.version.outputs.name }}"
           echo "Publishing docs as: $VERSION"
           rm -rf "site/$VERSION"
           mkdir -p "site/$VERSION"
@@ -110,6 +167,9 @@ jobs:
           cp -r docs/ts/html "site/$VERSION/ts"
           cp docs/hammerspoon.d.ts "site/$VERSION/hammerspoon.d.ts"
           cp docs/tsconfig.example.json "site/$VERSION/tsconfig.example.json"
+          if [ -d sdk-docs ]; then
+            cp -r sdk-docs "site/$VERSION/sdk"
+          fi
 
       - name: Generate root version index
         run: node scripts/generate-versions-index.js site
@@ -144,7 +204,7 @@ jobs:
             if git rev-parse --quiet --verify HEAD > /dev/null; then
               git commit --quiet --amend --no-edit
             else
-              git commit --quiet -m "docs: publish ${{ steps.version.outputs.name }}"
+              git commit --quiet -m "docs: publish ${{ needs.version.outputs.name }}"
             fi
             if git push --force-with-lease="gh-pages:${LEASE}" "$REMOTE" gh-pages; then
               exit 0

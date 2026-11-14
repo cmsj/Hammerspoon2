@@ -20,12 +20,9 @@ import JavaScriptCore
 /// This helps documentation generators identify promise-returning functions.
 public typealias JSPromise = JSValue
 
-// Helper class to hold Promise resolve/reject functions
 // Pattern inspired by SwiftyJSCore's JSPromiseHolder
-//
-// This class manages the JS Promise resolve/reject functions and ensures
-// they are called on the main thread where JSContext is safe to use.
-@_documentation(visibility: private)
+/// Settles a JavaScript Promise created by ``wrapAsyncInJSPromise(in:body:)``, on the main
+/// thread, where its JavaScript context is safe to use.
 @MainActor
 public final class JSPromiseHolder {
     private let resolve: JSFunction
@@ -78,7 +75,6 @@ public final class JSPromiseHolder {
 ///     }
 /// }
 /// ```
-@_documentation(visibility: private)
 @MainActor
 public func wrapAsyncInJSPromise(in context: JSContext, body: @escaping @MainActor (JSPromiseHolder) -> Void) -> JSPromise? {
     // Create the Promise executor function

@@ -12,7 +12,6 @@ import JavaScriptCore
 /// An extension is a bundle of compiled code (and, optionally, JavaScript) that Hammerspoon 2
 /// loads at runtime, when a script calls `require('ext:<name>')`. Its principal class conforms to
 /// `HSModuleAPI`, and it links against this framework, which Hammerspoon 2 embeds.
-@_documentation(visibility: private)
 public enum HSSDK {
     /// The version of the SDK this copy of Hammerspoon 2 provides.
     ///
@@ -23,7 +22,6 @@ public enum HSSDK {
 }
 
 /// A version of the Hammerspoon 2 SDK, such as `1.2`.
-@_documentation(visibility: private)
 nonisolated public struct HSSDKVersion: Comparable, Sendable, CustomStringConvertible {
     /// Changes when the SDK breaks extensions built against an earlier version
     public let major: Int

@@ -61,12 +61,15 @@ const listItems = versions.map(v => {
             : '';
     const hasTS = fs.existsSync(path.join(siteDir, v, 'ts'));
     const tsLink = hasTS ? `<a href="${v}/ts/">TypeScript</a>` : '';
+    const hasSDK = fs.existsSync(path.join(siteDir, v, 'sdk'));
+    const sdkLink = hasSDK ? `<a href="${v}/sdk/documentation/hammerspoonsdk/">Swift SDK</a>` : '';
     return `            <li>
                 <div class="version-row">
                     <span class="version-name">${v}${badge}</span>
                     <div class="version-links">
                         <a href="${v}/js/">JavaScript API</a>
                         ${tsLink}
+                        ${sdkLink}
                     </div>
                 </div>
             </li>`;

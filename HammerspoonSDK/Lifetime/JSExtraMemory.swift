@@ -21,7 +21,6 @@ import JavaScriptCore
 ///
 /// `JSReportExtraMemoryCost` is exported by JavaScriptCore.framework but not declared in its
 /// public headers, so it's looked up at runtime, and reporting is skipped if macOS removes it.
-@_documentation(visibility: private)
 public enum JSExtraMemory {
     private typealias ReportFunction = @convention(c) (JSContextRef, Int) -> Void
 

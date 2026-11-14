@@ -63,6 +63,9 @@ try {
 
 ## Writing an extension
 
+The [HammerspoonSDK reference](../sdk/documentation/hammerspoonsdk/) documents the Swift API
+extensions are built with.
+
 An extension is a loadable bundle with this layout:
 
 ```

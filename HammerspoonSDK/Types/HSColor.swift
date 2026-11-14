@@ -58,6 +58,7 @@ import Observation
     @objc func toJSON() -> [String: Any]
 }
 
+/// A colour, shared between Swift and JavaScript. Its JavaScript API is ``HSColorAPI``.
 @Observable
 @objc public class HSColor: NSObject, HSColorAPI {
     @objc public var typeName = "HSColor"
@@ -84,11 +85,14 @@ import Observation
         ]
     }
 
+    /// The colour, for SwiftUI
     public var color: Color
 
     /// The colour for AppKit APIs
     public var nsColor: NSColor { NSColor(color) }
 
+    /// Creates a colour from a SwiftUI colour.
+    /// - Parameter color: The colour
     public init(color: Color) {
         self.color = color
         super.init()

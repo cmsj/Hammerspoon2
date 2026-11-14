@@ -15,7 +15,6 @@ import JavaScriptCore
 /// calls `shutdown()` when the engine is torn down (on reload or quit). A module must release
 /// everything it holds from JavaScript in `shutdown()`: its `JSCallback`s, its `HSObjectTracker`s
 /// (with `shutdown()`), and any `JSValue`s its JavaScript enhancement script set on it.
-@_documentation(visibility: private)
 @objc public protocol HSModuleAPI: JSExport {
     /// The module's name, such as `"hs.timer"`, used in log messages
     @objc var moduleName: String { get }

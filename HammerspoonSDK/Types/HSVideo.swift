@@ -106,6 +106,7 @@ import AVFoundation
     @objc var volume: Double { get set }
 }
 
+/// A video playlist, shared between Swift and JavaScript. Its JavaScript API is ``HSVideoAPI``.
 @objc public class HSVideo: NSObject, HSVideoAPI {
     @objc public var typeName = "HSVideo"
 
@@ -117,10 +118,15 @@ import AVFoundation
         MainActor.assumeIsolated { toString() }
     }
 
+    /// The player that plays the playlist
     public let player: AVQueuePlayer
     private let items: [AVPlayerItem]
     private var looper: AVPlayerLooper?
 
+    /// Creates a playlist.
+    /// - Parameters:
+    ///   - player: The player that plays it
+    ///   - items: The playlist's items, in order
     public init(player: AVQueuePlayer, items: [AVPlayerItem]) {
         self.player = player
         self.items = items

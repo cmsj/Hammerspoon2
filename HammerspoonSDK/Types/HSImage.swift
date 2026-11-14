@@ -192,6 +192,7 @@ import Observation
     @objc func set(_ value: JSValue)
 }
 
+/// An image, shared between Swift and JavaScript. Its JavaScript API is ``HSImageAPI``.
 @Observable
 @objc public class HSImage: NSObject, HSImageAPI {
     @objc public var typeName = "HSImage"
@@ -204,8 +205,11 @@ import Observation
         MainActor.assumeIsolated { toString() }
     }
 
+    /// The image
     public var image: NSImage
 
+    /// Creates an image, and reports its size to JavaScript's garbage collector.
+    /// - Parameter image: The image
     public init(image: NSImage) {
         self.image = image
         super.init()
@@ -285,18 +289,18 @@ import Observation
         return image.toBridge()
     }
 
-    @objc public static func fromURL(_ urlString: String) -> JSPromise? {
+    @objc public static func fromURL(_ url: String) -> JSPromise? {
         // The promise must belong to the calling context, or JS can't use it as a Promise
         guard let context = JSContext.current() else { return nil }
-        guard let url = URL(string: urlString) else {
-            AKError("HSImage: Invalid URL: \(urlString)")
-            return context.createRejectedPromise(with: "Invalid URL: \(urlString)")
+        guard let imageURL = URL(string: url) else {
+            AKError("HSImage: Invalid URL: \(url)")
+            return context.createRejectedPromise(with: "Invalid URL: \(url)")
         }
 
         return wrapAsyncInJSPromise(in: context) { holder in
             Task { @MainActor in
                 do {
-                    let (data, _) = try await URLSession.shared.data(from: url)
+                    let (data, _) = try await URLSession.shared.data(from: imageURL)
                     guard let image = NSImage(data: data) else {
                         AKError("HSImage: Failed to create image from URL data")
                         holder.rejectWithMessage("Failed to create image from URL data")

@@ -136,6 +136,7 @@ import CoreGraphics
     @objc func toJSON() -> [String: Any]
 }
 
+/// A point, shared between Swift and JavaScript. Its JavaScript API is ``HSPointAPI``.
 @objc public class HSPoint: NSObject, HSPointAPI {
     @objc public var typeName = "HSPoint"
 
@@ -151,6 +152,7 @@ import CoreGraphics
         ["x": x, "y": y]
     }
 
+    /// The point
     public var point: CGPoint
 
     public var x: Double {

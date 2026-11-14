@@ -24,6 +24,8 @@ import Observation
     @objc func set(_ newValue: String)
 }
 
+/// A string whose changes SwiftUI views observe, shared between Swift and JavaScript. Its
+/// JavaScript API is ``HSStringAPI``.
 @Observable
 @objc public class HSString: NSObject, HSStringAPI {
     @objc public var typeName = "HSString"
@@ -44,6 +46,8 @@ import Observation
 
     @objc public var value: String { _value }
 
+    /// Creates a string container.
+    /// - Parameter value: Its initial value
     public init(value: String) {
         self._value = value
         super.init()

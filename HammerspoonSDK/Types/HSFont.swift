@@ -79,6 +79,7 @@ import SwiftUI
     @objc static func custom(_ name: String, _ size: Double) -> HSFont
 }
 
+/// A font, shared between Swift and JavaScript. Its JavaScript API is ``HSFontAPI``.
 @objc public class HSFont: NSObject, HSFontAPI {
     @objc public var typeName = "HSFont"
 
@@ -89,6 +90,7 @@ import SwiftUI
     public nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+    /// The font, for SwiftUI
     public var font: Font
 
     private init(font: Font) {

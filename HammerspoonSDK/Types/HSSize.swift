@@ -72,6 +72,7 @@ import CoreGraphics
     @objc func toJSON() -> [String: Any]
 }
 
+/// A size, shared between Swift and JavaScript. Its JavaScript API is ``HSSizeAPI``.
 @objc public class HSSize: NSObject, HSSizeAPI {
     @objc public var typeName = "HSSize"
 
@@ -87,6 +88,7 @@ import CoreGraphics
         ["w": w, "h": h]
     }
 
+    /// The size
     public var size: CGSize
 
     public var w: Double {

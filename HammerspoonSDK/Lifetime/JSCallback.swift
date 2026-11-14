@@ -226,7 +226,7 @@ extension JSValue {
     /// Whether the value is a JS function. JavaScriptCore's ObjC API has no direct way to ask.
     var isCallable: Bool {
         guard isObject, let context else { return false }
-        let globalContext = context.jsGlobalContextRef
+        let globalContext = unsafe context.jsGlobalContextRef
         guard let object = unsafe JSValueToObject(globalContext, jsValueRef, nil) else { return false }
         return unsafe JSObjectIsFunction(globalContext, object)
     }

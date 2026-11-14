@@ -168,6 +168,7 @@ import CoreGraphics
     @objc func toJSON() -> [String: Any]
 }
 
+/// A rectangle, shared between Swift and JavaScript. Its JavaScript API is ``HSRectAPI``.
 @objc public class HSRect: NSObject, HSRectAPI {
     @objc public var typeName = "HSRect"
 
@@ -183,6 +184,7 @@ import CoreGraphics
         ["x": x, "y": y, "w": w, "h": h]
     }
 
+    /// The rectangle
     public var rect: CGRect
 
     public var x: Double {

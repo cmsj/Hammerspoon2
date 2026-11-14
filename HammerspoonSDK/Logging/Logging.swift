@@ -9,7 +9,6 @@ import Foundation
 import Synchronization
 import os
 
-@_documentation(visibility: private)
 extension Logger {
     /// Using your bundle identifier is a great way to ensure a unique identifier.
     nonisolated private static let subsystem = Bundle.main.bundleIdentifier ?? "net.tenshu.Hammerspoon-2"
@@ -28,7 +27,6 @@ nonisolated func AKLog(_ level: HammerspoonLogType, _ msg: String) {
 
 /// Logs useful information for the user, to the Hammerspoon 2 Console. Callable from any thread.
 /// - Parameter msg: The message
-@_documentation(visibility: private)
 nonisolated public func AKInfo(_ msg: String) {
     Logger.Hammerspoon.info("\(msg)")
     AKLog(.Info, msg)
@@ -37,7 +35,6 @@ nonisolated public func AKInfo(_ msg: String) {
 /// Logs a recoverable bad state, such as invalid input, to the Hammerspoon 2 Console. Callable
 /// from any thread.
 /// - Parameter msg: The message
-@_documentation(visibility: private)
 nonisolated public func AKWarning(_ msg: String) {
     Logger.Hammerspoon.warning("\(msg)")
     AKLog(.Warning, msg)
@@ -46,7 +43,6 @@ nonisolated public func AKWarning(_ msg: String) {
 /// Logs an unrecoverable failure, such as an OS call failing, to the Hammerspoon 2 Console.
 /// Callable from any thread.
 /// - Parameter msg: The message
-@_documentation(visibility: private)
 nonisolated public func AKError(_ msg: String) {
     Logger.Hammerspoon.error("\(msg)")
     AKLog(.Error, msg)
@@ -55,7 +51,6 @@ nonisolated public func AKError(_ msg: String) {
 /// Logs a debug or trace event, such as a watcher starting, to the Hammerspoon 2 Console.
 /// Callable from any thread.
 /// - Parameter msg: The message
-@_documentation(visibility: private)
 nonisolated public func AKDebug(_ msg: String) {
     Logger.Hammerspoon.debug("\(msg)")
     AKLog(.Debug, msg)
@@ -63,7 +58,6 @@ nonisolated public func AKDebug(_ msg: String) {
 
 /// Logs a line of output from JavaScript's `console` to the Hammerspoon 2 Console.
 /// - Parameter msg: The message
-@_documentation(visibility: private)
 @_spi(HammerspoonHost)
 nonisolated public func AKConsole(_ msg: String) {
     Logger.Hammerspoon.info("JS Console: \(msg)")
@@ -72,7 +66,6 @@ nonisolated public func AKConsole(_ msg: String) {
 
 /// Logs a Console autocompletion result.
 /// - Parameter msg: The message
-@_documentation(visibility: private)
 @_spi(HammerspoonHost)
 nonisolated public func AKAutocomplete(_ msg: String) {
     // NOTE: This does not pass into Logger, there's really no need
@@ -97,7 +90,6 @@ nonisolated public func akSetGarbageLoggingEnabled(_ enabled: Bool) {
 /// collection. Only recorded when the user turns on garbage collection logging, so the message
 /// is only built then. Callable from any thread.
 /// - Parameter msg: The message
-@_documentation(visibility: private)
 nonisolated public func AKGarbage(_ msg: @autoclosure () -> String) {
     guard garbageLoggingGate.load(ordering: .relaxed) else { return }
     let message = msg()
