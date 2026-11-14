@@ -790,8 +790,12 @@ step_sdk_package() {
     if ! git -C "$checkout" rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
         git -C "$checkout" tag -a "$VERSION" -m "HammerspoonSDK from $APP_NAME $VERSION"
     fi
-    # By name, since a clone of the still-empty repository has no branch to follow
-    git -C "$checkout" push --quiet origin HEAD:refs/heads/main "refs/tags/$VERSION"
+    # To the default branch the clone checked out, or main when the repository is still empty and
+    # has no branch to follow
+    local branch
+    branch="$(git -C "$checkout" rev-parse -q --verify --abbrev-ref origin/HEAD 2>/dev/null || true)"
+    branch="${branch#origin/}"
+    git -C "$checkout" push --quiet origin "HEAD:refs/heads/${branch:-main}" "refs/tags/$VERSION"
 }
 
 step_appcast() {

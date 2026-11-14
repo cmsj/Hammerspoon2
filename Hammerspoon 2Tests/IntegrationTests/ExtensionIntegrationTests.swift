@@ -350,7 +350,11 @@ struct ExtensionTests {
             let frameworks = bundle.appendingPathComponent("Contents/Frameworks")
             try FileManager.default.createDirectory(at: frameworks, withIntermediateDirectories: true)
             let appSDK = try #require(Bundle.main.privateFrameworksURL).appendingPathComponent("HammerspoonSDK.framework")
-            try FileManager.default.copyItem(at: appSDK, to: frameworks.appendingPathComponent("HammerspoonSDK.framework"))
+            let copy = frameworks.appendingPathComponent("HammerspoonSDK.framework")
+            try FileManager.default.copyItem(at: appSDK, to: copy)
+            // Signed as Xcode would sign it, since the app's copy is unsigned when the app is
+            // built without signing (as CI does), and trimmed after it was built
+            try TestExtensionFixture.codesign(["--force", "--sign", "-", copy.path])
             try TestExtensionFixture.codesign(["--force", "--sign", "-", bundle.path])
 
             let setup = LoaderSetup(directory: directory)
