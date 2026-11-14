@@ -384,7 +384,7 @@ import Security
         case idle, connecting, connected, listening
 
         var isActive: Bool {
-            switch (self) {
+            switch self {
             case .idle:
                 return false
             case .connecting, .connected, .listening:
@@ -1122,6 +1122,7 @@ import Security
     private static func asIdentity(_ value: Any) -> SecIdentity? {
         let object = value as CFTypeRef
         guard CFGetTypeID(object) == SecIdentityGetTypeID() else { return nil }
+        // swiftlint:disable:next force_cast
         return (object as! SecIdentity)
     }
 

@@ -226,7 +226,7 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
 
     // MARK: - Per-camera watcher
 
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     // The module keeps one object per camera alive itself (so JS always gets the same one),
     // but this callback is owned by the camera's JS wrapper. So a watching camera is active:
     // its wrapper, and so the callback, stay alive until the watcher is removed, even if the
@@ -236,8 +236,8 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
             cameraModule?.watchingCameras.setActive(self, watcherCallback != nil)
         }
     }
-    private var cmioListenerBlock: CMIOObjectPropertyListenerBlock? = nil
-    private var watcherCMIOID: CMIOObjectID? = nil
+    private var cmioListenerBlock: CMIOObjectPropertyListenerBlock?
+    private var watcherCMIOID: CMIOObjectID?
     // Ends the watch when the camera is unplugged: its CMIO device is gone, so the watcher could
     // never fire again, and it would otherwise stay active until reload
     private var disconnectObserver: NSObjectProtocol?
@@ -457,12 +457,13 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
                 mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeWildcard),
                 mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementWildcard)
             )
-            var uidRef: Unmanaged<CFString>? = nil
+            var uidRef: Unmanaged<CFString>?
             let uidInSize = unsafe UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
             var uidOutSize = uidInSize
 
             guard unsafe CMIOObjectGetPropertyData(deviceID, &uidAddress, 0, nil, uidInSize, &uidOutSize, &uidRef) == noErr,
                   unsafe uidRef != nil else { continue }
+            // swiftlint:disable:next force_unwrapping
             let deviceUID = unsafe uidRef!.takeRetainedValue() as String
 
             if deviceUID == uid { return deviceID }

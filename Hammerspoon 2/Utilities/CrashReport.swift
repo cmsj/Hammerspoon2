@@ -160,7 +160,7 @@ nonisolated struct CrashReport {
         /// The frame as a line of a backtrace, e.g.
         /// `3   Hammerspoon 2      0x0000000100a1c2d4 Hammerspoon 2 + 115412`.
         func line(index: Int) -> String {
-            let addressText = address.map { String(format: "0x%016llx", $0) } ?? "0x????????????????"
+            let addressText = address.map { unsafe String(format: "0x%016llx", $0) } ?? "0x????????????????"
             let location: String
             if let symbol {
                 location = "\(symbol) + \(symbolOffset ?? 0)"

@@ -26,14 +26,14 @@ private struct ReactiveRectangleFill: View {
 }
 
 class UIRectangle: ShapeModifiable, FrameModifiable, OpacityModifiable, InteractiveModifiable {
-    var fillColor: HSColor? = nil
-    var strokeColor: HSColor? = nil
+    var fillColor: HSColor?
+    var strokeColor: HSColor?
     var strokeWidth: CGFloat = 1.0
     var cornerRadius: CGFloat = 0.0
-    var elementFrame: UIFrame? = nil
+    var elementFrame: UIFrame?
     var elementOpacity: Double = 1.0
-    var clickCallback: (() -> Void)? = nil
-    var hoverCallback: ((Bool) -> Void)? = nil
+    var clickCallback: (() -> Void)?
+    var hoverCallback: ((Bool) -> Void)?
 
     func toSwiftUI(containerSize: CGSize) -> AnyView {
         let resolved = elementFrame?.resolve(containerSize: containerSize)

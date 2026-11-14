@@ -120,7 +120,7 @@ struct HSAppInfoData {
     /// console.log(hs.appinfo.machineName)
     /// ```
     @objc var machineName: String { get }
-    
+
     /// Hammerspoon 2's Process Identifier (PID)
     /// - Example:
     /// ```js

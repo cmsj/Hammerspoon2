@@ -202,11 +202,11 @@ nonisolated enum HSSerialEvent: String, HSEventName {
     let engineID: UUID
     private var ports = HSObjectTracker<HSSerialPort>()
 
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSSerialEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
     // Owned by this module, whose JS wrapper ModuleRoot pins, so it lives until _removeWatcher()
     private var listener: JSCallback?
     private var notificationPort: IONotificationPortRef?
@@ -318,6 +318,7 @@ nonisolated enum HSSerialEvent: String, HSEventName {
 
         // Retain self so the raw pointer passed to IOKit stays valid for the watcher lifetime.
         unsafe selfRef = Unmanaged.passRetained(self)
+        // swiftlint:disable:next force_unwrapping
         let refCon: UnsafeMutableRawPointer = unsafe selfRef!.toOpaque()
 
         let addedStatus = unsafe IOServiceAddMatchingNotification(

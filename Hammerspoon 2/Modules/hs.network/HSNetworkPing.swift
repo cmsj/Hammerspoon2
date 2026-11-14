@@ -83,7 +83,7 @@ private func sendICMPPacket(fd: Int32, packet: Data, targetAddr: Data) -> String
 /// For IPv4, received data includes the IP header; for IPv6 it does not.
 /// Returns nil if the packet is not a valid echo reply for `expectedIdentifier`.
 private func readICMPReply(fd: Int32, family: Int32,
-                            expectedIdentifier: UInt16) -> (sequence: UInt16, identifier: UInt16, ttl: UInt8)? {
+                           expectedIdentifier: UInt16) -> (sequence: UInt16, identifier: UInt16, ttl: UInt8)? {
     var buffer = [UInt8](repeating: 0, count: 2048)
     let bytesRead = unsafe Darwin.recv(fd, &buffer, buffer.count, 0)
     guard bytesRead >= 8 else { return nil }
@@ -527,6 +527,7 @@ private func readICMPReply(fd: Int32, family: Int32,
         _received += 1
 
         _packets[seq] = makePacketInfo(seq: seq, status: "received", rtt: rtt)
+        // swiftlint:disable:next force_unwrapping
         fireCallback("receivedPacket", _packets[seq]!)
         checkIfDone()
     }

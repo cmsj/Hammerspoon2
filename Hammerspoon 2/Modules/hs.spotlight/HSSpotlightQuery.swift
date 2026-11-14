@@ -315,15 +315,17 @@ import JavaScriptCore
     }
 
     private func tearDownNotifications() {
+        // swiftlint:disable comma
         NotificationCenter.default.removeObserver(self, name: .NSMetadataQueryDidStartGathering,  object: query)
         NotificationCenter.default.removeObserver(self, name: .NSMetadataQueryGatheringProgress,  object: query)
         NotificationCenter.default.removeObserver(self, name: .NSMetadataQueryDidFinishGathering, object: query)
         NotificationCenter.default.removeObserver(self, name: .NSMetadataQueryDidUpdate,          object: query)
+        // swiftlint:enable comma
     }
 
-    @objc private func handleDidStartGathering()   { fireSimpleCallback("didStart") }
-    @objc private func handleGatheringProgress()   { fireSimpleCallback("inProgress") }
-    @objc private func handleDidFinishGathering()  { fireSimpleCallback("didFinish") }
+    @objc private func handleDidStartGathering() { fireSimpleCallback("didStart") }
+    @objc private func handleGatheringProgress() { fireSimpleCallback("inProgress") }
+    @objc private func handleDidFinishGathering() { fireSimpleCallback("didFinish") }
 
     private func fireSimpleCallback(_ event: String) {
         guard let cb = callback else { return }
@@ -345,8 +347,8 @@ import JavaScriptCore
 
     // MARK: - HSSpotlightQueryAPI
 
-    @objc var count: Int       { query.resultCount }
-    @objc var isRunning: Bool  { query.isStarted && !query.isStopped }
+    @objc var count: Int { query.resultCount }
+    @objc var isRunning: Bool { query.isStarted && !query.isStopped }
     @objc var isGathering: Bool { query.isGathering }
 
     @objc @discardableResult func setQuery(_ predicate: String) -> HSSpotlightQuery {

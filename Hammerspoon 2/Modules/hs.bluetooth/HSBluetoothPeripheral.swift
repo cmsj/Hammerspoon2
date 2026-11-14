@@ -323,7 +323,7 @@ final class BluetoothPeripheralRecord {
     private var watcherCallback: JSCallback? {
         didSet { updateActivity() }
     }
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSBluetoothPeripheralEvent.allNames }
 
     /// Whether anything is listening for this peripheral's events

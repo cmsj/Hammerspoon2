@@ -193,14 +193,14 @@ class HSApplicationWatcherObject {
 @objc class HSApplicationModule: NSObject, HSModuleAPI, HSApplicationModuleAPI {
     var moduleName = "hs.application"
     let engineID: UUID
-    private var watcher: HSApplicationWatcherObject? = nil
+    private var watcher: HSApplicationWatcherObject?
 
     // Swift-retained storage for the JS-defined watcher emitter instance
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSApplicationEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
 
     // MARK: - Module lifecycle
     required init(engineID: UUID) {
@@ -308,7 +308,7 @@ class HSApplicationWatcherObject {
     }
 
     private func fileTypeToUTType(_ fileType: String) -> UTType? {
-        var utType: UTType? = nil
+        var utType: UTType?
 
         utType = UTType(fileType)
         if utType == nil {
@@ -358,4 +358,3 @@ class HSApplicationWatcherObject {
         }
     }
 }
-

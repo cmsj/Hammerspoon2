@@ -154,7 +154,7 @@ import JavaScriptCore
     var moduleName = "hs.spoons"
     let engineID: UUID
     let installer: SpoonInstaller
-    @objc var use: JSFunction? = nil
+    @objc var use: JSFunction?
 
     private let session: URLSession
     private var operations: [UUID: Task<Void, Never>] = [:]

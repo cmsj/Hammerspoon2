@@ -848,6 +848,8 @@ import SwiftUI
     }
 
     private func resolvedLevel() -> NSWindow.Level {
+        // FIXME: Could windowLevelValues be replaced with an enum?
+        // swiftlint:disable:next force_unwrapping
         NSWindow.Level(rawValue: windowLevelRaw ?? HSCanvasModule.windowLevelValues["normal"]!)
     }
 

@@ -127,6 +127,7 @@ nonisolated enum HSStreamDeckEvent: String, HSEventName {
         IOHIDManagerSetDeviceMatchingMultiple(ioHIDManager, matchingDicts as CFArray)
 
         unsafe selfRef = Unmanaged.passRetained(self)
+        // swiftlint:disable:next force_unwrapping
         let refCon: UnsafeMutableRawPointer = unsafe selfRef!.toOpaque()
 
         unsafe IOHIDManagerRegisterDeviceMatchingCallback(ioHIDManager, { context, _, _, device in
@@ -254,11 +255,11 @@ nonisolated enum HSStreamDeckEvent: String, HSEventName {
 
     // MARK: - Module-level watcher
 
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSStreamDeckEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
     private var moduleCallback: JSCallback?
 
     @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {

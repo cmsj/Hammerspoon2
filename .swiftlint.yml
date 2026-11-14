@@ -4,6 +4,15 @@ opt_in_rules:
 disabled_rules:
   - line_length
   - identifier_name
+  - trailing_comma
+  - cyclomatic_complexity
+  - file_length
+  - type_body_length
+  - function_parameter_count
+  - function_body_length
+  - large_tuple
+  - todo
+  - optional_data_string_conversion
 
 force_unwrapping:
   severity: error

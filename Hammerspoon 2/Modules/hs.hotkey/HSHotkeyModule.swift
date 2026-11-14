@@ -172,9 +172,9 @@ import Carbon
     private var activeHotkeys = HSObjectTracker<HSHotkey>()
 
     // MARK: - Swift-retained storage for JS-defined functions
-    @objc var createModal: JSFunction? = nil
-    @objc var bindSpec: JSFunction? = nil
-    @objc var showHotkeys: JSFunction? = nil
+    @objc var createModal: JSFunction?
+    @objc var bindSpec: JSFunction?
+    @objc var showHotkeys: JSFunction?
 
     @objc var alertDuration: Double = 1.0
 
@@ -462,6 +462,7 @@ private struct ModifierMapper {
     }
 
     static let modifierMap: [String: UInt32] = [
+        // swiftlint:disable colon
         "cmd":     UInt32(cmdKey),
         "command": UInt32(cmdKey),
         "⌘":       UInt32(cmdKey),
@@ -473,5 +474,6 @@ private struct ModifierMapper {
         "⌥":       UInt32(optionKey),
         "shift":   UInt32(shiftKey),
         "⇧":       UInt32(shiftKey),
+        // swiftlint:enable colon
     ]
 }

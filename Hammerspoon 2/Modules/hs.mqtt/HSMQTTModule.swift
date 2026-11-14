@@ -88,7 +88,7 @@ import JavaScriptCoreExtras
     let engineID: UUID
     private var clients = HSObjectTracker<HSMQTTClient>()
 
-    @objc var _makeClientEmitter: JSFunction? = nil
+    @objc var _makeClientEmitter: JSFunction?
 
     required init(engineID: UUID) {
         self.engineID = engineID

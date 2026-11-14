@@ -244,6 +244,7 @@ import CoreLocation
 
     static func locationTable(from loc: CLLocation) -> [String: Any] {
         [
+            // swiftlint:disable colon
             "latitude":           loc.coordinate.latitude,
             "longitude":          loc.coordinate.longitude,
             "altitude":           loc.altitude,
@@ -252,6 +253,7 @@ import CoreLocation
             "course":             loc.course,
             "speed":              loc.speed,
             "timestamp":          loc.timestamp.timeIntervalSince1970
+            // swiftlint:enable colon
         ]
     }
 
@@ -263,9 +265,10 @@ import CoreLocation
 
     // USNO algorithm for sunrise/sunset
     private static func sunTime(latitude: Double, longitude: Double,
-                                 date: Date, isSunrise: Bool) -> Date? {
+                                date: Date, isSunrise: Bool) -> Date? {
         let toRad = Double.pi / 180.0
         var cal = Calendar(identifier: .gregorian)
+        // swiftlint:disable:next force_unwrapping
         cal.timeZone = TimeZone(secondsFromGMT: 0)!
         let comps = cal.dateComponents([.year, .month, .day], from: date)
         guard let year = comps.year, let month = comps.month, let day = comps.day else { return nil }

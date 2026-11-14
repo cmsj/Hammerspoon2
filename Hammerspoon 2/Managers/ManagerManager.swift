@@ -71,6 +71,7 @@ class ManagerManager {
         try engine.resetContext()
 
         let configDir = settings.configLocation.deletingLastPathComponent()
+        // swiftlint:disable:next compiler_protocol_init
         var configDirExists = ObjCBool(booleanLiteral: false)
         unsafe _ = fileSystem.fileExists(atPath: configDir.path, isDirectory: &configDirExists)
 

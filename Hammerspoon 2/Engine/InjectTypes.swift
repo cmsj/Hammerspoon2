@@ -19,6 +19,7 @@ import JavaScriptCoreExtras
 struct TypeBridgesInstaller: JSContextInstallable {
     func install(in context: JSContext) throws {
         let typeBridges = [
+            // swiftlint:disable colon
             "HSPoint": HSPoint.self,
             "HSSize":  HSSize.self,
             "HSRect":  HSRect.self,
@@ -27,6 +28,7 @@ struct TypeBridgesInstaller: JSContextInstallable {
             "HSColor": HSColor.self,
             "HSImage": HSImage.self,
             "HSVideo": HSVideo.self,
+            // swiftlint:enable colon
         ]
 
         typeBridges.forEach { key, value in

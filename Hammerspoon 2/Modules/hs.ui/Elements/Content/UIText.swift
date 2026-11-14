@@ -30,11 +30,11 @@ private struct ReactiveText: View {
 class UIText: FrameModifiable, OpacityModifiable, InteractiveModifiable, TextModifiable {
     var content: HSString
     var font: Font = .body
-    var foregroundColor: HSColor? = nil
-    var elementFrame: UIFrame? = nil
+    var foregroundColor: HSColor?
+    var elementFrame: UIFrame?
     var elementOpacity: Double = 1.0
-    var clickCallback: (() -> Void)? = nil
-    var hoverCallback: ((Bool) -> Void)? = nil
+    var clickCallback: (() -> Void)?
+    var hoverCallback: ((Bool) -> Void)?
 
     init(content: HSString) {
         self.content = content

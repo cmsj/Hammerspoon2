@@ -254,6 +254,7 @@ private func parseFSEventFlags(_ flags: FSEventStreamEventFlags) -> [String] {
         flags & FSEventStreamEventFlags(UInt32(bitPattern: Int32(flag))) != 0
     }
 
+    // swiftlint:disable opening_brace
     if has(kFSEventStreamEventFlagMustScanSubDirs)   { result.append("mustScanSubDirs") }
     if has(kFSEventStreamEventFlagUserDropped)        { result.append("userDropped") }
     if has(kFSEventStreamEventFlagKernelDropped)      { result.append("kernelDropped") }
@@ -275,5 +276,7 @@ private func parseFSEventFlags(_ flags: FSEventStreamEventFlags) -> [String] {
     if has(kFSEventStreamEventFlagItemIsHardlink)     { result.append("itemIsHardlink") }
     if has(kFSEventStreamEventFlagItemIsLastHardlink) { result.append("itemIsLastHardlink") }
     if has(kFSEventStreamEventFlagItemCloned)         { result.append("itemCloned") }
+    // swiftlint:enable opening_brace
+
     return result
 }

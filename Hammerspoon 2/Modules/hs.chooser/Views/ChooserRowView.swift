@@ -20,7 +20,7 @@ struct ChooserRowView: View {
             if let image = item.image {
                 Image(nsImage: image)
                     .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .scaledToFit()
                     .frame(width: 32, height: 32)
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             }

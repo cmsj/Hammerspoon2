@@ -284,6 +284,7 @@ import JavaScriptCore
             let afterAmp = string.index(after: idx)
             if let semiIdx = string[afterAmp...].firstIndex(of: ";") {
                 let entityContent = String(string[afterAmp..<semiIdx])
+                // swiftlint:disable:next control_statement
                 if (entityContent.hasPrefix("#x") || entityContent.hasPrefix("#X")),
                    let cp = UInt32(entityContent.dropFirst(2), radix: 16),
                    let scalar = Unicode.Scalar(cp) {

@@ -243,10 +243,12 @@ import JavaScriptCore
         let content = UNMutableNotificationContent()
         content.title = title
 
+        // swiftlint:disable opening_brace
         if let subtitle = options["subtitle"] as? String         { content.subtitle = subtitle }
         if let body = options["body"] as? String                 { content.body = body }
         if let threadId = options["threadIdentifier"] as? String { content.threadIdentifier = threadId }
         if let badge = options["badge"] as? NSNumber             { content.badge = badge }
+        // swiftlint:enable opening_brace
 
         if let rawUserInfo = options["userInfo"] as? [AnyHashable: Any] {
             content.userInfo = rawUserInfo
@@ -417,9 +419,11 @@ extension HSNotifyModule: UNUserNotificationCenterDelegate {
 
             if let cb = callbacks.removeValue(forKey: notifId) {
                 var responseObj: [AnyHashable: Any] = [
+                    // swiftlint:disable colon
                     "actionIdentifier": actionId,
                     "userInfo":         userInfo,
                     "notificationId":   notifId,
+                    // swiftlint:enable colon
                 ]
                 if let text = userText { responseObj["userText"] = text }
                 _ = cb.call(withArguments: [responseObj])

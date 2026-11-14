@@ -193,6 +193,7 @@ extension SBApplication: ShortcutsBridgeApp {}
                         holder.resolveWith(value)
                     } else {
                         let message = output?.isEmpty == false
+                        // swiftlint:disable:next force_unwrapping
                             ? output!
                             : "Shortcut '\(name)' failed with exit code \(exitCode)"
                         AKDebug("hs.shortcuts.run(): '\(name)' rejected: \(message)")

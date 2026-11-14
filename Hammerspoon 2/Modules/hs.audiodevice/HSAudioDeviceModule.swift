@@ -200,7 +200,7 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
     }
 
     @objc func allOutputDevices() -> [HSAudioDevice] { all().filter { $0.isOutput } }
-    @objc func allInputDevices() -> [HSAudioDevice]  { all().filter { $0.isInput } }
+    @objc func allInputDevices() -> [HSAudioDevice] { all().filter { $0.isInput } }
 
     @objc func defaultOutputDevice() -> HSAudioDevice? {
         deviceForProperty(kAudioHardwarePropertyDefaultOutputDevice)
@@ -224,12 +224,12 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
 
     // MARK: - System-level watcher
 
-    @objc var _watcherEmitter: JSFunction? = nil
-    @objc var _makeDeviceEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
+    @objc var _makeDeviceEmitter: JSFunction?
     @objc var _eventNames: [String] { HSAudioDeviceEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
     private var moduleCallback: JSCallback?
     private var moduleRegistrations: [String: (address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = unsafe [:]
     /// The devices present when the device list last changed, with their identity, so a
@@ -245,9 +245,11 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
         let sysObjID = AudioObjectID(kAudioObjectSystemObject)
 
         let propertyEvents: [(HSAudioDeviceEvent, AudioObjectPropertySelector)] = [
+            // swiftlint:disable comma
             (.defaultOutputChanged,       kAudioHardwarePropertyDefaultOutputDevice),
             (.defaultInputChanged,        kAudioHardwarePropertyDefaultInputDevice),
             (.defaultSystemOutputChanged, kAudioHardwarePropertyDefaultSystemOutputDevice),
+            // swiftlint:enable comma
         ]
         for (event, selector) in propertyEvents {
             let eventName = event.rawValue
@@ -299,8 +301,7 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
         guard unsafe !moduleRegistrations.isEmpty else { return }
         let sysObjID = AudioObjectID(kAudioObjectSystemObject)
         for key in unsafe Array(moduleRegistrations.keys) {
-            guard unsafe moduleRegistrations[key] != nil else { continue }
-            var reg = unsafe moduleRegistrations[key]!
+            guard var reg = unsafe moduleRegistrations[key] else { continue }
             unsafe AudioObjectRemovePropertyListenerBlock(sysObjID, &reg.address, .main, reg.block)
         }
         unsafe moduleRegistrations.removeAll()

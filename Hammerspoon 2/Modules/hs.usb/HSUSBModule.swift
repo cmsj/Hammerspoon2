@@ -25,10 +25,12 @@ private func readUSBDeviceProperties(from device: io_service_t) -> [String: Any]
     }
 
     var info: [String: Any] = [
+        // swiftlint:disable colon
         "productName": (properties[usbProductNameKey] as? String) ?? "",
         "vendorName":  (properties[usbVendorNameKey]  as? String) ?? "",
         "productID":   (properties[usbProductIDKey]   as? Int)    ?? 0,
         "vendorID":    (properties[usbVendorIDKey]    as? Int)    ?? 0
+        // swiftlint:enable colon
     ]
     if let serial = properties[usbSerialNumberKey] as? String, !serial.isEmpty {
         info["serialNumber"] = serial
@@ -104,11 +106,11 @@ nonisolated enum HSUSBEvent: String, HSEventName {
     var moduleName = "hs.usb"
     let engineID: UUID
 
-    @objc var _watcherEmitter: JSValue? = nil
+    @objc var _watcherEmitter: JSValue?
     @objc var _eventNames: [String] { HSUSBEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
 
     private var listener: JSCallback?
     private var notificationPort: IONotificationPortRef?
@@ -186,6 +188,7 @@ nonisolated enum HSUSBEvent: String, HSEventName {
         // IOServiceAddMatchingNotification consumes the matching dict reference it is given,
         // so we pass matching dicts inline — ARC manages their lifetime around the call.
         unsafe selfRef = Unmanaged.passRetained(self)
+        // swiftlint:disable:next force_unwrapping
         let refCon: UnsafeMutableRawPointer = unsafe selfRef!.toOpaque()
 
         // "Device added" notifications

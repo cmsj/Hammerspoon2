@@ -32,7 +32,7 @@ import CoreGraphics
 
     /// The size of the rectangle, ie its width and height, as an HSSize object
     var size: HSSize { get set }
-    
+
     /// Create a new HSRect object
     /// - Parameters:
     ///   - x: The x-axis coordinate of the top-left corner
@@ -347,4 +347,3 @@ extension CGRect: JSConvertible {
                w: Double(size.width), h: Double(size.height))
     }
 }
-

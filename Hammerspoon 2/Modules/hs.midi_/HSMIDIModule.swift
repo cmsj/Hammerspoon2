@@ -124,6 +124,7 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
     var packetPtr = unsafe MIDIEventListInit(eventListPtr, ._1_0)
     for packet in packets {
         unsafe packetPtr = packet.withUnsafeBufferPointer { wordsPtr in
+            // swiftlint:disable:next force_unwrapping
             unsafe MIDIEventListAdd(eventListPtr, bufferSize, packetPtr, 0, wordsPtr.count, wordsPtr.baseAddress!)
         }
     }

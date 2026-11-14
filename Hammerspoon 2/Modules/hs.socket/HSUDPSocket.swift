@@ -446,6 +446,7 @@ import Darwin
             }
             let bindAddress = localAddress ?? (family == AF_INET ? ipv4AnyAddress(port: boundPort) : ipv6AnyAddress(port: boundPort))
             let result = unsafe bindAddress.withUnsafeBytes { raw in
+                // swiftlint:disable:next force_unwrapping
                 unsafe Darwin.bind(endpoint.fd, raw.baseAddress!.assumingMemoryBound(to: sockaddr.self), socklen_t(bindAddress.count))
             }
             guard result == 0 else {
@@ -592,6 +593,7 @@ import Darwin
         let family = socketAddressFamily(address)
         guard let endpoint = endpoint(for: family) else { return }
         let result = unsafe address.withUnsafeBytes { raw in
+            // swiftlint:disable:next force_unwrapping
             unsafe Darwin.connect(endpoint.fd, raw.baseAddress!.assumingMemoryBound(to: sockaddr.self), socklen_t(address.count))
         }
         guard result == 0 else {
@@ -618,6 +620,7 @@ import Darwin
             sent = unsafe data.withUnsafeBytes { bytes in
                 unsafe address.withUnsafeBytes { raw in
                     unsafe sendto(endpoint.fd, bytes.baseAddress, bytes.count, 0,
+                                  // swiftlint:disable:next force_unwrapping
                                   raw.baseAddress!.assumingMemoryBound(to: sockaddr.self), socklen_t(address.count))
                 }
             }
@@ -827,6 +830,7 @@ nonisolated private func ipv6AnyAddress(port: Int) -> Data {
 
 nonisolated private func socketAddressFamily(_ address: Data) -> Int32 {
     unsafe address.withUnsafeBytes { raw in
+        // swiftlint:disable:next force_unwrapping
         Int32(unsafe raw.load(fromByteOffset: MemoryLayout<sockaddr>.offset(of: \.sa_family)!, as: sa_family_t.self))
     }
 }

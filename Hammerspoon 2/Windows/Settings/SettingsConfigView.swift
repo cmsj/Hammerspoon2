@@ -30,7 +30,7 @@ struct SettingsConfigView: View {
             panel.allowsMultipleSelection = false
             panel.showsHiddenFiles = true
             panel.directoryURL = settingsManager.configLocation.deletingLastPathComponent()
-            
+
             if panel.runModal() == .OK {
                 if let url = panel.url {
                     settingsManager.configLocation = url
@@ -41,7 +41,7 @@ struct SettingsConfigView: View {
         icon = NSWorkspace.shared.icon(forFile: settingsManager.configLocation.path)
         icon.size = .init(width: iconSize, height: iconSize)
     }
-    
+
     private var neitherHint: String {
         switch settingsManager.reopenAction {
         case .showConsole:

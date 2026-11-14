@@ -243,7 +243,7 @@ import AXSwift
     @objc var _roles: [String: String] = [:]
 
     // Swift-retained storage for the JS watcher emitter
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
 
     // MARK: - Module lifecycle
 
@@ -512,7 +512,7 @@ import AXSwift
         // Get or create observer for this PID
         if !observers.keys.contains(pid) {
             do {
-                let observer = try Observer(processID: pid) { [weak self] (observer: Observer, element: UIElement, notification: UIElement.AXNotification, info: [String: AnyObject]?) in
+                let observer = try Observer(processID: pid) { [weak self] (_: Observer, element: UIElement, notification: UIElement.AXNotification, _: [String: AnyObject]?) in
                     // This closure is called when any notification on this PID fires
                     guard let self = self else { return }
                     self.handleNotification(element: element, notification: notification)

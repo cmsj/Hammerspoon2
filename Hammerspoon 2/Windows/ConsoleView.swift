@@ -12,7 +12,7 @@ import UniformTypeIdentifiers
 class ConsoleViewModel: WindowAccessorDelegate {
     /// Applies `alpha` as soon as the window attaches, in case it becomes available
     /// after `alpha` has already been set (or vice versa).
-    var window: NSWindow? = nil {
+    var window: NSWindow? {
         didSet { applyAlpha() }
     }
     var alpha: CGFloat = 1.0 {
@@ -34,9 +34,9 @@ struct ConsoleView: View {
     @State var evalIndex: Int = -1
 
     /// Non-nil while a completion session is active (user keeps pressing Tab).
-    @State var activeCompletion: ConsoleCompletionEngine.Result? = nil
+    @State var activeCompletion: ConsoleCompletionEngine.Result?
     @State var completionCycleIndex: Int = 0
-    @State var textSelection: TextSelection? = nil
+    @State var textSelection: TextSelection?
 
     @State var searchString: String = ""
     @State var searchPresented: Bool = true
@@ -110,7 +110,7 @@ struct ConsoleView: View {
 
     fileprivate func handleUpArrow() -> KeyPress.Result {
         guard !evalHistory.isEmpty else { return .ignored }
-        switch (evalIndex) {
+        switch evalIndex {
         case -1:
             // Start walking up the history
             evalIndex = evalHistory.count - 1
@@ -118,7 +118,7 @@ struct ConsoleView: View {
             // We can go no further, evalIndex has taken us to the start of history
             return .ignored
         default:
-            evalIndex = evalIndex - 1
+            evalIndex -= 1
         }
         evalString = evalHistory[evalIndex]
         // The system's default up-arrow action (move cursor to start) fires before this
@@ -128,7 +128,7 @@ struct ConsoleView: View {
     }
 
     fileprivate func handleDownArrow() -> KeyPress.Result {
-        switch (evalIndex) {
+        switch evalIndex {
         case -1:
             // We're not in history yet, pressing down here has no effect
             return .ignored
@@ -139,7 +139,7 @@ struct ConsoleView: View {
             textSelection = nil
             return .handled
         default:
-            evalIndex = evalIndex + 1
+            evalIndex += 1
         }
         evalString = evalHistory[evalIndex]
         textSelection = TextSelection(range: evalString.endIndex..<evalString.endIndex)
@@ -282,7 +282,7 @@ struct ConsoleView: View {
         .toolbar(id: "console-toolbar") {
             ToolbarItem(id: "minimumLogLevel") {
                 Picker("Minimum log level", selection: $minimumLogLevel) {
-                    ForEach(HammerspoonLogType.allCases.filter { $0 != .Autocomplete }){ item in
+                    ForEach(HammerspoonLogType.allCases.filter { $0 != .Autocomplete }) { item in
                         Text(item.asString)
                     }
                 }

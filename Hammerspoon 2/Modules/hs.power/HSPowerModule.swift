@@ -252,21 +252,22 @@ nonisolated enum HSPowerEvent: String, HSEventName {
 
     private var sleepAssertions: [String: IOPMAssertionID] = [:]
 
-    @objc var _eventWatcherEmitter: JSFunction? = nil
+    @objc var _eventWatcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSPowerEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
     private var eventWatcherCallback: JSCallback?
     private var workspaceObservers: [NSObjectProtocol] = []
     private var distributedObservers: [NSObjectProtocol] = []
 
-    @objc var _batteryWatcherEmitter: JSFunction? = nil
+    @objc var _batteryWatcherEmitter: JSFunction?
     private var batteryWatcherCallback: JSCallback?
     private var batteryRunLoopSource: CFRunLoopSource?
     private var batteryContextPointer: UnsafeMutableRawPointer?
 
     private static let workspaceEvents: [(NSNotification.Name, HSPowerEvent)] = [
+        // swiftlint:disable comma
         (NSWorkspace.screensDidSleepNotification,        .screensDidSleep),
         (NSWorkspace.screensDidWakeNotification,         .screensDidWake),
         (NSWorkspace.willSleepNotification,              .systemWillSleep),
@@ -274,14 +275,17 @@ nonisolated enum HSPowerEvent: String, HSEventName {
         (NSWorkspace.willPowerOffNotification,           .systemWillPowerOff),
         (NSWorkspace.sessionDidBecomeActiveNotification, .sessionDidBecomeActive),
         (NSWorkspace.sessionDidResignActiveNotification, .sessionDidResignActive),
+        // swiftlint:enable comma
     ]
 
     private static let distributedEvents: [(String, HSPowerEvent)] = [
+        // swiftlint:disable comma
         ("com.apple.screensaver.didstart", .screensaverDidStart),
         ("com.apple.screensaver.didstop",  .screensaverDidStop),
         ("com.apple.screensaver.willstop", .screensaverWillStop),
         ("com.apple.screenIsLocked",       .screensDidLock),
         ("com.apple.screenIsUnlocked",     .screensDidUnlock),
+        // swiftlint:enable comma
     ]
 
     required init(engineID: UUID) {

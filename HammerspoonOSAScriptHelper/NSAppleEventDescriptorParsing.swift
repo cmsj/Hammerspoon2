@@ -13,6 +13,7 @@ import Foundation
 // Four-char-code constants used below (avoiding a Carbon import).
 // Each constant is the big-endian byte sequence of its four-character tag.
 // ---------------------------------------------------------------------------
+// swiftlint:disable colon
 nonisolated private let kTypeUnicodeText:             DescType = 0x75747874  // 'utxt'
 nonisolated private let kTypeUTF8Text:                DescType = 0x75746638  // 'utf8'
 nonisolated private let kTypeTrue:                    DescType = 0x74727565  // 'true'
@@ -27,6 +28,7 @@ nonisolated private let kTypeAERecord:                DescType = 0x7265636F  // 
 nonisolated private let kTypeNull:                    DescType = 0x6E756C6C  // 'null'
 nonisolated private let kTypeType:                    DescType = 0x74797065  // 'type'
 nonisolated private let kKeywordUsrf:                 AEKeyword = 0x75737266 // 'usrf'
+// swiftlint:enable colon
 
 extension NSAppleEventDescriptor {
 

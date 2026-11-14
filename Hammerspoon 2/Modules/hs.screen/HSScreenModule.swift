@@ -121,11 +121,11 @@ nonisolated enum HSScreenEvent: String, HSEventName {
     var moduleName = "hs.screen"
     let engineID: UUID
 
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSScreenEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
     private var watcherCallback: JSCallback?
     private var watcherObserver: NSObjectProtocol?
 

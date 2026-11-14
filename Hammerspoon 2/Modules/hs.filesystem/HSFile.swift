@@ -516,9 +516,11 @@ import Darwin
     /// The path the kernel currently has for an open file descriptor (absolute, symlinks resolved).
     private static func kernelPath(of fd: Int32) -> String? {
         var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+        // swiftlint:disable force_unwrapping
         let result = buffer.withUnsafeMutableBytes { unsafe fcntl(fd, F_GETPATH, $0.baseAddress!) }
         guard result != -1 else { return nil }
         return buffer.withUnsafeBufferPointer { unsafe String(validatingCString: $0.baseAddress!) }
+        // swiftlint:enable force_unwrapping
     }
 
     /// While the file is open, check that `path` still names this file (same device and inode) before

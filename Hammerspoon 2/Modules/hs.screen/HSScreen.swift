@@ -9,7 +9,6 @@ import CoreGraphics
 import JavaScriptCore
 import ScreenCaptureKit
 
-
 // MARK: - JavaScript API
 
 /// An object representing a single display attached to the system.

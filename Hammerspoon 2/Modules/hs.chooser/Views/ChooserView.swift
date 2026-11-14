@@ -10,7 +10,7 @@ struct ChooserView: View {
     var viewModel: ChooserViewModel
     /// Binding for the text field — setter notifies HSChooser of user typing.
     var queryBinding: Binding<String>
-    @State var querySelection: TextSelection? = nil
+    @State var querySelection: TextSelection?
     let onSelect: (Int?) -> Void
 
     @FocusState private var searchFocused: Bool

@@ -78,7 +78,7 @@ import JavaScriptCore
     var moduleName = "hs.docs"
     let engineID: UUID
 
-    private var cachedModules: [[String: Any]]? = nil
+    private var cachedModules: [[String: Any]]?
 
     // The window opened by show(), so another show() while it's open raises it instead of
     // opening a second one. Weak: a shown window is kept alive by hs.ui, and a closed one is

@@ -158,7 +158,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 @_documentation(visibility: private)
 @main
-struct Hammerspoon_2App: App {
+struct Hammerspoon2App: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @Environment(\.openSettings) private var openSettings
@@ -179,7 +179,7 @@ struct Hammerspoon_2App: App {
                 try? managerManager.reload()
             }
 
-            Button ("Show Config") {
+            Button("Show Config") {
                 NSWorkspace.shared.open(SettingsManager.shared.configLocation.deletingLastPathComponent())
             }
 
@@ -273,7 +273,7 @@ struct Hammerspoon_2App: App {
         .restorationBehavior(.disabled)
         .handlesExternalEvents(matching: [])
 
-        Settings() {
+        Settings {
             SettingsView()
         }
         .restorationBehavior(.disabled)

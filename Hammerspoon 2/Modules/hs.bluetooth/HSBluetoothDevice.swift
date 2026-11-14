@@ -270,7 +270,7 @@ nonisolated enum HSBluetoothDeviceEvent: String, HSEventName {
             module?.updateClassicNotifications()
         }
     }
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSBluetoothDeviceEvent.allNames }
 
     /// Whether anything is listening for this device's events

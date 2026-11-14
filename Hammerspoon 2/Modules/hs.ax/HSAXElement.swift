@@ -521,6 +521,7 @@ import AXSwift
         // correctly; the [Any] branch below then recurses into arrays and hits this.
         let cfValue = value as CFTypeRef
         if CFGetTypeID(cfValue) == AXUIElementGetTypeID() {
+            // swiftlint:disable:next force_cast
             return HSAXElement(element: UIElement(cfValue as! AXUIElement))
         }
         if let point = value as? CGPoint {

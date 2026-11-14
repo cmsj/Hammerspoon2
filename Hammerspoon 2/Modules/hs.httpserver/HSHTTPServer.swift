@@ -286,15 +286,15 @@ struct ParsedHTTPRequest {
 
     // Configuration
     private var _port: UInt16 = 0
-    private var _interface: String? = nil
-    private var _password: String? = nil
+    private var _interface: String?
+    private var _password: String?
     private var maxBodySize = 10 * 1024 * 1024  // 10 MB
     private var _name = "Hammerspoon HTTP Server"
     private var _bonjour = false
-    private var _documentRoot: String? = nil
+    private var _documentRoot: String?
     private var _directoryIndex: [String] = ["index.html", "index.htm"]
     private var _allowDirectoryListing = false
-    private var _tlsIdentity: SecIdentity? = nil
+    private var _tlsIdentity: SecIdentity?
 
     // Runtime state
     private var listener: NWListener?
@@ -540,7 +540,7 @@ struct ParsedHTTPRequest {
         let rawPath = parts[1]
 
         var path = rawPath
-        var query: String? = nil
+        var query: String?
         if let qIdx = rawPath.firstIndex(of: "?") {
             path = String(rawPath[..<qIdx])
             query = String(rawPath[rawPath.index(after: qIdx)...])
@@ -640,6 +640,7 @@ struct ParsedHTTPRequest {
                     }
                 } as @convention(block) (JSValue) -> Void, in: ctx)
 
+                // swiftlint:disable:next force_unwrapping
                 result.invokeMethod("then", withArguments: [onFulfilled!, onRejected!])
                 return
             }
@@ -689,6 +690,7 @@ struct ParsedHTTPRequest {
         ].joined(separator: "\r\n")
 
         // Send the 101 response WITHOUT closing the connection (unlike normal HTTP responses).
+        // swiftlint:disable:next force_unwrapping
         connection.send(content: handshake.data(using: .utf8)!, completion: .contentProcessed { [weak self] error in
             MainActor.assumeIsolated {
                 guard let self, error == nil else { return }
@@ -953,6 +955,7 @@ struct ParsedHTTPRequest {
             AKError("HSHTTPServer: PKCS12 identity value is not a SecIdentity")
             return nil
         }
+        // swiftlint:disable:next force_cast
         return (identity as! SecIdentity)
     }
 

@@ -1006,6 +1006,8 @@ import UniformTypeIdentifiers
             fail("hs.fs.tempFile", errno: errno)
             return nil
         }
+
+        // swiftlint:disable:next force_unwrapping
         let path = template.withUnsafeBufferPointer { unsafe String(cString: $0.baseAddress!) }
         let file = HSFile(fd: fd, path: path, mode: "w+")
         openFiles.add(file)
@@ -1454,6 +1456,7 @@ import UniformTypeIdentifiers
         for url in urls {
             guard let values = try? url.resourceValues(forKeys: keys) else { continue }
             var info: [String: Any] = [:]
+            // swiftlint:disable opening_brace
             if let v = values.volumeLocalizedName    { info["name"]              = v }
             if let v = values.volumeIsLocal          { info["isLocal"]           = v }
             if let v = values.volumeIsInternal       { info["isInternal"]        = v }
@@ -1465,6 +1468,7 @@ import UniformTypeIdentifiers
             if let v = values.volumeTotalCapacity    { info["totalCapacity"]     = v }
             if let v = values.volumeAvailableCapacity { info["availableCapacity"] = v }
             if let v = values.volumeUUIDString       { info["uuid"]              = v }
+            // swiftlint:enable opening_brace
             result[url.path] = info
         }
         return result
