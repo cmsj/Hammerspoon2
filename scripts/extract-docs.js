@@ -18,7 +18,12 @@ const { THROWS_DESCRIPTION } = require('./docs-strings');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const MODULES_DIR = path.join(__dirname, '..', 'Hammerspoon 2', 'Modules');
-const TYPES_DIR = path.join(__dirname, '..', 'HammerspoonSDK', 'Types');
+// publish-docs.yml runs these scripts against older releases too, whose shared types were in
+// the app, before they moved to the SDK
+const TYPES_DIR = [
+    path.join(__dirname, '..', 'HammerspoonSDK', 'Types'),
+    path.join(__dirname, '..', 'Hammerspoon 2', 'Engine', 'Types'),
+].find(dir => fs.existsSync(dir)) || path.join(__dirname, '..', 'HammerspoonSDK', 'Types');
 const OUTPUT_JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_COMBINED_DIR = path.join(OUTPUT_JSON_DIR, 'combined');
 
@@ -1318,10 +1323,10 @@ function processModuleRoot() {
 }
 
 /**
- * Process the HammerspoonSDK/Types directory
+ * Process the shared types directory
  */
 function processTypes(typesPath) {
-    console.log('Processing types from HammerspoonSDK/Types');
+    console.log(`Processing types from ${path.relative(REPO_ROOT, typesPath)}`);
 
     const typesData = {
         name: 'Types',
