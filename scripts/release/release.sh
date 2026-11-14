@@ -199,17 +199,22 @@ check_github() {
     if [ -n "$SDK_PACKAGE_REPO" ]; then
         [ "$(gh api "repos/$SDK_PACKAGE_REPO" --jq .permissions.push 2>/dev/null)" = "true" ] \
             || die "$SDK_PACKAGE_REPO doesn't exist or your GitHub account can't push to it, so execute can't publish the HammerspoonSDK package (create it, or set SDK_PACKAGE_REPO=\"\" to skip that step)"
-        # The SDK package is tagged with the app's version, so a release older than the package
-        # version the extension template asks for would publish one the template can't use
-        local template_sdk
-        template_sdk="$(sed -n 's|.*\.package(url: "https://github.com/[^"]*", from: "\([^"]*\)").*|\1|p' \
-            "$REPO_ROOT/Examples/ExtensionTemplate/Package.swift")"
-        [ -n "$template_sdk" ] || die "can't find the HammerspoonSDK version Examples/ExtensionTemplate/Package.swift asks for"
-        # Compared with three parts each, since sort -V puts 1.0 before 1.0.0
-        local pad='s/^[0-9]*$/&.0.0/; s/^[0-9]*\.[0-9]*$/&.0/'
-        [ "$(printf '%s\n%s\n' "$template_sdk" "$VERSION" | sed "$pad" | sort -V | head -1)" = "$(sed "$pad" <<<"$template_sdk")" ] \
-            || die "the extension template needs HammerspoonSDK $template_sdk or later, but the package would be tagged $VERSION (set SDK_PACKAGE_REPO=\"\" to release without publishing it)"
     fi
+}
+
+# The SDK package is tagged with the app's version, so a release older than the package version
+# the extension template asks for would publish one the template can't use. Not checked by
+# appcast, which can update the feed for a release that has already been published.
+check_sdk_package_version() {
+    [ -n "$SDK_PACKAGE_REPO" ] || return 0
+    local template_sdk
+    template_sdk="$(sed -n 's|.*\.package(url: "https://github.com/[^"]*", from: "\([^"]*\)").*|\1|p' \
+        "$REPO_ROOT/Examples/ExtensionTemplate/Package.swift")"
+    [ -n "$template_sdk" ] || die "can't find the HammerspoonSDK version Examples/ExtensionTemplate/Package.swift asks for"
+    # Compared with three parts each, since sort -V puts 1.0 before 1.0.0
+    local pad='s/^[0-9]*$/&.0.0/; s/^[0-9]*\.[0-9]*$/&.0/'
+    [ "$(printf '%s\n%s\n' "$template_sdk" "$VERSION" | sed "$pad" | sort -V | head -1)" = "$(sed "$pad" <<<"$template_sdk")" ] \
+        || die "the extension template needs HammerspoonSDK $template_sdk or later, but the package would be tagged $VERSION (set SDK_PACKAGE_REPO=\"\" to release without publishing it)"
 }
 
 # Check the Sparkle signing key is in the keychain and matches the app's.
@@ -381,6 +386,7 @@ cmd_prepare() {
     log "Preflight checks"
     require_tools xcodebuild xcrun ditto plutil codesign spctl gh git node jq shasum curl file swift
     check_github
+    check_sdk_package_version
 
     [ -z "$(git status --porcelain)" ] || die "working tree is not clean"
     git fetch --quiet origin
@@ -903,6 +909,7 @@ cmd_execute() {
     log "Checking the prepared release"
     require_tools xcodebuild plutil gh git node jq shasum curl swift
     check_github
+    check_sdk_package_version
     resolve_packages
 
     COMMIT="$(jq -r .commit "$MANIFEST")"
