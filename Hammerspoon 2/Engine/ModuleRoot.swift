@@ -234,8 +234,12 @@ import JavaScriptCoreExtras
             } catch {
                 AKError("ModuleRoot: couldn't make \(name)'s methods return null: \(error.localizedDescription)")
             }
-            if let script = loaded.manifest.enhancementScriptURL {
-                runEnhancementScript(script, for: module, in: context)
+            if let script = loaded.manifest.enhancementScriptURL,
+               !runEnhancementScript(script, for: module, in: context) {
+                // Half set up, so it's dropped, and the next require() starts again
+                module.shutdown()
+                modules[key] = nil
+                moduleWrappers[key] = nil
             }
         }
         return module
@@ -243,17 +247,26 @@ import JavaScriptCoreExtras
 
     /// Runs an extension's enhancement script as the body of a function whose one argument,
     /// `ext`, is the module. Anything it throws is rethrown from the `require()` that loaded it.
-    private func runEnhancementScript(_ url: URL, for module: any HSModuleAPI, in context: JSContext) {
+    /// - Returns: Whether it ran without throwing
+    private func runEnhancementScript(_ url: URL, for module: any HSModuleAPI, in context: JSContext) -> Bool {
         guard let source = try? String(contentsOf: url, encoding: .utf8) else {
-            AKError("ModuleRoot: couldn't read \(url.path)")
-            return
+            context.exception = JSValue(newErrorFromMessage: "Couldn't read the extension's script, \(url.path)", in: context)
+            return false
+        }
+        let previousHandler = context.exceptionHandler
+        var thrown: JSValue?
+        context.exceptionHandler = { _, exception in
+            thrown = exception
         }
         // The newline keeps line numbers accurate after the first line, as require() does
-        guard let function = context.evaluateScript("(function (ext) {\n" + source + "\n})", withSourceURL: url),
-              function.isObject else { return }
-        _ = context.callCapturingException {
+        let function = context.evaluateScript("(function (ext) {\n" + source + "\n})", withSourceURL: url)
+        if thrown == nil, let function, function.isObject {
             function.call(withArguments: [module])
         }
+        context.exceptionHandler = previousHandler
+        guard let thrown else { return true }
+        context.exception = thrown
+        return false
     }
 
     // Pins lazily, on JS access, since that's when the current context is known
