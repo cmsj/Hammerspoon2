@@ -10,6 +10,7 @@ import JavaScriptCore
 import AppKit
 import AXSwift
 import ScreenCaptureKit
+import HammerspoonSDK
 
 // Expose some private API, per https://github.com/saagarjha/Ensemble/blob/27f3fd77c261660c1f469a246858d23d06aa8c1f/macOS/SPI.swift#L21
 let _AXUIElementGetWindow = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "_AXUIElementGetWindow"), to: (@convention(c) (AXUIElement, UnsafeMutablePointer<CGWindowID>) -> AXError)?.self)

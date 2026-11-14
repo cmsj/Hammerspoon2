@@ -8,6 +8,7 @@ import JavaScriptCore
 import AVFoundation
 import AppKit
 @testable import Hammerspoon_2
+@_spi(HammerspoonHost) import HammerspoonSDK
 
 @Suite("hs.ui tests", .serialized)
 struct HSUITests {

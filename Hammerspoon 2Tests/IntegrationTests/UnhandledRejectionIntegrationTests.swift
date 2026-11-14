@@ -7,6 +7,7 @@ import Testing
 import JavaScriptCore
 import JavaScriptCoreExtras
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 /// A JSContext with an UnhandledRejectionInstaller that records what it reports, instead of
 /// logging it

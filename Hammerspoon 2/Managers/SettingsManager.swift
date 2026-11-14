@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+@_spi(HammerspoonHost) import HammerspoonSDK
 
 enum DockMenubarType: String, CaseIterable, Identifiable {
     var id: Self { self }
@@ -151,6 +152,7 @@ final class SettingsManager {
         case reopenAction
         case importSpoonsOnOpen
         case offerCrashReports
+        case allowExtensions
 
         var id: String { "\(self)" }
 
@@ -176,6 +178,8 @@ final class SettingsManager {
                 return ReopenAction.showConsole.rawValue
             case .importSpoonsOnOpen, .offerCrashReports:
                 return true
+            case .allowExtensions:
+                return false
             }
         }
     }
@@ -254,6 +258,32 @@ final class SettingsManager {
         }
     }
 
+    /// Whether scripts may load extensions (native code built against HammerspoonSDK) with
+    /// `require('ext:<name>')`. Off by default, since an extension runs with all of the app's
+    /// permissions.
+    var allowExtensions: Bool {
+        didSet {
+            UserDefaults.standard.set(allowExtensions, forKey: Keys.allowExtensions.rawValue)
+            notifyDelegates()
+        }
+    }
+
+    /// The extensions the user has allowed to load, by name. `ExtensionLoader` records approvals
+    /// in UserDefaults, and this follows them.
+    private(set) var approvedExtensions: [ExtensionApproval] = []
+
+    /// Forgets the user's approval of an extension, so they're asked again the next time a
+    /// config loads it
+    func revokeExtensionApproval(_ name: String) {
+        ExtensionApprovals().revoke(name)
+        approvedExtensions = ExtensionApprovals().all
+    }
+
+    /// Where extension bundles are installed: an Extensions folder next to the config file
+    var extensionsDirectory: URL {
+        configLocation.deletingLastPathComponent().appendingPathComponent("Extensions", isDirectory: true)
+    }
+
     @ObservationIgnored
     private var defaultsObserver: (any NSObjectProtocol)?
 
@@ -269,7 +299,8 @@ final class SettingsManager {
             Keys.consoleAlpha.rawValue: Keys.consoleAlpha.defaultValue,
             Keys.reopenAction.rawValue: Keys.reopenAction.defaultValue,
             Keys.importSpoonsOnOpen.rawValue: Keys.importSpoonsOnOpen.defaultValue,
-            Keys.offerCrashReports.rawValue: Keys.offerCrashReports.defaultValue
+            Keys.offerCrashReports.rawValue: Keys.offerCrashReports.defaultValue,
+            Keys.allowExtensions.rawValue: Keys.allowExtensions.defaultValue
         ])
 
         // swiftlint:disable force_cast
@@ -283,6 +314,8 @@ final class SettingsManager {
         consoleAlpha = min(max(UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue), 0.2), 1.0)
         importSpoonsOnOpen = UserDefaults.standard.bool(forKey: Keys.importSpoonsOnOpen.rawValue)
         offerCrashReports = UserDefaults.standard.bool(forKey: Keys.offerCrashReports.rawValue)
+        allowExtensions = UserDefaults.standard.bool(forKey: Keys.allowExtensions.rawValue)
+        approvedExtensions = ExtensionApprovals().all
 
         let dockMenuBehaviourString = UserDefaults.standard.string(forKey: Keys.dockMenuBehaviour.rawValue) ?? Keys.dockMenuBehaviour.defaultValue as! String
         dockMenuBehaviour = DockMenubarType(rawValue: dockMenuBehaviourString) ?? .both
@@ -348,6 +381,12 @@ final class SettingsManager {
         let newImportSpoonsOnOpen = UserDefaults.standard.bool(forKey: Keys.importSpoonsOnOpen.rawValue)
         if newImportSpoonsOnOpen != importSpoonsOnOpen { importSpoonsOnOpen = newImportSpoonsOnOpen }
 
+        let newAllowExtensions = UserDefaults.standard.bool(forKey: Keys.allowExtensions.rawValue)
+        if newAllowExtensions != allowExtensions { allowExtensions = newAllowExtensions }
+
+        let newApprovedExtensions = ExtensionApprovals().all
+        if newApprovedExtensions != approvedExtensions { approvedExtensions = newApprovedExtensions }
+
         // Clamped in case another preferences client (e.g. iCloud sync) stores a value
         // outside the range the console UI allows, so displayed and applied opacity agree.
         let newConsoleAlpha = min(max(UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue), 0.2), 1.0)
@@ -370,6 +409,9 @@ extension SettingsManager: SettingsManagerProtocol {
         consoleAlpha = Keys.consoleAlpha.defaultValue as! Double
         importSpoonsOnOpen = Keys.importSpoonsOnOpen.defaultValue as! Bool
         offerCrashReports = Keys.offerCrashReports.defaultValue as! Bool
+        allowExtensions = Keys.allowExtensions.defaultValue as! Bool
+        ExtensionApprovals().revokeAll()
+        approvedExtensions = []
 
         // swiftlint:disable force_unwrapping
         let dockMenuType = DockMenubarType(rawValue: Keys.dockMenuBehaviour.defaultValue as! String)!

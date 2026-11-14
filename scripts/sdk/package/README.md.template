@@ -1,0 +1,24 @@
+# HammerspoonSDK
+
+The framework that [Hammerspoon 2](https://github.com/@APP_REPO@) extensions are
+built against, as a Swift package. Each version of this package is the SDK from the Hammerspoon 2
+release with the same version number, and is published automatically when that release is.
+
+Use it to build an extension without Hammerspoon 2 installed, for example in CI. With Hammerspoon
+2 installed, you can also build against its own copy of the framework, in
+`/Applications/Hammerspoon 2.app/Contents/Frameworks`.
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/@PACKAGE_REPO@", from: "@VERSION@"),
+],
+```
+
+Depend on the oldest version of Hammerspoon 2 you want your extension to work with: it can only
+use the API that version's SDK has. Link the framework, but never embed it in your extension:
+Hammerspoon 2 provides it, and refuses extensions that bring their own copy.
+
+See the Extensions guide in the [Hammerspoon 2 documentation](https://cmsj.github.io/Hammerspoon2/)
+for how to write, build and sign an extension, and
+[Examples/ExtensionTemplate](https://github.com/@APP_REPO@/tree/@VERSION@/Examples/ExtensionTemplate)
+for a starting point.

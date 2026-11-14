@@ -7,6 +7,7 @@ import Foundation
 import JavaScriptCore
 import Network
 import Security
+import HammerspoonSDK
 
 // MARK: - Protocol
 

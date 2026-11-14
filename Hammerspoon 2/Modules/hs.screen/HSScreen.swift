@@ -8,6 +8,7 @@ import AppKit
 import CoreGraphics
 import JavaScriptCore
 import ScreenCaptureKit
+import HammerspoonSDK
 
 // MARK: - JavaScript API
 

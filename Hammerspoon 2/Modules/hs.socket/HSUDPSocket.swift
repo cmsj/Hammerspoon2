@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import Darwin
+import HammerspoonSDK
 
 // UDP is implemented with BSD sockets rather than Network.framework, which can't send
 // broadcasts, and models UDP as one connection per remote peer rather than a single socket that

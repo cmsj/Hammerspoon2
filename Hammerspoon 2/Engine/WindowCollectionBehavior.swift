@@ -5,6 +5,7 @@
 
 import AppKit
 import JavaScriptCore
+import HammerspoonSDK
 
 /// The `NSWindow.CollectionBehavior` names shared by the modules that make their own windows
 /// (`hs.canvas`, `hs.ui`), and the validation they all need before assigning one.

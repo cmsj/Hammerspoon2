@@ -7,6 +7,7 @@ import AppKit
 import Foundation
 import JavaScriptCore
 import ScriptingBridge
+import HammerspoonSDK
 
 // MARK: - ScriptingBridge Protocols
 

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import HammerspoonSDK
 
 @_documentation(visibility: private)
 struct SettingsConsoleView: View {

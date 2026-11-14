@@ -9,6 +9,7 @@ import Foundation
 import JavaScriptCore
 import AppKit
 import UniformTypeIdentifiers
+import HammerspoonSDK
 
 /// # HSUIFilePicker
 ///

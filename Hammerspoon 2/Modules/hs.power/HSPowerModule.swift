@@ -9,6 +9,7 @@ import JavaScriptCore
 import IOKit
 import IOKit.ps
 import IOKit.pwr_mgt
+import HammerspoonSDK
 
 // MARK: - Module API protocol
 

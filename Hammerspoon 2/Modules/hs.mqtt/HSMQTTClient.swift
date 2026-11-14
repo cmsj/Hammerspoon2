@@ -7,6 +7,7 @@ import Foundation
 import JavaScriptCore
 import MQTT
 import Network
+import HammerspoonSDK
 
 // MARK: - JavaScript API
 

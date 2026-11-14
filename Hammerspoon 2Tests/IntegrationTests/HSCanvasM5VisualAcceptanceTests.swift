@@ -13,6 +13,7 @@ import Testing
 import SwiftUI
 import AppKit
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 @Suite("hs.canvas M5 visual acceptance test")
 struct HSCanvasM5VisualAcceptanceTests {

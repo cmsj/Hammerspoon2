@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import HammerspoonSDK
 
 /// SwiftUI view that directly observes an HSColor fill so only the circle
 /// re-renders when the color changes.

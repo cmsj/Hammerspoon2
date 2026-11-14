@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import HammerspoonSDK
 
 /// Bridges URL opens received by the SwiftUI app layer into `hs.urlevent`.
 ///

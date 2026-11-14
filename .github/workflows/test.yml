@@ -63,6 +63,17 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
+      # Changes to the SDK extensions build against need the matching change to HSSDK.version
+      - name: Check the SDK's API against its released versions
+        run: |
+          products="$(xcodebuild -showBuildSettings -scheme Development -destination 'platform=macOS' \
+            | sed -n 's/^ *BUILT_PRODUCTS_DIR = //p' | head -1)"
+          scripts/sdk/check-api.sh check "$products/Hammerspoon 2.app"
+
+      # publish-docs.yml publishes these from main, and fails if DocC finds problems in them
+      - name: Build the SDK's Swift API docs
+        run: scripts/sdk/build-docs.sh build/sdk-docs
+
       - name: Run tests
         env:
           # xcodebuild does NOT forward the job's own CI=true into the test host

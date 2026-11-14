@@ -7,6 +7,7 @@ import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
 import SystemConfiguration
+import HammerspoonSDK
 
 // MARK: - C callback
 

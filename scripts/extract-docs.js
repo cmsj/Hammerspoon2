@@ -18,7 +18,12 @@ const { THROWS_DESCRIPTION } = require('./docs-strings');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const MODULES_DIR = path.join(__dirname, '..', 'Hammerspoon 2', 'Modules');
-const TYPES_DIR = path.join(__dirname, '..', 'Hammerspoon 2', 'Engine', 'Types');
+// publish-docs.yml runs these scripts against older releases too, whose shared types were in
+// the app, before they moved to the SDK
+const TYPES_DIR = [
+    path.join(__dirname, '..', 'HammerspoonSDK', 'Types'),
+    path.join(__dirname, '..', 'Hammerspoon 2', 'Engine', 'Types'),
+].find(dir => fs.existsSync(dir)) || path.join(__dirname, '..', 'HammerspoonSDK', 'Types');
 const OUTPUT_JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_COMBINED_DIR = path.join(OUTPUT_JSON_DIR, 'combined');
 
@@ -109,7 +114,8 @@ function parseSwiftFile(filePath, repoRoot) {
 
     // Find all @objc protocol definitions that extend JSExport or HSTypeAPI
     // We need to manually handle brace matching because protocols can have nested braces
-    const protocolStartRegex = /@objc\s+protocol\s+(\w+)\s*:\s*([^{]+)\{/g;
+    // The SDK's types are public, so their protocols may have an access modifier
+    const protocolStartRegex = /@objc\s+(?:public\s+)?protocol\s+(\w+)\s*:\s*([^{]+)\{/g;
     let match;
     let firstProtocolIndex = null;
 
@@ -1317,10 +1323,10 @@ function processModuleRoot() {
 }
 
 /**
- * Process the Engine/Types directory
+ * Process the shared types directory
  */
 function processTypes(typesPath) {
-    console.log('Processing types from Engine/Types');
+    console.log(`Processing types from ${path.relative(REPO_ROOT, typesPath)}`);
 
     const typesData = {
         name: 'Types',
@@ -1333,7 +1339,7 @@ function processTypes(typesPath) {
     for (const file of files) {
         const filePath = path.join(typesPath, file);
         const { protocols } = parseSwiftFile(filePath, REPO_ROOT);
-        // All protocols in Engine/Types are type definitions
+        // All protocols in HammerspoonSDK/Types are type definitions
         typesData.types.push(...protocols.map(p => ({ ...p, category: 'type' })));
     }
 
@@ -1498,7 +1504,7 @@ function generateCombinedJSDoc(moduleData) {
 }
 
 /**
- * Generate JSDoc-compatible file for global types (from Engine/Types)
+ * Generate JSDoc-compatible file for global types (from HammerspoonSDK/Types)
  */
 function generateTypesJSDoc(typesData) {
     let output = '// Global Type Definitions\n\n';
@@ -1687,7 +1693,7 @@ function main() {
     const consoleIdx = allModules.findIndex(m => m.name === 'console');
     allModules.splice(consoleIdx >= 0 ? consoleIdx + 1 : 0, 0, moduleRootData);
 
-    // Process Engine/Types directory if it exists
+    // Process HammerspoonSDK/Types directory if it exists
     let typesData = null;
     if (fs.existsSync(TYPES_DIR)) {
         console.log('\n'); // Add spacing

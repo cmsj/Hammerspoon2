@@ -8,6 +8,7 @@ import JavaScriptCore
 import AppKit
 import AXSwift
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 private nonisolated func canDriveTextEditAndPreview() -> Bool {
     AXIsProcessTrusted()

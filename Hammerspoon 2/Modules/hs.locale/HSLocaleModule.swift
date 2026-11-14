@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 // MARK: - File-scope helpers (locale detail extraction)
 

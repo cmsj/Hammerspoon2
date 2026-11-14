@@ -9,6 +9,7 @@ import JavaScriptCoreExtras
 import AVFoundation
 import CoreMediaIO
 import AppKit
+import HammerspoonSDK
 
 // MARK: - Private: still-image capture delegate
 

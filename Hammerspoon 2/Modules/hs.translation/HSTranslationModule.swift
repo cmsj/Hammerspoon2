@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 @unsafe @preconcurrency import Translation
+import HammerspoonSDK
 
 /// Translate text between languages using the macOS on-device Translation framework.
 ///

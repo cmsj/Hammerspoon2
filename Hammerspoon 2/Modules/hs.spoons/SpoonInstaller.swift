@@ -5,6 +5,7 @@
 
 import Foundation
 import CryptoKit
+import HammerspoonSDK
 
 /// Downloads the file at a URL. Injectable so tests never touch the network.
 typealias SpoonFetcher = @Sendable (URL) async throws -> Data

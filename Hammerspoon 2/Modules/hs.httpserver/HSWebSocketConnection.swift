@@ -6,6 +6,7 @@ import Foundation
 import JavaScriptCore
 import Network
 import CryptoKit
+import HammerspoonSDK
 
 // MARK: - WebSocket frame utilities
 

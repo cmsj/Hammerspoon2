@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import CoreMIDI
+import HammerspoonSDK
 
 /// Collects every `MIDIUniversalMessage` `MIDIEventListForEachEvent` parses out of an event
 /// list. `MIDIEventVisitor` is a plain C function pointer (no captures allowed), so this

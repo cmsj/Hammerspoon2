@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import IOKit
+import HammerspoonSDK
 
 // USB device property keys from the IOKit registry
 private let usbProductNameKey = "USB Product Name"

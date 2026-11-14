@@ -8,6 +8,7 @@ import CoreServices
 import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
+import HammerspoonSDK
 
 // MARK: - Module API protocol
 

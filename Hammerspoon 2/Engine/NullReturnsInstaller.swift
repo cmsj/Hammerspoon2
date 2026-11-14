@@ -7,6 +7,10 @@ import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
 import ObjectiveC
+import HammerspoonSDK
+
+/// How many of `ExtensionLoader.exportedClasses` a context has had wrapped
+private var installedExtensionClassesKey: UInt8 = 0
 
 /// JavaScriptCore turns a nil object returned by an Objective-C method or property into
 /// `undefined`, not `null`, so `=== null` checks in user scripts never match. This installer wraps
@@ -34,11 +38,41 @@ struct NullReturnsInstaller: JSContextInstallable {
         (StatementSync.self, "get"),    // undefined when there's no row, as in Node
     ]
 
-    /// Every class in the app binary that exports a member returning an object. The ObjC runtime
-    /// doesn't change after launch, so this is only worked out once.
-    nonisolated static let exportedClasses: [ExportedClass] = findExportedClasses()
+    /// The binaries whose classes are always wrapped: the app's and the SDK's. Extensions' are
+    /// added as they load (see `ExtensionLoader`).
+    nonisolated static let builtInImages: [String] = [ModuleRoot.self, HSImage.self].compactMap { cls in
+        unsafe class_getImageName(cls).map { unsafe String(cString: $0) }
+    }
+
+    /// Every class in the app and SDK binaries that exports a member returning an object. Those
+    /// binaries don't change after launch, so this is only worked out once.
+    nonisolated static let exportedClasses: [ExportedClass] = builtInImages.flatMap(findExportedClasses(inImage:))
 
     func install(in context: JSContext) throws {
+        try Self.install(Self.exportedClasses, in: context)
+        try Self.installExtensions(in: context)
+    }
+
+    /// Wraps the classes of every extension loaded since the context was last given them. Called
+    /// when a context is set up, and when an extension loads into a running one.
+    /// - Parameters:
+    ///   - context: The context
+    ///   - loader: The loader whose extensions to wrap
+    static func installExtensions(in context: JSContext, from loader: ExtensionLoader = .shared) throws {
+        // The loader's list only grows, so a context just needs to know how much of it it has
+        let installed = (unsafe objc_getAssociatedObject(context, &installedExtensionClassesKey) as? NSNumber)?.intValue ?? 0
+        let classes = loader.exportedClasses
+        guard classes.count > installed else { return }
+        try install(Array(classes[installed...]), in: context)
+        unsafe objc_setAssociatedObject(context, &installedExtensionClassesKey, NSNumber(value: classes.count), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+
+    /// Wraps the members of `classes` in a context. Used at context creation for every class
+    /// loaded so far, and again when an extension loads into a running context.
+    /// - Parameters:
+    ///   - classes: The classes to wrap
+    ///   - context: The context
+    static func install(_ classes: [ExportedClass], in context: JSContext) throws {
         let installer = context.evaluateScript("""
             (function () {
                 'use strict';
@@ -87,7 +121,7 @@ struct NullReturnsInstaller: JSContextInstallable {
             throw HammerspoonError(.vmCreation, msg: "Failed to create the null returns installer")
         }
 
-        for exported in Self.exportedClasses {
+        for exported in classes {
             guard let cls = unsafe objc_getClass(exported.name) as? AnyClass,
                   let constructor = JSValue(object: cls, in: context),
                   let prototype = constructor.forProperty("prototype"), prototype.isObject else {
@@ -103,13 +137,14 @@ struct NullReturnsInstaller: JSContextInstallable {
 
     // MARK: - Runtime introspection
 
-    /// Finds the object-returning members that JavaScriptCore exports for each class in the app
+    /// Finds the object-returning members that JavaScriptCore exports for each class in a
     /// binary, following the same rules it does: a class exports the members of every protocol it
     /// adopts directly that inherits from JSExport (plus that protocol's own JSExport ancestors),
     /// onto its own prototype. Superclasses export theirs onto their own prototypes.
-    nonisolated static func findExportedClasses() -> [ExportedClass] {
-        guard let jsExport = unsafe objc_getProtocol("JSExport"),
-              let image = unsafe class_getImageName(ModuleRoot.self) else { return [] }
+    /// - Parameter image: The path of a loaded binary, as `class_getImageName` gives it
+    /// - Returns: The classes in it with members that return an object
+    nonisolated static func findExportedClasses(inImage image: String) -> [ExportedClass] {
+        guard let jsExport = unsafe objc_getProtocol("JSExport") else { return [] }
         var classCount: UInt32 = 0
         guard let classNames = unsafe objc_copyClassNamesForImage(image, &classCount) else { return [] }
         defer { unsafe free(UnsafeMutableRawPointer(classNames)) }

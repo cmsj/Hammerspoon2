@@ -7,6 +7,7 @@ import Foundation
 import JavaScriptCore
 import IOKit
 import IOKit.hid
+import HammerspoonSDK
 
 // MARK: - IOKit helpers (file-scope, no actor isolation needed)
 

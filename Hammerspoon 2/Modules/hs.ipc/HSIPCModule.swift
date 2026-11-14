@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// Module for enabling CLI access to Hammerspoon 2 via the `hs2` command-line tool.
 ///

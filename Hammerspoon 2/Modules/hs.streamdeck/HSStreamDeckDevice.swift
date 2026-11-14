@@ -9,6 +9,7 @@ import IOKit
 import IOKit.hid
 import AppKit
 import SwiftUI
+import HammerspoonSDK
 
 // MARK: - Input report callback (file-scope, IOKit C callback)
 

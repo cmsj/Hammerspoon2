@@ -7,6 +7,7 @@ import Testing
 import JavaScriptCore
 import CoreGraphics
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 private nonisolated func hasScreens() -> Bool {
     var count: UInt32 = 0

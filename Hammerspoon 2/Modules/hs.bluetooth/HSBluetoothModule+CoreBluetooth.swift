@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import CoreBluetooth
+import HammerspoonSDK
 
 /// A scan started by `hs.bluetooth.scan()`, until it resolves
 @MainActor

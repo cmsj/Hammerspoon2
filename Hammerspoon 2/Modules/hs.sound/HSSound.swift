@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import AppKit
+import HammerspoonSDK
 
 /// An object representing an audio sound that can be played, paused, and stopped.
 /// Create instances using `hs.sound.fromFile()` or `hs.sound.named()`.

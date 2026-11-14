@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import HammerspoonSDK
 
 /// Collects JavaScript garbage when macOS reports that the system is short of memory.
 ///

@@ -5,6 +5,7 @@
 
 import Testing
 @testable import Hammerspoon_2
+@_spi(HammerspoonHost) import HammerspoonSDK
 
 /// `HammerspoonLog`/`SettingsManager` are real process-wide `@MainActor` singletons
 /// with no per-test injection, so this suite is serialized and each test clears/restores

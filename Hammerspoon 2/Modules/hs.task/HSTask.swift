@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
+import HammerspoonSDK
 
 /// Object representing an external process task
 @objc protocol HSTaskAPI: HSTypeAPI, JSExport {

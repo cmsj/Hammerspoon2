@@ -4,7 +4,7 @@
  * Object Lifetime Check
  *
  * A module's child objects must be retained from Swift in exactly one way: an HSObjectTracker
- * (see "Hammerspoon 2/Engine/HSObjectTracker.swift"), which tracks them weakly and pins the
+ * (see "HammerspoonSDK/Lifetime/HSObjectTracker.swift"), which tracks them weakly and pins the
  * active ones. Other retention mechanisms keep the Swift object alive but let its JSCallbacks be
  * collected, or keep it alive after it should have become garbage. This fails on:
  *

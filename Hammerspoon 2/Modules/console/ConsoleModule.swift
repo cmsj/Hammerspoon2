@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
+@_spi(HammerspoonHost) import HammerspoonSDK
 
 /// These functions are provided to maintain convenience with the console.log() function present in many JavaScript instances.
 @objc protocol ConsoleModuleAPI: JSExport {

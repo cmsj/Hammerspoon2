@@ -79,7 +79,19 @@ Every module follows this structure:
 
 Use the `/HSModule` skill when creating or reviewing modules.
 
-### Reactive Types (`Engine/Types/`)
+### HammerspoonSDK framework (`HammerspoonSDK/`)
+
+The API that modules are built on lives in its own framework target, `HammerspoonSDK`, which the app embeds and third-party extensions link against: `HSModuleAPI`/`HSTypeAPI`, `JSCallback`, `HSObjectTracker`, `JSExtraMemory`, `JSPromise` helpers, the `AK*` logging functions, and the shared types in `HammerspoonSDK/Types/`. It's built with library evolution, so its public API is an ABI that extensions depend on:
+
+- App files that use it need `import HammerspoonSDK`. Members only the app may use (log sink, engine context, `HSActiveObjects.removeAll(in:)`/`wrappers(in:)`, `akSetGarbageLoggingEnabled`) are `@_spi(HammerspoonHost)`; import with `@_spi(HammerspoonHost) import HammerspoonSDK` to use them.
+- Don't change or remove public SDK API, or add requirements to its public protocols, without bumping `HSSDK.version`'s major version. Adding API bumps the minor version. CI enforces this with `scripts/sdk/check-api.sh`, which compares the built SDK with the API recorded for the newest released SDK version in `scripts/sdk/api/<x.y>.json`; `release.sh prepare` refuses to release an SDK version whose API hasn't been recorded (`check-api.sh record`).
+- The SDK must not depend on the app, or expose types from packages like JavaScriptCoreExtras.
+
+Each release also publishes the SDK as an XCFramework zip (`scripts/sdk/build-xcframework.sh`, run by `release.sh prepare`) and as a Swift package in `cmsj/HammerspoonSDK` (`SDK_PACKAGE_REPO`), rendered from `scripts/sdk/package/` (`release.sh execute`). `Examples/ExtensionTemplate` is a Swift package extension that builds against it. Extension authors can also compile against the copy embedded in the app, which `scripts/trim-embedded-sdk.sh` (an app build phase) trims to the public `.swiftinterface`, removing the private interface and binary module that would expose the SPI.
+
+Extensions are loaded by `Engine/Extensions/ExtensionLoader.swift` for `require('ext:<name>')`, from `<config dir>/Extensions/<name>.hsmodule` or an installed Spoon's `Extensions` folder (`ExtensionSearchPaths`), only when the `allowExtensions` setting is on, after a signature check and user approval, which is remembered per build (cdhash) and listed, for removal, in the Advanced tab of Settings. `docs/extensions-guide.md` is the authors' guide, and `Hammerspoon 2Tests/Helpers/TestExtension` is a test fixture built against the SDK like a third-party extension.
+
+### Reactive Types (`HammerspoonSDK/Types/`)
 
 `HSString`, `HSColor`, and `HSImage` are shared observable containers for use with `hs.ui`. They use `@Observable` (requires macOS 14+; project targets 27.0):
 

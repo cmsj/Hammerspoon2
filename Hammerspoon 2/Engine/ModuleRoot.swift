@@ -9,6 +9,7 @@ import Foundation
 import AppKit
 import JavaScriptCore
 import JavaScriptCoreExtras
+@_spi(HammerspoonHost) import HammerspoonSDK
 
 @_documentation(visibility: private)
 @objc protocol ModuleRootAPI: JSExport {
@@ -155,6 +156,7 @@ import JavaScriptCoreExtras
     let engineID: UUID
     let settings: SettingsManagerProtocol
     let spoonManager: SpoonManager
+    let extensionLoader: ExtensionLoader
     @objc var modules: [String: HSModuleAPI] = [:]
 
     // Each module's JS wrapper, held so it's never garbage collected. Module properties are
@@ -170,12 +172,17 @@ import JavaScriptCoreExtras
     // can drop any pins its modules left behind.
     private var context: JSContext?
 
-    /// - Parameter spoonManager: Defaults to one using `settings`, so hs.spoons uses the same
-    ///   config directory as everything else
-    init(engineID: UUID, settings: SettingsManagerProtocol = SettingsManager.shared, spoonManager: SpoonManager? = nil) {
+    /// - Parameters:
+    ///   - spoonManager: Defaults to one using `settings`, so hs.spoons uses the same config
+    ///     directory as everything else
+    ///   - extensionLoader: Loads extensions for `require('ext:<name>')`. Defaults to the shared
+    ///     one, since extension code is loaded once per process.
+    init(engineID: UUID, settings: SettingsManagerProtocol = SettingsManager.shared, spoonManager: SpoonManager? = nil,
+         extensionLoader: ExtensionLoader? = nil) {
         self.engineID = engineID
         self.settings = settings
         self.spoonManager = spoonManager ?? SpoonManager(settings: settings)
+        self.extensionLoader = extensionLoader ?? .shared
         super.init()
     }
 
@@ -200,6 +207,66 @@ import JavaScriptCoreExtras
 
             return module
         }
+    }
+
+    /// This engine's instance of an extension's module, for `require('ext:<name>')`. The first
+    /// time it's asked for, the extension is loaded (if no earlier engine loaded it), its module
+    /// is created, and its enhancement script, if it has one, is run with the module as `ext`.
+    /// - Parameter name: The extension's name
+    /// - Throws: `ExtensionError` if the extension can't be loaded
+    /// - Returns: The module
+    func extensionModule(named name: String) throws(ExtensionError) -> any HSModuleAPI {
+        let key = "ext:\(name)"
+        if let module = modules[key] {
+            pinWrapper(of: module, named: key)
+            return module
+        }
+
+        let loaded = try extensionLoader.load(named: name)
+        AKDebug("Loading extension module: \(name)")
+        let module = loaded.moduleType.init(engineID: engineID)
+        modules[key] = module
+        pinWrapper(of: module, named: key)
+
+        if let context = JSContext.current() {
+            do {
+                try NullReturnsInstaller.installExtensions(in: context, from: extensionLoader)
+            } catch {
+                AKError("ModuleRoot: couldn't make \(name)'s methods return null: \(error.localizedDescription)")
+            }
+            if let script = loaded.manifest.enhancementScriptURL,
+               !runEnhancementScript(script, for: module, in: context) {
+                // Half set up, so it's dropped, and the next require() starts again
+                module.shutdown()
+                modules[key] = nil
+                moduleWrappers[key] = nil
+            }
+        }
+        return module
+    }
+
+    /// Runs an extension's enhancement script as the body of a function whose one argument,
+    /// `ext`, is the module. Anything it throws is rethrown from the `require()` that loaded it.
+    /// - Returns: Whether it ran without throwing
+    private func runEnhancementScript(_ url: URL, for module: any HSModuleAPI, in context: JSContext) -> Bool {
+        guard let source = try? String(contentsOf: url, encoding: .utf8) else {
+            context.exception = JSValue(newErrorFromMessage: "Couldn't read the extension's script, \(url.path)", in: context)
+            return false
+        }
+        let previousHandler = context.exceptionHandler
+        var thrown: JSValue?
+        context.exceptionHandler = { _, exception in
+            thrown = exception
+        }
+        // The newline keeps line numbers accurate after the first line, as require() does
+        let function = context.evaluateScript("(function (ext) {\n" + source + "\n})", withSourceURL: url)
+        if thrown == nil, let function, function.isObject {
+            function.call(withArguments: [module])
+        }
+        context.exceptionHandler = previousHandler
+        guard let thrown else { return true }
+        context.exception = thrown
+        return false
     }
 
     // Pins lazily, on JS access, since that's when the current context is known
@@ -395,9 +462,9 @@ import JavaScriptCoreExtras
 // MARK: - JSContextInstallable
 
 struct ModuleRootInstaller: JSContextInstallable {
-    let engineID: UUID
+    let moduleRoot: ModuleRoot
 
     func install(in context: JSContext) throws {
-        context.setObject(ModuleRoot(engineID: engineID), forKeyedSubscript: "hs" as NSString)
+        context.setObject(moduleRoot, forKeyedSubscript: "hs" as NSString)
     }
 }

@@ -7,6 +7,7 @@ import Foundation
 import CoreAudio
 import JavaScriptCore
 import JavaScriptCoreExtras
+import HammerspoonSDK
 
 // MARK: - CoreAudio Helpers
 

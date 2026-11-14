@@ -6,9 +6,7 @@
 //
 
 import Foundation
-import JavaScriptCore
-import Synchronization
-import os
+import HammerspoonSDK
 
 @_documentation(visibility: private)
 struct HammerspoonLogEntry: Identifiable, Equatable, Hashable {
@@ -25,15 +23,6 @@ struct HammerspoonLogEntry: Identifiable, Equatable, Hashable {
     var levelString: String {
         return self.logType.asString
     }
-}
-
-@_documentation(visibility: private)
-extension Logger {
-    /// Using your bundle identifier is a great way to ensure a unique identifier.
-    private static let subsystem = Bundle.main.bundleIdentifier! // swiftlint:disable:this force_unwrapping
-
-    /// Logs for Hammerspoon
-    static let Hammerspoon = Logger(subsystem: subsystem, category: "Hammerspoon")
 }
 
 @_documentation(visibility: private)
@@ -93,67 +82,4 @@ final class HammerspoonLog {
     func clearLog() {
         buffers.removeAll()
     }
-}
-
-@_documentation(visibility: private)
-func AKLog(_ level: HammerspoonLogType, _ msg: String) {
-    Task { @MainActor in
-        HammerspoonLog.shared.log(level, msg)
-    }
-}
-
-@_documentation(visibility: private)
-func AKInfo(_ msg: String) {
-    Logger.Hammerspoon.info("\(msg)")
-    AKLog(.Info, msg)
-}
-
-@_documentation(visibility: private)
-func AKWarning(_ msg: String) {
-    Logger.Hammerspoon.warning("\(msg)")
-    AKLog(.Warning, msg)
-}
-
-@_documentation(visibility: private)
-func AKError(_ msg: String) {
-    Logger.Hammerspoon.error("\(msg)")
-    AKLog(.Error, msg)
-}
-
-@_documentation(visibility: private)
-func AKDebug(_ msg: String) {
-    Logger.Hammerspoon.debug("\(msg)")
-    AKLog(.Debug, msg)
-}
-
-@_documentation(visibility: private)
-func AKConsole(_ msg: String) {
-    Logger.Hammerspoon.info("JS Console: \(msg)")
-    AKLog(.Console, msg)
-}
-
-@_documentation(visibility: private)
-func AKAutocomplete(_ msg: String) {
-    // NOTE: This does not pass into Logger, there's really no need
-    AKLog(.Autocomplete, msg)
-}
-
-/// Lock-free, thread-agnostic gate for `AKGarbage`. `AKGarbage` is called from
-/// arbitrary threads/actors (including deinits of non-MainActor types) on some
-/// hot paths, so checking whether garbage logging is enabled must not require
-/// hopping to `SettingsManager`'s `@MainActor` isolation or touching UserDefaults.
-private let garbageLoggingGate = Atomic<Bool>(false)
-
-/// Enables/disables `AKGarbage`'s runtime gate. Callable from any thread/actor.
-/// `SettingsManager` calls this whenever `garbageLoggingEnabled` changes.
-func akSetGarbageLoggingEnabled(_ enabled: Bool) {
-    garbageLoggingGate.store(enabled, ordering: .relaxed)
-}
-
-@_documentation(visibility: private)
-func AKGarbage(_ msg: @autoclosure () -> String) {
-    guard garbageLoggingGate.load(ordering: .relaxed) else { return }
-    let message = msg()
-    Logger.Hammerspoon.debug("\(message)")
-    AKLog(.Garbage, message)
 }

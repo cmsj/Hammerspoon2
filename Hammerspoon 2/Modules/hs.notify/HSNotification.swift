@@ -7,6 +7,7 @@
 import Foundation
 import JavaScriptCore
 @unsafe @preconcurrency import UserNotifications
+import HammerspoonSDK
 
 // MARK: - HSNotification (per-notification JS-exposed object)
 

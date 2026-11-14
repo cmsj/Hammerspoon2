@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import AVKit
+import HammerspoonSDK
 
 /// SwiftUI view that hosts an HSVideo's player. Playback is driven entirely by
 /// HSVideo's play()/pause()/seek()/volume — this view just renders the player.

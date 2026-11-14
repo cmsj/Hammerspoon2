@@ -6,6 +6,7 @@
 import Foundation
 import Darwin
 import JavaScriptCore
+import HammerspoonSDK
 
 /// Helpers shared by `HSFSModule` and `HSFile`.
 @_documentation(visibility: private)

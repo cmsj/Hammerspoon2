@@ -9,6 +9,7 @@ import Foundation
 import JavaScriptCore
 import Cocoa
 import AXSwift
+import HammerspoonSDK
 
 /// Object representing an application. You should not instantiate this directly in JavaScript, but rather, use the methods from hs.application which will return appropriate HSApplication objects.
 @objc protocol HSApplicationAPI: HSTypeAPI, JSExport {

@@ -7,6 +7,7 @@ import Testing
 import JavaScriptCore
 import AVFoundation
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 private nonisolated func hasNoCamera() -> Bool {
     let deviceTypes: [AVCaptureDevice.DeviceType] = [

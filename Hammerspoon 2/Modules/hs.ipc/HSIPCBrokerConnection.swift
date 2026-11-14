@@ -7,6 +7,7 @@ import Foundation
 import Observation
 import ServiceManagement
 import XPC
+import HammerspoonSDK
 
 /// Hammerspoon 2's connection to the HammerspoonIPCBroker launch agent.
 ///

@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import CoreLocation
+import HammerspoonSDK
 
 // MARK: - Watcher API protocol
 

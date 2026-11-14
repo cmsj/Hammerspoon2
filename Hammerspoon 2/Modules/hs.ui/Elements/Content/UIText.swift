@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import HammerspoonSDK
 
 /// SwiftUI view that directly observes an HSString so only the text element
 /// re-renders when the value changes — not the entire canvas.

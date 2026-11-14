@@ -67,7 +67,7 @@ if [ "${CONFIGURATION:-}" = "Release" ]; then
     NEEDS_GENERATE=1
 elif [ ! -f "$STAMP" ] || [ ! -d docs/js/html ] || [ ! -d docs/ts/html ] || [ -f "$PLACEHOLDER_MARKER" ]; then
     NEEDS_GENERATE=1
-elif find "Hammerspoon 2" scripts docs/*.md docs/tsconfig.docs.json package.json \
+elif find "Hammerspoon 2" HammerspoonSDK scripts docs/*.md docs/tsconfig.docs.json package.json \
         \( -name "*.swift" -o -name "*.js" -o -name "*.md" -o -name "*.njk" -o -name "*.css" \
            -o -name "package.json" -o -name "tsconfig.docs.json" \) \
         -newer "$STAMP" -print -quit | grep -q .; then

@@ -11,6 +11,7 @@
 import Testing
 import JavaScriptCore
 @testable import Hammerspoon_2
+import HammerspoonSDK
 
 /// One watcher module's expected event names, plus a plausible typo of one of them.
 ///

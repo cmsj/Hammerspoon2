@@ -6,8 +6,9 @@
 #   scripts/release/release.sh execute [--dry-run] [--yes] <version>
 #
 # prepare changes nothing outside build/release/<version>. Once it has checked
-# that <version> is unused and that every tool, key and permission both phases
-# need is in place, it:
+# that <version> is unused, that every tool, key and permission both phases
+# need is in place, and that the API of the SDK version it ships has been
+# recorded (see scripts/sdk/check-api.sh), it:
 #
 #   1. archives the Release scheme from HEAD with MARKETING_VERSION=<version>
 #      and CURRENT_PROJECT_VERSION=<commit count>, so Sparkle's build numbers
@@ -16,6 +17,9 @@
 #   3. zips it and signs the zip with the Sparkle EdDSA key, and zips the
 #      archive's dSYMs (checking every executable of ours has one) so crash
 #      reports from the release can be symbolicated
+#   3a. checks the app's HammerspoonSDK.framework has the API recorded for its
+#      version, and packages it as a zipped XCFramework, for extension authors
+#      (scripts/sdk/build-xcframework.sh)
 #   4. builds signed binary deltas against the previous releases that this
 #      script published, and writes sparkle.json to describe all of the above
 #   5. writes a changelog from the Changelog-Added/Changed/Fixed trailers in
@@ -43,6 +47,9 @@
 #   1. tags the release's commit and pushes the tag
 #   2. creates the GitHub release with the notes and assets (as a draft until
 #      every asset is uploaded and checked) and publishes it
+#   2a. unless SDK_PACKAGE_REPO is empty, publishes the HammerspoonSDK Swift package
+#      for this release: a Package.swift pointing at the release's SDK asset,
+#      committed and tagged <version> in that repository
 #   3. commits appcast.xml to gh-pages and pushes it
 #   4. deploys GitHub Pages (.github/workflows/pages-deploy.yml) and checks
 #      the feed it serves is the new one
@@ -69,6 +76,11 @@
 #   NOTARY_PROFILE      notarytool keychain profile (default: hammerspoon2-notary)
 #   SPARKLE_KEY_ACCOUNT Sparkle keychain account (default: ed25519)
 #   DELTA_COUNT         previous releases to build deltas from (default: 3)
+#   SDK_PACKAGE_REPO    owner/name of the HammerspoonSDK Swift package's GitHub
+#                       repository, which execute publishes each release's SDK
+#                       to (default: cmsj/HammerspoonSDK, which the extensions
+#                       guide and Examples/ExtensionTemplate point authors at;
+#                       set it to "" to skip that step)
 
 set -euo pipefail
 
@@ -87,6 +99,8 @@ PAGES_WORKFLOW="pages-deploy.yml"
 NOTARY_PROFILE="${NOTARY_PROFILE:-hammerspoon2-notary}"
 SPARKLE_KEY_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-ed25519}"
 DELTA_COUNT="${DELTA_COUNT:-3}"
+SDK_PACKAGE_REPO="${SDK_PACKAGE_REPO-cmsj/HammerspoonSDK}"
+SDK_TEMPLATES="$REPO_ROOT/scripts/sdk/package"
 
 usage() {
     cat <<EOF
@@ -182,6 +196,10 @@ check_github() {
         || die "your GitHub account can't push to $GH_REPO, so it can't tag or release"
     gh workflow view "$PAGES_WORKFLOW" >/dev/null 2>&1 \
         || die "$PAGES_WORKFLOW isn't on $GH_REPO's default branch, and execute needs it to deploy the appcast"
+    if [ -n "$SDK_PACKAGE_REPO" ]; then
+        [ "$(gh api "repos/$SDK_PACKAGE_REPO" --jq .permissions.push 2>/dev/null)" = "true" ] \
+            || die "$SDK_PACKAGE_REPO doesn't exist or your GitHub account can't push to it, so execute can't publish the HammerspoonSDK package (create it, or set SDK_PACKAGE_REPO=\"\" to skip that step)"
+    fi
 }
 
 # Check the Sparkle signing key is in the keychain and matches the app's.
@@ -351,7 +369,7 @@ cmd_prepare() {
     [ -z "$NOTES_FILE" ] || [ -z "$SINCE_TAG" ] || die "--since has no effect with --notes-file"
 
     log "Preflight checks"
-    require_tools xcodebuild xcrun ditto plutil codesign spctl gh git node jq shasum curl file
+    require_tools xcodebuild xcrun ditto plutil codesign spctl gh git node jq shasum curl file swift
     check_github
 
     [ -z "$(git status --porcelain)" ] || die "working tree is not clean"
@@ -383,6 +401,12 @@ cmd_prepare() {
     check_build_is_newest "$BUILD_NUMBER" "$WORK_ROOT/live-$VERSION.xml"
     rm -f "$WORK_ROOT/live-$VERSION.xml"
 
+    # Releasing an SDK version fixes its API, which later builds are checked against
+    local sdk_state
+    sdk_state="$("$REPO_ROOT/scripts/sdk/check-api.sh" version)"
+    [[ "$sdk_state" == *"(recorded)" ]] \
+        || die "the API of HammerspoonSDK ${sdk_state%% *} hasn't been recorded. Build the app, run scripts/sdk/check-api.sh record <Hammerspoon 2.app>, and commit and push the file it adds to scripts/sdk/api/"
+
     resolve_packages
     check_sparkle_key
     FEED_URL="$(plutil -extract SUFeedURL raw "$INFO_PLIST")"
@@ -398,6 +422,8 @@ cmd_prepare() {
     local zip_name="$ASSET_BASENAME-$VERSION.zip"
     local zip="$ASSETS/$zip_name"
     local dsyms_zip="$ASSETS/$ASSET_BASENAME-$VERSION-dSYMs.zip"
+    local sdk_zip
+    sdk_zip="$ASSETS/$(sdk_asset_name)"
 
     echo "Version $VERSION, build $BUILD_NUMBER, commit $HEAD_SHA"
     echo "Working in $WORK"
@@ -501,6 +527,13 @@ EOF
     log "Packaging dSYMs"
     check_dsyms "$app" "$archive/dSYMs"
     ditto -c -k --keepParent "$archive/dSYMs" "$dsyms_zip"
+
+    log "Packaging the SDK for extension authors"
+    "$REPO_ROOT/scripts/sdk/check-api.sh" check "$app"
+    # From the exported app, so it's the trimmed, Developer ID signed copy the app ships
+    local sdk_checksum
+    sdk_checksum="$("$REPO_ROOT/scripts/sdk/build-xcframework.sh" "$app" "$sdk_zip")"
+    echo "  $(basename "$sdk_zip") (Swift package checksum $sdk_checksum)"
 
     log "Building deltas from up to $DELTA_COUNT previous releases"
     # Only releases made by this script carry sparkle.json, and only their build
@@ -681,6 +714,25 @@ served_appcast_sha() {
     curl -fsSL -H 'Cache-Control: no-cache' "$FEED_URL?nocache=$(date +%s)" 2>/dev/null | shasum -a 256 | cut -d' ' -f1
 }
 
+# The release asset holding the SDK's XCFramework
+sdk_asset_name() {
+    echo "HammerspoonSDK-$VERSION.xcframework.zip"
+}
+
+# render_sdk_template <template> <checksum>: fills in a file from scripts/sdk/package
+render_sdk_template() {
+    sed -e "s|@VERSION@|$VERSION|g" \
+        -e "s|@URL@|https://github.com/$GH_REPO/releases/download/$VERSION/$(sdk_asset_name)|g" \
+        -e "s|@CHECKSUM@|$2|g" \
+        -e "s|@APP_REPO@|$GH_REPO|g" \
+        -e "s|@PACKAGE_REPO@|$SDK_PACKAGE_REPO|g" \
+        "$1"
+}
+
+sdk_package_published() {
+    git ls-remote --exit-code --tags "https://github.com/$SDK_PACKAGE_REPO.git" "refs/tags/$VERSION" >/dev/null 2>&1
+}
+
 step_tag() {
     log "Tagging $COMMIT as $VERSION"
     if ! git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
@@ -718,6 +770,32 @@ step_release() {
         gh release edit "$VERSION" --notes-file "$NOTES" >/dev/null
     fi
     gh release view "$VERSION" --json url --jq .url
+}
+
+step_sdk_package() {
+    log "Publishing the HammerspoonSDK package to $SDK_PACKAGE_REPO"
+    # The checksum of the asset verify_assets checked, so the package can only ever point at the
+    # SDK that was prepared and reviewed. Runs after the release is published, so the asset's URL
+    # is public by the time anyone can resolve the package.
+    local checkout="$WORK/sdk-package" checksum
+    checksum="$(cd "$WORK" && swift package compute-checksum "$ASSETS/$(sdk_asset_name)")"
+    rm -rf "$checkout"
+    gh repo clone "$SDK_PACKAGE_REPO" "$checkout" -- --quiet
+    render_sdk_template "$SDK_TEMPLATES/Package.swift.template" "$checksum" > "$checkout/Package.swift"
+    render_sdk_template "$SDK_TEMPLATES/README.md.template" "$checksum" > "$checkout/README.md"
+    git -C "$checkout" add Package.swift README.md
+    if ! git -C "$checkout" diff --cached --quiet; then
+        git -C "$checkout" commit --quiet -m "HammerspoonSDK from $APP_NAME $VERSION"
+    fi
+    if ! git -C "$checkout" rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+        git -C "$checkout" tag -a "$VERSION" -m "HammerspoonSDK from $APP_NAME $VERSION"
+    fi
+    # To the default branch the clone checked out, or main when the repository is still empty and
+    # has no branch to follow
+    local branch
+    branch="$(git -C "$checkout" rev-parse -q --verify --abbrev-ref origin/HEAD 2>/dev/null || true)"
+    branch="${branch#origin/}"
+    git -C "$checkout" push --quiet origin "HEAD:refs/heads/${branch:-main}" "refs/tags/$VERSION"
 }
 
 step_appcast() {
@@ -813,7 +891,7 @@ cmd_execute() {
     [ "$(jq -r .version "$MANIFEST")" = "$VERSION" ] || die "$MANIFEST is for a different version"
 
     log "Checking the prepared release"
-    require_tools xcodebuild plutil gh git node jq shasum curl
+    require_tools xcodebuild plutil gh git node jq shasum curl swift
     check_github
     resolve_packages
 
@@ -884,13 +962,25 @@ cmd_execute() {
     local deploy_state="to do"
     [ "$(served_appcast_sha)" != "$APPCAST_SHA" ] || deploy_state="done"
 
+    local sdk_state
+    if [ -z "$SDK_PACKAGE_REPO" ]; then
+        sdk_state="skipped (SDK_PACKAGE_REPO is empty)"
+    elif sdk_package_published; then
+        sdk_state="done"
+    else
+        sdk_state="to do"
+    fi
+
     printf '\nRelease %s (build %s) from %s:\n' "$VERSION" "$(jq -r .build "$MANIFEST")" "$COMMIT"
     printf '  1. %-36s %s\n' "Tag $VERSION and push it:" "$tag_state"
     printf '  2. %-36s %s\n' "Publish the GitHub release:" "$release_state_text"
-    printf '  3. %-36s %s\n' "Push $APPCAST_NAME to gh-pages:" "$appcast_state"
-    printf '  4. %-36s %s\n' "Deploy Pages and check the feed:" "$deploy_state"
+    printf '  3. %-36s %s\n' "Publish the HammerspoonSDK package:" "$sdk_state"
+    printf '  4. %-36s %s\n' "Push $APPCAST_NAME to gh-pages:" "$appcast_state"
+    printf '  5. %-36s %s\n' "Deploy Pages and check the feed:" "$deploy_state"
 
-    if [ "$tag_state:$release_state_text:$appcast_state:$deploy_state" = "done:done:done:done" ]; then
+    local sdk_done="$sdk_state"
+    [ -n "$SDK_PACKAGE_REPO" ] || sdk_done="done"
+    if [ "$tag_state:$release_state_text:$sdk_done:$appcast_state:$deploy_state" = "done:done:done:done:done" ]; then
         echo "Nothing left to do."
         return
     fi
@@ -905,6 +995,7 @@ cmd_execute() {
     EXECUTING=1
     [ "$tag_state" = "done" ] || step_tag
     [ "$release_state_text" = "done" ] || step_release
+    [ "$sdk_state" != "to do" ] || step_sdk_package
     [ "$appcast_state" = "done" ] || step_appcast
     step_deploy
     EXECUTING=0

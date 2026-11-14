@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import HammerspoonSDK
 
 /// SwiftUI view that directly observes an HSString label so only the button
 /// re-renders when the label changes.

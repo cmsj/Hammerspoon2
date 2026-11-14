@@ -8,6 +8,7 @@
 import Foundation
 import AppKit
 import AXSwift
+import HammerspoonSDK
 
 // Private API: creates an AXUIElement for a given element ID in another process. Used (as in
 // alt-tab-macos) to reach windows that an app's AXWindows attribute doesn't report.
