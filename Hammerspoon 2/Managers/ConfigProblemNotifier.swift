@@ -86,7 +86,7 @@ final class ConfigProblemNotifier: ConfigProblemNotifierProtocol {
                     AKWarning("Notifications aren't allowed, so couldn't show the config problem: \(problem.title)")
                     return
                 }
-                await registerCategories(in: center)
+                await registerCategories()
                 guard postedGeneration == generation else { return }
                 try await center.add(request)
             } catch {
@@ -112,7 +112,7 @@ final class ConfigProblemNotifier: ConfigProblemNotifierProtocol {
         }
         if response.actionIdentifier != UNNotificationDismissActionIdentifier {
             switch remedy {
-            case .openSettings: AppWindows.shared.showSettings()
+            case .openSettings: AppWindows.shared.showSettings(.configuration)
             case .openConsole: AppWindows.shared.showConsole()
             }
         }
@@ -120,7 +120,7 @@ final class ConfigProblemNotifier: ConfigProblemNotifierProtocol {
     }
 
     /// Adds our categories to the notification center's, keeping the ones hs.notify registered
-    private func registerCategories(in center: UNUserNotificationCenter) async {
+    private func registerCategories() async {
         let ours = ConfigProblem.Remedy.allCases.map { remedy in
             UNNotificationCategory(
                 identifier: remedy.categoryIdentifier,
@@ -129,7 +129,8 @@ final class ConfigProblemNotifier: ConfigProblemNotifierProtocol {
             )
         }
         let ourIdentifiers = Set(ours.map(\.identifier))
-        let others = await center.notificationCategories().filter { !ourIdentifiers.contains($0.identifier) }
-        center.setNotificationCategories(others.union(ours))
+        await NotificationCategories.shared.update { existing in
+            existing.filter { !ourIdentifiers.contains($0.identifier) }.union(ours)
+        }
     }
 }
