@@ -222,9 +222,19 @@ import JavaScriptCore
             secondsUntilTarget += 86400 // Add 24 hours
         }
 
-        let timer = HSTimer(interval: secondsUntilTarget, repeats: false, callback: callback, continueOnError: continueOnError, tracker: timers)
+        // A non-positive (or NaN, if omitted) repeatInterval means a one-shot timer
+        guard repeatInterval > 0 else {
+            let timer = HSTimer(interval: secondsUntilTarget, repeats: false, callback: callback, continueOnError: continueOnError, tracker: timers)
+            timers.add(timer)
+            return timer.start()
+        }
+
+        // Repeat at repeatInterval, but make the first fire happen at the target time
+        let timer = HSTimer(interval: repeatInterval, repeats: true, callback: callback, continueOnError: continueOnError, tracker: timers)
         timers.add(timer)
-        return timer.start()
+        timer.start()
+        timer.setNextTrigger(secondsUntilTarget)
+        return timer
     }
 
     // MARK: - Time conversion utilities
