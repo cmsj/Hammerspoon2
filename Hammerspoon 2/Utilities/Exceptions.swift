@@ -12,6 +12,7 @@ struct HammerspoonError: Error, Equatable, CustomLocalizedStringResourceConverti
     enum ErrorKind: String {
         case vmCreation = "Creating JS VM"
         case jsEvalURLKind = "Invalid JS URL"
+        case jsException = "JavaScript exception"
         case unknown = "Unknown"
     }
 

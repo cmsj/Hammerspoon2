@@ -22,6 +22,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AKGarbage("applicationDidFinishLaunching: Creating/booting shared manager")
 
         AppDelegate.instance = self
+        // Before anything posts a notification, and before launching finishes
+        UserNotificationRouter.shared.install()
         ConsoleCompletionEngine.shared.prewarm()
         // Before the config loads, so a config that crashes the app can still be reported.
         CrashReportManager.shared.offerToReportNewCrashes()
@@ -44,6 +46,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// or its Dock icon is clicked. This is how users get back to the console when we're hidden
     /// from both the Dock and the menu bar.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        // Clicking one of our notifications also reopens us, but the response is handled already
+        if UserNotificationRouter.shared.isHandlingResponse {
+            return false
+        }
         switch SettingsManager.shared.reopenAction {
         case .showConsole:
             showConsole()
@@ -67,10 +73,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showConsole() {
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        if let url = URL(string: "hammerspoon2://openConsole") {
-            NSWorkspace.shared.open(url)
-        }
+        AppWindows.shared.showConsole()
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
@@ -227,6 +230,10 @@ struct Hammerspoon2App: App {
             // Without it, LaunchServices resets an .accessory app to .regular (showing a Dock icon)
             // whenever it opens the app, e.g. for a hammerspoon2:// URL or `open -a` (#316)
             NSApplication.shared.setActivationPolicy(settingsManager.dockMenuBehaviour.activationPolicy)
+        }
+        .onChange(of: true, initial: true) {
+            // Runs once, when the scenes exist, so code outside SwiftUI can open Settings
+            AppWindows.shared.register(openSettings: openSettings)
         }
 
         Window("Console", id: "console") {

@@ -29,7 +29,8 @@ struct ManagerManagerTests {
         let manager = ManagerManager(
             engine: mockEngine,
             settings: mockSettings,
-            fileSystem: mockFileSystem
+            fileSystem: mockFileSystem,
+            configProblemNotifier: MockConfigProblemNotifier()
         )
 
         // Act
@@ -55,7 +56,8 @@ struct ManagerManagerTests {
         let manager = ManagerManager(
             engine: mockEngine,
             settings: mockSettings,
-            fileSystem: mockFileSystem
+            fileSystem: mockFileSystem,
+            configProblemNotifier: MockConfigProblemNotifier()
         )
 
         // Act
@@ -80,7 +82,8 @@ struct ManagerManagerTests {
         let manager = ManagerManager(
             engine: mockEngine,
             settings: mockSettings,
-            fileSystem: mockFileSystem
+            fileSystem: mockFileSystem,
+            configProblemNotifier: MockConfigProblemNotifier()
         )
 
         // Act
@@ -103,7 +106,8 @@ struct ManagerManagerTests {
         let manager = ManagerManager(
             engine: mockEngine,
             settings: mockSettings,
-            fileSystem: mockFileSystem
+            fileSystem: mockFileSystem,
+            configProblemNotifier: MockConfigProblemNotifier()
         )
 
         // Act & Assert
@@ -118,34 +122,99 @@ struct ManagerManagerTests {
         #expect(mockEngine.evalFromURLCalls.count == 0, "Config should not be evaluated when reset fails")
     }
 
-    @Test("Boot propagates config evaluation errors")
-    func testBootWithConfigEvaluationError() async throws {
-        // Arrange
+    @Test("Boot reports an unreadable config file instead of throwing")
+    func testBootWithUnreadableConfigFile() async throws {
         let mockEngine = MockJSEngine()
         let mockSettings = MockSettingsManager()
         let mockFileSystem = MockFileSystem()
+        let mockNotifier = MockConfigProblemNotifier()
+
+        let configURL = URL(fileURLWithPath: "/path/to/init.js")
+        mockSettings.configLocation = configURL
+        mockFileSystem.addFile(atPath: configURL.path)
+        mockEngine.shouldThrowOnEvalFromURL = true
+        mockEngine.evalFromURLError = CocoaError(.fileReadNoPermission)
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: mockNotifier)
+
+        try manager.boot()
+
+        #expect(mockNotifier.notifiedProblems == [.unreadableFile(configURL, reason: CocoaError(.fileReadNoPermission).localizedDescription)])
+    }
+
+    @Test("Boot reports a JavaScript exception in the config instead of throwing")
+    func testBootWithConfigScriptError() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+        let mockNotifier = MockConfigProblemNotifier()
 
         let configPath = "/path/to/init.js"
         mockSettings.configLocation = URL(fileURLWithPath: configPath)
         mockFileSystem.addFile(atPath: configPath)
         mockEngine.shouldThrowOnEvalFromURL = true
+        mockEngine.evalFromURLError = HammerspoonError(.jsException, msg: "ReferenceError: Can't find variable: nope (init.js:3)")
 
-        let manager = ManagerManager(
-            engine: mockEngine,
-            settings: mockSettings,
-            fileSystem: mockFileSystem
-        )
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: mockNotifier)
 
-        // Act & Assert
-        var didThrow = false
-        do {
-            try manager.boot()
-        } catch {
-            didThrow = true
-        }
+        try manager.boot()
 
-        #expect(didThrow, "Boot should throw when config evaluation fails")
-        #expect(mockEngine.resetContextCalls == 1, "Context should still be reset")
+        #expect(mockNotifier.notifiedProblems == [.scriptError("ReferenceError: Can't find variable: nope (init.js:3)")])
+    }
+
+    @Test("Boot reports a missing config directory")
+    func testBootReportsMissingConfigDirectory() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockNotifier = MockConfigProblemNotifier()
+
+        mockSettings.configLocation = URL(fileURLWithPath: "/missing/config/init.js")
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: MockFileSystem(), configProblemNotifier: mockNotifier)
+
+        try manager.boot()
+
+        #expect(mockNotifier.notifiedProblems == [.missingDirectory(URL(fileURLWithPath: "/missing/config/"))])
+        #expect(mockEngine.evalFromURLCalls.isEmpty, "Config should not be evaluated without a config directory")
+    }
+
+    @Test("Boot reports a missing config file in an existing directory")
+    func testBootReportsMissingConfigFile() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+        let mockNotifier = MockConfigProblemNotifier()
+
+        let configDirectory = URL(fileURLWithPath: "/existing/config")
+        let configURL = configDirectory.appendingPathComponent("init.js")
+        mockSettings.configLocation = configURL
+        mockFileSystem.addDirectory(atPath: configDirectory.path)
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: mockNotifier)
+
+        try manager.boot()
+
+        #expect(mockNotifier.notifiedProblems == [.missingFile(configURL)])
+        #expect(mockEngine.evalFromURLCalls.isEmpty, "Config should not be evaluated without a config file")
+    }
+
+    @Test("Boot withdraws any earlier config problem notification, and posts none for a good config")
+    func testBootWithdrawsEarlierProblem() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+        let mockNotifier = MockConfigProblemNotifier()
+
+        let configPath = "/path/to/init.js"
+        mockSettings.configLocation = URL(fileURLWithPath: configPath)
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: mockNotifier)
+
+        try manager.boot()
+        mockFileSystem.addFile(atPath: configPath)
+        try manager.boot()
+
+        #expect(mockNotifier.calls == [.withdraw, .notify(.missingDirectory(URL(fileURLWithPath: "/path/to/"))), .withdraw])
     }
 
     // MARK: - Dependency Injection Tests
@@ -164,7 +233,8 @@ struct ManagerManagerTests {
         let manager = ManagerManager(
             engine: customEngine,
             settings: customSettings,
-            fileSystem: customFileSystem
+            fileSystem: customFileSystem,
+            configProblemNotifier: MockConfigProblemNotifier()
         )
 
         // Assert
@@ -199,7 +269,8 @@ struct ManagerManagerTests {
         let manager = ManagerManager(
             engine: mockEngine,
             settings: mockSettings,
-            fileSystem: mockFileSystem
+            fileSystem: mockFileSystem,
+            configProblemNotifier: MockConfigProblemNotifier()
         )
 
         // Act
@@ -227,7 +298,8 @@ struct ManagerManagerTests {
         let manager = ManagerManager(
             engine: mockEngine,
             settings: mockSettings,
-            fileSystem: mockFileSystem
+            fileSystem: mockFileSystem,
+            configProblemNotifier: MockConfigProblemNotifier()
         )
 
         // Act - first boot
@@ -263,7 +335,7 @@ struct ManagerManagerTests {
 
         let configDir = URL(fileURLWithPath: "/new/config/dir")
 
-        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: MockConfigProblemNotifier())
 
         try manager.completeOnboarding(configDirectory: configDir)
 
@@ -279,7 +351,7 @@ struct ManagerManagerTests {
         let configDir = URL(fileURLWithPath: "/existing/config/dir")
         mockFileSystem.addDirectory(atPath: configDir.path)
 
-        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: MockConfigProblemNotifier())
 
         try manager.completeOnboarding(configDirectory: configDir)
 
@@ -294,7 +366,7 @@ struct ManagerManagerTests {
 
         let configDir = URL(fileURLWithPath: "/chosen/config/dir")
 
-        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: MockConfigProblemNotifier())
 
         try manager.completeOnboarding(configDirectory: configDir)
 
@@ -315,7 +387,7 @@ struct ManagerManagerTests {
 
         let configDir = URL(fileURLWithPath: "/fresh/config/dir")
 
-        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: MockConfigProblemNotifier())
 
         try manager.completeOnboarding(configDirectory: configDir)
 
@@ -337,7 +409,7 @@ struct ManagerManagerTests {
         mockFileSystem.addDirectory(atPath: configDir.path)
         mockFileSystem.addFile(at: configDir.appendingPathComponent("init.js"), contents: "// user's own config")
 
-        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: MockConfigProblemNotifier())
 
         try manager.completeOnboarding(configDirectory: configDir)
 
@@ -353,7 +425,7 @@ struct ManagerManagerTests {
 
         let configDir = URL(fileURLWithPath: "/no-permission/config/dir")
 
-        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: MockConfigProblemNotifier())
 
         var thrownError: Error?
         do {
@@ -383,7 +455,7 @@ struct ManagerManagerTests {
 
         let configDir = URL(fileURLWithPath: "/fresh/config/dir")
 
-        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: MockConfigProblemNotifier())
 
         var thrownError: Error?
         do {
@@ -409,7 +481,7 @@ struct ManagerManagerTests {
 
         let configDir = URL(fileURLWithPath: "/fresh/config/dir")
 
-        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: MockConfigProblemNotifier())
 
         var thrownError: Error?
         do {

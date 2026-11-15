@@ -22,6 +22,8 @@ class MockJSEngine: JSEngineProtocol {
     // Configure behavior
     var shouldThrowOnEval: Bool = false
     var shouldThrowOnEvalFromURL: Bool = false
+    /// Thrown by evalFromURL instead of the generic error when shouldThrowOnEvalFromURL is set
+    var evalFromURLError: Error?
     var shouldThrowOnReset: Bool = false
     var evalReturnValue: Any? = "mock eval result"
     var evalFromURLReturnValue: Any? = "mock evalFromURL result"
@@ -46,7 +48,7 @@ class MockJSEngine: JSEngineProtocol {
 
     @discardableResult func evalFromURL(_ url: URL, wrapInIIFE: Bool = false) throws -> Any? {
         if shouldThrowOnEvalFromURL {
-            throw HammerspoonError(.vmCreation, msg: "Mock error: evalFromURL failed")
+            throw evalFromURLError ?? HammerspoonError(.vmCreation, msg: "Mock error: evalFromURL failed")
         }
         let result = evalFromURLReturnValue
         evalFromURLCalls.append((url: url, wrapInIIFE: wrapInIIFE, result: result))
@@ -77,6 +79,7 @@ class MockJSEngine: JSEngineProtocol {
         storage.removeAll()
         shouldThrowOnEval = false
         shouldThrowOnEvalFromURL = false
+        evalFromURLError = nil
         shouldThrowOnReset = false
         hasContextValue = true
     }

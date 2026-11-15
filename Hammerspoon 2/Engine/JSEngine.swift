@@ -199,7 +199,41 @@ extension JSEngine: JSEngineProtocol {
             // confusing than every line number being off by one.
             script = "(function(){" + script + "\n})();"
         }
-        return context?.evaluateScript(script, withSourceURL: url)
+        guard let context else { return nil }
+
+        // An uncaught exception is reported to the exceptionHandler rather than returned, so
+        // wrap the handler for the duration of the evaluation to notice it. The previous handler
+        // still sees every exception, so they're logged as usual.
+        let previousHandler = context.exceptionHandler
+        var firstException: JSValue?
+        context.exceptionHandler = { context, exception in
+            if firstException == nil {
+                firstException = exception
+            }
+            previousHandler?(context, exception)
+        }
+        defer { context.exceptionHandler = previousHandler }
+
+        let result = context.evaluateScript(script, withSourceURL: url)
+        if let firstException {
+            throw HammerspoonError(.jsException, msg: Self.describe(firstException))
+        }
+        return result
+    }
+
+    /// A one-line description of a JS exception, with the file and line it was thrown from when known,
+    /// e.g. `TypeError: undefined is not an object (init.js:12)`
+    static func describe(_ exception: JSValue) -> String {
+        let message = exception.toString() ?? "Unknown error"
+        guard exception.isObject,
+              let line = exception.objectForKeyedSubscript("line"), line.isNumber else {
+            return message
+        }
+        guard let sourceURL = exception.objectForKeyedSubscript("sourceURL"), sourceURL.isString,
+              let fileName = URL(string: sourceURL.toString())?.lastPathComponent else {
+            return "\(message) (line \(line.toInt32()))"
+        }
+        return "\(message) (\(fileName):\(line.toInt32()))"
     }
 
     func resetContext() throws {

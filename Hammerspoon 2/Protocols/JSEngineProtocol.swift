@@ -25,7 +25,8 @@ protocol JSEngineProtocol {
     ///     This scopes `const`/`let` bindings to the function rather than the global lexical
     ///     environment, making JS proxies for Swift objects GC-eligible once the script finishes.
     /// - Returns: The result of the evaluation, or nil if evaluation fails
-    /// - Throws: HammerspoonError if the file cannot be read or evaluated
+    /// - Throws: An error if the file cannot be read, or a HammerspoonError of kind `.jsException`
+    ///   if evaluating it raised an uncaught JavaScript exception
     @discardableResult func evalFromURL(_ url: URL, wrapInIIFE: Bool) throws -> Any?
 
     /// Resets the JavaScript context, creating a fresh environment

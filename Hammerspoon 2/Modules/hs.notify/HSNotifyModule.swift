@@ -179,7 +179,7 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        UNUserNotificationCenter.current().delegate = self
+        UserNotificationRouter.shared.notifyModule = self
         AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
@@ -188,7 +188,9 @@ import JavaScriptCore
             callbacks[key]?.detach(from: self)
         }
         callbacks.removeAll()
-        UNUserNotificationCenter.current().delegate = nil
+        if UserNotificationRouter.shared.notifyModule === self {
+            UserNotificationRouter.shared.notifyModule = nil
+        }
     }
 
     isolated deinit {
@@ -382,16 +384,9 @@ import JavaScriptCore
 
 // MARK: - UNUserNotificationCenterDelegate
 
+// UserNotificationRouter is the notification center's delegate, and passes on responses to
+// notifications that aren't the app's own.
 extension HSNotifyModule: UNUserNotificationCenterDelegate {
-
-    // Show banner/sound/badge even while Hammerspoon is the frontmost app.
-    nonisolated func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-        completionHandler([.banner, .sound, .badge, .list])
-    }
 
     // Dispatch user interactions to the registered JS callback.
     // Apple guarantees this is called on the main thread, so assumeIsolated is safe.
