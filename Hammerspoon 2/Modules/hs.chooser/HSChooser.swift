@@ -303,6 +303,25 @@ import SwiftUI
     /// ```
     @objc var onQueryChange: JSFunction? { get set }
 
+    /// {((row: number, item: Record<string, any> | null) => void) | null} Called when the selected row changes while the chooser is visible, or null to remove the handler.
+    ///
+    /// Use this to show something that depends on the selected row, such as a preview, and keep it
+    /// up to date as the user moves through the rows.
+    ///
+    /// The arguments are the new `selectedRow` and the row object (same shape as `onSelect`), or
+    /// `null` for the item when no rows match the query. It is called once when the chooser is
+    /// shown, then whenever the selection moves to a different row, or the row it is on changes
+    /// to a different choice: arrow keys, Page Up/Down, Home/End, a click, a new query, new
+    /// choices, or setting `selectedRow` from JavaScript.
+    ///
+    /// - Example:
+    /// ```js
+    /// chooser.onSelectionChange = (row, item) => {
+    ///     if (item) showPreviewFor(item)
+    /// }
+    /// ```
+    @objc var onSelectionChange: JSFunction? { get set }
+
     /// {(() => void) | null} Called after the panel becomes visible, or null to remove the handler.
     /// - Example:
     /// ```js
@@ -409,6 +428,8 @@ import SwiftUI
     private var isShown = false {
         didSet {
             tracker?.setActive(self, isShown)
+            // The next show() reports its selection afresh
+            if !isShown { lastNotifiedSelection = nil }
         }
     }
 
@@ -417,6 +438,9 @@ import SwiftUI
         super.init()
         viewModel.onContextMenuSelect = { [weak self] item, entry in
             self?.handleContextMenuSelection(item, entry: entry)
+        }
+        viewModel.onSelectedIndexChange = { [weak self] in
+            self?.notifySelectionChange()
         }
     }
 
@@ -523,6 +547,7 @@ import SwiftUI
 
     private var _onSelect: JSCallback?
     private var _onQueryChange: JSCallback?
+    private var _onSelectionChange: JSCallback?
     private var _onShow: JSCallback?
     private var _onHide: JSCallback?
     private var _onInvalid: JSCallback?
@@ -578,6 +603,14 @@ import SwiftUI
         set {
             _onQueryChange?.detach(from: self)
             _onQueryChange = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+        }
+    }
+
+    @objc var onSelectionChange: JSValue? {
+        get { _onSelectionChange?.value }
+        set {
+            _onSelectionChange?.detach(from: self)
+            _onSelectionChange = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 
@@ -661,6 +694,7 @@ import SwiftUI
             _choicesFunction = nil
             allChoices = []
             viewModel.filteredChoices = []
+            viewModel.selectedIndex = 0
         }
         viewModel.onContentSizeChange?(viewModel.expectedHeight())
         return self
@@ -669,6 +703,8 @@ import SwiftUI
     @objc @discardableResult func refreshChoices() -> HSChooser {
         if isStaticChoices {
             viewModel.filteredChoices = filteredChoices(for: _storedQuery)
+            // Keep the selection on a row that still exists
+            viewModel.selectedIndex = min(viewModel.selectedIndex, max(0, viewModel.filteredChoices.count - 1))
         } else {
             callChoicesFunction()
         }
@@ -700,6 +736,7 @@ import SwiftUI
         window?.makeKeyAndOrderFront(nil)
         window?.refreshShadow()
         _ = _onShow?.call(withArguments: [])
+        notifySelectionChange()
         AKGarbage("hs.chooser.show(): \(identifier)")
         return self
     }
@@ -752,6 +789,8 @@ import SwiftUI
         _onSelect = nil
         _onQueryChange?.detach(from: self)
         _onQueryChange = nil
+        _onSelectionChange?.detach(from: self)
+        _onSelectionChange = nil
         _onShow?.detach(from: self)
         _onShow = nil
         _onHide?.detach(from: self)
@@ -766,6 +805,7 @@ import SwiftUI
         viewModel.onUserQueryChange = nil
         viewModel.onContentSizeChange = nil
         viewModel.onContextMenuSelect = nil
+        viewModel.onSelectedIndexChange = nil
         // Entries can hold native objects (even this chooser) in custom fields
         contextMenuEntries = []
         viewModel.contextMenuEntries = []
@@ -898,9 +938,10 @@ import SwiftUI
         viewModel.onUserQueryChange = { [weak self] newQuery in
             guard let self else { return }
             self._storedQuery = newQuery
-            self.viewModel.selectedIndex = 0
             if self.isStaticChoices {
+                // Filter before resetting the selection, so onSelectionChange sees the new rows
                 self.viewModel.filteredChoices = self.filteredChoices(for: newQuery)
+                self.viewModel.selectedIndex = 0
                 self.viewModel.onContentSizeChange?(self.viewModel.expectedHeight())
             } else {
                 // callChoicesFunction updates filteredChoices and calls onContentSizeChange.
@@ -981,6 +1022,22 @@ import SwiftUI
                 _ = cbValue.call(withArguments: [JSValue(nullIn: context) as Any])
             }
         }
+    }
+
+    /// The row and choice last reported to `onSelectionChange`, so it's only called when
+    /// either of them actually changes. `nil` until the chooser reports its first selection.
+    private var lastNotifiedSelection: (row: Int, id: UUID?)?
+
+    private func notifySelectionChange() {
+        guard isShown else { return }
+        let row = viewModel.selectedIndex
+        let item = viewModel.filteredChoices.indices.contains(row) ? viewModel.filteredChoices[row] : nil
+        if let last = lastNotifiedSelection, last.row == row, last.id == item?.id { return }
+        // Record before calling, so a handler that sets selectedRow doesn't recurse forever
+        lastNotifiedSelection = (row, item?.id)
+        guard let callback = _onSelectionChange, let context = callback.value?.context else { return }
+        let itemArg: Any = item.map { buildReturnDict(for: $0) } ?? JSValue(nullIn: context) as Any
+        _ = callback.call(withArguments: [row, itemArg])
     }
 
     private func handleContextMenuSelection(_ item: ChooserItem, entry: [String: Any]) {

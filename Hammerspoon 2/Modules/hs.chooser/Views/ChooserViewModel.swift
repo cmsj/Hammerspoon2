@@ -42,6 +42,7 @@ final class ChooserViewModel {
             // Multi-row moves leave the highlight behind until the list has scrolled to the new
             // row (see ChooserView); everything else highlights the new row immediately.
             if !animateNextScroll { highlightedIndex = selectedIndex }
+            onSelectedIndexChange?()
         }
     }
     /// The row drawn as selected. Usually equal to `selectedIndex`, but lags behind it while
@@ -94,6 +95,8 @@ final class ChooserViewModel {
 
     /// Notified when the user types in the search field (not when set programmatically).
     @ObservationIgnored var onUserQueryChange: ((String) -> Void)?
+    /// Notified whenever `selectedIndex` is set, even to its current value.
+    @ObservationIgnored var onSelectedIndexChange: (() -> Void)?
     /// Notified when content size changes so the window frame can be updated.
     @ObservationIgnored var onContentSizeChange: ((CGFloat) -> Void)?
     /// Notified when the user picks a context menu item, with the row it was opened on.
