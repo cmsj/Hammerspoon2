@@ -131,6 +131,16 @@ struct HSChooserTests {
             #expect(!harness.hasException)
         }
 
+        @Test("onSelectionChange property is writable")
+        func testOnSelectionChangeWritable() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create(); c.onSelectionChange = () => {}")
+            harness.expectTrue("typeof c.onSelectionChange === 'function'")
+            harness.eval("c.onSelectionChange = null")
+            harness.expectTrue("c.onSelectionChange === null")
+            #expect(!harness.hasException)
+        }
+
         @Test("onShow property is writable")
         func testOnShowWritable() {
             let harness = makeHarness()
@@ -879,6 +889,123 @@ struct HSChooserTests {
             let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
             let entry = try #require(menuEntry(titled: "Inspect", in: chooser))
             chooser.viewModel.onContextMenuSelect?(chooser.viewModel.filteredChoices[0], entry)
+            #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Selection change
+
+    @Suite("hs.chooser onSelectionChange tests")
+    @MainActor
+    struct HSChooserSelectionChangeTests {
+
+        /// Creates a chooser `c` over `rows`, whose onSelectionChange calls are recorded in
+        /// `calls` as "row:text" (or "row:null"), and returns the native chooser.
+        private func makeChooser(_ harness: JSTestHarness, rows: [String]) throws -> HSChooser {
+            harness.loadModule(HSChooserModule.self, as: "chooser")
+            let choices = rows.map { "{text: '\($0)'}" }.joined(separator: ", ")
+            harness.eval("""
+            var calls = []
+            var c = hs.chooser.create()
+            c.setChoices([\(choices)])
+            c.onSelectionChange = (row, item) => calls.push(row + ':' + (item === null ? 'null' : item.text))
+            """)
+            return try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
+        }
+
+        private func calls(_ harness: JSTestHarness) -> String? {
+            harness.evalString("calls.join(',')")
+        }
+
+        @Test("Showing the chooser reports the initial selection")
+        func testShowReportsInitialSelection() throws {
+            let harness = JSTestHarness()
+            _ = try makeChooser(harness, rows: ["Alpha", "Beta"])
+            harness.eval("c.selectedRow = 1")
+            #expect(calls(harness) == "", "Nothing is reported while the chooser is hidden")
+            harness.eval("c.show()")
+            defer { harness.eval("c.hide()") }
+            #expect(calls(harness) == "1:Beta")
+            #expect(!harness.hasException)
+        }
+
+        @Test("Moving the selection reports each new row, but not a move to the same row")
+        func testMovingSelectionReportsNewRow() throws {
+            let harness = JSTestHarness()
+            let chooser = try makeChooser(harness, rows: ["Alpha", "Beta", "Gamma"])
+            harness.eval("c.show()")
+            defer { harness.eval("c.hide()") }
+
+            chooser.viewModel.moveSelection(by: 1)
+            chooser.viewModel.moveSelection(by: 5)
+            chooser.viewModel.moveSelection(by: 1)
+            harness.eval("c.selectedRow = 2")
+            harness.eval("c.selectedRow = 0")
+            #expect(calls(harness) == "0:Alpha,1:Beta,2:Gamma,0:Alpha")
+            #expect(!harness.hasException)
+        }
+
+        @Test("Typing a query reports the row the selection lands on, with the new rows")
+        func testQueryChangeReportsNewRow() throws {
+            let harness = JSTestHarness()
+            let chooser = try makeChooser(harness, rows: ["Alpha", "Beta", "Gamma"])
+            harness.eval("c.show()")
+            defer { harness.eval("c.hide()") }
+
+            chooser.viewModel.moveSelection(by: 2)
+            chooser.viewModel.onUserQueryChange?("a")       // Alpha, Beta, Gamma: back to row 0
+            chooser.viewModel.onUserQueryChange?("et")      // Beta: row 0 is now a different choice
+            chooser.viewModel.onUserQueryChange?("e")       // Beta: same row, same choice
+            chooser.viewModel.onUserQueryChange?("zzz")     // No rows match
+            #expect(calls(harness) == "0:Alpha,2:Gamma,0:Alpha,0:Beta,0:null")
+            #expect(!harness.hasException)
+        }
+
+        @Test("Refreshing static choices keeps the selection on a row that still exists")
+        func testRefreshClampsSelection() {
+            let harness = JSTestHarness()
+            harness.loadModule(HSChooserModule.self, as: "chooser")
+            harness.eval("""
+            var calls = []
+            var c = hs.chooser.create()
+            c.searchSubText = true
+            c.setChoices([{text: 'Alpha', subText: 'x'}, {text: 'Beta', subText: 'x'}, {text: 'Gamma x'}])
+            c.onSelectionChange = (row, item) => calls.push(row + ':' + (item === null ? 'null' : item.text))
+            c.query = 'x'
+            c.show()
+            c.selectedRow = 2
+            """)
+            defer { harness.eval("c.hide()") }
+
+            // Without subText matches only "Gamma x" is left, so row 2 no longer exists
+            harness.eval("c.searchSubText = false; c.refreshChoices()")
+            #expect(harness.evalInt("c.selectedRow") == 0)
+            #expect(calls(harness) == "0:Alpha,2:Gamma x,0:Gamma x")
+            #expect(!harness.hasException)
+        }
+
+        @Test("A handler that changes the selection doesn't recurse forever")
+        func testHandlerSettingSelectionDoesNotRecurse() throws {
+            let harness = JSTestHarness()
+            let chooser = try makeChooser(harness, rows: ["Alpha", "Beta", "Gamma"])
+            harness.eval("""
+            c.onSelectionChange = (row, item) => { calls.push(row); c.selectedRow = 2 }
+            c.show()
+            """)
+            defer { harness.eval("c.hide()") }
+            chooser.viewModel.moveSelection(to: 0)
+            #expect(calls(harness) == "0,2,0,2")
+            #expect(harness.evalInt("c.selectedRow") == 2)
+            #expect(!harness.hasException)
+        }
+
+        @Test("Showing the chooser again reports its selection again")
+        func testReshowReportsAgain() throws {
+            let harness = JSTestHarness()
+            _ = try makeChooser(harness, rows: ["Alpha"])
+            harness.eval("c.show(); c.hide(); c.show()")
+            defer { harness.eval("c.hide()") }
+            #expect(calls(harness) == "0:Alpha,0:Alpha")
             #expect(!harness.hasException)
         }
     }
