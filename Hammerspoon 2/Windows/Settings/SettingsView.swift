@@ -10,20 +10,21 @@ import SwiftUI
 @_documentation(visibility: private)
 struct SettingsView: View {
     @State private var settingsManager = SettingsManager.shared
+    @Bindable private var appWindows = AppWindows.shared
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        TabView {
-            Tab("Configuration", systemImage: "gearshape") {
+        TabView(selection: $appWindows.settingsTab) {
+            Tab("Configuration", systemImage: "gearshape", value: .configuration) {
                 SettingsConfigView()
             }
-            Tab("Permissions", systemImage: "lock.shield") {
+            Tab("Permissions", systemImage: "lock.shield", value: .permissions) {
                 SettingsPermissionsView()
             }
-            Tab("Console", systemImage: "line.3.horizontal") {
+            Tab("Console", systemImage: "line.3.horizontal", value: .console) {
                 SettingsConsoleView()
             }
-            Tab("Advanced", systemImage: "hammer") {
+            Tab("Advanced", systemImage: "hammer", value: .advanced) {
                 SettingsAdvancedView()
             }
         }

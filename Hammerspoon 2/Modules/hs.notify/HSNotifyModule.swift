@@ -427,9 +427,8 @@ extension HSNotifyModule: UNUserNotificationCenterDelegate {
 
             // Prune the per-notification category now that it has served its purpose.
             if let categoryId {
-                UNUserNotificationCenter.current().getNotificationCategories { existing in
-                    let pruned = existing.filter { $0.identifier != categoryId }
-                    UNUserNotificationCenter.current().setNotificationCategories(pruned)
+                Task {
+                    await NotificationCategories.shared.update { $0.filter { $0.identifier != categoryId } }
                 }
             }
         }
