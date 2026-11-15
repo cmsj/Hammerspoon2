@@ -29,6 +29,14 @@ struct ChooserItem: Identifiable, Equatable {
     static func == (lhs: ChooserItem, rhs: ChooserItem) -> Bool {
         lhs.id == rhs.id
     }
+
+    /// Whether both items describe the same choice, even if they were parsed separately (choices
+    /// from a function are parsed afresh, with new ids, every time it's called).
+    func isSameChoice(as other: ChooserItem) -> Bool {
+        text == other.text && subText == other.subText && image === other.image &&
+            isValid == other.isValid && showsContextMenu == other.showsContextMenu &&
+            NSDictionary(dictionary: extra).isEqual(to: other.extra)
+    }
 }
 
 /// Observable state shared between HSChooser and the SwiftUI view hierarchy.

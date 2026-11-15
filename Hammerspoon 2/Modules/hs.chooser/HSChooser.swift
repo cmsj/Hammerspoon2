@@ -1026,15 +1026,21 @@ import SwiftUI
 
     /// The row and choice last reported to `onSelectionChange`, so it's only called when
     /// either of them actually changes. `nil` until the chooser reports its first selection.
-    private var lastNotifiedSelection: (row: Int, id: UUID?)?
+    private var lastNotifiedSelection: (row: Int, item: ChooserItem?)?
 
     private func notifySelectionChange() {
         guard isShown else { return }
         let row = viewModel.selectedIndex
         let item = viewModel.filteredChoices.indices.contains(row) ? viewModel.filteredChoices[row] : nil
-        if let last = lastNotifiedSelection, last.row == row, last.id == item?.id { return }
+        if let last = lastNotifiedSelection, last.row == row {
+            switch (last.item, item) {
+            case (nil, nil): return
+            case let (lastItem?, item?) where lastItem.isSameChoice(as: item): return
+            default: break
+            }
+        }
         // Record before calling, so a handler that sets selectedRow doesn't recurse forever
-        lastNotifiedSelection = (row, item?.id)
+        lastNotifiedSelection = (row, item)
         guard let callback = _onSelectionChange, let context = callback.value?.context else { return }
         let itemArg: Any = item.map { buildReturnDict(for: $0) } ?? JSValue(nullIn: context) as Any
         _ = callback.call(withArguments: [row, itemArg])
