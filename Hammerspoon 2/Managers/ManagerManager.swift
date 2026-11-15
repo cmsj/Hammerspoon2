@@ -34,18 +34,22 @@ class ManagerManager {
     let engine: JSEngineProtocol
     let settings: SettingsManagerProtocol
     let fileSystem: FileSystemProtocol
+    let configProblemNotifier: ConfigProblemNotifierProtocol
 
     /// Initializer with dependency injection
     /// - Parameters:
     ///   - engine: The JavaScript engine to use (defaults to JSEngine.shared)
     ///   - settings: The settings manager to use (defaults to SettingsManager.shared)
     ///   - fileSystem: The file system to use (defaults to FileManager.default)
+    ///   - configProblemNotifier: Tells the user about config problems (defaults to ConfigProblemNotifier.shared)
     init(engine: JSEngineProtocol = JSEngine.shared,
          settings: SettingsManagerProtocol = SettingsManager.shared,
-         fileSystem: FileSystemProtocol = FileManager.default) {
+         fileSystem: FileSystemProtocol = FileManager.default,
+         configProblemNotifier: ConfigProblemNotifierProtocol = ConfigProblemNotifier.shared) {
         self.engine = engine
         self.settings = settings
         self.fileSystem = fileSystem
+        self.configProblemNotifier = configProblemNotifier
     }
 
     func reload() throws {
@@ -67,7 +71,13 @@ class ManagerManager {
         NSApplication.shared.terminate(nil)
     }
 
+    /// Creates a fresh JS context and loads the user's config into it. Problems with the config
+    /// itself are shown to the user as a notification, rather than thrown.
+    /// - Throws: If the JS context couldn't be created
     func boot() throws {
+        // Whatever was wrong last time may have been fixed
+        configProblemNotifier.withdraw()
+
         try engine.resetContext()
 
         let configDir = settings.configLocation.deletingLastPathComponent()
@@ -77,6 +87,7 @@ class ManagerManager {
 
         if !configDirExists.boolValue {
             AKError("Configuration directory does not exist at: \(configDir.path)")
+            configProblemNotifier.notify(.missingDirectory(configDir))
             return
         }
 
@@ -84,10 +95,22 @@ class ManagerManager {
 
         if !fileSystem.fileExists(atPath: settings.configLocation.path) {
             AKError("No config file found at: \(settings.configLocation.path)")
+            configProblemNotifier.notify(.missingFile(settings.configLocation))
             return
         }
         AKDebug("Loading user config from: \(settings.configLocation)...")
-        try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)
+        do {
+            try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)
+        } catch let error as HammerspoonError where error.kind == .jsException {
+            // The exception itself has already been logged to the Console
+            AKError("User config failed to load")
+            configProblemNotifier.notify(.scriptError(error.msg))
+            return
+        } catch {
+            AKError("Unable to read config file at \(settings.configLocation.path): \(error.localizedDescription)")
+            configProblemNotifier.notify(.unreadableFile(settings.configLocation, reason: error.localizedDescription))
+            return
+        }
         AKDebug("User config complete")
     }
 
