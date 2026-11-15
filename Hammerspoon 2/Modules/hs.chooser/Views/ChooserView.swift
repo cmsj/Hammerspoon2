@@ -90,7 +90,11 @@ struct ChooserView: View {
                         .contentShape(Rectangle())
                         .onTapGesture {
                             viewModel.selectedIndex = index
-                            onSelect(index)
+                            // An onSelectionChange handler may have hidden the chooser or changed
+                            // its rows, so confirm the clicked choice wherever it is now, if anywhere
+                            if viewModel.isVisible, let current = viewModel.filteredChoices.firstIndex(of: item) {
+                                onSelect(current)
+                            }
                         }
                         .contextMenu {
                             if item.showsContextMenu {

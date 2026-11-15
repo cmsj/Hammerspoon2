@@ -961,6 +961,30 @@ struct HSChooserTests {
             #expect(!harness.hasException)
         }
 
+        @Test("Choices from a function only report a change when the selected choice is different")
+        func testDynamicChoicesKeepIdentity() throws {
+            let harness = JSTestHarness()
+            harness.loadModule(HSChooserModule.self, as: "chooser")
+            harness.eval("""
+            var calls = []
+            var version = 1
+            var c = hs.chooser.create()
+            c.setChoices((q) => [{text: 'Alpha', subText: 'first', id: version}, {text: 'Beta'}]
+                .filter(choice => choice.text.toLowerCase().includes(q.toLowerCase())))
+            c.onSelectionChange = (row, item) => calls.push(row + ':' + item.text + ':' + item.id)
+            c.show()
+            """)
+            defer { harness.eval("c.hide()") }
+            let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
+
+            chooser.viewModel.onUserQueryChange?("a")       // Alpha is still on row 0
+            chooser.viewModel.onUserQueryChange?("al")      // and still is
+            harness.eval("c.refreshChoices()")              // Same choices again
+            harness.eval("version = 2; c.refreshChoices()") // Alpha's custom field changed
+            #expect(harness.evalString("calls.join(',')") == "0:Alpha:1,0:Alpha:2")
+            #expect(!harness.hasException)
+        }
+
         @Test("Refreshing static choices keeps the selection on a row that still exists")
         func testRefreshClampsSelection() {
             let harness = JSTestHarness()
