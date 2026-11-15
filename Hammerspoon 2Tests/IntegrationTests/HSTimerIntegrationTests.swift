@@ -59,6 +59,54 @@ struct HSTimerIntegrationTests {
         harness.eval("repeatTimer.stop()")
     }
 
+    @Test("doAt with a repeatInterval first fires at the target time, then repeats")
+    func testDoAtRepeats() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTimerModule.self, as: "timer")
+
+        var callCount = 0
+        harness.registerCallback("doAtCallback") {
+            callCount += 1
+        }
+
+        harness.eval("""
+        var doAtTimer = hs.timer.doAt(hs.timer.localTime() + 0.3, 0.05, () => { __test_callback('doAtCallback') });
+        """)
+
+        #expect(harness.eval("doAtTimer.repeats") as? Bool == true)
+        #expect(harness.eval("doAtTimer.interval") as? Double == 0.05)
+        let nextTrigger = harness.eval("doAtTimer.nextTrigger()") as? Double ?? -1
+        #expect(nextTrigger > 0.1, "First fire should be at the target time, not after repeatInterval")
+
+        let success = harness.waitFor(timeout: 1.0) { callCount >= 3 }
+        #expect(success, "doAt timer should have fired at least 3 times")
+        #expect(harness.eval("doAtTimer.running()") as? Bool == true)
+
+        harness.eval("doAtTimer.stop()")
+    }
+
+    @Test("doAt with a zero repeatInterval fires once")
+    func testDoAtOneShot() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTimerModule.self, as: "timer")
+
+        var callCount = 0
+        harness.registerCallback("doAtOnceCallback") {
+            callCount += 1
+        }
+
+        harness.eval("""
+        var doAtOnceTimer = hs.timer.doAt(hs.timer.localTime() + 0.05, 0, () => { __test_callback('doAtOnceCallback') });
+        """)
+
+        #expect(harness.eval("doAtOnceTimer.repeats") as? Bool == false)
+        let fired = harness.waitFor(timeout: 0.5) { callCount >= 1 }
+        #expect(fired, "doAt timer should have fired")
+        _ = harness.waitFor(timeout: 0.2) { callCount > 1 }
+        #expect(callCount == 1, "A one-shot doAt timer should fire exactly once")
+        #expect(harness.eval("doAtOnceTimer.running()") as? Bool == false)
+    }
+
     @Test("hs.timer can be stopped")
     func testTimerStop() {
         let harness = JSTestHarness()
