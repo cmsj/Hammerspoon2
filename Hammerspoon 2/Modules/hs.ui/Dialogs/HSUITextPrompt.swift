@@ -147,6 +147,9 @@ import AppKit
         textField.stringValue = defaultText
         textField.placeholderString = ""
         alert.accessoryView = textField
+        // NSAlert doesn't focus its accessory view, so without this the keyboard focus can
+        // start on a button and typing goes nowhere until the user clicks into the field.
+        alert.window.initialFirstResponder = textField
 
         // Show the alert
         let response = alert.runModal()
