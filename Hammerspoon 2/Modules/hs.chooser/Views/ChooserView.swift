@@ -91,8 +91,11 @@ struct ChooserView: View {
                         .onTapGesture {
                             viewModel.selectedIndex = index
                             // An onSelectionChange handler may have hidden the chooser or changed
-                            // its rows, so confirm the clicked choice wherever it is now, if anywhere
-                            if viewModel.isVisible, let current = viewModel.filteredChoices.firstIndex(of: item) {
+                            // its rows (choices from a function are re-parsed with new ids), so
+                            // confirm the clicked choice wherever it is now, if anywhere
+                            let choices = viewModel.filteredChoices
+                            if viewModel.isVisible,
+                               let current = choices.firstIndex(of: item) ?? choices.firstIndex(where: { $0.isSameChoice(as: item) }) {
                                 onSelect(current)
                             }
                         }
