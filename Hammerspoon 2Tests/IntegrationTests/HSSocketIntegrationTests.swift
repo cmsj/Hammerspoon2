@@ -1071,6 +1071,63 @@ struct HSSocketTests {
             #expect(!harness.hasException)
         }
 
+        @Test("bind() doesn't take over a path a stream socket is listening on")
+        func testBindOverStreamListener() async {
+            let harness = makeHarness()
+            let path = temporarySocketPath()
+            harness.eval("""
+                var log = [];
+                var listener = hs.socket.create().setCallback((event) => {
+                    if (event === "listening") log.push("listening");
+                }).listenUnix("\(path)");
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalBool("log.includes('listening')") == true })
+            harness.eval("""
+                var errors = [];
+                var u = hs.socket.createUnixDatagram().setCallback((event, sock, data) => {
+                    if (event === "error") errors.push(data);
+                }).bind("\(path)");
+            """)
+            #expect(harness.evalInt("errors.length") == 1)
+            #expect(harness.evalBool("u.isBound") == false)
+            #expect(FileManager.default.fileExists(atPath: path))
+            harness.eval("listener.disconnect()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("A datagram larger than the socket accepts is reported, not delivered cut short")
+        func testOversizedDatagram() async throws {
+            let harness = makeHarness()
+            let path = temporarySocketPath()
+            harness.eval("""
+                var sizes = [];
+                var errors = [];
+                var receiver = hs.socket.createUnixDatagram().setCallback((event, sock, data) => {
+                    if (event === "data") sizes.push(data.length);
+                    if (event === "error") errors.push(data);
+                }).bind("\(path)").receive();
+            """)
+            let address = try #require(unixSocketAddress(path: path))
+            let fd = socket(AF_UNIX, SOCK_DGRAM, 0)
+            #expect(fd >= 0)
+            defer { close(fd) }
+            var bufferSize: Int32 = 200_000
+            _ = unsafe setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &bufferSize, socklen_t(MemoryLayout<Int32>.size))
+            for size in [70_000, 3] {
+                let payload = [UInt8](repeating: 65, count: size)
+                let sent = unsafe address.withUnsafeBytes { raw in
+                    unsafe sendto(fd, payload, payload.count, 0, raw.baseAddress?.assumingMemoryBound(to: sockaddr.self), socklen_t(address.count))
+                }
+                #expect(sent == size)
+            }
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("sizes.length") == 1 })
+            #expect(harness.evalInt("sizes[0]") == 3)
+            #expect(harness.evalInt("errors.length") == 1)
+            #expect(harness.evalBool("errors[0].includes('larger than 65536')") == true)
+            harness.eval("receiver.close()")
+            #expect(!harness.hasException)
+        }
+
         @Test("Invalid arguments report errors without throwing")
         func testUnixDatagramErrors() {
             let harness = makeHarness()

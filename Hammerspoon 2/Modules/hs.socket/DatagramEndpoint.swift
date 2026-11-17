@@ -84,9 +84,12 @@ final class DatagramEndpoint {
     }
 
     /// Receives one datagram, or returns `nil` if none is waiting.
-    /// - Returns: The datagram and the sender's address, or the receive error's errno.
+    /// - Returns: The datagram and the sender's address, or why it couldn't be received. A
+    ///   datagram larger than `maximumSize` is discarded and reported as an error, rather than
+    ///   delivered cut short.
     func receive(maximumSize: Int) -> Result<(data: [UInt8], address: Data), DatagramReceiveError>? {
-        var buffer = [UInt8](repeating: 0, count: maximumSize)
+        // One byte more than allowed, so a larger datagram shows itself by filling it
+        var buffer = [UInt8](repeating: 0, count: maximumSize + 1)
         var storage = sockaddr_storage()
         var length = socklen_t(MemoryLayout<sockaddr_storage>.size)
         let count = buffer.withUnsafeMutableBytes { bytes in
@@ -99,18 +102,31 @@ final class DatagramEndpoint {
         guard count >= 0 else {
             let code = errno
             guard code != EAGAIN && code != EWOULDBLOCK && code != EINTR else { return nil }
-            return .failure(DatagramReceiveError(code: code))
+            return .failure(.system(code))
+        }
+        guard count <= maximumSize else {
+            return .failure(.tooLarge(maximumSize))
         }
         buffer.removeSubrange(count...)
         return .success((buffer, unsafe Data(bytes: &storage, count: Int(length))))
     }
 }
 
-/// A failed `recvfrom()`.
-struct DatagramReceiveError: Error {
-    let code: Int32
+/// Why a datagram couldn't be received.
+enum DatagramReceiveError: Error {
+    /// `recvfrom()` failed with this errno
+    case system(Int32)
+    /// The datagram was larger than this many bytes, so it was discarded
+    case tooLarge(Int)
 
-    var message: String { socketErrorMessage(code) }
+    var message: String {
+        switch self {
+        case .system(let code):
+            return socketErrorMessage(code)
+        case .tooLarge(let maximumSize):
+            return "Discarded a datagram larger than \(maximumSize) bytes"
+        }
+    }
 }
 
 /// Called on the main run loop when one of a `DatagramEndpoint`'s sockets is readable.
@@ -165,13 +181,15 @@ nonisolated func unixSocketPath(from address: Data) -> String? {
     return String(decoding: pathBytes, as: UTF8.self)
 }
 
-/// Whether something is using the Unix domain socket at `path`, found by trying to connect: a
-/// stream socket's listener accepts the connection, and a datagram socket that's still bound
-/// accepts it as its peer. A socket file left behind by a socket that has gone refuses it.
+/// Whether something may be using the Unix domain socket at `path`, found by trying to connect:
+/// a stream socket's listener accepts the connection, and a datagram socket that's still bound
+/// accepts it as its peer. Only a socket file left behind by a socket that has gone refuses it
+/// (`ECONNREFUSED`); anything else, such as a socket of the other type (`EPROTOTYPE`), or a
+/// check that couldn't be made, counts as in use.
 nonisolated func unixSocketIsInUse(at path: String, type: Int32) -> Bool {
-    guard let address = unixSocketAddress(path: path) else { return false }
+    guard let address = unixSocketAddress(path: path) else { return true }
     let fd = socket(AF_UNIX, type, 0)
-    guard fd >= 0 else { return false }
+    guard fd >= 0 else { return true }
     defer { close(fd) }
     // Non-blocking, so a listener with a full backlog can't stall the main thread
     _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
@@ -179,7 +197,7 @@ nonisolated func unixSocketIsInUse(at path: String, type: Int32) -> Bool {
         // swiftlint:disable:next force_unwrapping
         unsafe connect(fd, raw.baseAddress!.assumingMemoryBound(to: sockaddr.self), socklen_t(address.count))
     }
-    return result == 0 || errno == EAGAIN || errno == EINPROGRESS
+    return result == 0 || (errno != ECONNREFUSED && errno != ENOENT)
 }
 
 /// Removes a socket file left at `path` by a socket that has gone, so its path can be reused.

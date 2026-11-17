@@ -90,7 +90,7 @@ import Darwin
     /// datagrams to. Call it before `connect()` or sending.
     ///
     /// A stale socket file left at the path by a socket that has gone is replaced, but binding
-    /// fails if another socket is still bound there. `close()` removes the socket file.
+    /// fails if another socket is still using it. `close()` removes the socket file.
     ///
     /// - Parameter path: The path to create the socket file at, at most 103 bytes long, e.g. `"/tmp/hammerspoon.sock"`.
     /// - Returns: The socket, for chaining.
@@ -153,7 +153,7 @@ import Darwin
     /// - Returns: The socket, for chaining.
     /// - Example:
     /// ```js
-    /// sock.send("ping", "/tmp/other.sock").receiveOne()
+    /// sock.bind("/tmp/hammerspoon.sock").send("ping", "/tmp/other.sock").receiveOne()
     /// ```
     @objc @discardableResult func receiveOne() -> HSUnixDatagramSocket
 
@@ -264,7 +264,7 @@ import Darwin
         }
         guard let address = validAddress(path) else { return self }
         guard removeStaleUnixSocketFile(at: path, type: SOCK_DGRAM) else {
-            emitError("Another socket is already bound to \(path)")
+            emitError("Another socket is already using \(path)")
             return self
         }
         guard let endpoint = makeEndpoint() else { return self }
