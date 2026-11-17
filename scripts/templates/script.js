@@ -248,6 +248,57 @@ function initTOCObserver() {
     items.forEach(el => observer.observe(el));
 }
 
+// On guide pages, highlight the section being read in the sidebar outline and
+// expand its sub-sections
+function initGuideOutline() {
+    const outline = document.getElementById('guide-outline');
+    if (!outline) return;
+
+    const links = Array.from(outline.querySelectorAll('a[data-outline-target]'));
+    const headings = links
+        .map(a => document.getElementById(a.dataset.outlineTarget))
+        .filter(Boolean);
+    if (headings.length === 0) return;
+
+    let currentId = null;
+
+    function update() {
+        // The current section is the last heading scrolled past the header
+        // (or the first one, before any has been reached)
+        const threshold = document.querySelector('.top-header').offsetHeight + 24;
+        let current = headings[0];
+        for (const heading of headings) {
+            if (heading.getBoundingClientRect().top > threshold) break;
+            current = heading;
+        }
+        // At the bottom of the page, later headings may never reach the top
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+            current = headings[headings.length - 1];
+        }
+        if (current.id === currentId) return;
+        currentId = current.id;
+
+        const activeLink = outline.querySelector(`[data-outline-target="${CSS.escape(currentId)}"]`);
+        links.forEach(a => a.classList.toggle('outline-active', a === activeLink));
+        const activeSection = activeLink.closest('.guide-outline > li');
+        outline.querySelectorAll(':scope > li').forEach(li =>
+            li.classList.toggle('expanded', li === activeSection));
+        activeLink.scrollIntoView({ block: 'nearest' });
+    }
+
+    let scheduled = false;
+    window.addEventListener('scroll', () => {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(() => {
+            scheduled = false;
+            update();
+        });
+    }, { passive: true });
+    window.addEventListener('hashchange', update);
+    update();
+}
+
 // Apply dark theme and initialise syntax highlighting
 document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.setAttribute('data-theme', 'dark');

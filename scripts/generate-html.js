@@ -290,7 +290,10 @@ function generateGuidePage(guide) {
 
     // marked doesn't assign heading ids by default; guides' internal
     // cross-reference links depend on GitHub-style slugs, so generate them here.
+    // Each heading also gets a self-link anchor, and h2/h3 headings are
+    // collected into an outline that the sidebar shows under the guide's entry.
     const usedSlugs = new Map();
+    const outline = [];
     const renderer = new Renderer();
     renderer.heading = function(token) {
         const text = this.parser.parseInline(token.tokens, this.parser.textRenderer);
@@ -301,14 +304,24 @@ function generateGuidePage(guide) {
         const count = usedSlugs.get(slug) || 0;
         usedSlugs.set(slug, count + 1);
         if (count > 0) slug = `${slug}-${count}`;
-        return `<h${token.depth} id="${slug}">${text}</h${token.depth}>\n`;
+        if (token.depth === 2) {
+            outline.push({ id: slug, html: text, children: [] });
+        } else if (token.depth === 3 && outline.length > 0) {
+            outline[outline.length - 1].children.push({ id: slug, html: text });
+        }
+        return `<h${token.depth} id="${slug}">${text}` +
+            `<a class="heading-anchor" href="#${slug}" aria-label="Link to this section">#</a>` +
+            `</h${token.depth}>\n`;
     };
 
+    // Render first: the outline is filled in by the heading renderer.
+    const contentHtml = marked(markdownSource, { renderer });
     const html = nunjucks.render('guide.njk', {
         title: guide.pageTitle,
         currentPage: guide.slug,
         pageTitle: guide.pageTitle,
-        contentHtml: marked(markdownSource, { renderer })
+        guideOutline: outline,
+        contentHtml
     });
 
     const outputPath = path.join(OUTPUT_DIR, guide.outputName);

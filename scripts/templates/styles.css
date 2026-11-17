@@ -300,6 +300,48 @@ a:hover {
     display: none;
 }
 
+/* Outline of the guide being read, nested under its sidebar entry */
+.guide-outline {
+    list-style: none;
+    margin: 0.25rem 0 0.5rem 0.5rem;
+    border-left: 1px solid var(--border);
+}
+
+.guide-outline ul {
+    list-style: none;
+    display: none;
+    margin-left: 0.75rem;
+}
+
+.guide-outline li.expanded > ul {
+    display: block;
+}
+
+.nav-section .guide-outline a {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+    white-space: normal;
+    border-radius: 0 4px 4px 0;
+    border-left: 2px solid transparent;
+    margin-left: -1px;
+}
+
+.nav-section .guide-outline ul a {
+    font-size: 0.78125rem;
+}
+
+.nav-section .guide-outline a.outline-active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: var(--accent-subtle);
+}
+
+.guide-outline code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+}
+
 /* ============================================================
    Main content area
    ============================================================ */
@@ -523,6 +565,26 @@ a:hover {
 .guide-content h4 {
     font-size: 0.9375rem;
     margin: 1.25rem 0 0.5rem;
+}
+
+.heading-anchor {
+    margin-left: 0.5rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.guide-content h2:hover .heading-anchor,
+.guide-content h3:hover .heading-anchor,
+.guide-content h4:hover .heading-anchor,
+.heading-anchor:focus {
+    opacity: 1;
+}
+
+.guide-content .heading-anchor:hover {
+    color: var(--accent);
+    text-decoration: none;
 }
 
 .guide-content ul,
