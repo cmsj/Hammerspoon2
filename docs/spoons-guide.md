@@ -11,10 +11,25 @@ Hammerspoon 1 lifecycle *is* built in - `init()` is called automatically, same a
 - but `start()`/`stop()` and `bindHotkeys()` below are recommended patterns for Spoon authors to
 follow, not things the runtime calls for you (unless you ask `hs.spoons.use()` to).
 
+## Finding Spoons
+
+There's no central list of Spoons: authors publish them in their own GitHub repositories, and
+you choose where each one comes from. Good places to look:
+
+- **The [`hammerspoon2-spoon` topic on GitHub](https://github.com/topics/hammerspoon2-spoon)**
+  lists repositories whose authors have tagged them as containing Hammerspoon 2 Spoons. Each
+  repository's README should say which Spoons it holds and how to configure them.
+- **[r/Hammerspoon](https://www.reddit.com/r/Hammerspoon)** is where people share Spoons and
+  configs, and where you can ask whether something that does what you need already exists.
+
+Make sure it's a Hammerspoon 2 Spoon (a `.spoon2` bundle written in JavaScript) and not a
+Hammerspoon 1 `.spoon`, which won't load. As with any code you run in your config, read a
+Spoon before installing it: it runs with all the permissions you've granted Hammerspoon 2.
+
 ## Installing Spoons from GitHub or a URL
 
-Most Spoons are shared through their authors' own GitHub repositories. There's no central list
-of Spoons: you choose where each one comes from. The easiest way to use one is
+Most Spoons are shared through their authors' own GitHub repositories (see
+[Finding Spoons](#finding-spoons) above). The easiest way to use one is
 `hs.spoons.use()`, which installs the Spoon the first time your config runs, and then loads and
 configures it:
 
@@ -408,7 +423,9 @@ Hammerspoon 2 recognize it as installable. Then either:
   a `Spoons` directory, alongside any others you've written), and people can install it with
   `hs.spoons.use("Greeter", { source: "you/your-repo" })`. There's no build step and nothing to
   generate. Tag your releases, so people can pin a version with `ref`, and add the
-  `hammerspoon2-spoon` topic to the repository, so people can find it by searching GitHub.
+  `hammerspoon2-spoon` topic to the repository, so it shows up in the
+  [list of Spoons on GitHub](https://github.com/topics/hammerspoon2-spoon). Posting about it on
+  [r/Hammerspoon](https://www.reddit.com/r/Hammerspoon) helps people find it too.
 - **Hand someone the bundle**, or a zip of it. Double-clicking it runs the install flow
   described above, and `hs.spoons.install()` can install the zip from any `https://` URL.
 
