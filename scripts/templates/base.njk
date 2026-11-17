@@ -38,11 +38,32 @@
             <div class="nav-section" id="guides-section">
                 <div class="nav-section-label">GUIDES</div>
                 <div class="nav-guides">
-                    <a href="getting-started.html" class="{{ 'active' if currentPage == 'getting-started' }}">Getting Started</a>
-                    <a href="spoons-guide.html" class="{{ 'active' if currentPage == 'spoons-guide' }}">Spoons</a>
-                    <a href="canvas-guide.html" class="{{ 'active' if currentPage == 'canvas-guide' }}">hs.canvas</a>
-                    <a href="typescript-guide.html" class="{{ 'active' if currentPage == 'typescript-guide' }}">TypeScript</a>
-                    <a href="migration-guide.html" class="{{ 'active' if currentPage == 'migration-guide' }}">Migrating from v1</a>
+                    {% set guides = [
+                        ['getting-started', 'getting-started.html', 'Getting Started'],
+                        ['spoons-guide', 'spoons-guide.html', 'Spoons'],
+                        ['canvas-guide', 'canvas-guide.html', 'hs.canvas'],
+                        ['typescript-guide', 'typescript-guide.html', 'TypeScript'],
+                        ['migration-guide', 'migration-guide.html', 'Migrating from v1']
+                    ] %}
+                    {% for guide in guides %}
+                    <a href="{{ guide[1] }}" class="{{ 'active' if currentPage == guide[0] }}">{{ guide[2] }}</a>
+                    {% if currentPage == guide[0] and guideOutline and guideOutline.length %}
+                    <ul class="guide-outline" id="guide-outline">
+                        {% for section in guideOutline %}
+                        <li>
+                            <a href="#{{ section.id }}" data-outline-target="{{ section.id }}">{{ section.html | safe }}</a>
+                            {% if section.children.length %}
+                            <ul>
+                                {% for sub in section.children %}
+                                <li><a href="#{{ sub.id }}" data-outline-target="{{ sub.id }}">{{ sub.html | safe }}</a></li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
             <div class="nav-section" id="modules-section">
@@ -76,6 +97,7 @@
             addCopyButtons();
             initSearch();
             initTOCObserver();
+            initGuideOutline();
         });
     </script>
 </body>
