@@ -2,7 +2,7 @@
 //  HSSocketIntegrationTests.swift
 //  Hammerspoon 2Tests
 //
-// These tests exercise hs.socket over loopback TCP, Unix domain sockets and loopback UDP. No
+// These tests exercise hs.socket over loopback TCP, Unix domain stream and datagram sockets and loopback UDP. No
 // external network access is required.
 
 import Testing
@@ -157,6 +157,7 @@ struct HSSocketTests {
             let harness = makeHarness()
             #expect(harness.evalTypeOf("hs.socket.create") == "function")
             #expect(harness.evalTypeOf("hs.socket.createUDP") == "function")
+            #expect(harness.evalTypeOf("hs.socket.createUnixDatagram") == "function")
             #expect(harness.evalTypeOf("hs.socket.decodeText") == "function")
             #expect(harness.evalDouble("hs.socket.connectTimeout") == 0)
             #expect(harness.evalDouble("hs.socket.readTimeout") == 0)
@@ -201,6 +202,20 @@ struct HSSocketTests {
             #expect(harness.evalBool("u.reusePort") == false)
             #expect(harness.evalBool("u.ipv4Enabled") == true)
             #expect(harness.evalBool("u.ipv6Enabled") == true)
+            #expect(!harness.hasException)
+        }
+
+        @Test("A new Unix datagram socket has its defaults")
+        func testNewUnixDatagramSocket() {
+            let harness = makeHarness()
+            harness.eval("var u = hs.socket.createUnixDatagram()")
+            #expect(harness.evalString("u.typeName") == "HSUnixDatagramSocket")
+            #expect(harness.evalBool("u.isBound") == false)
+            #expect(harness.evalBool("u.isConnected") == false)
+            #expect(harness.evalBool("u.isReceiving") == false)
+            #expect(harness.evalBool("u.localPath === null") == true)
+            #expect(harness.evalBool("u.peerPath === null") == true)
+            harness.expectTrue("hs.socket.createUnixDatagram().identifier !== u.identifier")
             #expect(!harness.hasException)
         }
 
@@ -902,6 +917,181 @@ struct HSSocketTests {
         }
     }
 
+    // MARK: - Unix domain datagram sockets
+
+    @MainActor
+    @Suite("hs.socket Unix datagram tests", .serialized)
+    struct HSSocketUnixDatagramTests {
+
+        @Test("Datagrams sent to a bound socket arrive whole, with the sender's path if it has one")
+        func testUnixDatagramRoundTrip() async throws {
+            let harness = makeHarness()
+            let receiverPath = temporarySocketPath()
+            let senderPath = temporarySocketPath()
+            harness.eval("""
+                var received = [];
+                var receiver = hs.socket.createUnixDatagram().setCallback((event, sock, data, address) => {
+                    if (event === "data") received.push({text: hs.socket.decodeText(data), address: address, isBytes: data instanceof Uint8Array});
+                }).bind("\(receiverPath)").receive();
+                var anonymous = hs.socket.createUnixDatagram();
+                var named = hs.socket.createUnixDatagram().bind("\(senderPath)");
+            """)
+            #expect(FileManager.default.fileExists(atPath: receiverPath))
+            #expect(harness.evalString("receiver.localPath") == receiverPath)
+            #expect(harness.evalBool("receiver.isBound && receiver.isReceiving") == true)
+
+            harness.eval("""
+                anonymous.send("one", "\(receiverPath)");
+                named.sendBytes(new Uint8Array([116, 119, 111]), "\(receiverPath)");
+            """)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("received.length") == 2 })
+            #expect(harness.evalString("received.map(r => r.text).join('|')") == "one|two")
+            #expect(harness.evalBool("received.every(r => r.isBytes)") == true)
+            #expect(harness.evalBool("received[0].address === null") == true)
+            #expect(harness.evalString("received[1].address.path") == senderPath)
+
+            harness.eval("receiver.close(); named.close()")
+            #expect(!FileManager.default.fileExists(atPath: receiverPath))
+            #expect(!FileManager.default.fileExists(atPath: senderPath))
+            #expect(harness.evalBool("receiver.isBound || receiver.isReceiving") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("A datagram from another program using the system's default buffers arrives")
+        func testDatagramFromPlainSocket() async throws {
+            let harness = makeHarness()
+            let path = temporarySocketPath()
+            harness.eval("""
+                var received = [];
+                var receiver = hs.socket.createUnixDatagram().setCallback((event, sock, data) => {
+                    if (event === "data") received.push(hs.socket.decodeText(data));
+                }).bind("\(path)").receive();
+            """)
+            // As Karabiner-Elements' send_user_command does
+            let payload = Array(#"{"layer":"hyperkey","key":"a"}"#.utf8)
+            let address = try #require(unixSocketAddress(path: path))
+            let fd = socket(AF_UNIX, SOCK_DGRAM, 0)
+            #expect(fd >= 0)
+            defer { close(fd) }
+            let sent = unsafe address.withUnsafeBytes { raw in
+                unsafe sendto(fd, payload, payload.count, 0, raw.baseAddress?.assumingMemoryBound(to: sockaddr.self), socklen_t(address.count))
+            }
+            #expect(sent == payload.count)
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("received.length") == 1 })
+            #expect(harness.evalString("JSON.parse(received[0]).key") == "a")
+            harness.eval("receiver.close()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("Datagrams larger than the system's default limit can be exchanged")
+        func testLargeDatagram() async throws {
+            let harness = makeHarness()
+            let path = temporarySocketPath()
+            harness.eval("""
+                var sizes = [];
+                var errors = [];
+                var receiver = hs.socket.createUnixDatagram().setCallback((event, sock, data) => {
+                    if (event === "data") sizes.push(data.length);
+                }).bind("\(path)").receive();
+                hs.socket.createUnixDatagram().setCallback((event, sock, data) => {
+                    if (event === "error") errors.push(data);
+                }).sendBytes(new Uint8Array(60000), "\(path)");
+            """)
+            #expect(harness.evalString("errors.join('|')") == "")
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("sizes.length") == 1 })
+            #expect(harness.evalInt("sizes[0]") == 60000)
+            harness.eval("receiver.close()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("A connected socket sends without a path, and replies reach a bound sender")
+        func testConnectedAndReceiveOne() async throws {
+            let harness = makeHarness()
+            let serverPath = temporarySocketPath()
+            let clientPath = temporarySocketPath()
+            harness.eval("""
+                var events = [];
+                var received = [];
+                var replies = [];
+                var server = hs.socket.createUnixDatagram().setCallback((event, sock, data, address) => {
+                    if (event === "data") { received.push(hs.socket.decodeText(data)); sock.send("pong", address.path); }
+                }).bind("\(serverPath)").receiveOne();
+                var client = hs.socket.createUnixDatagram().setCallback((event, sock, data, address) => {
+                    if (event === "data") replies.push(hs.socket.decodeText(data));
+                    else events.push(event === "error" ? "error:" + data : event + ":" + address.path);
+                }).bind("\(clientPath)").connect("\(serverPath)").receive();
+            """)
+            #expect(harness.evalString("events.join('|')") == "connected:\(serverPath)")
+            #expect(harness.evalBool("client.isConnected") == true)
+            #expect(harness.evalString("client.peerPath") == serverPath)
+
+            harness.eval("client.send('first').send('second')")
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("replies.length") == 1 })
+            #expect(harness.evalBool("server.isReceiving") == false)
+            #expect(harness.evalString("received.join('|')") == "first")
+
+            // The second datagram was queued by the system meanwhile
+            harness.eval("server.receiveOne()")
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("received.length") == 2 })
+            #expect(harness.evalString("received[1]") == "second")
+            harness.eval("server.close(); client.close()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bind() replaces a stale socket file, but not one another socket is bound to")
+        func testStaleAndInUsePaths() {
+            let harness = makeHarness()
+            let path = temporarySocketPath()
+            // A socket file left behind by a socket that has gone
+            let fd = socket(AF_UNIX, SOCK_DGRAM, 0)
+            if let address = unixSocketAddress(path: path) {
+                _ = unsafe address.withUnsafeBytes { raw in
+                    unsafe bind(fd, raw.baseAddress?.assumingMemoryBound(to: sockaddr.self), socklen_t(address.count))
+                }
+            }
+            close(fd)
+            #expect(FileManager.default.fileExists(atPath: path))
+
+            harness.eval("""
+                var errors = [];
+                var first = hs.socket.createUnixDatagram().bind("\(path)");
+                var second = hs.socket.createUnixDatagram().setCallback((event, sock, data) => {
+                    if (event === "error") errors.push(data);
+                }).bind("\(path)");
+            """)
+            #expect(harness.evalBool("first.isBound") == true)
+            #expect(harness.evalBool("second.isBound") == false)
+            #expect(harness.evalInt("errors.length") == 1)
+
+            // Closing the second socket mustn't remove the first one's file
+            harness.eval("second.close()")
+            #expect(FileManager.default.fileExists(atPath: path))
+            harness.eval("first.close()")
+            #expect(!FileManager.default.fileExists(atPath: path))
+            #expect(!harness.hasException)
+        }
+
+        @Test("Invalid arguments report errors without throwing")
+        func testUnixDatagramErrors() {
+            let harness = makeHarness()
+            let path = temporarySocketPath()
+            harness.eval("""
+                var errors = [];
+                var u = hs.socket.createUnixDatagram().setCallback((event, sock, data) => { if (event === "error") errors.push(data); });
+                u.receive();
+                u.send("nowhere");
+                u.sendBytes("not bytes", "/tmp/whatever.sock");
+                u.bind("");
+                u.bind("/tmp/" + "x".repeat(200));
+                u.send("nobody is bound here", "\(path)");
+                u.connect("\(path)");
+            """)
+            #expect(harness.evalInt("errors.length") == 7)
+            #expect(harness.evalBool("u.isReceiving || u.isBound || u.isConnected") == false)
+            #expect(!harness.hasException)
+        }
+    }
+
     // MARK: - Object lifetime
 
     @MainActor
@@ -972,16 +1162,50 @@ struct HSSocketTests {
             #expect(socket == nil)
         }
 
+        @Test("A receiving Unix datagram socket the caller didn't keep still delivers datagrams after garbage collection")
+        func testUnreferencedUnixDatagramReceiverSurvivesGC() async throws {
+            let harness = makeHarness()
+            let path = temporarySocketPath()
+            harness.eval("var received = 0;")
+            autoreleasepool {
+                _ = harness.eval("""
+                    void hs.socket.createUnixDatagram().setCallback((event) => {
+                        if (event === "data") received++;
+                    }).bind("\(path)").receive()
+                """)
+            }
+            harness.collectGarbage()
+            harness.eval("hs.socket.createUnixDatagram().send('hi', '\(path)')")
+            #expect(await harness.waitForAsync(timeout: 2) { harness.evalInt("received") == 1 })
+        }
+
+        @Test("A closed Unix datagram socket the caller didn't keep is garbage collected")
+        func testClosedUnixDatagramSocketIsCollected() {
+            let harness = makeHarness()
+            let path = temporarySocketPath()
+            weak var socket: HSUnixDatagramSocket?
+            autoreleasepool {
+                harness.eval("var u = hs.socket.createUnixDatagram().bind('\(path)').receive()")
+                socket = harness.evalValue("u")?.toObjectOf(HSUnixDatagramSocket.self) as? HSUnixDatagramSocket
+                harness.eval("u.close(); u = null")
+            }
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+            harness.collectGarbage()
+            #expect(socket == nil)
+        }
+
         @Test("Connecting, listening and receiving sockets are released after shutdown")
         func testSocketsDoNotLeakAfterReload() {
             let tracker = WeakLeakTracker()
+            let path = temporarySocketPath()
             autoreleasepool {
                 let harness = makeHarness()
-                // All three are active as soon as these calls return, without waiting for events
+                // All of these are active as soon as these calls return, without waiting for events
                 harness.eval("""
                     var server = hs.socket.create().setCallback(() => {}).listen(0);
                     var client = hs.socket.create().setCallback(() => {}).readUntil("\\n").connect("127.0.0.1", 9);
                     var udp = hs.socket.createUDP().setCallback(() => {}).bind(0).receive();
+                    var unixDatagram = hs.socket.createUnixDatagram().setCallback(() => {}).bind("\(path)").receive();
                 """)
                 for name in ["server", "client"] {
                     if let socket = harness.evalValue(name)?.toObjectOf(HSSocket.self) as? HSSocket {
@@ -991,7 +1215,10 @@ struct HSSocketTests {
                 if let udp = harness.evalValue("udp")?.toObjectOf(HSUDPSocket.self) as? HSUDPSocket {
                     tracker.track(udp)
                 }
-                harness.eval("server = null; client = null; udp = null")
+                if let unixDatagram = harness.evalValue("unixDatagram")?.toObjectOf(HSUnixDatagramSocket.self) as? HSUnixDatagramSocket {
+                    tracker.track(unixDatagram)
+                }
+                harness.eval("server = null; client = null; udp = null; unixDatagram = null")
                 harness.shutdownForLeakTest()
             }
             tracker.assertNoLeaks()

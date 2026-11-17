@@ -223,7 +223,7 @@ import Darwin
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSUDPSocket: NSObject, HSUDPSocketAPI, HSTrackedObject {
+@objc class HSUDPSocket: NSObject, HSUDPSocketAPI, HSTrackedObject, DatagramEndpointOwner {
     @objc var typeName = "HSUDPSocket"
     @objc let identifier = UUID().uuidString
 
@@ -241,19 +241,6 @@ import Darwin
 
     private enum Event: String {
         case data, connected, error
-    }
-
-    private enum ReceiveMode {
-        case off, continuous, once
-
-        var isActive: Bool {
-            switch self {
-            case .off:
-                return false
-            case .continuous, .once:
-                return true
-            }
-        }
     }
 
     private enum Operation {
@@ -274,65 +261,9 @@ import Darwin
         }
     }
 
-    /// One system socket, for one address family, monitored for incoming datagrams on the main
-    /// run loop.
-    ///
-    /// This uses CFSocket rather than a dispatch source because invalidating a CFSocket closes the
-    /// system socket immediately, so its port is free as soon as `close()` returns. A dispatch
-    /// source's descriptor may only be closed from its cancel handler, which runs later.
-    fileprivate final class Endpoint {
-        let fd: Int32
-        let family: Int32
-        fileprivate weak var owner: HSUDPSocket?
-        private var socket: CFSocket?
-        private var isReading = false
-
-        /// Takes ownership of `fd`, which is closed by `close()`, or straight away if this fails.
-        init?(fd: Int32, family: Int32, owner: HSUDPSocket) {
-            self.fd = fd
-            self.family = family
-            self.owner = owner
-            var context = unsafe CFSocketContext(version: 0, info: Unmanaged.passUnretained(self).toOpaque(),
-                                          retain: nil, release: nil, copyDescription: nil)
-            guard let socket = unsafe CFSocketCreateWithNative(nil, fd, CFSocketCallBackType.readCallBack.rawValue,
-                                                               udpEndpointReadable, &context) else {
-                _ = Darwin.close(fd)
-                return nil
-            }
-            CFSocketDisableCallBacks(socket, CFSocketCallBackType.readCallBack.rawValue)
-            let source = CFSocketCreateRunLoopSource(nil, socket, 0)
-            CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-            self.socket = socket
-        }
-
-        func startReading() {
-            guard !isReading, let socket else { return }
-            CFSocketEnableCallBacks(socket, CFSocketCallBackType.readCallBack.rawValue)
-            isReading = true
-        }
-
-        func stopReading() {
-            guard isReading, let socket else { return }
-            CFSocketDisableCallBacks(socket, CFSocketCallBackType.readCallBack.rawValue)
-            isReading = false
-        }
-
-        isolated deinit {
-            close()
-        }
-
-        /// Removes the socket from the run loop and closes it.
-        func close() {
-            guard let socket else { return }
-            CFSocketInvalidate(socket)
-            self.socket = nil
-            isReading = false
-        }
-    }
-
     private weak var tracker: HSObjectTracker<HSUDPSocket>?
     private var callback: JSCallback?
-    private var endpoints: [Endpoint] = []
+    private var endpoints: [DatagramEndpoint] = []
     /// The peer's address, once connected
     private var peerAddress: Data?
     @objc private(set) var isBound = false
@@ -341,7 +272,7 @@ import Darwin
 
     // Receiving, and queued operations, are pending activity: the socket stays alive with its
     // callback until they end, even if the user dropped their reference to it.
-    private var receiveMode: ReceiveMode = .off {
+    private var receiveMode: DatagramReceiveMode = .off {
         didSet { updateActivity() }
     }
     /// Connects and sends, run in order, since a host lookup can't complete synchronously
@@ -450,7 +381,7 @@ import Darwin
                 unsafe Darwin.bind(endpoint.fd, raw.baseAddress!.assumingMemoryBound(to: sockaddr.self), socklen_t(bindAddress.count))
             }
             guard result == 0 else {
-                let message = currentErrorMessage()
+                let message = currentSocketErrorMessage()
                 closeEndpoints()
                 emitError("Could not bind to \(localAddress.flatMap(networkAddressString).map { "\($0) " } ?? "")port \(boundPort): \(message)")
                 return self
@@ -597,7 +528,7 @@ import Darwin
             unsafe Darwin.connect(endpoint.fd, raw.baseAddress!.assumingMemoryBound(to: sockaddr.self), socklen_t(address.count))
         }
         guard result == 0 else {
-            emitError("Could not connect: \(currentErrorMessage())")
+            emitError("Could not connect: \(currentSocketErrorMessage())")
             return
         }
         // A connected socket only talks to its peer, so the other family's socket is no use
@@ -634,7 +565,7 @@ import Darwin
             }
         }
         if sent < 0 {
-            emitError("Send failed: \(currentErrorMessage())")
+            emitError("Send failed: \(currentSocketErrorMessage())")
         }
     }
 
@@ -648,7 +579,7 @@ import Darwin
         startReceiving(.once)
     }
 
-    private func startReceiving(_ mode: ReceiveMode) -> HSUDPSocket {
+    private func startReceiving(_ mode: DatagramReceiveMode) -> HSUDPSocket {
         guard !endpoints.isEmpty || isRunningOperation || !operations.isEmpty else {
             emitError("The socket has no local port to receive on: call bind(), connect() or send() first")
             return self
@@ -673,23 +604,16 @@ import Darwin
         }
     }
 
-    fileprivate func readDatagram(from endpoint: Endpoint) {
-        guard receiveMode != .off, endpoints.contains(where: { $0 === endpoint }) else { return }
-        var buffer = [UInt8](repeating: 0, count: Self.maximumDatagramSize)
-        var storage = sockaddr_storage()
-        var length = socklen_t(MemoryLayout<sockaddr_storage>.size)
-        let count = buffer.withUnsafeMutableBytes { bytes in
-            withUnsafeMutablePointer(to: &storage) { pointer in
-                unsafe pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { address in
-                    unsafe recvfrom(endpoint.fd, bytes.baseAddress, bytes.count, 0, address, &length)
-                }
-            }
-        }
-        guard count >= 0 else {
-            let code = errno
-            guard code != EAGAIN && code != EWOULDBLOCK && code != EINTR else { return }
+    func readDatagram(from endpoint: DatagramEndpoint) {
+        guard receiveMode != .off, endpoints.contains(where: { $0 === endpoint }),
+              let result = endpoint.receive(maximumSize: Self.maximumDatagramSize) else { return }
+        let datagram: (data: [UInt8], address: Data)
+        switch result {
+        case .success(let received):
+            datagram = received
+        case .failure(let error):
             // e.g. ECONNREFUSED, when a connected socket's peer isn't listening
-            emitError("Receive failed: \(errorMessage(code))")
+            emitError("Receive failed: \(error.message)")
             return
         }
 
@@ -698,9 +622,8 @@ import Darwin
             // Stop before calling back, since the callback may ask for another datagram
             pause()
         }
-        guard let function, let bytes = function.context.makeUint8Array(buffer[..<count]) else { return }
-        let address = socketAddressDictionary(unsafe Data(bytes: &storage, count: Int(length)))
-        _ = function.call(withArguments: [Event.data.rawValue, self, bytes, address])
+        guard let function, let bytes = function.context.makeUint8Array(datagram.data) else { return }
+        _ = function.call(withArguments: [Event.data.rawValue, self, bytes, socketAddressDictionary(datagram.address)])
     }
 
     // MARK: - Closing
@@ -736,7 +659,7 @@ import Darwin
     }
 
     /// Returns the socket for `family`, creating it if the socket hasn't bound or connected.
-    private func endpoint(for family: Int32) -> Endpoint? {
+    private func endpoint(for family: Int32) -> DatagramEndpoint? {
         if let endpoint = endpoints.first(where: { $0.family == family }) {
             return endpoint
         }
@@ -755,10 +678,10 @@ import Darwin
 
     /// Creates a non-blocking socket for `family`, configured from the socket's options, and adds
     /// it to `endpoints`.
-    private func makeEndpoint(family: Int32) -> Endpoint? {
+    private func makeEndpoint(family: Int32) -> DatagramEndpoint? {
         let fd = Darwin.socket(family, SOCK_DGRAM, IPPROTO_UDP)
         guard fd >= 0 else {
-            emitError("Could not create socket: \(currentErrorMessage())")
+            emitError("Could not create socket: \(currentSocketErrorMessage())")
             return nil
         }
         _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
@@ -774,7 +697,7 @@ import Darwin
             setOption(fd, SOL_SOCKET, SO_BROADCAST, true)
         }
 
-        guard let endpoint = Endpoint(fd: fd, family: family, owner: self) else {
+        guard let endpoint = DatagramEndpoint(fd: fd, family: family, owner: self) else {
             emitError("Could not monitor socket")
             return nil
         }
@@ -783,8 +706,7 @@ import Darwin
     }
 
     private func setOption(_ fd: Int32, _ level: Int32, _ name: Int32, _ enabled: Bool) {
-        var value: Int32 = enabled ? 1 : 0
-        _ = unsafe setsockopt(fd, level, name, &value, socklen_t(MemoryLayout<Int32>.size))
+        setSocketOption(fd, level, name, enabled ? 1 : 0)
     }
 
     // MARK: - Callback
@@ -801,14 +723,6 @@ import Darwin
 }
 
 // MARK: - Address helpers
-
-nonisolated private func errorMessage(_ code: Int32) -> String {
-    unsafe String(cString: strerror(code))
-}
-
-nonisolated private func currentErrorMessage() -> String {
-    errorMessage(errno)
-}
 
 nonisolated private func ipv4AnyAddress(port: Int) -> Data {
     var address = sockaddr_in()
@@ -892,16 +806,4 @@ nonisolated private func lookupSocketAddresses(host: String, port: Int, numericO
 @concurrent
 nonisolated private func lookupSocketAddressesInBackground(host: String, port: Int) async throws -> [Data] {
     try lookupSocketAddresses(host: host, port: port, numericOnly: false)
-}
-
-/// Called on the main run loop when one of an `HSUDPSocket.Endpoint`'s sockets is readable.
-///
-/// `nonisolated` and at file scope, since CFSocket calls it as a C function.
-nonisolated private func udpEndpointReadable(_ socket: CFSocket?, _ type: CFSocketCallBackType, _ address: CFData?,
-                                             _ data: UnsafeRawPointer?, _ info: UnsafeMutableRawPointer?) {
-    guard let info = unsafe info else { return }
-    let endpoint = unsafe Unmanaged<HSUDPSocket.Endpoint>.fromOpaque(info).takeUnretainedValue()
-    MainActor.assumeIsolated {
-        endpoint.owner?.readDatagram(from: endpoint)
-    }
 }

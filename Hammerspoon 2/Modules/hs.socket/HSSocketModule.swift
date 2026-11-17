@@ -11,6 +11,8 @@ import JavaScriptCore
 /// `hs.socket.create()` makes a stream socket, which can connect to a TCP server or Unix domain
 /// socket (optionally over TLS), or listen for incoming connections. `hs.socket.createUDP()`
 /// makes a UDP socket, which can send and receive datagrams, including broadcasts.
+/// `hs.socket.createUnixDatagram()` makes a Unix domain datagram socket, which exchanges
+/// datagrams with other programs on this Mac through a socket file.
 ///
 /// Sockets report everything through a single callback, set with `setCallback()`. Received data
 /// is delivered as a `Uint8Array`; `hs.socket.decodeText()` turns it into a string.
@@ -43,6 +45,16 @@ import JavaScriptCore
 ///     if (event === "data") console.log(address.host + ": " + hs.socket.decodeText(data))
 /// }).bind(9999).receive()
 /// udp.send("hello", "127.0.0.1", 9999)
+/// ```
+///
+/// ## Unix domain datagrams
+///
+/// For example, to receive messages from Karabiner-Elements' `send_user_command`:
+///
+/// ```js
+/// globalThis.karabiner = hs.socket.createUnixDatagram().setCallback((event, sock, data) => {
+///     if (event === "data") console.log(JSON.parse(hs.socket.decodeText(data)))
+/// }).bind("/tmp/hammerspoon-karabiner.sock").receive()
 /// ```
 @objc protocol HSSocketModuleAPI: JSExport {
 
@@ -79,6 +91,14 @@ import JavaScriptCore
     /// ```
     @objc func createUDP() -> HSUDPSocket
 
+    /// Creates a Unix domain datagram socket.
+    /// - Returns: A new `HSUnixDatagramSocket`.
+    /// - Example:
+    /// ```js
+    /// const sock = hs.socket.createUnixDatagram().setCallback(handler).bind("/tmp/hammerspoon.sock").receive()
+    /// ```
+    @objc func createUnixDatagram() -> HSUnixDatagramSocket
+
     /// Decodes bytes as UTF-8 text.
     ///
     /// Data from `readBytes()` or `readAvailable()` can end part-way through a multi-byte
@@ -106,6 +126,7 @@ import JavaScriptCore
     let engineID: UUID
     private var sockets = HSObjectTracker<HSSocket>()
     private var udpSockets = HSObjectTracker<HSUDPSocket>()
+    private var unixDatagramSockets = HSObjectTracker<HSUnixDatagramSocket>()
 
     @objc var connectTimeout: Double = 0
     @objc var readTimeout: Double = 0
@@ -119,6 +140,7 @@ import JavaScriptCore
     func shutdown() {
         sockets.shutdown()
         udpSockets.shutdown()
+        unixDatagramSockets.shutdown()
     }
 
     isolated deinit {
@@ -126,7 +148,7 @@ import JavaScriptCore
     }
 
     @objc func toString() -> String {
-        let n = sockets.activeCount + udpSockets.activeCount
+        let n = sockets.activeCount + udpSockets.activeCount + unixDatagramSockets.activeCount
         return "<\(moduleName): \(n) active socket\(n == 1 ? "" : "s")>"
     }
 
@@ -143,6 +165,12 @@ import JavaScriptCore
     @objc func createUDP() -> HSUDPSocket {
         let socket = HSUDPSocket(tracker: udpSockets)
         udpSockets.add(socket)
+        return socket
+    }
+
+    @objc func createUnixDatagram() -> HSUnixDatagramSocket {
+        let socket = HSUnixDatagramSocket(tracker: unixDatagramSockets)
+        unixDatagramSockets.add(socket)
         return socket
     }
 
