@@ -393,6 +393,48 @@ struct HSHTTPTests {
             #expect(ok, "Should receive a 200 response from the local server")
         }
 
+        @Test("response url is the final URL after following a redirect")
+        func testResponseURLAfterRedirect() async {
+            let h = makeHarness()
+
+            h.eval("""
+            var server = hs.httpserver.create()
+                .setPort(0)
+                .setCallback((method, path, headers, body) => {
+                    if (path === "/start") {
+                        return {body: "", status: 302, headers: {"Location": "/final"}}
+                    }
+                    return {body: "arrived", status: 200, headers: {"Content-Type": "text/plain"}}
+                })
+                .start()
+        """)
+
+            let portReady = await h.waitForAsync(timeout: 2.0) {
+                let port = h.eval("server.getPort()") as? Int ?? 0
+                return port > 0
+            }
+            #expect(portReady, "Server should be ready")
+            guard portReady else { h.eval("server.stop()"); return }
+
+            var finalURL: String?
+            var status: Int?
+            h.registerCallback("redirected") { (result: [String: Any]) in
+                finalURL = result["url"] as? String
+                status = result["status"] as? Int
+            }
+            h.eval("""
+            var requestedURL = "http://localhost:" + server.getPort() + "/start"
+            hs.http.get(requestedURL).then(r => redirected(r))
+        """)
+
+            let ok = await h.waitForAsync(timeout: 3.0) { finalURL != nil }
+            let expectedURL = h.evalString("'http://localhost:' + server.getPort() + '/final'")
+            h.eval("server.stop()")
+            #expect(ok, "Should receive a response")
+            #expect(status == 200)
+            #expect(finalURL == expectedURL)
+        }
+
         @Test("POST body is delivered to callback")
         func testPOSTBody() async {
             let h = makeHarness()

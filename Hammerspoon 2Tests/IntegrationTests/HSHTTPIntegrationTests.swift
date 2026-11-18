@@ -80,6 +80,37 @@ struct HSHTTPOtherTests {
         }
     }
 
+    // MARK: - Failed request shape
+
+    @Suite("hs.http failed request tests")
+    struct HSHTTPFailedRequestTests {
+
+        init() async {
+            await JSTestHarness.drainMainActorQueue()
+        }
+
+        @Test("a failed request resolves with status -1 and an empty url")
+        func testFailedRequestHasEmptyURL() async {
+            let h = JSTestHarness()
+            h.loadModule(HSHTTPModule.self, as: "http")
+
+            var status: Int?
+            var url: String?
+            h.registerCallback("failed") { (result: [String: Any]) in
+                status = result["status"] as? Int
+                url = result["url"] as? String
+            }
+            // Port 1 on loopback refuses the connection immediately
+            h.eval("hs.http.get('http://127.0.0.1:1/').then(r => failed(r))")
+
+            let ok = await h.waitForAsync(timeout: 3.0) { status != nil }
+            #expect(ok, "The request should resolve")
+            #expect(status == -1)
+            #expect(url == "")
+            #expect(!h.hasException)
+        }
+    }
+
     // MARK: - Utility function tests (no network needed)
 
     @Suite("hs.http utility tests")
