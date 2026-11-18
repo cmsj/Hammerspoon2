@@ -226,12 +226,13 @@ struct HSSpoonsLoadTests {
     @Suite("spoon.json metadata injection")
     struct MetadataInjectionTests {
 
-        @Test("author, description, and version from spoon.json are injected onto module.exports")
+        @Test("name, author, description, and version from spoon.json are injected onto module.exports")
         func testMetadataInjectedOntoExports() throws {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon", author: "Jane Dev", version: "2.3.1", description: "Does a thing.")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = {};")
             ctx.eval("var s = hs.spoons.load('TestSpoon')")
+            #expect(ctx.eval("s.name")?.toString() == "TestSpoon")
             #expect(ctx.eval("s.author")?.toString() == "Jane Dev")
             #expect(ctx.eval("s.version")?.toString() == "2.3.1")
             #expect(ctx.eval("s.description")?.toString() == "Does a thing.")
@@ -243,24 +244,46 @@ struct HSSpoonsLoadTests {
             let ctx = try LoadSpoonContext()
             try ctx.writeSpoonJSON(spoon: "TestSpoon", author: "Real Author", version: "9.9.9", description: "Real description.")
             try ctx.writeSpoonInit(spoon: "TestSpoon", """
-                module.exports = { author: "wrong", version: "0.0.1", description: "wrong" };
+                module.exports = { name: "wrong", author: "wrong", version: "0.0.1", description: "wrong" };
             """)
             ctx.eval("var s = hs.spoons.load('TestSpoon')")
+            #expect(ctx.eval("s.name")?.toString() == "TestSpoon")
             #expect(ctx.eval("s.author")?.toString() == "Real Author")
             #expect(ctx.eval("s.version")?.toString() == "9.9.9")
             #expect(ctx.eval("s.description")?.toString() == "Real description.")
             #expect(!ctx.hadException)
         }
 
-        @Test("metadata is injected onto a function export, since functions are objects")
-        func testMetadataInjectedOntoFunctionExport() throws {
+        @Test("loading throws when module.exports is a function")
+        func testThrowsForFunctionExport() throws {
             let ctx = try LoadSpoonContext()
-            try ctx.writeSpoonJSON(spoon: "TestSpoon", version: "4.5.6")
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
             try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = function () { return 42; };")
+            ctx.eval("hs.spoons.load('TestSpoon')")
+            #expect(ctx.hadException)
+            #expect(ctx.eval("typeof hs.spoons.TestSpoon")?.toString() == "undefined")
+        }
+
+        @Test("name comes from spoon.json even when it doesn't match the directory name")
+        func testNameFromSpoonJSONWhenMismatched() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon", name: "OtherName")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = {};")
             ctx.eval("var s = hs.spoons.load('TestSpoon')")
-            #expect(ctx.eval("typeof s")?.toString() == "function")
-            #expect(ctx.eval("s.version")?.toString() == "4.5.6")
-            #expect(ctx.eval("s()")?.toInt32() == 42)
+            #expect(ctx.eval("s.name")?.toString() == "OtherName")
+            #expect(ctx.eval("hs.spoons.TestSpoon === s")?.toBool() == true)
+            #expect(!ctx.hadException)
+        }
+
+        @Test("name is available as this.name inside the Spoon's init()")
+        func testNameAvailableInInit() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", """
+                module.exports = { init() { this.seenName = this.name; } };
+            """)
+            ctx.eval("var s = hs.spoons.load('TestSpoon')")
+            #expect(ctx.eval("s.seenName")?.toString() == "TestSpoon")
             #expect(!ctx.hadException)
         }
 

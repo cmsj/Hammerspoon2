@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 
 /// Load, install and update Spoons - packaged, reusable pieces of configuration.
 ///
@@ -37,11 +38,12 @@ import JavaScriptCore
     /// Spoon's own directory using relative paths. On success, the Spoon is also stored on
     /// `hs.spoons` under its name, so other code can reach it without loading it again.
     ///
-    /// `init.js` must set `module.exports` to an object (or a function, since functions are
-    /// objects too) - loading fails with an exception otherwise. Its `author`, `description`,
-    /// and `version` properties are then set from `spoon.json`, overwriting any of the same
-    /// name the Spoon's own `init.js` set, so that information is always present and always
-    /// reflects what's on disk. If the resulting object has an `init()` method, it's called
+    /// `init.js` must set `module.exports` to an object (not a function) - loading fails with an
+    /// exception otherwise. Its `name`, `author`,
+    /// `description`, and `version` properties are then set from `spoon.json`, overwriting any
+    /// of the same name the Spoon's own `init.js` set, so that information is always present and
+    /// always reflects what's on disk (a warning is logged if `spoon.json`'s `name` doesn't
+    /// match the Spoon's directory name). If the resulting object has an `init()` method, it's called
     /// automatically (with `this` bound to the object) before `load()` returns - matching
     /// Hammerspoon 1's behavior. An exception thrown from `init()` fails the load: nothing is
     /// stored on `hs.spoons`, and `load()` throws. Unlike `init.js` itself (which `require()`
@@ -246,12 +248,17 @@ import JavaScriptCore
             return result
         }
 
-        guard let result, result.isObject else {
+        guard let result, result.isObject, !result.isFunction else {
             return fail("'\(name)' must set module.exports to an object")
+        }
+
+        if metadata.name != name {
+            AKWarning("hs.spoons: '\(name)' has the name '\(metadata.name)' in its spoon.json, which doesn't match its directory name")
         }
 
         // Authoritative from spoon.json, so these always reflect it even if the Spoon's own
         // init.js also happens to set properties of the same name.
+        result.setValue(metadata.name, forProperty: "name")
         result.setValue(metadata.author, forProperty: "author")
         result.setValue(metadata.description, forProperty: "description")
         result.setValue(metadata.version, forProperty: "version")
