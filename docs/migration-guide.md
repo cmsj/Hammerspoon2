@@ -632,7 +632,7 @@ JS object literals), drawn in order through the same `fill`/`stroke`/`build`/`cl
 `resetClip` pipeline, with the same element types (`rectangle`, `circle`, `oval`, `arc`,
 `ellipticalArc`, `segments`, `points`, `text`, `image`, `canvas`), gradients, blend modes,
 per-element mouse tracking, and `windowLevels`/`windowBehaviors`/`compositeTypes` constants.
-The [hs.canvas guide](canvas-guide.html) documents every element attribute; this section
+The [Canvas Tutorial](canvas-guide.html) documents every element attribute; this section
 covers only what changed.
 
 A typical v1 snippet:

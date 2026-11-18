@@ -19,33 +19,30 @@ const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'docs', 'js', 'html');
 const COMBINED_DIR = path.join(JSON_DIR, 'combined');
 const TEMPLATES_DIR = path.join(__dirname, 'templates');
+// In sidebar order
 const GUIDES = [
     {
         sourcePath: path.join(__dirname, '..', 'docs', 'getting-started.md'),
         outputName: 'getting-started.html',
         slug: 'getting-started',
         pageTitle: 'Getting Started',
+        navTitle: 'Getting Started',
         searchDescription: 'A guide to your first Hammerspoon 2 config: hotkeys, object lifecycle, watchers, and hs.ui.'
-    },
-    {
-        sourcePath: path.join(__dirname, '..', 'docs', 'migration-guide.md'),
-        outputName: 'migration-guide.html',
-        slug: 'migration-guide',
-        pageTitle: 'Migrating from Hammerspoon 1',
-        searchDescription: 'A guide for Hammerspoon 1 users on what changed, what moved, and what was removed in Hammerspoon 2.'
     },
     {
         sourcePath: path.join(__dirname, '..', 'docs', 'spoons-guide.md'),
         outputName: 'spoons-guide.html',
         slug: 'spoons-guide',
         pageTitle: 'Spoons',
+        navTitle: 'Spoons',
         searchDescription: 'How to install, use, and write Spoons - packaged, reusable pieces of Hammerspoon 2 configuration.'
     },
     {
         sourcePath: path.join(__dirname, '..', 'docs', 'canvas-guide.md'),
         outputName: 'canvas-guide.html',
         slug: 'canvas-guide',
-        pageTitle: 'hs.canvas',
+        pageTitle: 'Canvas Tutorial',
+        navTitle: 'Canvas Tutorial',
         searchDescription: 'A complete guide to hs.canvas: the element/property reference, the action pipeline, and worked examples combining shapes, text, images, gradients, and mouse interaction.'
     },
     {
@@ -53,7 +50,16 @@ const GUIDES = [
         outputName: 'typescript-guide.html',
         slug: 'typescript-guide',
         pageTitle: 'TypeScript',
+        navTitle: 'TypeScript',
         searchDescription: 'How to write your Hammerspoon 2 config in TypeScript: setup, the ambient hammerspoon.d.ts globals, compiling, and editor support.'
+    },
+    {
+        sourcePath: path.join(__dirname, '..', 'docs', 'migration-guide.md'),
+        outputName: 'migration-guide.html',
+        slug: 'migration-guide',
+        pageTitle: 'Migrating from Hammerspoon 1',
+        navTitle: 'Migrating from v1',
+        searchDescription: 'A guide for Hammerspoon 1 users on what changed, what moved, and what was removed in Hammerspoon 2.'
     }
 ];
 
@@ -278,8 +284,8 @@ function generateTypePage(typeName, protocol, isGlobal = false) {
 
 /**
  * Generate one standalone guide page (e.g. "Getting Started", "Migrating from
- * Hammerspoon 1") from a Markdown source file. Returns a search index entry
- * for the guide, or null if its source file doesn't exist.
+ * Hammerspoon 1") from a Markdown source file. Returns the guide's search
+ * index entry and its section outline, or null if its source file doesn't exist.
  */
 function generateGuidePage(guide) {
     if (!fs.existsSync(guide.sourcePath)) {
@@ -291,7 +297,7 @@ function generateGuidePage(guide) {
     // marked doesn't assign heading ids by default; guides' internal
     // cross-reference links depend on GitHub-style slugs, so generate them here.
     // Each heading also gets a self-link anchor, and h2/h3 headings are
-    // collected into an outline that the sidebar shows under the guide's entry.
+    // collected into an outline that the sidebar tree shows under the guide.
     const usedSlugs = new Map();
     const outline = [];
     const renderer = new Renderer();
@@ -320,7 +326,6 @@ function generateGuidePage(guide) {
         title: guide.pageTitle,
         currentPage: guide.slug,
         pageTitle: guide.pageTitle,
-        guideOutline: outline,
         contentHtml
     });
 
@@ -329,10 +334,13 @@ function generateGuidePage(guide) {
     console.log(`  ✓ Generated ${guide.outputName}`);
 
     return {
-        fullName: guide.pageTitle,
-        description: guide.searchDescription,
-        url: guide.outputName,
-        kind: 'guide'
+        searchEntry: {
+            fullName: guide.pageTitle,
+            description: guide.searchDescription,
+            url: guide.outputName,
+            kind: 'guide'
+        },
+        outline
     };
 }
 
@@ -441,17 +449,76 @@ function buildSearchIndex(allModuleData, allTypeEntries) {
 }
 
 /**
+ * Escape text for inclusion in HTML.
+ */
+function escapeHTML(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+/**
+ * Build the sidebar entries for a module or type page: its properties, then
+ * its methods, each pointing at the anchor the page template gives it.
+ */
+function apiNavChildren(properties, methods) {
+    const children = [];
+    const seen = new Set();
+    for (const prop of properties || []) {
+        if (seen.has(prop.name)) continue;
+        seen.add(prop.name);
+        children.push({ id: prop.name, html: escapeHTML(prop.name), kind: 'property' });
+    }
+    for (const method of methods || []) {
+        const id = method.name === 'init' ? 'constructor' : method.name;
+        if (seen.has(id)) continue;
+        seen.add(id);
+        children.push({ id, html: `${escapeHTML(id)}()`, kind: 'method' });
+    }
+    return children;
+}
+
+/**
+ * Build the sidebar tree: every guide, module and type, each with the sections
+ * or members that its page links to.
+ * @param {{guide: object, outline: object[]}[]} guideEntries - Generated guides
+ * @param {object[]} allModuleData - Array of parsed module JSON objects
+ * @param {string[]} typeNames - Type names, in sidebar order
+ * @param {{typeName: string, protocol: object}[]} allTypeEntries - Array of type entries
+ */
+function buildNavigation(guideEntries, allModuleData, typeNames, allTypeEntries) {
+    const protocols = new Map(allTypeEntries.map(e => [e.typeName, e.protocol]));
+    return {
+        guides: guideEntries.map(({ guide, outline }) => ({
+            page: guide.slug,
+            name: escapeHTML(guide.navTitle),
+            url: guide.outputName,
+            children: outline
+        })),
+        modules: allModuleData.map(m => ({
+            page: m.name,
+            name: escapeHTML(m.name),
+            url: `${m.name}.html`,
+            children: apiNavChildren(m.properties, m.methods)
+        })),
+        types: typeNames.map(t => ({
+            page: t,
+            name: escapeHTML(t),
+            url: `${t}.html`,
+            children: apiNavChildren(protocols.get(t).properties, protocols.get(t).methods)
+        }))
+    };
+}
+
+/**
  * Generate JavaScript for navigation and search
  */
-function generateJavaScript(modules, types, searchIndex) {
-    const navigationData = {
-        modules: modules.map(m => ({ name: m.name, url: m.name + '.html' })),
-        types: types.map(t => ({ name: t, url: t + '.html' }))
-    };
-
+function generateJavaScript(navigationData, searchIndex) {
     const script = scriptTemplate
-        .replace('{{NAVIGATION_DATA}}', JSON.stringify(navigationData, null, 2))
-        .replace('{{SEARCH_INDEX}}', JSON.stringify(searchIndex));
+        .replace('{{NAVIGATION_DATA}}', () => JSON.stringify(navigationData))
+        .replace('{{SEARCH_INDEX}}', () => JSON.stringify(searchIndex));
 
     const outputPath = path.join(OUTPUT_DIR, 'script.js');
     fs.writeFileSync(outputPath, script);
@@ -538,10 +605,12 @@ function main() {
     // Generate each guide page, if its source file is present, and fold it
     // into the search index
     console.log('\nGenerating guides:');
+    const guideEntries = [];
     for (const guide of GUIDES) {
-        const guideEntry = generateGuidePage(guide);
-        if (guideEntry) {
-            searchIndex.unshift(guideEntry);
+        const generated = generateGuidePage(guide);
+        if (generated) {
+            searchIndex.unshift(generated.searchEntry);
+            guideEntries.push({ guide, outline: generated.outline });
         }
     }
 
@@ -550,7 +619,8 @@ function main() {
     generateIndexPage(index.modules, allTypes);
 
     // Generate JavaScript and CSS
-    generateJavaScript(index.modules, allTypes, searchIndex);
+    const navigationData = buildNavigation(guideEntries, allModuleData, allTypes, allTypeEntries);
+    generateJavaScript(navigationData, searchIndex);
     generateCSS();
     copyHighlightJS();
 
