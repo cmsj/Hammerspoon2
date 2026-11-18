@@ -8,13 +8,15 @@
  * needs atos and dwarfdump. It:
  *
  *  1. Finds the crash log in the issue: an attached .txt/.ips/.json file, or an .ips report
- *     pasted into the body. Hammerspoon 2 writes a compact .ips (see CrashReport.swift), but a
+ *     pasted into the body, or failing that the same in a comment. Hammerspoon 2 writes a compact .ips (see CrashReport.swift), but a
  *     full one from ~/Library/Logs/DiagnosticReports works too.
  *  2. Downloads Hammerspoon-2-<version>-dSYMs.zip from the release the crash came from, which
  *     scripts/release/release.sh attaches to every release.
  *  3. Symbolicates every frame in a binary whose UUID matches one of those dSYMs, using atos.
- *  4. Posts the result as a comment on the issue, or updates the one it posted before (so
- *     editing the issue to add the crash log gets it symbolicated too).
+ *  4. Posts the result as a comment on the issue, and labels it `symbolicated` if that worked.
+ *     Until it has, editing the issue or commenting on it runs this again: a failure updates the
+ *     one comment it posted before rather than adding another, and a success replaces it with a
+ *     new comment (so the reporter is notified, and the result is at the end of the thread).
  *
  * The issue is untrusted input: nothing from it reaches a shell, only github.com attachment URLs
  * are fetched, and everything it contributes to the comment is inside a code block.
@@ -32,6 +34,7 @@ const { execFileSync } = require('child_process');
 const COMMENT_MARKER = '<!-- crash-symbolication -->';
 // Comments posted with the workflow's GITHUB_TOKEN are authored by this bot account.
 const COMMENT_AUTHOR = 'github-actions[bot]';
+const SYMBOLICATED_LABEL = 'symbolicated';
 // GitHub rejects comments over 65536 characters; leave room for the notes around the report.
 const MAX_REPORT_LENGTH = 60000;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
@@ -329,11 +332,13 @@ function renderComment({ report, traces, version, notes, maxLength = MAX_REPORT_
 
 /**
  * Symbolicates `report` against the dSYMs in `dsymsDirectory` (if any) and renders the comment.
- * `releaseNote` says where the dSYMs came from, or why there aren't any.
+ * `releaseNote` says where the dSYMs came from, or why there aren't any. Returns
+ * `{ body, symbolicated }`, where `symbolicated` is the number of frames atos found.
  */
 function buildComment({ report, version, dsymsDirectory, releaseNote, dwarfdump, atos }) {
     const traces = backtraces(report);
     const notes = [releaseNote];
+    let symbolicated = 0;
     if (dsymsDirectory) {
         const dsyms = dsymsByUUID(dsymsDirectory, dwarfdump);
         symbolicate(traces, dsyms, atos);
@@ -354,10 +359,10 @@ function buildComment({ report, version, dsymsDirectory, releaseNote, dwarfdump,
                     "so this crash probably isn't from the release build (a local or development build, perhaps)."
             );
         }
-        const symbolicated = traces.flatMap(trace => trace.frames).filter(frame => frame.symbolicated).length;
+        symbolicated = traces.flatMap(trace => trace.frames).filter(frame => frame.symbolicated).length;
         notes.push('', `Symbolicated ${symbolicated} frame${symbolicated === 1 ? '' : 's'}.`);
     }
-    return renderComment({ report, traces, version, notes });
+    return { body: renderComment({ report, traces, version, notes }), symbolicated };
 }
 
 // --- GitHub ------------------------------------------------------------------------------------
@@ -397,19 +402,28 @@ async function downloadAttachment(url) {
     return buffer.toString('utf8');
 }
 
-/** The crash report in an issue: the first attachment that is one, or else one in the body. */
-async function findReport(issueBody, download = downloadAttachment) {
-    for (const url of attachmentURLs(issueBody)) {
-        try {
-            const report = parseIPS(await download(url));
-            if (report) {
-                return report;
+/**
+ * The crash report in `texts` (the issue body, then its comments): in the first text that has
+ * one, the first attachment that is one, or else one in the text itself.
+ */
+async function findReport(texts, download = downloadAttachment) {
+    for (const text of texts) {
+        for (const url of attachmentURLs(text)) {
+            try {
+                const report = parseIPS(await download(url));
+                if (report) {
+                    return report;
+                }
+            } catch (error) {
+                console.log(`::warning::${error.message}`);
             }
-        } catch (error) {
-            console.log(`::warning::${error.message}`);
+        }
+        const report = parseIPS(text);
+        if (report) {
+            return report;
         }
     }
-    return parseIPS(issueBody);
+    return null;
 }
 
 /** Downloads and unzips the release's dSYMs. Returns `{ directory, note }`. */
@@ -445,21 +459,25 @@ async function fetchDSYMs(repo, version) {
     return { directory: path.join(work, 'dSYMs'), note: `Symbolicated with the dSYMs from [release ${version}](${release.html_url}).` };
 }
 
-async function findComment(repo, issueNumber) {
+async function listComments(repo, issueNumber) {
+    const all = [];
     for (let page = 1; ; page++) {
         const comments = await github('GET', `/repos/${repo}/issues/${issueNumber}/comments?per_page=100&page=${page}`);
-        // Check the author too, so a pasted copy of the marker can't redirect the report.
-        const existing = comments.find(
-            comment => comment.user && comment.user.login === COMMENT_AUTHOR && (comment.body || '').startsWith(COMMENT_MARKER)
-        );
-        if (existing || comments.length < 100) {
-            return existing;
+        all.push(...comments);
+        if (comments.length < 100) {
+            return all;
         }
     }
 }
 
-async function upsertComment(repo, issueNumber, body) {
-    const existing = await findComment(repo, issueNumber);
+/** Whether `comment` is the one this script posts. */
+function isOurComment(comment) {
+    // Check the author too, so a pasted copy of the marker can't redirect the report.
+    return Boolean(comment.user && comment.user.login === COMMENT_AUTHOR && (comment.body || '').startsWith(COMMENT_MARKER));
+}
+
+/** Updates `existing` (our comment, if there is one) to `body`, or posts `body` if there isn't. */
+async function upsertComment(repo, issueNumber, existing, body) {
     if (existing && existing.body === body) {
         return 'unchanged';
     }
@@ -469,6 +487,20 @@ async function upsertComment(repo, issueNumber, body) {
     }
     await github('POST', `/repos/${repo}/issues/${issueNumber}/comments`, { body });
     return 'created';
+}
+
+async function setLabel(repo, issueNumber, labelled) {
+    if (labelled) {
+        await github('POST', `/repos/${repo}/issues/${issueNumber}/labels`, { labels: [SYMBOLICATED_LABEL] });
+        return;
+    }
+    try {
+        await github('DELETE', `/repos/${repo}/issues/${issueNumber}/labels/${SYMBOLICATED_LABEL}`);
+    } catch (error) {
+        if (error.status !== 404) {
+            throw error;
+        }
+    }
 }
 
 const NO_REPORT_COMMENT = [
@@ -485,12 +517,20 @@ async function runForIssue(issueNumber) {
     const repo = process.env.GITHUB_REPOSITORY;
     const issue = await github('GET', `/repos/${repo}/issues/${issueNumber}`);
     const issueBody = issue.body || '';
+    const wasSymbolicated = (issue.labels || []).some(label => (label.name || label) === SYMBOLICATED_LABEL);
+    const comments = await listComments(repo, issueNumber);
+    const existing = comments.find(isOurComment);
 
-    const report = await findReport(issueBody);
+    // Our own comment quotes the report, so leave it (and any other bot's) out of the search.
+    const texts = [issueBody, ...comments.filter(comment => !comment.user || comment.user.type !== 'Bot').map(comment => comment.body || '')];
+    const report = await findReport(texts);
     if (!report) {
         // Only nag once; if the bot has already replied, leave that reply alone.
-        if (!(await findComment(repo, issueNumber))) {
-            await upsertComment(repo, issueNumber, NO_REPORT_COMMENT);
+        if (!existing) {
+            await upsertComment(repo, issueNumber, null, NO_REPORT_COMMENT);
+        }
+        if (wasSymbolicated) {
+            await setLabel(repo, issueNumber, false);
         }
         console.log(`No crash log found in #${issueNumber}`);
         return;
@@ -500,8 +540,22 @@ async function runForIssue(issueNumber) {
     const { directory, note } = version
         ? await fetchDSYMs(repo, version)
         : { directory: null, note: "The crash log doesn't say which version crashed, and neither does the issue, so it couldn't be symbolicated." };
-    const comment = buildComment({ report, version, dsymsDirectory: directory, releaseNote: note });
-    console.log(`Comment on #${issueNumber}: ${await upsertComment(repo, issueNumber, comment)}`);
+    const { body, symbolicated } = buildComment({ report, version, dsymsDirectory: directory, releaseNote: note });
+    const succeeded = symbolicated > 0;
+
+    if (succeeded && existing && !wasSymbolicated) {
+        // Our comment says why symbolication failed before; replace it with a new comment rather
+        // than editing it, since an edit doesn't notify anyone and is buried above the discussion.
+        await github('DELETE', `/repos/${repo}/issues/comments/${existing.id}`);
+        await upsertComment(repo, issueNumber, null, body);
+        console.log(`Comment on #${issueNumber}: replaced`);
+    } else {
+        console.log(`Comment on #${issueNumber}: ${await upsertComment(repo, issueNumber, existing, body)}`);
+    }
+    if (succeeded !== wasSymbolicated) {
+        await setLabel(repo, issueNumber, succeeded);
+    }
+    console.log(`#${issueNumber} ${succeeded ? 'is' : "isn't"} symbolicated`);
 }
 
 function parseArgs(argv) {
@@ -531,7 +585,7 @@ async function main() {
             process.exit(1);
         }
         const releaseNote = args.dsyms ? `Symbolicated with the dSYMs in \`${args.dsyms}\`.` : 'No dSYMs given.';
-        console.log(buildComment({ report, version: crashedVersion(report, ''), dsymsDirectory: args.dsyms, releaseNote }));
+        console.log(buildComment({ report, version: crashedVersion(report, ''), dsymsDirectory: args.dsyms, releaseNote }).body);
         return;
     }
 

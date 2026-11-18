@@ -97,12 +97,25 @@ test('finds attachment URLs in both forms GitHub uses', () => {
 test('prefers an attached report to the text of the issue', async () => {
     const body = issueBody({ crashLog: '[log.txt](https://github.com/user-attachments/files/1/log.txt)' });
     const fetched = [];
-    const report = await findReport(body, async url => {
+    const report = await findReport([body], async url => {
         fetched.push(url);
         return exceptionText;
     });
     assert.deepEqual(fetched, ['https://github.com/user-attachments/files/1/log.txt']);
     assert.equal(report.body.procName, 'HammerspoonIPCBroker');
+});
+
+test('finds a report attached to a comment when the issue has none', async () => {
+    const body = issueBody({ crashLog: 'The crash log is on your clipboard: select all of this text and paste over it.' });
+    const comments = ['Oops, forgot the log', '[log.txt](https://github.com/user-attachments/files/2/log.txt)'];
+    const fetched = [];
+    const report = await findReport([body, ...comments], async url => {
+        fetched.push(url);
+        return exceptionText;
+    });
+    assert.deepEqual(fetched, ['https://github.com/user-attachments/files/2/log.txt']);
+    assert.equal(report.body.procName, 'HammerspoonIPCBroker');
+    assert.equal(await findReport([body, comments[0]], async () => assert.fail('nothing to download')), null);
 });
 
 test('reads the version from the report, or from the form for helpers', () => {
@@ -159,12 +172,13 @@ test('trims other threads to fit in a comment', () => {
 });
 
 test('symbolicates our frames with the matching dSYM', onMac, () => {
-    const comment = buildComment({
+    const { body: comment, symbolicated } = buildComment({
         report: parseIPS(compact(abortText)),
         version: '0.1.0',
         dsymsDirectory: DSYMS,
         releaseNote: 'From the fixture.',
     });
+    assert.ok(symbolicated > 0);
     assert.match(comment, /3 +Hammerspoon 2 +0x[0-9a-f]{16} parseConfig \(main\.m:7\)/);
     assert.match(comment, /4 +Hammerspoon 2 +0x[0-9a-f]{16} main \(main\.m:24\)/);
     assert.match(comment, /__main_block_invoke \(main\.m:17\)/);
@@ -172,7 +186,7 @@ test('symbolicates our frames with the matching dSYM', onMac, () => {
 });
 
 test('symbolicates an uncaught exception backtrace', onMac, () => {
-    const comment = buildComment({
+    const { body: comment } = buildComment({
         report: parseIPS(exceptionText),
         version: '0.1.0',
         dsymsDirectory: DSYMS,
@@ -183,7 +197,8 @@ test('symbolicates an uncaught exception backtrace', onMac, () => {
 
 test("says when the release's dSYMs don't match the crashed build", onMac, () => {
     const text = abortText.replace(/9d32208f-a3ce-3b44-b752-1fb780078e7b/g, '11111111-2222-3333-4444-555555555555');
-    const comment = buildComment({ report: parseIPS(text), version: '0.1.0', dsymsDirectory: DSYMS, releaseNote: 'x' });
+    const { body: comment, symbolicated } = buildComment({ report: parseIPS(text), version: '0.1.0', dsymsDirectory: DSYMS, releaseNote: 'x' });
+    assert.equal(symbolicated, 0);
     assert.match(comment, /No dSYM in that release matches `Hammerspoon 2`/);
     assert.match(comment, /Symbolicated 0 frames/);
 });
