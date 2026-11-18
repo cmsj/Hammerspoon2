@@ -638,7 +638,13 @@ import SwiftUI
         isShown = false
 
         // Explicitly nil the contentView so UICanvasView (and any element closures it
-        // holds) are released synchronously before AppKit's async window cleanup runs.
+        // holds) are released before AppKit's async window cleanup runs. That's on the next
+        // pass of the main queue rather than now, as this is usually called from JS and the
+        // views may hold the last references to an embedded web view's WebKit objects.
+        if let window = nsWindow {
+            releaseOutsideJavaScript(window)
+            if let contentView = window.contentView { releaseOutsideJavaScript(contentView) }
+        }
         nsWindow?.contentView = nil
         nsWindow?.delegate = nil
         nsWindow?.close()

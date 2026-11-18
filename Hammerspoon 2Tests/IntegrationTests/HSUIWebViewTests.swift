@@ -7,6 +7,7 @@ import Testing
 import Foundation
 import JavaScriptCore
 import AppKit
+import WebKit
 @testable import Hammerspoon_2
 
 // Note: hs.ui.webview requires macOS 26.0. Tests are written using the JS harness
@@ -555,6 +556,78 @@ struct HSUIWebViewTests {
                     "Showing a hidden window again must reuse its NSWindow, not make another")
             harness.eval("w.destroy()")
         }
+
+        // #399: JavaScriptCore holds its lock for the whole of a call from JS into Swift (and the
+        // autorelease pool it wraps that call in drains before the lock is released). While it's
+        // held, the thread's atom string table is the JS VM's own, so if WebKit is torn down then,
+        // freeing a back/forward list with saved form state aborts in AtomStringImpl::remove.
+        // Which pages' state reaches the list depends on WebKit internals, so rather than try to
+        // provoke the abort, these check that the WebKit objects outlive the call from JS.
+        @Test(
+            "Destroying a window from JavaScript frees its web view once the call has returned",
+            .disabled(if: isRunningInCI(), "WebKit CVDisplayLink UAF crash in GitHub's virtualized macOS runner — see QUARANTINED IN CI comment below")
+        )
+        func testDestroyFreesWebKitOutsideJavaScript() async throws {
+            let harness = makeHarness()
+            autoreleasepool {
+                _ = harness.eval("""
+                    var loaded = false
+                    var wv = hs.ui.webview()
+                        .onMessage("loaded", () => { loaded = true })
+                        .loadHTML("<script>onload = () => webkit.messageHandlers.loaded.postMessage(1)</script>")
+                    var win = hs.ui.window({x: 100, y: 100, w: 400, h: 300}).webview(wv)
+                    win.show()
+                    void 0
+                    """)
+            }
+            #expect(!harness.hasException)
+            #expect(await harness.waitForAsync(timeout: 5.0) { harness.evalBool("loaded") == true })
+            // Let the page settle and read its back/forward list, as a toolbar does. Without
+            // these the WKWebView can happen to outlive the call anyway, hiding a regression.
+            try await Task.sleep(for: .seconds(1))
+            #expect(harness.evalBool("wv.canGoBack") == false)
+
+            weak var webKitView: WKWebView?
+            autoreleasepool {
+                webKitView = NSApp.windows.lazy.compactMap { $0.contentView.flatMap(Self.findWebKitView(in:)) }.first
+                // Leave the window's views holding the last references to the web view's WebKit objects
+                harness.eval("wv = null; void 0")
+                harness.collectGarbage()
+            }
+            try #require(webKitView != nil)
+
+            autoreleasepool { _ = harness.eval("win.destroy(); void 0") }
+            #expect(webKitView != nil, "The WKWebView must not be freed during the call from JS")
+            #expect(await harness.waitForAsync(timeout: 2.0) { webKitView == nil })
+        }
+
+        @Test("Collecting a web view's JS wrapper frees its WebKit objects once the collector has finished")
+        func testCollectionFreesWebKitOutsideJavaScript() async throws {
+            let harness = makeHarness()
+            weak var webView: UIWebView?
+            weak var page: WebPage?
+            autoreleasepool {
+                harness.eval("var wv = hs.ui.webview().loadHTML('hi'); void 0")
+                let object = harness.evalValue("wv")?.toObjectOf(UIWebView.self) as? UIWebView
+                webView = object
+                page = object?.page
+            }
+            try #require(page != nil)
+
+            // The collector holds JavaScriptCore's lock while it finalizes the wrapper
+            autoreleasepool {
+                harness.eval("wv = null; void 0")
+                harness.collectGarbage()
+            }
+            try #require(webView == nil, "The collector should have freed the UIWebView")
+            #expect(page != nil, "The WebPage must not be freed while the collector holds the lock")
+            #expect(await harness.waitForAsync(timeout: 2.0) { page == nil })
+        }
+
+        private static func findWebKitView(in view: NSView) -> WKWebView? {
+            if let webKitView = view as? WKWebView { return webKitView }
+            return view.subviews.lazy.compactMap(findWebKitView(in:)).first
+        }
     }
 
     // MARK: - Page Messages
@@ -1002,6 +1075,8 @@ struct HSUIWebViewTests {
             // Drop the test's own strong reference used for polling above — otherwise
             // this local would itself be the "leak" assertNoLeaks() reports.
             webView = nil
+            // As in the next test, let the window's views be released on the main queue
+            await JSTestHarness.drainMainActorQueue()
             // Known, currently-unfixable leak — see the comment above this suite.
             // withKnownIssue keeps this from failing CI while still surfacing loudly
             // (as an unexpected pass) if WebKit or UIWebView's implementation changes
@@ -1066,6 +1141,9 @@ struct HSUIWebViewTests {
                 harness.shutdownForLeakTest()
             }
             webView = nil
+            // Destroying the window releases its views on the main queue, which assertNoLeaks()
+            // can't drain, as this test is itself running there
+            await JSTestHarness.drainMainActorQueue()
             tracker.assertNoLeaks(timeout: 2.0)
         }
     }
