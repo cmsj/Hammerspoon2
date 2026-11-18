@@ -300,44 +300,106 @@ a:hover {
     display: none;
 }
 
-/* Outline of the guide being read, nested under its sidebar entry */
-.guide-outline {
+/* Sidebar tree: every guide, module and type, with its sections or members */
+.nav-tree,
+.nav-children {
     list-style: none;
-    margin: 0.25rem 0 0.5rem 0.5rem;
+}
+
+.nav-row {
+    display: flex;
+    align-items: center;
+}
+
+.nav-section .nav-row > a {
+    flex: 1;
+    min-width: 0;
+}
+
+.nav-toggle,
+.nav-toggle-spacer {
+    flex: 0 0 1.125rem;
+    align-self: stretch;
+}
+
+.nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.nav-toggle:hover {
+    color: var(--text-primary);
+}
+
+.nav-toggle::before {
+    content: '';
+    width: 0.375rem;
+    height: 0.375rem;
+    border: solid currentColor;
+    border-width: 0 1.5px 1.5px 0;
+    transform: translateX(-1px) rotate(-45deg);
+    transition: transform 0.15s;
+}
+
+.nav-node.expanded > .nav-row > .nav-toggle::before {
+    transform: translateY(-1px) rotate(45deg);
+}
+
+.nav-children {
+    display: none;
+    margin: 0.125rem 0 0.375rem 1.125rem;
     border-left: 1px solid var(--border);
 }
 
-.guide-outline ul {
-    list-style: none;
-    display: none;
-    margin-left: 0.75rem;
-}
-
-.guide-outline li.expanded > ul {
+.nav-node.expanded > .nav-children {
     display: block;
 }
 
-.nav-section .guide-outline a {
+.nav-children .nav-children {
+    margin-left: 1.875rem;
+}
+
+.nav-section .nav-children a {
     font-size: 0.8125rem;
     line-height: 1.4;
     padding: 0.25rem 0.5rem 0.25rem 0.75rem;
-    white-space: normal;
     border-radius: 0 4px 4px 0;
     border-left: 2px solid transparent;
     margin-left: -1px;
 }
 
-.nav-section .guide-outline ul a {
+/* Guide section titles wrap; member names are short enough to truncate */
+.nav-section .nav-children a:not(.nav-property):not(.nav-method) {
+    white-space: normal;
+}
+
+.nav-section .nav-children .nav-row > a {
+    padding-left: 0.25rem;
+}
+
+.nav-section .nav-children .nav-children a {
     font-size: 0.78125rem;
 }
 
-.nav-section .guide-outline a.outline-active {
+.nav-section a.nav-property,
+.nav-section a.nav-method {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+.nav-section .nav-children a.outline-active {
     color: var(--accent);
     border-left-color: var(--accent);
     background: var(--accent-subtle);
 }
 
-.guide-outline code {
+.nav-children code {
     font-family: var(--font-mono);
     font-size: 0.9em;
 }

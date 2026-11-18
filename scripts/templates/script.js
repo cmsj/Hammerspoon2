@@ -2,21 +2,115 @@
 const navigationData = {{NAVIGATION_DATA}};
 const searchIndex = {{SEARCH_INDEX}};
 
-// Load navigation links into left sidebar
-function loadNavigation(currentPage) {
-    const modulesNav = document.getElementById('modules-nav');
-    const typesNav = document.getElementById('types-nav');
+// Sidebar tree state kept for the browsing session: the pages whose entries
+// the reader has expanded, and how far the sidebar was scrolled
+const NAV_EXPANDED_KEY = 'hs2-docs-nav-expanded';
+const NAV_SCROLL_KEY = 'hs2-docs-nav-scroll';
 
-    if (modulesNav) {
-        modulesNav.innerHTML = navigationData.modules.map(m =>
-            `<a href="${m.url}" class="${currentPage === m.name ? 'active' : ''}">${m.name}</a>`
-        ).join('');
+function readSessionValue(key, fallback) {
+    try {
+        const value = sessionStorage.getItem(key);
+        return value === null ? fallback : JSON.parse(value);
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function writeSessionValue(key, value) {
+    try {
+        sessionStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {}
+}
+
+// A tree row: a disclosure toggle (or a spacer, to keep labels aligned)
+// followed by the entry's link
+function navRow(link, hasChildren, expanded) {
+    const toggle = hasChildren
+        ? `<button type="button" class="nav-toggle" aria-expanded="${expanded}" aria-label="Show contents"></button>`
+        : '<span class="nav-toggle-spacer"></span>';
+    return `<div class="nav-row">${toggle}${link}</div>`;
+}
+
+// The sections or members under a sidebar entry. On the current page they are
+// plain fragment links, tagged so initNavTracking() can follow the reader.
+function renderNavChildren(children, pageUrl, isCurrent) {
+    const nested = children.some(child => child.children && child.children.length);
+    const items = children.map(child => {
+        const href = isCurrent ? `#${child.id}` : `${pageUrl}#${child.id}`;
+        const target = isCurrent ? ` data-nav-target="${child.id}"` : '';
+        const kind = child.kind ? ` class="nav-${child.kind}"` : '';
+        const link = `<a href="${href}"${target}${kind}>${child.html}</a>`;
+        if (!nested) return `<li>${link}</li>`;
+        const hasChildren = child.children && child.children.length > 0;
+        return `<li class="nav-node">${navRow(link, hasChildren, false)}` +
+            (hasChildren ? renderNavChildren(child.children, pageUrl, isCurrent) : '') +
+            '</li>';
+    });
+    return `<ul class="nav-children">${items.join('')}</ul>`;
+}
+
+// Build the left sidebar: a collapsible tree of every guide, module and type,
+// with the current page's entry expanded
+function loadNavigation(currentPage) {
+    const sidebar = document.querySelector('.sidebar-left');
+    if (!sidebar) return;
+
+    const expandedPages = new Set(readSessionValue(NAV_EXPANDED_KEY, []));
+    const sections = [
+        ['guides-nav', navigationData.guides],
+        ['modules-nav', navigationData.modules],
+        ['types-nav', navigationData.types]
+    ];
+
+    for (const [containerId, entries] of sections) {
+        const container = document.getElementById(containerId);
+        if (!container) continue;
+        container.innerHTML = '<ul class="nav-tree">' + entries.map(entry => {
+            const isCurrent = entry.page === currentPage;
+            const hasChildren = entry.children.length > 0;
+            const expanded = hasChildren && (isCurrent || expandedPages.has(entry.page));
+            const classes = ['nav-node', isCurrent ? 'nav-current' : '', expanded ? 'expanded' : '']
+                .filter(Boolean).join(' ');
+            const link = `<a href="${entry.url}" class="${isCurrent ? 'active' : ''}">${entry.name}</a>`;
+            return `<li class="${classes}" data-page="${entry.page}">` +
+                navRow(link, hasChildren, expanded) +
+                (hasChildren ? renderNavChildren(entry.children, entry.url, isCurrent) : '') +
+                '</li>';
+        }).join('') + '</ul>';
     }
 
-    if (typesNav) {
-        typesNav.innerHTML = navigationData.types.map(t =>
-            `<a href="${t.url}" class="${currentPage === t.name ? 'active' : ''}">${t.name}</a>`
-        ).join('');
+    sidebar.addEventListener('click', (e) => {
+        const toggle = e.target.closest('.nav-toggle');
+        if (!toggle) return;
+        const node = toggle.closest('.nav-node');
+        const expanded = node.classList.toggle('expanded');
+        toggle.setAttribute('aria-expanded', expanded);
+        if (node.dataset.page) {
+            if (expanded) {
+                expandedPages.add(node.dataset.page);
+            } else {
+                expandedPages.delete(node.dataset.page);
+            }
+            writeSessionValue(NAV_EXPANDED_KEY, [...expandedPages]);
+        } else {
+            // A section within a page: leave it as the reader set it, rather
+            // than following the scroll position
+            node.dataset.pinned = 'true';
+        }
+    });
+
+    // Keep the sidebar where the reader left it, unless that leaves the
+    // current page's entry out of view, in which case bring it to the top so
+    // its contents are visible too
+    sidebar.scrollTop = readSessionValue(NAV_SCROLL_KEY, 0);
+    window.addEventListener('pagehide', () => writeSessionValue(NAV_SCROLL_KEY, sidebar.scrollTop));
+    const active = sidebar.querySelector('.nav-current > .nav-row');
+    if (active) {
+        const row = active.getBoundingClientRect();
+        const visible = sidebar.getBoundingClientRect();
+        if (row.top < visible.top || row.bottom > visible.bottom) {
+            sidebar.scrollTop += row.top - visible.top - 8;
+        }
     }
 }
 
@@ -248,42 +342,46 @@ function initTOCObserver() {
     items.forEach(el => observer.observe(el));
 }
 
-// On guide pages, highlight the section being read in the sidebar outline and
-// expand its sub-sections
-function initGuideOutline() {
-    const outline = document.getElementById('guide-outline');
-    if (!outline) return;
+// Highlight the section or member being read in the current page's sidebar
+// entry, expanding the guide section that contains it
+function initNavTracking() {
+    const current = document.querySelector('.nav-node.nav-current');
+    if (!current) return;
 
-    const links = Array.from(outline.querySelectorAll('a[data-outline-target]'));
-    const headings = links
-        .map(a => document.getElementById(a.dataset.outlineTarget))
-        .filter(Boolean);
-    if (headings.length === 0) return;
+    const targets = Array.from(current.querySelectorAll('a[data-nav-target]'))
+        .map(link => ({ link, element: document.getElementById(link.dataset.navTarget) }))
+        .filter(target => target.element);
+    if (targets.length === 0) return;
 
-    let currentId = null;
+    const sectionNodes = Array.from(current.querySelectorAll('.nav-children .nav-node'));
+    let activeLink;
 
     function update() {
-        // The current section is the last heading scrolled past the header
-        // (or the first one, before any has been reached)
+        // The active target is the last one scrolled past the header; none is
+        // active while the reader is still above the first
         const threshold = document.querySelector('.top-header').offsetHeight + 24;
-        let current = headings[0];
-        for (const heading of headings) {
-            if (heading.getBoundingClientRect().top > threshold) break;
-            current = heading;
+        let active = null;
+        for (const target of targets) {
+            if (target.element.getBoundingClientRect().top > threshold) break;
+            active = target;
         }
-        // At the bottom of the page, later headings may never reach the top
-        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
-            current = headings[headings.length - 1];
+        // At the bottom of the page, later targets may never reach the top
+        const scrollable = document.documentElement.scrollHeight > window.innerHeight;
+        if (scrollable && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+            active = targets[targets.length - 1];
         }
-        if (current.id === currentId) return;
-        currentId = current.id;
+        const link = active ? active.link : null;
+        if (link === activeLink) return;
+        activeLink = link;
 
-        const activeLink = outline.querySelector(`[data-outline-target="${CSS.escape(currentId)}"]`);
-        links.forEach(a => a.classList.toggle('outline-active', a === activeLink));
-        const activeSection = activeLink.closest('.guide-outline > li');
-        outline.querySelectorAll(':scope > li').forEach(li =>
-            li.classList.toggle('expanded', li === activeSection));
-        activeLink.scrollIntoView({ block: 'nearest' });
+        targets.forEach(target => target.link.classList.toggle('outline-active', target.link === link));
+        for (const node of sectionNodes) {
+            if (node.dataset.pinned) continue;
+            const expanded = link !== null && node.contains(link);
+            node.classList.toggle('expanded', expanded);
+            node.querySelector(':scope > .nav-row > .nav-toggle')?.setAttribute('aria-expanded', expanded);
+        }
+        if (link) link.scrollIntoView({ block: 'nearest' });
     }
 
     let scheduled = false;
