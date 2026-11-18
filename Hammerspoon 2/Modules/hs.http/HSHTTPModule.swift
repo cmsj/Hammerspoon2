@@ -25,7 +25,7 @@ import JavaScriptCore
     /// Perform an HTTP GET request.
     /// - Parameter url: The URL to request.
     /// - Parameter headers?: Optional dictionary of request headers.
-    /// - Returns: {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
+    /// - Returns: {Promise<{status: number, url: string, body: string, headers: object}>} Resolves with the HTTP response.
     /// - Example:
     /// ```js
     /// hs.http.get("https://httpbin.org/get").then(r => console.log(r.status))
@@ -36,7 +36,7 @@ import JavaScriptCore
     /// - Parameter url: The URL to request.
     /// - Parameter body?: Optional request body string.
     /// - Parameter headers?: Optional dictionary of request headers.
-    /// - Returns: {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
+    /// - Returns: {Promise<{status: number, url: string, body: string, headers: object}>} Resolves with the HTTP response.
     /// - Example:
     /// ```js
     /// hs.http.post("https://httpbin.org/post", '{"key":"val"}', {"Content-Type": "application/json"}).then(r => console.log(r.status))
@@ -47,7 +47,7 @@ import JavaScriptCore
     /// - Parameter url: The URL to request.
     /// - Parameter body?: Optional request body string.
     /// - Parameter headers?: Optional dictionary of request headers.
-    /// - Returns: {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
+    /// - Returns: {Promise<{status: number, url: string, body: string, headers: object}>} Resolves with the HTTP response.
     /// - Example:
     /// ```js
     /// hs.http.put("https://httpbin.org/put", "updated data", null).then(r => console.log(r.status))
@@ -62,7 +62,7 @@ import JavaScriptCore
     /// - Parameter method: The HTTP method string (e.g. "DELETE", "PATCH", "HEAD").
     /// - Parameter body?: Optional request body string.
     /// - Parameter headers?: Optional dictionary of request headers.
-    /// - Returns: {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
+    /// - Returns: {Promise<{status: number, url: string, body: string, headers: object}>} Resolves with the HTTP response.
     /// - Example:
     /// ```js
     /// hs.http.doRequest("https://httpbin.org/delete", "DELETE", null, null).then(r => console.log(r.status))
@@ -189,6 +189,7 @@ import JavaScriptCore
                     let (data, response) = try await URLSession.shared.data(for: request)
                     let httpResponse = response as? HTTPURLResponse
                     let status = httpResponse?.statusCode ?? -1
+                    let responseURL = httpResponse?.url?.absoluteString ?? ""
                     let responseBody = String(data: data, encoding: .utf8) ?? ""
                     var responseHeaders: [String: String] = [:]
                     httpResponse?.allHeaderFields.forEach { k, v in
@@ -198,6 +199,7 @@ import JavaScriptCore
                     }
                     holder.resolveWith([
                         "status": status,
+                        "url": responseURL,
                         "body": responseBody,
                         "headers": responseHeaders
                     ] as [String: Any])
@@ -205,6 +207,7 @@ import JavaScriptCore
                     AKWarning("hs.http: \(method) \(urlString) failed: \(error.localizedDescription)")
                     holder.resolveWith([
                         "status": -1,
+                        "url": "",
                         "body": "",
                         "headers": [:] as [String: String]
                     ] as [String: Any])

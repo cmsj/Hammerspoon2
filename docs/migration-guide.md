@@ -239,8 +239,9 @@ keeps running until you stop or remove it, whether or not you keep a reference t
 gives the process ID of an app that has Secure Input on (or `null`), so you can tell the user
 which app is blocking keystrokes.
 
-**`hs.http`** — every request method returns a Promise resolving to `{status, body, headers}`;
-there's no callback argument any more. A network failure *resolves* with `status: -1`, it
+**`hs.http`** — every request method returns a Promise resolving to `{status, url, body, headers}`;
+there's no callback argument any more. `url` is the URL that answered, so after a redirect it
+differs from the one you requested. A network failure *resolves* with `status: -1`, it 
 doesn't reject — check `status` rather than relying on `.catch()`. Gained `openWebSocket()`
 for WebSocket clients (no dedicated WebSocket story existed in v1's `hs.http`).
 
