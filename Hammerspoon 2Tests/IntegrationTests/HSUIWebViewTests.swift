@@ -589,7 +589,10 @@ struct HSUIWebViewTests {
 
             weak var webKitView: WKWebView?
             autoreleasepool {
-                webKitView = NSApp.windows.lazy.compactMap { $0.contentView.flatMap(Self.findWebKitView(in:)) }.first
+                // Only this test's window: other tests' windows may be open too
+                let window = harness.evalValue("win")?.toObjectOf(HSUIWindow.self) as? HSUIWindow
+                let nsWindow = NSApp.windows.first { window != nil && ($0.delegate as AnyObject?) === window }
+                webKitView = nsWindow?.contentView.flatMap(Self.findWebKitView(in:))
                 // Leave the window's views holding the last references to the web view's WebKit objects
                 harness.eval("wv = null; void 0")
                 harness.collectGarbage()
