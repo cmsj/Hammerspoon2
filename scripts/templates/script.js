@@ -3,8 +3,10 @@ const navigationData = {{NAVIGATION_DATA}};
 const searchIndex = {{SEARCH_INDEX}};
 
 // Sidebar tree state kept for the browsing session: the pages whose entries
-// the reader has expanded, and how far the sidebar was scrolled
+// the reader has expanded, the sections within a page they have expanded or
+// collapsed by hand, and how far the sidebar was scrolled
 const NAV_EXPANDED_KEY = 'hs2-docs-nav-expanded';
+const NAV_SECTIONS_KEY = 'hs2-docs-nav-sections';
 const NAV_SCROLL_KEY = 'hs2-docs-nav-scroll';
 
 function readSessionValue(key, fallback) {
@@ -33,7 +35,9 @@ function navRow(link, hasChildren, expanded) {
 
 // The sections or members under a sidebar entry. On the current page they are
 // plain fragment links, tagged so initNavTracking() can follow the reader.
-function renderNavChildren(children, pageUrl, isCurrent) {
+// Sections the reader has toggled are restored from sectionStates, and pinned
+// so that initNavTracking() leaves them alone.
+function renderNavChildren(children, page, pageUrl, isCurrent, sectionStates) {
     const nested = children.some(child => child.children && child.children.length);
     const items = children.map(child => {
         const href = isCurrent ? `#${child.id}` : `${pageUrl}#${child.id}`;
@@ -42,8 +46,13 @@ function renderNavChildren(children, pageUrl, isCurrent) {
         const link = `<a href="${href}"${target}${kind}>${child.html}</a>`;
         if (!nested) return `<li>${link}</li>`;
         const hasChildren = child.children && child.children.length > 0;
-        return `<li class="nav-node">${navRow(link, hasChildren, false)}` +
-            (hasChildren ? renderNavChildren(child.children, pageUrl, isCurrent) : '') +
+        const key = `${page}#${child.id}`;
+        const pinned = hasChildren && key in sectionStates;
+        const expanded = pinned && sectionStates[key];
+        const attributes = `class="nav-node${expanded ? ' expanded' : ''}" data-section="${key}"` +
+            (pinned ? ' data-pinned="true"' : '');
+        return `<li ${attributes}>${navRow(link, hasChildren, expanded)}` +
+            (hasChildren ? renderNavChildren(child.children, page, pageUrl, isCurrent, sectionStates) : '') +
             '</li>';
     });
     return `<ul class="nav-children">${items.join('')}</ul>`;
@@ -56,6 +65,7 @@ function loadNavigation(currentPage) {
     if (!sidebar) return;
 
     const expandedPages = new Set(readSessionValue(NAV_EXPANDED_KEY, []));
+    const sectionStates = readSessionValue(NAV_SECTIONS_KEY, {});
     const sections = [
         ['guides-nav', navigationData.guides],
         ['modules-nav', navigationData.modules],
@@ -74,7 +84,7 @@ function loadNavigation(currentPage) {
             const link = `<a href="${entry.url}" class="${isCurrent ? 'active' : ''}">${entry.name}</a>`;
             return `<li class="${classes}" data-page="${entry.page}">` +
                 navRow(link, hasChildren, expanded) +
-                (hasChildren ? renderNavChildren(entry.children, entry.url, isCurrent) : '') +
+                (hasChildren ? renderNavChildren(entry.children, entry.page, entry.url, isCurrent, sectionStates) : '') +
                 '</li>';
         }).join('') + '</ul>';
     }
@@ -96,6 +106,8 @@ function loadNavigation(currentPage) {
             // A section within a page: leave it as the reader set it, rather
             // than following the scroll position
             node.dataset.pinned = 'true';
+            sectionStates[node.dataset.section] = expanded;
+            writeSessionValue(NAV_SECTIONS_KEY, sectionStates);
         }
     });
 
