@@ -24,8 +24,11 @@ const {
     renderComment,
     buildComment,
     findReport,
+    runForIssue,
     codeBlock,
+    COMMENT_AUTHOR,
     COMMENT_MARKER,
+    NO_REPORT_COMMENT,
 } = require('../symbolicate-crash');
 
 const REPORTS = path.join(__dirname, '..', '..', 'Hammerspoon 2Tests', 'Fixtures', 'CrashReports');
@@ -201,4 +204,90 @@ test("says when the release's dSYMs don't match the crashed build", onMac, () =>
     assert.equal(symbolicated, 0);
     assert.match(comment, /No dSYM in that release matches `Hammerspoon 2`/);
     assert.match(comment, /Symbolicated 0 frames/);
+});
+
+/**
+ * Replaces fetch with an in-memory GitHub holding issue 7, with `comments` and `labels`, and no
+ * releases. Returns the list of write requests made.
+ */
+function mockGitHub(t, { body = issueBody({ crashLog: 'No log here' }), comments = [], labels = [] } = {}) {
+    const writes = [];
+    t.mock.method(globalThis, 'fetch', async (url, { method, body: requestBody }) => {
+        const { pathname } = new URL(url);
+        if (method === 'GET' && pathname === '/repos/o/r/issues/7') {
+            return { ok: true, status: 200, json: async () => ({ body, labels: labels.map(name => ({ name })) }) };
+        }
+        if (method === 'GET' && pathname === '/repos/o/r/issues/7/comments') {
+            return { ok: true, status: 200, json: async () => comments };
+        }
+        if (method === 'GET' && pathname.startsWith('/repos/o/r/releases/tags/')) {
+            return { ok: false, status: 404, text: async () => 'Not Found' };
+        }
+        writes.push({ method, pathname, body: requestBody && JSON.parse(requestBody) });
+        return { ok: true, status: method === 'DELETE' ? 204 : 200, json: async () => ({}) };
+    });
+    return writes;
+}
+
+const reporter = { user: { login: 'someone', type: 'User' } };
+const ourReply = text => ({ id: 3, user: { login: COMMENT_AUTHOR, type: 'Bot' }, body: `${COMMENT_MARKER}\n${text}` });
+const fixtureDSYMs = async () => ({ directory: DSYMS, note: 'From the fixture.' });
+const writeSummary = writes => writes.map(write => [write.method, write.pathname]);
+
+test('asks for a crash log once, and leaves a discussion alone after that', async t => {
+    let writes = mockGitHub(t);
+    await runForIssue({ repo: 'o/r', issueNumber: 7 });
+    assert.deepEqual(writeSummary(writes), [['POST', '/repos/o/r/issues/7/comments']]);
+    assert.equal(writes[0].body.body, NO_REPORT_COMMENT);
+
+    t.mock.restoreAll();
+    writes = mockGitHub(t, { comments: [ourReply('old'), { ...reporter, body: 'Me too!' }] });
+    await runForIssue({ repo: 'o/r', issueNumber: 7 });
+    assert.deepEqual(writes, []);
+});
+
+test("doesn't find the report quoted in its own reply", async t => {
+    const writes = mockGitHub(t, { comments: [ourReply(compact(abortText))] });
+    await runForIssue({ repo: 'o/r', issueNumber: 7 });
+    assert.deepEqual(writes, []);
+});
+
+test('updates its failure reply in place when symbolication still fails', async t => {
+    const writes = mockGitHub(t, { comments: [ourReply('old'), { ...reporter, body: compact(abortText) }] });
+    await runForIssue({ repo: 'o/r', issueNumber: 7 });
+    assert.deepEqual(writeSummary(writes), [['PATCH', '/repos/o/r/issues/comments/3']]);
+    assert.match(writes[0].body.body, /There's no release tagged `0\.1\.0`/);
+});
+
+test('removes the label when a re-run fails', async t => {
+    const writes = mockGitHub(t, { body: issueBody({ crashLog: compact(abortText) }), labels: ['crash', 'symbolicated'] });
+    await runForIssue({ repo: 'o/r', issueNumber: 7 });
+    assert.deepEqual(writeSummary(writes), [
+        ['POST', '/repos/o/r/issues/7/comments'],
+        ['DELETE', '/repos/o/r/issues/7/labels/symbolicated'],
+    ]);
+});
+
+test('replaces its failure reply with a new one, and labels the issue, once symbolication works', onMac, async t => {
+    const writes = mockGitHub(t, { comments: [ourReply('old'), { ...reporter, body: compact(abortText) }] });
+    await runForIssue({ repo: 'o/r', issueNumber: 7, getDSYMs: fixtureDSYMs });
+    assert.deepEqual(writeSummary(writes), [
+        ['DELETE', '/repos/o/r/issues/comments/3'],
+        ['POST', '/repos/o/r/issues/7/comments'],
+        ['POST', '/repos/o/r/issues/7/labels'],
+    ]);
+    assert.match(writes[1].body.body, /parseConfig \(main\.m:7\)/);
+    assert.deepEqual(writes[2].body, { labels: ['symbolicated'] });
+});
+
+test('leaves an up-to-date symbolicated reply and label alone', onMac, async t => {
+    const report = parseIPS(compact(abortText));
+    const { body } = buildComment({ report, version: '0.1.0', dsymsDirectory: DSYMS, releaseNote: 'From the fixture.' });
+    const writes = mockGitHub(t, {
+        body: issueBody({ crashLog: compact(abortText) }),
+        comments: [{ ...ourReply(''), body }],
+        labels: ['crash', 'symbolicated'],
+    });
+    await runForIssue({ repo: 'o/r', issueNumber: 7, getDSYMs: fixtureDSYMs });
+    assert.deepEqual(writes, []);
 });

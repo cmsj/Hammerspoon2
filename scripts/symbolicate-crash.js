@@ -513,8 +513,11 @@ const NO_REPORT_COMMENT = [
     'Crash logs are in `~/Library/Logs/DiagnosticReports`, named like `Hammerspoon 2-2026-10-20-123456.ips`.',
 ].join('\n');
 
-async function runForIssue(issueNumber) {
-    const repo = process.env.GITHUB_REPOSITORY;
+/**
+ * Symbolicates the crash in issue `issueNumber` of `repo` and replies to it. `getDSYMs` is
+ * fetchDSYMs, or a stand-in for tests.
+ */
+async function runForIssue({ repo, issueNumber, getDSYMs = fetchDSYMs }) {
     const issue = await github('GET', `/repos/${repo}/issues/${issueNumber}`);
     const issueBody = issue.body || '';
     const wasSymbolicated = (issue.labels || []).some(label => (label.name || label) === SYMBOLICATED_LABEL);
@@ -538,7 +541,7 @@ async function runForIssue(issueNumber) {
 
     const version = crashedVersion(report, issueBody);
     const { directory, note } = version
-        ? await fetchDSYMs(repo, version)
+        ? await getDSYMs(repo, version)
         : { directory: null, note: "The crash log doesn't say which version crashed, and neither does the issue, so it couldn't be symbolicated." };
     const { body, symbolicated } = buildComment({ report, version, dsymsDirectory: directory, releaseNote: note });
     const succeeded = symbolicated > 0;
@@ -593,7 +596,7 @@ async function main() {
         console.error(`not an issue number: ${args.issue}`);
         process.exit(2);
     }
-    await runForIssue(Number(args.issue));
+    await runForIssue({ repo: process.env.GITHUB_REPOSITORY, issueNumber: Number(args.issue) });
 }
 
 if (require.main === module) {
@@ -614,7 +617,9 @@ module.exports = {
     renderComment,
     buildComment,
     findReport,
+    runForIssue,
     codeBlock,
+    COMMENT_AUTHOR,
     COMMENT_MARKER,
     NO_REPORT_COMMENT,
 };
