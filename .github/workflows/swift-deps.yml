@@ -1,0 +1,151 @@
+name: Swift dependencies
+
+# Dependabot can't update Swift packages referenced from an Xcode project, so this does it
+# monthly (see scripts/swift-deps.js):
+#
+#  - update: re-resolves every package to the newest version its requirement allows, and opens
+#    (or refreshes) a pull request with the new Package.resolved. Pull requests opened with the
+#    workflow's GITHUB_TOKEN don't trigger other workflows, so it starts the test suite itself.
+#    Needs "Allow GitHub Actions to create and approve pull requests" in the repository's
+#    Actions settings.
+#
+#  - forks: most of our packages are forks. Compares each with its upstream and keeps one issue
+#    up to date suggesting which to re-sync (or drop), plus any newer releases that a package's
+#    requirement rules out. The issue is closed when there's nothing left to do.
+
+on:
+  schedule:
+    - cron: '0 6 1 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: swift-deps
+  cancel-in-progress: false
+
+env:
+  RESOLVED: Hammerspoon 2.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+  BRANCH: automation/swift-package-updates
+
+jobs:
+  update:
+    name: Update packages
+    runs-on: xcode-27
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      # Without a Package.resolved, xcodebuild resolves everything afresh to the newest allowed
+      # versions; with one, it keeps the existing pins.
+      - name: Re-resolve Swift packages
+        run: |
+          cp "$RESOLVED" "$RUNNER_TEMP/old.resolved"
+          rm "$RESOLVED"
+          xcodebuild -resolvePackageDependencies -scheme Development
+
+      - name: Open or update pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- "$RESOLVED"; then
+            echo "All Swift packages are already up to date." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          node scripts/swift-deps.js update-summary "$RUNNER_TEMP/old.resolved" "$RESOLVED" > "$RUNNER_TEMP/body.md"
+          cat "$RUNNER_TEMP/body.md" >> "$GITHUB_STEP_SUMMARY"
+
+          # Don't re-push a branch that already has exactly these updates, so an open pull
+          # request's test run and reviews aren't thrown away for nothing. The steps after this
+          # still run, so a run that pushed but then failed to open the pull request or start
+          # the tests gets finished by the next one.
+          if git fetch --quiet origin "$BRANCH" 2>/dev/null && git diff --quiet FETCH_HEAD -- "$RESOLVED"; then
+            echo "The update branch already has these changes."
+            head=$(git rev-parse FETCH_HEAD)
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git checkout -B "$BRANCH"
+            git commit --quiet -m 'Update Swift package dependencies' -- "$RESOLVED"
+            git push --force origin "$BRANCH"
+            head=$(git rev-parse HEAD)
+          fi
+
+          pr=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$pr" ]; then
+            gh pr edit "$pr" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh pr create --base main --head "$BRANCH" --label dependencies \
+              --title 'Update Swift package dependencies' --body-file "$RUNNER_TEMP/body.md"
+          fi
+
+          runs=$(gh run list --workflow test.yml --commit "$head" --json databaseId --jq 'length')
+          if [ "$runs" -eq 0 ]; then
+            gh workflow run test.yml --ref "$BRANCH"
+          fi
+
+  forks:
+    name: Check forks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Compare forks with upstream
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/swift-deps.js fork-report --json > "$RUNNER_TEMP/report.json"
+          node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).body)' \
+            "$RUNNER_TEMP/report.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update tracking issue
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const { REPORT_MARKER, REPORT_TITLE } = require(`${process.env.GITHUB_WORKSPACE}/scripts/swift-deps.js`);
+            const { actionable, body } = JSON.parse(fs.readFileSync(`${process.env.RUNNER_TEMP}/report.json`, 'utf8'));
+
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo, state: 'open', creator: 'github-actions[bot]', per_page: 100,
+            });
+            const existing = issues.find((issue) => !issue.pull_request && issue.body && issue.body.startsWith(REPORT_MARKER));
+
+            if (actionable) {
+              if (existing) {
+                await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body });
+              } else {
+                await github.rest.issues.create({ ...context.repo, title: REPORT_TITLE, body, labels: ['dependencies'] });
+              }
+            } else if (existing) {
+              await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body });
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: existing.number,
+                body: 'All of our Swift package forks are up to date with upstream, and no package has a newer release than its requirement allows. Closing.',
+              });
+              await github.rest.issues.update({ ...context.repo, issue_number: existing.number, state: 'closed', state_reason: 'completed' });
+            }
