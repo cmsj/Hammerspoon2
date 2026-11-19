@@ -18,18 +18,6 @@ import XPC
 // MARK: - Log levels (must match HammerspoonLogType raw values)
 
 extension HammerspoonLogType {
-    nonisolated init?(string: String) {
-        switch string.lowercased() {
-        case "garbage":                     self = .Garbage
-        case "debug":                       self = .Debug
-        case "info":                        self = .Info
-        case "warning", "warn":             self = .Warning
-        case "error":                       self = .Error
-        case "javascript", "console", "js": self = .Console
-        default: return nil
-        }
-    }
-
     nonisolated var textProperties: TextProperties {
         switch self {
         case .Garbage: return TextProperties(.grey, nil)
