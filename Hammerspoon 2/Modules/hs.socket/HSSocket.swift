@@ -657,7 +657,7 @@ import Security
             emitError("TLS isn't supported on Unix domain sockets")
             return self
         }
-        guard removeStaleSocketFile(at: path) else {
+        guard removeStaleUnixSocketFile(at: path, type: SOCK_STREAM) else {
             emitError("Another program is already listening at \(path)")
             return self
         }
@@ -731,16 +731,6 @@ import Security
 
     fileprivate func clientConnected(_ client: HSSocket) {
         emit(.connection, client)
-    }
-
-    /// Removes a socket file left at `path` by a listener that has gone, so its path can be reused.
-    /// - Returns: `false` if something is still listening there
-    private func removeStaleSocketFile(at path: String) -> Bool {
-        var info = stat()
-        guard unsafe lstat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFSOCK else { return true }
-        guard !unixSocketAcceptsConnections(at: path) else { return false }
-        unsafe unlink(path)
-        return true
     }
 
     // MARK: - Reading
@@ -1158,27 +1148,4 @@ nonisolated private func acceptAnyCertificate(_ metadata: sec_protocol_metadata_
 nonisolated func normalizedOptionalString(_ value: String?) -> String? {
     guard let value, value != "undefined", value != "null" else { return nil }
     return value
-}
-
-/// Whether something is listening on the Unix domain socket at `path`, found by trying to connect.
-/// A socket file whose listener has gone refuses the connection.
-nonisolated private func unixSocketAcceptsConnections(at path: String) -> Bool {
-    var address = sockaddr_un()
-    let pathBytes = Array(path.utf8)
-    guard pathBytes.count < MemoryLayout.size(ofValue: address.sun_path) else { return false }
-    address.sun_family = sa_family_t(AF_UNIX)
-    address.sun_len = UInt8(MemoryLayout<sockaddr_un>.size)
-    withUnsafeMutableBytes(of: &address.sun_path) { buffer in
-        unsafe buffer.copyBytes(from: pathBytes)
-    }
-
-    let fd = socket(AF_UNIX, SOCK_STREAM, 0)
-    guard fd >= 0 else { return false }
-    defer { close(fd) }
-    // Non-blocking, so a listener with a full backlog can't stall the main thread
-    _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
-    let result = withUnsafePointer(to: &address) { pointer in
-        unsafe pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { unsafe connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) }
-    }
-    return result == 0 || errno == EAGAIN || errno == EINPROGRESS
 }
