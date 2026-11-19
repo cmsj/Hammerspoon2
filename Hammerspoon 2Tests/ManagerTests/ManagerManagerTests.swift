@@ -162,6 +162,30 @@ struct ManagerManagerTests {
         #expect(mockNotifier.notifiedProblems == [.scriptError("ReferenceError: Can't find variable: nope (init.js:3)")])
     }
 
+    @Test("A config failing after a top-level await is reported, unless it has since been reloaded")
+    func testBootReportsAsyncConfigErrorOnlyForCurrentBoot() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+        let mockNotifier = MockConfigProblemNotifier()
+
+        let configPath = "/path/to/init.js"
+        mockSettings.configLocation = URL(fileURLWithPath: configPath)
+        mockFileSystem.addFile(atPath: configPath)
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem, configProblemNotifier: mockNotifier)
+
+        try manager.boot()
+        try manager.boot()
+        let handlers = mockEngine.evalFromURLAsyncExceptionHandlers.compactMap { $0 }
+        try #require(handlers.count == 2)
+
+        handlers[0](HammerspoonError(.jsException, msg: "Error: old (init.js:2)"))
+        #expect(mockNotifier.notifiedProblems.isEmpty, "The replaced config's error should be ignored")
+
+        handlers[1](HammerspoonError(.jsException, msg: "Error: new (init.js:2)"))
+        #expect(mockNotifier.notifiedProblems == [.scriptError("Error: new (init.js:2)")])
+    }
+
     @Test("Boot reports a missing config directory")
     func testBootReportsMissingConfigDirectory() async throws {
         let mockEngine = MockJSEngine()

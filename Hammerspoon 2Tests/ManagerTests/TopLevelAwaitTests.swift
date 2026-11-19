@@ -46,6 +46,9 @@ struct TopLevelAwaitTests {
         "await Promise.resolve(42);",
         "await Promise.resolve(42) // the answer",
         "(await Promise.resolve(40)) + 2",
+        "await Promise.resolve(42); // with a comment",
+        "await Promise.resolve(42) /* with a comment; */",
+        "await Promise.resolve(42); ",
     ])
     func awaitedExpression(input: String) async throws {
         let engine = try makeEngine()
@@ -80,6 +83,31 @@ struct TopLevelAwaitTests {
         let shown = try await evalConsoleInput("\(keyword) answer = await Promise.resolve(42)", in: engine)
 
         #expect(shown.first?.isUndefined == true)
+        #expect(engine.evalValue("answer")?.toInt32() == 42)
+    }
+
+    @Test("Every name in a declaration with await stays available, with its own value", arguments: [
+        "const a = await Promise.resolve(1), b = 2",
+        "let a = await Promise.resolve([1, 'x,y'].length - 1), b = 2; // note",
+        "var a = (await Promise.resolve(1)), b = (() => { return 2 })();",
+    ])
+    func multipleDeclarations(input: String) async throws {
+        let engine = try makeEngine()
+        defer { engine.shutdown() }
+
+        _ = try await evalConsoleInput(input, in: engine)
+
+        #expect(engine.evalValue("a")?.toInt32() == 1)
+        #expect(engine.evalValue("b")?.toInt32() == 2)
+    }
+
+    @Test("A declaration with a trailing comment stays available")
+    func declarationWithComment() async throws {
+        let engine = try makeEngine()
+        defer { engine.shutdown() }
+
+        _ = try await evalConsoleInput("const answer = await Promise.resolve(42); // note", in: engine)
+
         #expect(engine.evalValue("answer")?.toInt32() == 42)
     }
 

@@ -27,6 +27,8 @@ class MockJSEngine: JSEngineProtocol {
     var shouldThrowOnReset: Bool = false
     var evalReturnValue: Any? = "mock eval result"
     var evalFromURLReturnValue: Any? = "mock evalFromURL result"
+    /// The onAsyncException handler passed to each evalFromURL call, to simulate a later failure
+    var evalFromURLAsyncExceptionHandlers: [((HammerspoonError) -> Void)?] = []
 
     subscript(key: String) -> Any? {
         get {
@@ -54,6 +56,7 @@ class MockJSEngine: JSEngineProtocol {
         }
         let result = evalFromURLReturnValue
         evalFromURLCalls.append((url: url, wrapInIIFE: wrapInIIFE, result: result))
+        evalFromURLAsyncExceptionHandlers.append(onAsyncException)
         return result
     }
 
@@ -77,6 +80,7 @@ class MockJSEngine: JSEngineProtocol {
     func reset() {
         evalCalls.removeAll()
         evalFromURLCalls.removeAll()
+        evalFromURLAsyncExceptionHandlers.removeAll()
         resetContextCalls = 0
         storage.removeAll()
         shouldThrowOnEval = false

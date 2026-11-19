@@ -36,6 +36,10 @@ class ManagerManager {
     let fileSystem: FileSystemProtocol
     let configProblemNotifier: ConfigProblemNotifierProtocol
 
+    /// Counts boots, so a config using top-level await that has since been replaced can't report
+    /// problems (its context can outlive a reload while something it awaits is still pending)
+    private var bootCount = 0
+
     /// Initializer with dependency injection
     /// - Parameters:
     ///   - engine: The JavaScript engine to use (defaults to JSEngine.shared)
@@ -77,6 +81,8 @@ class ManagerManager {
     func boot() throws {
         // Whatever was wrong last time may have been fixed
         configProblemNotifier.withdraw()
+        bootCount += 1
+        let thisBoot = bootCount
 
         try engine.resetContext()
 
@@ -100,10 +106,11 @@ class ManagerManager {
         }
         AKDebug("Loading user config from: \(settings.configLocation)...")
         do {
-            try engine.evalFromURL(settings.configLocation, wrapInIIFE: false) { [configProblemNotifier] error in
+            try engine.evalFromURL(settings.configLocation, wrapInIIFE: false) { [weak self] error in
                 // A config using top-level await failed after its first await
+                guard let self, self.bootCount == thisBoot else { return }
                 AKError("User config failed to load")
-                configProblemNotifier.notify(.scriptError(error.msg))
+                self.configProblemNotifier.notify(.scriptError(error.msg))
             }
         } catch let error as HammerspoonError where error.kind == .jsException {
             // The exception itself has already been logged to the Console
