@@ -46,7 +46,9 @@ class MockJSEngine: JSEngineProtocol {
         return result
     }
 
-    @discardableResult func evalFromURL(_ url: URL, wrapInIIFE: Bool = false) throws -> Any? {
+    @discardableResult func evalFromURL(_ url: URL,
+                                        wrapInIIFE: Bool,
+                                        onAsyncException: ((HammerspoonError) -> Void)?) throws -> Any? {
         if shouldThrowOnEvalFromURL {
             throw evalFromURLError ?? HammerspoonError(.vmCreation, msg: "Mock error: evalFromURL failed")
         }

@@ -100,7 +100,11 @@ class ManagerManager {
         }
         AKDebug("Loading user config from: \(settings.configLocation)...")
         do {
-            try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)
+            try engine.evalFromURL(settings.configLocation, wrapInIIFE: false) { [configProblemNotifier] error in
+                // A config using top-level await failed after its first await
+                AKError("User config failed to load")
+                configProblemNotifier.notify(.scriptError(error.msg))
+            }
         } catch let error as HammerspoonError where error.kind == .jsException {
             // The exception itself has already been logged to the Console
             AKError("User config failed to load")

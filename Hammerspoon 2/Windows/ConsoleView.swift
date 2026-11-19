@@ -204,8 +204,11 @@ struct ConsoleView: View {
         evalIndex = -1
         // Format with the same inspector console.log() uses, so results look the same either way.
         // undefined is skipped, as it's what statements and thrown exceptions evaluate to.
-        if let result = JSEngine.shared.evalValue(evalString), !result.isUndefined {
-            AKConsole(NodeUtil.inspect(result))
+        // Input using top-level await shows its result once it finishes.
+        JSEngine.shared.evalConsoleInput(evalString) { result in
+            if !result.isUndefined {
+                AKConsole(NodeUtil.inspect(result))
+            }
         }
         evalString = ""
     }

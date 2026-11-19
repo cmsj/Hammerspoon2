@@ -179,13 +179,38 @@ extension JSEngine: JSEngineProtocol {
         return context?.evaluateScript(script)
     }
 
-    @discardableResult func evalFromURL(_ url: URL, wrapInIIFE: Bool = false) throws -> Any? {
+    /// Evaluates a line typed into the Console, calling `show` with its value. Input that uses
+    /// top-level `await` runs asynchronously: `show` is called once it finishes, and if it fails
+    /// the error is logged like an uncaught exception.
+    func evalConsoleInput(_ input: String, show: @escaping (JSValue) -> Void) {
+        guard let context else { return }
+        guard let rewritten = TopLevelAwait.rewriteConsoleInput(input, in: context) else {
+            if let result = context.evaluateScript(input) {
+                show(result)
+            }
+            return
+        }
+        // An exception (eg. redeclaring a const) has already been logged, and evaluates to undefined
+        guard let function = context.evaluateScript(rewritten), function.isObject else { return }
+        Self.runAsync(function, fulfilled: show, rejected: Self.reportException)
+    }
+
+    @discardableResult func evalFromURL(_ url: URL,
+                                        wrapInIIFE: Bool,
+                                        onAsyncException: ((HammerspoonError) -> Void)?) throws -> Any? {
         guard url.isFileURL else {
             throw HammerspoonError(.jsEvalURLKind, msg: "Refusing to eval remote URL")
         }
 
         var script = try String(contentsOf: url, encoding: .utf8)
-        if wrapInIIFE {
+        guard let context else { return nil }
+
+        // A script using top-level await runs in an async function, which scopes its
+        // declarations like the IIFE below would
+        let asyncScript = TopLevelAwait.rewriteFile(script, in: context)
+        if let asyncScript {
+            script = asyncScript
+        } else if wrapInIIFE {
             // Wrapping in an IIFE scopes top-level `const`/`let` bindings to the function
             // rather than the global lexical environment. Without this, every `const t = hs.timer.new(...)`
             // creates a permanent GC root that prevents the JS proxy from
@@ -199,7 +224,6 @@ extension JSEngine: JSEngineProtocol {
             // confusing than every line number being off by one.
             script = "(function(){" + script + "\n})();"
         }
-        guard let context else { return nil }
 
         // An uncaught exception is reported to the exceptionHandler rather than returned, so
         // wrap the handler for the duration of the evaluation to notice it. The previous handler
@@ -218,7 +242,42 @@ extension JSEngine: JSEngineProtocol {
         if let firstException {
             throw HammerspoonError(.jsException, msg: Self.describe(firstException))
         }
+        if asyncScript != nil, let result, result.isObject {
+            Self.runAsync(result, fulfilled: { _ in }, rejected: { reason in
+                Self.reportException(reason)
+                onAsyncException?(HammerspoonError(.jsException, msg: Self.describe(reason)))
+            })
+        }
         return result
+    }
+
+    /// Logs a rejection from code run asynchronously for the user, the same way as the
+    /// context's exception handler logs an uncaught exception
+    private static func reportException(_ reason: JSValue) {
+        guard let context = JSContext.current() else { return }
+        context.exceptionHandler?(context, reason)
+    }
+
+    /// Calls the async function `function`, then `fulfilled` or `rejected` once the Promise it returns
+    /// settles. The handlers are attached before any microtasks run, so a rejection isn't also
+    /// reported as unhandled.
+    private static func runAsync(_ function: JSValue,
+                                 fulfilled: @escaping (JSValue) -> Void,
+                                 rejected: @escaping (JSValue) -> Void) {
+        guard let runner = function.context.evaluateScript("(fn, fulfilled, rejected) => fn().then(fulfilled, rejected)") else {
+            return
+        }
+        // JavaScriptCore calls these on the thread running JS, which is always the main thread.
+        // They mustn't capture the context, which would then never be freed.
+        let onFulfilled: @convention(block) (JSValue) -> Void = { value in
+            MainActor.assumeIsolated { fulfilled(value) }
+        }
+        let onRejected: @convention(block) (JSValue) -> Void = { reason in
+            MainActor.assumeIsolated { rejected(reason) }
+        }
+        runner.call(withArguments: [function,
+                                    unsafe unsafeBitCast(onFulfilled, to: AnyObject.self),
+                                    unsafe unsafeBitCast(onRejected, to: AnyObject.self)])
     }
 
     /// A one-line description of a JS exception, with the file and line it was thrown from when known,

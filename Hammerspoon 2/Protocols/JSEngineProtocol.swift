@@ -24,10 +24,15 @@ protocol JSEngineProtocol {
     ///   - wrapInIIFE: If true, wraps the script in an immediately-invoked function expression.
     ///     This scopes `const`/`let` bindings to the function rather than the global lexical
     ///     environment, making JS proxies for Swift objects GC-eligible once the script finishes.
+    ///   - onAsyncException: A file using top-level `await` runs in an async function, so an
+    ///     exception after its first `await` can't be thrown from here. It's passed to this instead,
+    ///     having been logged like any other uncaught exception.
     /// - Returns: The result of the evaluation, or nil if evaluation fails
     /// - Throws: An error if the file cannot be read, or a HammerspoonError of kind `.jsException`
     ///   if evaluating it raised an uncaught JavaScript exception
-    @discardableResult func evalFromURL(_ url: URL, wrapInIIFE: Bool) throws -> Any?
+    @discardableResult func evalFromURL(_ url: URL,
+                                        wrapInIIFE: Bool,
+                                        onAsyncException: ((HammerspoonError) -> Void)?) throws -> Any?
 
     /// Resets the JavaScript context, creating a fresh environment
     /// - Throws: HammerspoonError if context creation fails
@@ -45,6 +50,12 @@ protocol JSEngineProtocol {
 extension JSEngineProtocol {
     /// Convenience overload that evaluates without IIFE wrapping.
     @discardableResult func evalFromURL(_ url: URL) throws -> Any? {
-        try evalFromURL(url, wrapInIIFE: false)
+        try evalFromURL(url, wrapInIIFE: false, onAsyncException: nil)
+    }
+
+    /// Convenience overload that ignores exceptions thrown asynchronously after a top-level `await`,
+    /// beyond logging them.
+    @discardableResult func evalFromURL(_ url: URL, wrapInIIFE: Bool) throws -> Any? {
+        try evalFromURL(url, wrapInIIFE: wrapInIIFE, onAsyncException: nil)
     }
 }
