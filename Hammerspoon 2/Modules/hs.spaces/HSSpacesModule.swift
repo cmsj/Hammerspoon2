@@ -598,10 +598,17 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
             let bar = try await self.openSpacesBar(for: display)
             let button = bar.spaceButtons[index]
             // Removing is destructive, so double check this really is the right button: Mission
-            // Control numbers desktops (but not fullscreen spaces) from 1 in its titles
-            let expectedNumber = userIndex + 1
-            if let number = HSMissionControl.desktopNumber(of: button), number != expectedNumber {
-                throw HSMissionControl.Failure("Mission Control's desktop \(number) doesn't look like space \(spaceID) (desktop \(expectedNumber)); not removing it")
+            // Control numbers desktops (but not fullscreen spaces) from 1 in its titles. With
+            // separate Spaces per display, the numbering carries on across displays in order, so
+            // a later display's desktops can start after 1; accept either numbering.
+            let earlierDesktops = skyLight.managedDisplays()
+                .prefix { $0.identifier != display.identifier }
+                .reduce(0) { count, earlier in
+                    count + earlier.spaces.filter { skyLight.type(of: $0) == HSSkyLight.SpaceKind.user.rawValue }.count
+                }
+            let expectedNumbers = Set([userIndex + 1, earlierDesktops + userIndex + 1])
+            if let number = HSMissionControl.desktopNumber(of: button), !expectedNumbers.contains(number) {
+                throw HSMissionControl.Failure("Mission Control's desktop \(number) doesn't look like space \(spaceID) (desktop \(earlierDesktops + userIndex + 1)); not removing it")
             }
             guard HSMissionControl.actions(of: button).contains(HSMissionControl.removeDesktopAction) else {
                 throw HSMissionControl.Failure("Mission Control won't remove space \(spaceID)")
