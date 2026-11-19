@@ -96,7 +96,9 @@ import JavaScriptCoreExtras
     ///     const errors = hs.consoleHistory({ minimumLevel: "error", since: lastSeen })
     ///     if (errors.length > 0) {
     ///         lastSeen = errors[errors.length - 1].sequence
-    ///         console.log(`${errors.length} new errors, the latest: ${errors[errors.length - 1].message}`)
+    ///         // console.info(), not console.log(): "javascript" messages are above "error", so a
+    ///         // console.log() report would be found as a new error by the next check
+    ///         console.info(`${errors.length} new errors, the latest: ${errors[errors.length - 1].message}`)
     ///     }
     /// })
     /// ```
