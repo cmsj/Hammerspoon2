@@ -1,0 +1,24 @@
+# Routine version updates. Security updates are enabled separately in the
+# repository settings and arrive regardless of this schedule.
+version: 2
+updates:
+  # Docs tooling (package.json). Minor/patch bumps land as one grouped PR;
+  # major bumps get their own PR since they can change the generated docs.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
