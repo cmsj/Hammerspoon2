@@ -16,7 +16,7 @@
       "location" : "https://github.com/cmsj/javascript-core-extras",
       "state" : {
         "branch" : "main",
-        "revision" : "9c37965365e4a34e2dd2e4340d11ecd6f5beb321"
+        "revision" : "3fff4ea69b124bc85cae75a0d8c732abd1cf0cb4"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle",
       "state" : {
-        "revision" : "ac2def288cbff5cfc7df3ffef6abdf45b72bcb0a",
-        "version" : "2.9.6"
+        "revision" : "ab7d71291238df6e0492143b120c9b696a35f603",
+        "version" : "2.10.1"
       }
     },
     {
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-issue-reporting",
       "state" : {
-        "revision" : "71c7c9a761d1ca6ed4ccb6ced040fe1c1a39e8e7",
-        "version" : "2.1.0"
+        "revision" : "b23bb4493c439d3e05152bc167014235ba3d47fc",
+        "version" : "2.1.2"
       }
     },
     {
