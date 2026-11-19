@@ -79,7 +79,26 @@ enum TopLevelAwait {
 
         init(_ chars: [Character]) {
             var depth = 0
+            // The bracket depth at which each enclosing template literal's ${ was opened
+            var templateDepths: [Int] = []
             var i = 0
+
+            // Moves i to the closing backtick of the template literal i is in, or to the { of its
+            // next ${, which is then entered
+            func skipTemplateText() {
+                while i < chars.count && chars[i] != "`" {
+                    if chars[i] == "\\" {
+                        i += 1
+                    } else if chars[i] == "$" && i + 1 < chars.count && chars[i + 1] == "{" {
+                        i += 1
+                        templateDepths.append(depth)
+                        depth += 1
+                        return
+                    }
+                    i += 1
+                }
+            }
+
             while i < chars.count {
                 let char = chars[i]
                 let next = i + 1 < chars.count ? chars[i + 1] : nil
@@ -92,13 +111,22 @@ enum TopLevelAwait {
                     while i < chars.count && !(chars[i] == "*" && i + 1 < chars.count && chars[i + 1] == "/") { i += 1 }
                     i += 2
                     continue
-                case "\"", "'", "`":
+                case "\"", "'":
                     // Leaves i at the closing quote
                     i += 1
                     while i < chars.count && chars[i] != char {
                         if chars[i] == "\\" { i += 1 }
                         i += 1
                     }
+                case "`":
+                    i += 1
+                    skipTemplateText()
+                case "}" where templateDepths.last == depth - 1:
+                    // The end of a ${...}, back into its template literal's text
+                    depth -= 1
+                    templateDepths.removeLast()
+                    i += 1
+                    skipTemplateText()
                 case "(", "[", "{": depth += 1
                 case ")", "]", "}": depth -= 1
                 case "," where depth == 0: commas.append(i)

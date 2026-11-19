@@ -90,6 +90,7 @@ struct TopLevelAwaitTests {
         "const a = await Promise.resolve(1), b = 2",
         "let a = await Promise.resolve([1, 'x,y'].length - 1), b = 2; // note",
         "var a = (await Promise.resolve(1)), b = (() => { return 2 })();",
+        "const a = `${`x,${'y,z'}`},`.length - 5 + await Promise.resolve(0), b = `${1}`.length + 1",
     ])
     func multipleDeclarations(input: String) async throws {
         let engine = try makeEngine()
