@@ -14,11 +14,12 @@ import JavaScriptCore
 ///
 /// - Example:
 /// ```js
-/// const result = await hs.ocr.recognizeText('/tmp/image.png')
-/// console.log('Full text: ' + result.text)
-/// console.log('Regions found: ' + result.observations.length)
-/// result.observations.forEach(obs => {
-///     console.log(obs.text + ' (' + (obs.confidence * 100).toFixed(0) + '%)')
+/// hs.ocr.recognizeText('/tmp/image.png').then(result => {
+///     console.log('Full text: ' + result.text)
+///     console.log('Regions found: ' + result.observations.length)
+///     result.observations.forEach(obs => {
+///         console.log(obs.text + ' (' + (obs.confidence * 100).toFixed(0) + '%)')
+///     })
 /// })
 /// ```
 @objc protocol HSOCRResultAPI: HSTypeAPI, JSExport {
@@ -27,8 +28,8 @@ import JavaScriptCore
     ///
     /// - Example:
     /// ```js
-    /// const result = await hs.ocr.recognizeText('/tmp/image.png')
-    /// console.log(result.typeName) // "HSOCRResult"
+    /// hs.ocr.recognizeText('/tmp/image.png')
+    ///     .then(result => console.log(result.typeName)) // "HSOCRResult"
     /// ```
     @objc var typeName: String { get }
 
@@ -40,9 +41,10 @@ import JavaScriptCore
     ///
     /// - Example:
     /// ```js
-    /// const result = await hs.ocr.recognizeText('/tmp/receipt.png')
-    /// const lines = result.text.split('\n')
-    /// lines.forEach(line => console.log(line))
+    /// hs.ocr.recognizeText('/tmp/receipt.png').then(result => {
+    ///     const lines = result.text.split('\n')
+    ///     lines.forEach(line => console.log(line))
+    /// })
     /// ```
     @objc var text: String { get }
 
@@ -55,12 +57,13 @@ import JavaScriptCore
     ///
     /// - Example:
     /// ```js
-    /// const result = await hs.ocr.recognizeText('/tmp/image.png')
-    /// const confident = result.observations.filter(o => o.confidence > 0.9)
-    /// console.log('High-confidence regions: ' + confident.length)
-    /// confident.forEach(obs => {
-    ///     const b = obs.bounds
-    ///     console.log(obs.text + ' at x=' + b.x.toFixed(3) + ' y=' + b.y.toFixed(3))
+    /// hs.ocr.recognizeText('/tmp/image.png').then(result => {
+    ///     const confident = result.observations.filter(o => o.confidence > 0.9)
+    ///     console.log('High-confidence regions: ' + confident.length)
+    ///     confident.forEach(obs => {
+    ///         const b = obs.bounds
+    ///         console.log(obs.text + ' at x=' + b.x.toFixed(3) + ' y=' + b.y.toFixed(3))
+    ///     })
     /// })
     /// ```
     @objc var observations: [HSOCRObservation] { get }
@@ -71,8 +74,8 @@ import JavaScriptCore
     /// - Returns: An object with the result's `text` and `observations`
     /// - Example:
     /// ```js
-    /// const result = await hs.ocr.recognizeText('/tmp/image.png')
-    /// console.log(JSON.stringify(result, null, 2))
+    /// hs.ocr.recognizeText('/tmp/image.png')
+    ///     .then(result => console.log(JSON.stringify(result, null, 2)))
     /// ```
     @objc func toJSON() -> [String: Any]
 }

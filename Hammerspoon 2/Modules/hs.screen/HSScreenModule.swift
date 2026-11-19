@@ -39,8 +39,8 @@ import JavaScriptCore
 /// ## Screenshots
 ///
 /// ```javascript
-/// const img = await hs.screen.main().snapshot();
-/// img.saveToFile("/tmp/screen.png");
+/// hs.screen.main().snapshot()
+///     .then(img => img.saveToFile("/tmp/screen.png"));
 /// ```
 ///
 /// ## Watching for display changes

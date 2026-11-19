@@ -307,8 +307,8 @@ import Carbon
     /// - Returns: {Promise<void>} A Promise that resolves once every character has been posted.
     /// - Example:
     /// ```js
-    /// await hs.eventtap.keyStrokesAsync("Hello, World!")
-    /// console.log("Finished typing")
+    /// hs.eventtap.keyStrokesAsync("Hello, World!")
+    ///     .then(() => console.log("Finished typing"))
     /// ```
     @objc func keyStrokesAsync(_ text: String) -> JSPromise?
 

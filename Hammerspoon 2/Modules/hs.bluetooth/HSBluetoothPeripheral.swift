@@ -20,11 +20,14 @@ import CoreBluetooth
 /// keeps delivering its events, until you call `disconnect()`, even if you drop your reference to it.
 ///
 /// ```javascript
-/// const [sensor] = await hs.bluetooth.scan({ seconds: 5, services: ["181A"] })
-/// await sensor.connect()
-/// const bytes = await sensor.readValue("181A", "2A6E")
-/// sensor.on("value", (service, characteristic, value) => console.log(characteristic + ": " + value))
-/// await sensor.subscribe("181A", "2A6E")
+/// async function watchSensor() {
+///     const [sensor] = await hs.bluetooth.scan({ seconds: 5, services: ["181A"] })
+///     await sensor.connect()
+///     const bytes = await sensor.readValue("181A", "2A6E")
+///     sensor.on("value", (service, characteristic, value) => console.log(characteristic + ": " + value))
+///     await sensor.subscribe("181A", "2A6E")
+/// }
+/// watchSensor()
 /// ```
 @objc protocol HSBluetoothPeripheralAPI: HSTypeAPI, JSExport {
     /// The type name for JavaScript introspection. Always `"HSBluetoothPeripheral"`.
@@ -33,31 +36,31 @@ import CoreBluetooth
     /// The peripheral's identifier, a UUID that macOS assigns in place of its Bluetooth address, which it doesn't reveal. It is stable on this Mac, but differs between Macs.
     /// - Example:
     /// ```js
-    /// const nearby = await hs.bluetooth.scan()
-    /// nearby.forEach(p => console.log(p.identifier))
+    /// hs.bluetooth.scan()
+    ///     .then(nearby => nearby.forEach(p => console.log(p.identifier)))
     /// ```
     @objc var identifier: String { get }
 
     /// The peripheral's name, or `null` if it hasn't reported one.
     /// - Example:
     /// ```js
-    /// const nearby = await hs.bluetooth.scan()
-    /// nearby.forEach(p => console.log(p.name ?? p.identifier))
+    /// hs.bluetooth.scan()
+    ///     .then(nearby => nearby.forEach(p => console.log(p.name ?? p.identifier)))
     /// ```
     @objc var name: String? { get }
 
     /// Whether Hammerspoon is connected to the peripheral.
     /// - Example:
     /// ```js
-    /// if (!sensor.isConnected) await sensor.connect()
+    /// if (!sensor.isConnected) sensor.connect()
     /// ```
     @objc var isConnected: Bool { get }
 
     /// The last known signal strength in dBm, or `null` if there is none. It is updated by `hs.bluetooth.scan()` and `readRSSI()`.
     /// - Example:
     /// ```js
-    /// const nearby = await hs.bluetooth.scan()
-    /// nearby.forEach(p => console.log(p.name + " " + p.rssi + " dBm"))
+    /// hs.bluetooth.scan()
+    ///     .then(nearby => nearby.forEach(p => console.log(p.name + " " + p.rssi + " dBm")))
     /// ```
     @objc var rssi: NSNumber? { get }
 
@@ -73,9 +76,10 @@ import CoreBluetooth
     /// The object has `localName` (string or `null`), `isConnectable` (boolean or `null`), `txPower` (number or `null`), `serviceUUIDs` (string[]), `manufacturerData` (Uint8Array or `null`) and `serviceData` (an object mapping service UUIDs to Uint8Array).
     /// - Example:
     /// ```js
-    /// const nearby = await hs.bluetooth.scan()
-    /// nearby.filter(p => p.advertisement.manufacturerData)
-    ///       .forEach(p => console.log(p.identifier + " " + p.advertisement.manufacturerData))
+    /// hs.bluetooth.scan().then(nearby => {
+    ///     nearby.filter(p => p.advertisement.manufacturerData)
+    ///           .forEach(p => console.log(p.identifier + " " + p.advertisement.manufacturerData))
+    /// })
     /// ```
     @objc var advertisement: [String: Any]? { get }
 
@@ -90,8 +94,9 @@ import CoreBluetooth
     /// - Returns: {Promise<number | null>} A Promise resolving to the battery percentage, or `null` if the peripheral has no Battery service
     /// - Example:
     /// ```js
-    /// await peripheral.connect()
-    /// console.log(peripheral.name + ": " + await peripheral.readBatteryLevel() + "%")
+    /// peripheral.connect()
+    ///     .then(() => peripheral.readBatteryLevel())
+    ///     .then(level => console.log(peripheral.name + ": " + level + "%"))
     /// ```
     @objc func readBatteryLevel() -> JSPromise?
 
@@ -99,7 +104,9 @@ import CoreBluetooth
     /// - Returns: {Promise<HSBluetoothPeripheral>} A Promise resolving to this peripheral once it's connected, or rejecting if the connection fails or takes longer than 20 seconds
     /// - Example:
     /// ```js
-    /// await sensor.connect()
+    /// sensor.connect()
+    ///     .then(() => console.log("Connected"))
+    ///     .catch(err => console.error("Unable to connect: " + err))
     /// ```
     @objc func connect() -> JSPromise?
 
@@ -107,7 +114,7 @@ import CoreBluetooth
     /// - Returns: {Promise<HSBluetoothPeripheral>} A Promise resolving to this peripheral once it's disconnected
     /// - Example:
     /// ```js
-    /// await sensor.disconnect()
+    /// sensor.disconnect().then(() => console.log("Disconnected"))
     /// ```
     @objc func disconnect() -> JSPromise?
 
@@ -115,7 +122,7 @@ import CoreBluetooth
     /// - Returns: {Promise<number>} A Promise resolving to the signal strength in dBm, or rejecting if the peripheral isn't connected
     /// - Example:
     /// ```js
-    /// console.log(await sensor.readRSSI() + " dBm")
+    /// sensor.readRSSI().then(rssi => console.log(rssi + " dBm"))
     /// ```
     @objc func readRSSI() -> JSPromise?
 
@@ -123,8 +130,9 @@ import CoreBluetooth
     /// - Returns: {Promise<string[]>} A Promise resolving to the UUIDs of the peripheral's services, e.g. `["180A", "180F"]`
     /// - Example:
     /// ```js
-    /// await sensor.connect()
-    /// console.log((await sensor.discoverServices()).join(", "))
+    /// sensor.connect()
+    ///     .then(() => sensor.discoverServices())
+    ///     .then(services => console.log(services.join(", ")))
     /// ```
     @objc func discoverServices() -> JSPromise?
 
@@ -133,8 +141,8 @@ import CoreBluetooth
     /// - Returns: {Promise<{uuid: string, properties: string[], isNotifying: boolean}[]>} A Promise resolving to the service's characteristics. `properties` lists what each supports: `"read"`, `"write"`, `"writeWithoutResponse"`, `"notify"`, `"indicate"`, `"broadcast"`, `"authenticatedSignedWrites"` and `"extendedProperties"`
     /// - Example:
     /// ```js
-    /// const chars = await sensor.discoverCharacteristics("180F")
-    /// chars.forEach(c => console.log(c.uuid + ": " + c.properties.join(", ")))
+    /// sensor.discoverCharacteristics("180F")
+    ///     .then(chars => chars.forEach(c => console.log(c.uuid + ": " + c.properties.join(", "))))
     /// ```
     @objc func discoverCharacteristics(_ service: String) -> JSPromise?
 
@@ -145,8 +153,8 @@ import CoreBluetooth
     /// - Returns: {Promise<Uint8Array>} A Promise resolving to the characteristic's value
     /// - Example:
     /// ```js
-    /// const value = await peripheral.readValue("180F", "2A19")
-    /// console.log("Battery: " + value[0] + "%")
+    /// peripheral.readValue("180F", "2A19")
+    ///     .then(value => console.log("Battery: " + value[0] + "%"))
     /// ```
     @objc func readValue(_ service: String, _ characteristic: String) -> JSPromise?
 
@@ -159,8 +167,9 @@ import CoreBluetooth
     /// - Returns: {Promise<void>} A Promise resolving once the peripheral has accepted the write (or, without a response, once it has been sent)
     /// - Example:
     /// ```js
-    /// await lamp.writeValue("FFE5", "FFE9", [0x56, 0xFF, 0x00, 0x00, 0x00, 0xF0, 0xAA])
-    /// await lamp.writeValue("FFE5", "FFE9", frame, { withoutResponse: true })
+    /// lamp.writeValue("FFE5", "FFE9", [0x56, 0xFF, 0x00, 0x00, 0x00, 0xF0, 0xAA])
+    ///     .then(() => console.log("Lamp updated"))
+    /// lamp.writeValue("FFE5", "FFE9", frame, { withoutResponse: true })
     /// ```
     @objc func writeValue(_ service: String, _ characteristic: String, _ value: JSValue, _ options: [String: Any]?) -> JSPromise?
 
@@ -172,7 +181,7 @@ import CoreBluetooth
     /// - Example:
     /// ```js
     /// heartStrap.on("value", (service, characteristic, value) => console.log("Heart rate: " + value[1]))
-    /// await heartStrap.subscribe("180D", "2A37")
+    /// heartStrap.subscribe("180D", "2A37")
     /// ```
     @objc func subscribe(_ service: String, _ characteristic: String) -> JSPromise?
 
@@ -183,7 +192,7 @@ import CoreBluetooth
     /// - Returns: {Promise<void>} A Promise resolving once the peripheral has stopped sending values
     /// - Example:
     /// ```js
-    /// await heartStrap.unsubscribe("180D", "2A37")
+    /// heartStrap.unsubscribe("180D", "2A37").then(() => console.log("Unsubscribed"))
     /// ```
     @objc func unsubscribe(_ service: String, _ characteristic: String) -> JSPromise?
 
@@ -251,7 +260,7 @@ import CoreBluetooth
     /// - Returns: An object with the peripheral's `identifier`, `name`, `isConnected`, `rssi`, `lastSeen` and `batteryLevel`
     /// - Example:
     /// ```js
-    /// console.log(JSON.stringify(await hs.bluetooth.scan(), null, 2))
+    /// hs.bluetooth.scan().then(nearby => console.log(JSON.stringify(nearby, null, 2)))
     /// ```
     @objc func toJSON() -> [String: Any]
 }

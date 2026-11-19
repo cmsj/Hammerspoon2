@@ -141,7 +141,7 @@ import IOBluetooth
     /// - Example:
     /// ```js
     /// const headphones = hs.bluetooth.pairedDevices().find(d => d.name === "My Headphones")
-    /// await headphones.connect()
+    /// headphones.connect().then(() => console.log("Headphones connected"))
     /// ```
     @objc func connect() -> JSPromise?
 
@@ -149,7 +149,7 @@ import IOBluetooth
     /// - Returns: {Promise<HSBluetoothDevice>} A Promise resolving to this device once it's disconnected
     /// - Example:
     /// ```js
-    /// await headphones.disconnect()
+    /// headphones.disconnect().then(() => console.log("Headphones disconnected"))
     /// ```
     @objc func disconnect() -> JSPromise?
 
@@ -157,7 +157,7 @@ import IOBluetooth
     /// - Returns: {Promise<number>} A Promise resolving to the signal strength in dBm, or rejecting if the device isn't connected
     /// - Example:
     /// ```js
-    /// console.log(await device.readRSSI() + " dBm")
+    /// device.readRSSI().then(rssi => console.log(rssi + " dBm"))
     /// ```
     @objc func readRSSI() -> JSPromise?
 
@@ -167,12 +167,15 @@ import IOBluetooth
     /// - Returns: {Promise<HSBluetoothPeripheral | null>} A Promise resolving to the device's peripheral, or `null` if it has none. Rejects if the device isn't connected, several peripherals match, or Bluetooth is unavailable
     /// - Example:
     /// ```js
-    /// const keyboard = hs.bluetooth.connectedDevices().find(d => d.name === "Magic Keyboard")
-    /// const peripheral = await keyboard.lowEnergyPeripheral()
-    /// if (peripheral) {
-    ///     await peripheral.connect()
-    ///     console.log(await peripheral.discoverServices())
+    /// async function showKeyboardServices() {
+    ///     const keyboard = hs.bluetooth.connectedDevices().find(d => d.name === "Magic Keyboard")
+    ///     const peripheral = await keyboard.lowEnergyPeripheral()
+    ///     if (peripheral) {
+    ///         await peripheral.connect()
+    ///         console.log(await peripheral.discoverServices())
+    ///     }
     /// }
+    /// showKeyboardServices()
     /// ```
     @objc func lowEnergyPeripheral() -> JSPromise?
 

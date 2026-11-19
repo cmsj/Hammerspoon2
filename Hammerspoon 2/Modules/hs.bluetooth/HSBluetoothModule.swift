@@ -31,8 +31,8 @@ import CoreBluetooth
 /// hs.bluetooth.on('connected', d => console.log(d.name + " connected"))
 /// hs.bluetooth.on('powerChanged', on => console.log("Bluetooth is " + (on ? "on" : "off")))
 ///
-/// const nearby = await hs.bluetooth.scan({ seconds: 5 })
-/// nearby.forEach(p => console.log((p.name ?? p.identifier) + " " + p.rssi + " dBm"))
+/// hs.bluetooth.scan({ seconds: 5 })
+///     .then(nearby => nearby.forEach(p => console.log((p.name ?? p.identifier) + " " + p.rssi + " dBm")))
 /// ```
 ///
 /// macOS asks the user for Bluetooth permission the first time this module talks to Bluetooth.
@@ -105,7 +105,7 @@ import CoreBluetooth
     /// - Example:
     /// ```js
     /// const sensor = hs.bluetooth.peripheral("5D7E2C4A-1B3F-4E8A-9C6D-0F1E2D3C4B5A")
-    /// if (sensor) await sensor.connect()
+    /// if (sensor) sensor.connect()
     /// ```
     @objc func peripheral(_ identifier: String) -> HSBluetoothPeripheral?
 
@@ -120,10 +120,11 @@ import CoreBluetooth
     /// - Returns: {Promise<HSBluetoothPeripheral[]>} A Promise resolving to the peripherals found when the scan ends, or when `stopScan()` is called. Rejects if a scan is already running, the options are invalid, or Bluetooth is unavailable
     /// - Example:
     /// ```js
-    /// const nearby = await hs.bluetooth.scan({ seconds: 5 })
-    /// nearby.forEach(p => console.log((p.name ?? p.identifier) + " " + p.rssi + " dBm"))
+    /// hs.bluetooth.scan({ seconds: 5 })
+    ///     .then(nearby => nearby.forEach(p => console.log((p.name ?? p.identifier) + " " + p.rssi + " dBm")))
     ///
-    /// const heartStraps = await hs.bluetooth.scan({ services: ["180D"] })
+    /// hs.bluetooth.scan({ services: ["180D"] })
+    ///     .then(heartStraps => console.log("Found " + heartStraps.length + " heart rate straps"))
     /// ```
     @objc func scan(_ options: [String: Any]?) -> JSPromise?
 
@@ -131,7 +132,7 @@ import CoreBluetooth
     /// - Example:
     /// ```js
     /// hs.bluetooth.once('discovered', p => hs.bluetooth.stopScan())
-    /// const [first] = await hs.bluetooth.scan({ seconds: 30 })
+    /// hs.bluetooth.scan({ seconds: 30 }).then(([first]) => console.log(first?.name))
     /// ```
     @objc func stopScan()
 
@@ -142,8 +143,8 @@ import CoreBluetooth
     /// - Returns: {Promise<HSBluetoothDevice[]>} A Promise resolving to the devices found when the search ends, or when `stopInquiry()` is called. Rejects if a search is already running, the options are invalid, or the search fails
     /// - Example:
     /// ```js
-    /// const found = await hs.bluetooth.inquiry({ seconds: 10 })
-    /// found.forEach(d => console.log(d.name + " " + d.address))
+    /// hs.bluetooth.inquiry({ seconds: 10 })
+    ///     .then(found => found.forEach(d => console.log(d.name + " " + d.address)))
     /// ```
     @objc func inquiry(_ options: [String: Any]?) -> JSPromise?
 

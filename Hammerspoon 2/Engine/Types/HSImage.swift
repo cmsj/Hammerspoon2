@@ -38,7 +38,10 @@ import Observation
 ///     .catch(err => console.error("Failed to load image:", err))
 ///
 /// // Or with async/await
-/// const image = await HSImage.fromURL("https://example.com/image.png")
+/// async function loadImage() {
+///     const image = await HSImage.fromURL("https://example.com/image.png")
+///     console.log("Image loaded:", image.size)
+/// }
 /// ```
 ///
 /// ## Image Manipulation
@@ -120,7 +123,8 @@ import Observation
     /// - Returns: {Promise<HSImage>} A Promise that resolves to the loaded image, or rejects on error
     /// - Example:
     /// ```js
-    /// const img = await HSImage.fromURL("https://example.com/image.png")
+    /// HSImage.fromURL("https://example.com/image.png")
+    ///     .then(img => console.log("Image loaded:", img.size))
     /// ```
     @objc static func fromURL(_ url: String) -> JSPromise?
 
