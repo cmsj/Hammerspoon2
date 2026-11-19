@@ -369,11 +369,11 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
     /// SkyLight's managed display identifier when all displays share one set of spaces
     private static let sharedSpacesDisplayIdentifier = "Main"
 
-    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _watcherEmitter: JSFunction?
     @objc var _eventNames: [String] { HSSpacesEvent.allNames }
-    @objc var on: JSFunction? = nil
-    @objc var off: JSFunction? = nil
-    @objc var once: JSFunction? = nil
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
     private var watcherCallback: JSCallback?
     private var watcherObserver: NSObjectProtocol?
 
@@ -550,8 +550,9 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
             let (space, display) = try self.spaceAndDisplay(spaceID)
             guard display.currentSpace != space else { return nil }
 
+            guard let index = display.spaces.firstIndex(of: space) else { throw HSMissionControl.Failure("no such space") }
             let bar = try await self.openSpacesBar(for: display)
-            try HSMissionControl.press(bar.spaceButtons[display.spaces.firstIndex(of: space)!])
+            try HSMissionControl.press(bar.spaceButtons[index])
 
             // Clicking a space closes Mission Control. Wait for it to finish animating away too, so
             // nothing toggles Mission Control again mid-animation.
@@ -592,11 +593,13 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
             let userSpaces = display.spaces.filter { skyLight.type(of: $0) == HSSkyLight.SpaceKind.user.rawValue }
             guard userSpaces.count > 1 else { throw HSMissionControl.Failure("space \(spaceID) is the only desktop on its display") }
 
+            guard let index = display.spaces.firstIndex(of: space),
+                  let userIndex = userSpaces.firstIndex(of: space) else { throw HSMissionControl.Failure("no such space") }
             let bar = try await self.openSpacesBar(for: display)
-            let button = bar.spaceButtons[display.spaces.firstIndex(of: space)!]
+            let button = bar.spaceButtons[index]
             // Removing is destructive, so double check this really is the right button: Mission
             // Control numbers desktops (but not fullscreen spaces) from 1 in its titles
-            let expectedNumber = userSpaces.firstIndex(of: space)! + 1
+            let expectedNumber = userIndex + 1
             if let number = HSMissionControl.desktopNumber(of: button), number != expectedNumber {
                 throw HSMissionControl.Failure("Mission Control's desktop \(number) doesn't look like space \(spaceID) (desktop \(expectedNumber)); not removing it")
             }
