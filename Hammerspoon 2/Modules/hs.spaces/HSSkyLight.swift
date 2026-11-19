@@ -8,17 +8,19 @@ import CoreGraphics
 
 /// A thin wrapper around the private SkyLight framework functions hs.spaces needs.
 ///
-/// SkyLight is the private framework WindowServer clients (including the Dock and Mission
-/// Control) use to manage Spaces. It can report on spaces and the windows on them, but it can't
-/// add, remove, or switch spaces in a way the Dock notices - see HSMissionControl for those. None of this is public API: every function is resolved at
-/// runtime with dlsym, so a macOS update that renames or removes one makes `shared` nil (and
-/// hs.spaces report itself unavailable) rather than crashing at launch. A signature change,
-/// however, can't be detected - that's the inherent risk of this module.
+/// SkyLight is the private framework WindowServer clients (including the Dock and Mission Control)
+/// use to manage Spaces. It can report on spaces and the windows on them, but it can't add, remove,
+/// or switch spaces in a way the Dock notices - see HSMissionControl for those. None of this is
+/// public API: every function is resolved at runtime with dlsym, so a macOS update that renames or
+/// removes one makes `shared` nil (and hs.spaces report itself unavailable) rather than crashing at
+/// launch. A signature change, however, can't be detected - that's the inherent risk of this
+/// module.
 ///
 /// Signatures follow those used by long-standing open source consumers of these functions
 /// (Hammerspoon 1's hs.spaces, yabai), and were verified against macOS 27.
-// @safe: the unsafe storage is the C function pointers below. They're only ever called with
-// values this class creates itself, and the Unmanaged results are consumed immediately.
+///
+/// It's `@safe` because the unsafe storage is the C function pointers below, which are only ever
+/// called with values this class creates itself, and the Unmanaged results are consumed immediately.
 @safe @_documentation(visibility: private)
 final class HSSkyLight {
     typealias ConnectionID = Int32
