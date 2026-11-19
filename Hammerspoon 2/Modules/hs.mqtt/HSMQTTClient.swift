@@ -22,9 +22,12 @@ import Network
 /// ```js
 /// const client = hs.mqtt.create("mqtt://broker.local")
 /// client.on("message", msg => console.log(msg.topic + ": " + msg.payload))
-/// await client.connect()
-/// await client.subscribe("home/+/temperature")
-/// await client.publish("home/office/light", "on")
+/// async function start() {
+///     await client.connect()
+///     await client.subscribe("home/+/temperature")
+///     await client.publish("home/office/light", "on")
+/// }
+/// start()
 /// ```
 @objc protocol HSMQTTClientAPI: HSTypeAPI, JSExport {
     /// The unique identifier of this client object.
@@ -58,7 +61,7 @@ import Network
     /// The client's connection state: `"disconnected"`, `"connecting"`, `"connected"`, `"reconnecting"` (the connection was lost and the client is trying to restore it, see the `reconnectInterval` option) or `"disconnecting"`.
     /// - Example:
     /// ```js
-    /// if (client.state === "disconnected") await client.connect()
+    /// if (client.state === "disconnected") client.connect()
     /// ```
     @objc var state: String { get }
 
@@ -80,11 +83,9 @@ import Network
     /// - Returns: {Promise<boolean>} A Promise resolving once the broker has accepted the connection, to `true` if the broker resumed a previous session for this client (see the `cleanSession` option), or `false` if it started a new one
     /// - Example:
     /// ```js
-    /// try {
-    ///     await client.connect()
-    /// } catch (err) {
-    ///     console.error("Unable to connect: " + err)
-    /// }
+    /// client.connect()
+    ///     .then(resumed => console.log(resumed ? "Resumed session" : "New session"))
+    ///     .catch(err => console.error("Unable to connect: " + err))
     /// ```
     @objc func connect() -> JSPromise?
 
@@ -92,7 +93,7 @@ import Network
     /// - Returns: {Promise<void>} A Promise resolving once the client has disconnected
     /// - Example:
     /// ```js
-    /// await client.disconnect()
+    /// client.disconnect().then(() => console.log("Disconnected"))
     /// ```
     @objc func disconnect() -> JSPromise?
 
@@ -104,8 +105,9 @@ import Network
     /// - Returns: {Promise<void>} A Promise resolving once the message has been sent (QoS 0) or the broker has acknowledged it (QoS 1 and 2)
     /// - Example:
     /// ```js
-    /// await client.publish("home/office/light", "on")
-    /// await client.publish("home/status", JSON.stringify({ away: true }), { qos: 1, retain: true })
+    /// client.publish("home/office/light", "on")
+    /// client.publish("home/status", JSON.stringify({ away: true }), { qos: 1, retain: true })
+    ///     .then(() => console.log("Status acknowledged"))
     /// ```
     @objc func publish(_ topic: String, _ payload: String, _ options: [String: Any]?) -> JSPromise?
 
@@ -116,8 +118,9 @@ import Network
     /// - Returns: {Promise<number>} A Promise resolving to the QoS level the broker granted, which may be lower than requested. It rejects if the broker refuses the subscription
     /// - Example:
     /// ```js
-    /// await client.subscribe("home/#")
-    /// await client.subscribe("alerts/critical", 1)
+    /// client.subscribe("home/#")
+    /// client.subscribe("alerts/critical", 1)
+    ///     .then(qos => console.log("Granted QoS " + qos))
     /// ```
     @objc func subscribe(_ topicFilter: String, _ qos: Int) -> JSPromise?
 
@@ -126,7 +129,7 @@ import Network
     /// - Returns: {Promise<void>} A Promise resolving once the broker has acknowledged the request
     /// - Example:
     /// ```js
-    /// await client.unsubscribe("home/#")
+    /// client.unsubscribe("home/#").then(() => console.log("Unsubscribed"))
     /// ```
     @objc func unsubscribe(_ topicFilter: String) -> JSPromise?
 

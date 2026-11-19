@@ -19,13 +19,14 @@ import JavaScriptCore
 ///
 /// - Example:
 /// ```js
-/// const result = await hs.ocr.recognizeText('/tmp/image.png')
-/// result.observations.forEach(obs => {
-///     const pct = (obs.confidence * 100).toFixed(0)
-///     console.log(obs.text + ' (' + pct + '% confidence)')
-///     const b = obs.bounds
-///     console.log('  region: x=' + b.x.toFixed(3) + ' y=' + b.y.toFixed(3)
-///                 + ' w=' + b.w.toFixed(3) + ' h=' + b.h.toFixed(3))
+/// hs.ocr.recognizeText('/tmp/image.png').then(result => {
+///     result.observations.forEach(obs => {
+///         const pct = (obs.confidence * 100).toFixed(0)
+///         console.log(obs.text + ' (' + pct + '% confidence)')
+///         const b = obs.bounds
+///         console.log('  region: x=' + b.x.toFixed(3) + ' y=' + b.y.toFixed(3)
+///                     + ' w=' + b.w.toFixed(3) + ' h=' + b.h.toFixed(3))
+///     })
 /// })
 /// ```
 @objc protocol HSOCRObservationAPI: HSTypeAPI, JSExport {
@@ -34,8 +35,8 @@ import JavaScriptCore
     ///
     /// - Example:
     /// ```js
-    /// const result = await hs.ocr.recognizeText('/tmp/image.png')
-    /// console.log(result.observations[0].typeName) // "HSOCRObservation"
+    /// hs.ocr.recognizeText('/tmp/image.png')
+    ///     .then(result => console.log(result.observations[0].typeName)) // "HSOCRObservation"
     /// ```
     @objc var typeName: String { get }
 
@@ -43,8 +44,8 @@ import JavaScriptCore
     ///
     /// - Example:
     /// ```js
-    /// const result = await hs.ocr.recognizeText('/tmp/image.png')
-    /// result.observations.forEach(obs => console.log(obs.text))
+    /// hs.ocr.recognizeText('/tmp/image.png')
+    ///     .then(result => result.observations.forEach(obs => console.log(obs.text)))
     /// ```
     @objc var text: String { get }
 
@@ -55,9 +56,10 @@ import JavaScriptCore
     ///
     /// - Example:
     /// ```js
-    /// const result = await hs.ocr.recognizeText('/tmp/image.png')
-    /// const highConf = result.observations.filter(o => o.confidence > 0.9)
-    /// console.log('High-confidence regions: ' + highConf.length)
+    /// hs.ocr.recognizeText('/tmp/image.png').then(result => {
+    ///     const highConf = result.observations.filter(o => o.confidence > 0.9)
+    ///     console.log('High-confidence regions: ' + highConf.length)
+    /// })
     /// ```
     @objc var confidence: Double { get }
 
@@ -69,12 +71,13 @@ import JavaScriptCore
     ///
     /// - Example:
     /// ```js
-    /// const result = await hs.ocr.recognizeText('/tmp/image.png')
-    /// const b = result.observations[0].bounds
-    /// // Check if the observation is in the top half of the image
-    /// if (b.y + b.h / 2 < 0.5) {
-    ///     console.log('Text is in the top half:', result.observations[0].text)
-    /// }
+    /// hs.ocr.recognizeText('/tmp/image.png').then(result => {
+    ///     const b = result.observations[0].bounds
+    ///     // Check if the observation is in the top half of the image
+    ///     if (b.y + b.h / 2 < 0.5) {
+    ///         console.log('Text is in the top half:', result.observations[0].text)
+    ///     }
+    /// })
     /// ```
     @objc var bounds: HSRect { get }
 
@@ -84,8 +87,8 @@ import JavaScriptCore
     /// - Returns: An object with the observation's `text`, `confidence` and `bounds`
     /// - Example:
     /// ```js
-    /// const result = await hs.ocr.recognizeText('/tmp/image.png')
-    /// console.log(JSON.stringify(result.observations[0]))
+    /// hs.ocr.recognizeText('/tmp/image.png')
+    ///     .then(result => console.log(JSON.stringify(result.observations[0])))
     /// ```
     @objc func toJSON() -> [String: Any]
 }

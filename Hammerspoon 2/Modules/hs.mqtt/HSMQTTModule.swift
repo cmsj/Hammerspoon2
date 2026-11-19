@@ -33,9 +33,12 @@ import JavaScriptCoreExtras
 ///         hs.notify.show("Doorbell", "Someone is at the door")
 ///     }
 /// })
-/// await client.connect()
-/// await client.subscribe("home/doorbell")
-/// await client.publish("home/mac/status", "online", { retain: true })
+/// async function start() {
+///     await client.connect()
+///     await client.subscribe("home/doorbell")
+///     await client.publish("home/mac/status", "online", { retain: true })
+/// }
+/// start()
 /// ```
 @objc protocol HSMQTTModuleAPI: JSExport {
     /// Creates an MQTT client. The client doesn't connect until you call its `connect()` method.

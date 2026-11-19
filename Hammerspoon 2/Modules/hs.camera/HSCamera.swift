@@ -168,8 +168,9 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     /// - Returns: {Promise<HSImage>} A Promise that resolves to an `HSImage`, or rejects on error
     /// - Example:
     /// ```js
-    /// const img = await hs.camera.all()[0].captureImage()
-    /// img.saveToFile("/tmp/snapshot.png")
+    /// hs.camera.all()[0].captureImage()
+    ///     .then(img => img.saveToFile("/tmp/snapshot.png"))
+    ///     .catch(err => console.error("Capture failed: " + err))
     /// ```
     @objc func captureImage() -> JSPromise?
 }

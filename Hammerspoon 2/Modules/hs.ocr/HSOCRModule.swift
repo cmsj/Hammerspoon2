@@ -28,13 +28,14 @@ import Vision
 /// - Example:
 /// ```js
 /// // Advanced: filter to high-confidence observations only
-/// const result = await hs.ocr.recognizeText('/tmp/photo.png', {
+/// hs.ocr.recognizeText('/tmp/photo.png', {
 ///     minimumConfidence: 0.8,
 ///     recognitionLevel: 'accurate'
-/// })
-/// result.observations.forEach(obs => {
-///     const b = obs.bounds
-///     console.log(obs.text + ' at (' + b.x.toFixed(3) + ', ' + b.y.toFixed(3) + ') ' + b.w.toFixed(3) + 'x' + b.h.toFixed(3))
+/// }).then(result => {
+///     result.observations.forEach(obs => {
+///         const b = obs.bounds
+///         console.log(obs.text + ' at (' + b.x.toFixed(3) + ', ' + b.y.toFixed(3) + ') ' + b.w.toFixed(3) + 'x' + b.h.toFixed(3))
+///     })
 /// })
 /// ```
 @objc protocol HSOCRModuleAPI: JSExport {
