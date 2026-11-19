@@ -110,12 +110,10 @@ import JavaScriptCore
             // to be registered before macOS renders the banner.
             Task {
                 await NotificationCategories.shared.update { $0.union([category]) }
-                center.add(request) { error in
-                    if let error {
-                        Task { @MainActor in
-                            AKError("hs.notify: Failed to deliver notification \(notifId): \(error.localizedDescription)")
-                        }
-                    }
+                do {
+                    try await center.add(request)
+                } catch {
+                    AKError("hs.notify: Failed to deliver notification \(notifId): \(error.localizedDescription)")
                 }
             }
         } else {
