@@ -64,6 +64,46 @@ import JavaScriptCoreExtras
     /// ```
     @objc func clearConsole()
 
+    /// Get the messages currently in the Hammerspoon Console, oldest first. This is the same history
+    /// the Console window shows, so it's limited by the "Console history length" setting (which
+    /// applies to each level separately), and `hs.clearConsole()` empties it.
+    ///
+    /// Each message is an object with:
+    ///  - `sequence`: a number that's higher for each newer message. Pass the last one you've seen
+    ///    as `since` to get only the messages logged after it
+    ///  - `date`: a `Date` for when the message was logged
+    ///  - `level`: `"garbage"`, `"debug"`, `"info"`, `"warning"`, `"error"` or `"javascript"`
+    ///    (for `console.log()` and friends)
+    ///  - `message`: the message's text
+    ///
+    /// Options (all optional):
+    ///  - `minimumLevel`: only get messages at this level or above, e.g. `"warning"` for warnings
+    ///    and errors (and `"javascript"` messages, which count as the highest level). Defaults to
+    ///    every level
+    ///  - `search`: only get messages that contain this text, ignoring case
+    ///  - `since`: only get messages whose `sequence` is higher than this
+    ///
+    /// - Note: Messages reach the Console asynchronously, so one logged moments ago, including
+    ///   by `console.log()` in the same function, may not be included yet.
+    /// - Parameter options?: {{minimumLevel?: "garbage" | "debug" | "info" | "warning" | "error" | "javascript", search?: string, since?: number}} Which messages to get
+    /// - Returns: {{sequence: number, date: Date, level: "garbage" | "debug" | "info" | "warning" | "error" | "javascript", message: string}[]} The matching messages, oldest first
+    /// - Throws: true
+    /// - Example:
+    /// ```js
+    /// // Every 5 minutes, report how many errors were logged since the last check
+    /// let lastSeen = 0
+    /// const errorCheck = hs.timer.every(300, () => {
+    ///     const errors = hs.consoleHistory({ minimumLevel: "error", since: lastSeen })
+    ///     if (errors.length > 0) {
+    ///         lastSeen = errors[errors.length - 1].sequence
+    ///         // console.info(), not console.log(): "javascript" messages are above "error", so a
+    ///         // console.log() report would be found as a new error by the next check
+    ///         console.info(`${errors.length} new errors, the latest: ${errors[errors.length - 1].message}`)
+    ///     }
+    /// })
+    /// ```
+    @objc func consoleHistory(_ options: [String: Any]?) -> [[String: Any]]
+
     /// {(() => void) | null} Called when Hammerspoon 2 is launched again while it's already
     /// running (e.g. from Finder, Spotlight or `open -a`), or when its Dock icon is clicked, or null
     /// to remove it. It's only called when Settings → Advanced → "When launched while running" is
@@ -333,6 +373,55 @@ import JavaScriptCoreExtras
         Task { @MainActor in
             HammerspoonLog.shared.clearLog()
         }
+    }
+
+    @objc func consoleHistory(_ options: [String: Any]?) -> [[String: Any]] {
+        // An option set to null or undefined counts as not given
+        let options = (options ?? [:]).filter { !($0.value is NSNull) }
+
+        var minimumLevel = HammerspoonLogType.Garbage
+        if let value = options["minimumLevel"] {
+            guard let name = value as? String, let level = HammerspoonLogType(string: name), level != .Autocomplete else {
+                JSContext.current()?.exception = JSValue(
+                    newErrorFromMessage: "hs.consoleHistory(): minimumLevel must be one of \"garbage\", \"debug\", \"info\", \"warning\", \"error\" or \"javascript\"",
+                    in: JSContext.current())
+                return []
+            }
+            minimumLevel = level
+        }
+
+        var search = ""
+        if let value = options["search"] {
+            guard let text = value as? String else {
+                JSContext.current()?.exception = JSValue(
+                    newErrorFromMessage: "hs.consoleHistory(): search must be a string", in: JSContext.current())
+                return []
+            }
+            search = text
+        }
+
+        var since: Double = -1
+        if let value = options["since"] {
+            guard let number = value as? NSNumber,
+                  CFGetTypeID(number) != CFBooleanGetTypeID(),
+                  !number.doubleValue.isNaN else {
+                JSContext.current()?.exception = JSValue(
+                    newErrorFromMessage: "hs.consoleHistory(): since must be a number", in: JSContext.current())
+                return []
+            }
+            since = number.doubleValue
+        }
+
+        return HammerspoonLog.shared.entries(minimumLevel: minimumLevel, searchString: search)
+            .filter { $0.logType != .Autocomplete && Double($0.sequence) > since }
+            .map { entry in
+                [
+                    "sequence": entry.sequence,
+                    "date": entry.date,
+                    "level": entry.logType.jsName,
+                    "message": entry.msg,
+                ]
+            }
     }
 
     // Modules
