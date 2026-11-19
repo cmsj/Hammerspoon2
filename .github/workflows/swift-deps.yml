@@ -68,18 +68,21 @@ jobs:
           node scripts/swift-deps.js update-summary "$RUNNER_TEMP/old.resolved" "$RESOLVED" > "$RUNNER_TEMP/body.md"
           cat "$RUNNER_TEMP/body.md" >> "$GITHUB_STEP_SUMMARY"
 
-          # Leave an open pull request alone if it already has exactly these updates, so its
-          # test run and reviews aren't thrown away for nothing.
+          # Don't re-push a branch that already has exactly these updates, so an open pull
+          # request's test run and reviews aren't thrown away for nothing. The steps after this
+          # still run, so a run that pushed but then failed to open the pull request or start
+          # the tests gets finished by the next one.
           if git fetch --quiet origin "$BRANCH" 2>/dev/null && git diff --quiet FETCH_HEAD -- "$RESOLVED"; then
             echo "The update branch already has these changes."
-            exit 0
+            head=$(git rev-parse FETCH_HEAD)
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git checkout -B "$BRANCH"
+            git commit --quiet -m 'Update Swift package dependencies' -- "$RESOLVED"
+            git push --force origin "$BRANCH"
+            head=$(git rev-parse HEAD)
           fi
-
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git checkout -B "$BRANCH"
-          git commit --quiet -m 'Update Swift package dependencies' -- "$RESOLVED"
-          git push --force origin "$BRANCH"
 
           pr=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
           if [ -n "$pr" ]; then
@@ -88,7 +91,11 @@ jobs:
             gh pr create --base main --head "$BRANCH" --label dependencies \
               --title 'Update Swift package dependencies' --body-file "$RUNNER_TEMP/body.md"
           fi
-          gh workflow run test.yml --ref "$BRANCH"
+
+          runs=$(gh run list --workflow test.yml --commit "$head" --json databaseId --jq 'length')
+          if [ "$runs" -eq 0 ]; then
+            gh workflow run test.yml --ref "$BRANCH"
+          fi
 
   forks:
     name: Check forks
