@@ -1,0 +1,42 @@
+name: Update Homebrew cask
+
+# Bumps Casks/hammerspoon2.rb to each published stable release, so
+# `brew install --cask hammerspoon2` from this repo's tap installs it.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Update version and sha256
+        env:
+          VERSION: ${{ github.event.release.tag_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$VERSION" -p "Hammerspoon-2-$VERSION.zip" -O app.zip
+          sha="$(sha256sum app.zip | cut -d' ' -f1)"
+          sed -i -E \
+            -e "s/^  version \".*\"/  version \"$VERSION\"/" \
+            -e "s/^  sha256 \".*\"/  sha256 \"$sha\"/" \
+            Casks/hammerspoon2.rb
+          rm app.zip
+
+      - name: Commit
+        env:
+          VERSION: ${{ github.event.release.tag_name }}
+        run: |
+          git diff --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git commit -am "hammerspoon2 cask: $VERSION"
+          git push
