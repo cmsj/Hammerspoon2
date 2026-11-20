@@ -560,6 +560,20 @@ final class UIWebViewToolbarEntry: Identifiable {
     @objc func evalJSResult(_ script: String, _ callback: JSFunction) -> UIWebView
 }
 
+// MARK: - Teardown
+
+/// Keeps `object` alive until the main queue next runs, so that any WebKit objects it owns are
+/// freed there rather than now.
+///
+/// WebKit must not be torn down while JavaScriptCore holds its lock, which it does for the whole
+/// of a call from JS into Swift and while the collector finalizes wrappers: the lock swaps the
+/// thread's atom string table for the JS VM's own, and freeing a web view's back/forward list
+/// then aborts in `AtomStringImpl::remove`, unable to find the list's atom strings (#399).
+@MainActor
+func releaseOutsideJavaScript(_ object: some Sendable) {
+    DispatchQueue.main.async { withExtendedLifetime(object) {} }
+}
+
 // MARK: - Implementation
 
 @available(macOS 26.0, *)
@@ -636,6 +650,8 @@ final class UIWebViewToolbarEntry: Identifiable {
 
     isolated deinit {
         destroy()
+        // This is often the collector finalizing our JS wrapper, or a call from JS releasing us
+        releaseOutsideJavaScript(page)
         AKGarbage("deinit of UIWebView")
     }
 
