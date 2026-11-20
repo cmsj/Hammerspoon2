@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSSerialPort - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSSerialPort</span>
+</nav>
+<div class="page-header">
+    <h1>HSSerialPort</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>A serial port, created via <code>hs.serial.createPortNamed()</code> or <code>hs.serial.createPortAtPath()</code>.</p>
+<p>The port is not open until you call <code>open()</code>. Configure it (baud rate, data bits, etc.)
+either before or after opening — configuration changes made while open are applied immediately.</p>
+<p>Received data, and lifecycle events, are delivered via the callback registered with <code>setCallback()</code>.</p>
+<ul>
+<li>Example:</li>
+</ul>
+<pre><code class="language-js">const port = hs.serial.createPortNamed(hs.serial.availablePortNames()[0])
+port.baudRate = 9600
+port.setCallback((event, data) =&gt; {
+    if (event === &quot;received&quot;) console.log(&quot;Received: &quot; + data)
+    if (event === &quot;error&quot;) console.log(&quot;Error: &quot; + data)
+}).open()
+port.sendData(&quot;AT\r\n&quot;)
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="identifier">
+        <h3><a href="#identifier">identifier</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The unique identifier assigned to this port object.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L52" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:52</a>
+        </div>
+    </div>
+    <div class="property" id="name">
+        <h3><a href="#name">name</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The port&#39;s name (e.g. `&quot;usbserial-1420&quot;`).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L59" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:59</a>
+        </div>
+    </div>
+    <div class="property" id="path">
+        <h3><a href="#path">path</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The port&#39;s device path (e.g. `&quot;/dev/cu.usbserial-1420&quot;`).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L66" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:66</a>
+        </div>
+    </div>
+    <div class="property" id="isOpen">
+        <h3><a href="#isOpen">isOpen</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the port is currently open.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L73" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:73</a>
+        </div>
+    </div>
+    <div class="property" id="baudRate">
+        <h3><a href="#baudRate">baudRate</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The baud rate, in bits per second. Default is `115200`.
+Setting a non-standard value (i.e. not one of 300, 1200, 2400, 4800, 9600, 14400,
+19200, 28800, 38400, 57600, 115200, 230400) is rejected unless `allowNonStandardBaudRates`
+is `true`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L84" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:84</a>
+        </div>
+    </div>
+    <div class="property" id="allowNonStandardBaudRates">
+        <h3><a href="#allowNonStandardBaudRates">allowNonStandardBaudRates</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether `baudRate` may be set to a value outside the standard set. Default is `false`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L92" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:92</a>
+        </div>
+    </div>
+    <div class="property" id="dataBits">
+        <h3><a href="#dataBits">dataBits</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The number of data bits, 5–8. Default is `8`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L99" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:99</a>
+        </div>
+    </div>
+    <div class="property" id="stopBits">
+        <h3><a href="#stopBits">stopBits</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The number of stop bits, 1 or 2. Default is `1`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L106" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:106</a>
+        </div>
+    </div>
+    <div class="property" id="parity">
+        <h3><a href="#parity">parity</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The parity mode: `&quot;none&quot;`, `&quot;odd&quot;`, or `&quot;even&quot;`. Default is `&quot;none&quot;`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L113" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:113</a>
+        </div>
+    </div>
+    <div class="property" id="dtr">
+        <h3><a href="#dtr">dtr</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">The state of the DTR (Data Terminal Ready) control line. Default is `false`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L120" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:120</a>
+        </div>
+    </div>
+    <div class="property" id="rts">
+        <h3><a href="#rts">rts</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">The state of the RTS (Request To Send) control line. Default is `false`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L127" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:127</a>
+        </div>
+    </div>
+    <div class="property" id="usesRTSCTSFlowControl">
+        <h3><a href="#usesRTSCTSFlowControl">usesRTSCTSFlowControl</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether to use hardware RTS/CTS flow control. Default is `false`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L134" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:134</a>
+        </div>
+    </div>
+    <div class="property" id="usesDTRDSRFlowControl">
+        <h3><a href="#usesDTRDSRFlowControl">usesDTRDSRFlowControl</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether to use hardware DTR/DSR flow control. Default is `false`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L141" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:141</a>
+        </div>
+    </div>
+    <div class="property" id="shouldEchoReceivedData">
+        <h3><a href="#shouldEchoReceivedData">shouldEchoReceivedData</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether data sent with `sendData()` is also delivered back to the callback
+as a `&quot;received&quot;` event, simulating local echo. Default is `false`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L149" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:149</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="open">
+        <h3>
+<a href="#open">open() -> HSSerialPort</a>
+        </h3>
+
+        <div class="description">Opens the port using its current configuration.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">open() -> HSSerialPort</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSerialPort</div>
+        <div class="return-desc">self, for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">port.setCallback((event, data) =&gt; console.log(event, data)).open()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L157" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:157</a>
+        </div>
+    </div>
+    <div class="method" id="close">
+        <h3>
+<a href="#close">close() -> HSSerialPort</a>
+        </h3>
+
+        <div class="description">Closes the port.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">close() -> HSSerialPort</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSerialPort</div>
+        <div class="return-desc">self, for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">port.close()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L165" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:165</a>
+        </div>
+    </div>
+    <div class="method" id="sendData">
+        <h3>
+<a href="#sendData">sendData(value) -> HSSerialPort</a>
+        </h3>
+
+        <div class="description">Sends data through the port.
+The string is transmitted as raw bytes: each character&#39;s code point (0–255) becomes
+one byte on the wire. This lets you round-trip arbitrary binary data — build the string
+with `String.fromCharCode()` for non-text payloads.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">sendData(value) -> HSSerialPort</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The data to send</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSerialPort</div>
+        <div class="return-desc">self, for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">port.sendData(&quot;AT&#92;r&#92;n&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L178" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:178</a>
+        </div>
+    </div>
+    <div class="method" id="setCallback">
+        <h3>
+<a href="#setCallback">setCallback(fn) -> HSSerialPort</a>
+        </h3>
+
+        <div class="description">Sets the callback invoked for port lifecycle events and received data.
+The callback receives two arguments: an event type string and a data string.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setCallback(fn) -> HSSerialPort</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">fn</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called on port events</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSerialPort</div>
+        <div class="return-desc">self, for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">port.setCallback((event, data) =&gt; console.log(event, data))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L194" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:194</a>
+        </div>
+    </div>
+    <div class="method" id="destroy">
+        <h3>
+<a href="#destroy">destroy() -> None</a>
+        </h3>
+
+        <div class="description">Closes the port and releases all resources. Called automatically during shutdown.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">destroy() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">port.destroy()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialPort.swift#L201" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift:201</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSSerialPort');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

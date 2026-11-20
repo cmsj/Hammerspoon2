@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.spoons - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="canvas-guide.html" class="">hs.canvas</a>
+                    <a href="typescript-guide.html" class="">TypeScript</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.spoons</span>
+</nav>
+<div class="page-header">
+    <h1>hs.spoons</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Load, install and update Spoons - packaged, reusable pieces of configuration.</p>
+<p>Spoons live in the <code>Spoons</code> directory inside your config directory. Every Spoon you load is
+also available on <code>hs.spoons</code> under its name, so <code>hs.spoons.load(&quot;Greeter&quot;)</code> makes
+<code>hs.spoons.Greeter</code> available to the rest of your config. That&#39;s why a Spoon can&#39;t be named
+after one of this module&#39;s own methods or properties.</p>
+<p>Spoons can be installed from any GitHub repository (<code>&quot;owner/repo&quot;</code>), or from a zip file at any
+<code>https://</code> URL. There&#39;s no central list of Spoons: you choose where each one comes from, so
+only install Spoons from sources you trust. Pin the version you install with <code>ref</code> (a GitHub
+tag or commit) or <code>sha256</code> (for a zip URL), and nothing changes until you choose to.</p>
+<h2>Quick start</h2>
+<pre><code class="language-js">// Installs Greeter the first time this runs, then loads it, configures it and starts it
+hs.spoons.use(&quot;Greeter&quot;, {
+    source: &quot;jane/hs2-spoons&quot;,
+    ref: &quot;v1.2.0&quot;,
+    config: { message: &quot;Time for a break!&quot; },
+    start: true
+})
+</code></pre>
+</div>
+
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="load">
+        <h3><a href="#load">hs.spoons.load(name) -> Object</a></h3>
+
+        <div class="description">Load an installed Spoon by name. A Spoon must contain a well-formed `spoon.json` (with
+non-empty `name`, `author`, `version`, and `description` fields) and an `init.js`, or
+loading fails with an exception. `init.js` is loaded through the same `require()` used for
+the rest of your config, so it can itself `require()` further files from within the
+Spoon&#39;s own directory using relative paths. On success, the Spoon is also stored on
+`hs.spoons` under its name, so other code can reach it without loading it again.
+`init.js` must set `module.exports` to an object (or a function, since functions are
+objects too) - loading fails with an exception otherwise. Its `author`, `description`,
+and `version` properties are then set from `spoon.json`, overwriting any of the same
+name the Spoon&#39;s own `init.js` set, so that information is always present and always
+reflects what&#39;s on disk. If the resulting object has an `init()` method, it&#39;s called
+automatically (with `this` bound to the object) before `load()` returns - matching
+Hammerspoon 1&#39;s behavior. An exception thrown from `init()` fails the load: nothing is
+stored on `hs.spoons`, and `load()` throws. Unlike `init.js` itself (which `require()`
+only ever evaluates once), `init()` runs again on every `load()` call for the same Spoon,
+since the same cached object is returned each time - write it to be safe to call more
+than once, or do one-time setup at `init.js`&#39;s top level instead.
+The exception&#39;s `code` is `ENOTINSTALLED` if there&#39;s no such Spoon, `EINVALIDARG` if the name
+can&#39;t be a Spoon&#39;s, or `EINVALIDSPOON` if the Spoon is malformed. An exception thrown by the
+Spoon&#39;s own code is passed on as it is.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.spoons.load(name) -> Object</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The Spoon&#39;s name, matching its directory name under `Spoons/`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Object</div>
+        <div class="return-desc">Whatever the Spoon&#39;s `init.js` assigned to `module.exports`</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    const Greeter = hs.spoons.load(&quot;Greeter&quot;)
+    console.log(Greeter.version)
+    // ...later, from anywhere...
+    hs.spoons.Greeter.show()
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.spoons/HSSpoonsModule.swift#L69" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.spoons/HSSpoonsModule.swift:69</a>
+        </div>
+    </div>
+    <div class="method" id="install">
+        <h3><a href="#install">hs.spoons.install(name, options) -> Promise&lt;{name: string, version: string, author: string, description: string, source: string, ref: string | null, commit: string | null}&gt;</a></h3>
+
+        <div class="description">Download a Spoon and install it into the `Spoons` directory. It isn&#39;t loaded: call
+`hs.spoons.load()` (or use `hs.spoons.use()`, which does both) once it&#39;s installed.
+The source is downloaded as a zip file. Its Spoons are every `*.spoon2` directory at its top
+level or in a `Spoons` directory, or, if there are none, the whole archive, if it&#39;s a single
+Spoon. An archive that holds a single directory, as a repository&#39;s does, is looked inside.
+The Promise rejects with an `Error` whose `code` says what went wrong: `EINVALIDARG`,
+`ENOTFOUND` (no such repository, ref, URL, or Spoon in the archive), `ENETWORK`,
+`EINTEGRITY` (the download didn&#39;t match `sha256`), `EINVALIDSPOON`, `EEXISTS`, or `EIO` (for
+anything else, such as failing to write the Spoon to disk).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.spoons.install(name, options) -> Promise&lt;{name: string, version: string, author: string, description: string, source: string, ref: string | null, commit: string | null}&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The name of the Spoon to install</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">[String: Any]</td>
+                    <td class="param-desc">`source` is a GitHub repository (`&quot;owner/repo&quot;` or its `https://github.com/...` URL) or the `https://` URL of a zip file. `ref` is a branch, tag or commit to install from (GitHub only; the default branch if omitted). `sha256` is the expected SHA-256 of the download. `force: true` replaces a Spoon that&#39;s already installed, rather than failing.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;{name: string, version: string, author: string, description: string, source: string, ref: string | null, commit: string | null}&gt;</div>
+        <div class="return-desc">Resolves with the installed Spoon&#39;s details</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.spoons.install(&quot;Greeter&quot;, { source: &quot;jane/hs2-spoons&quot;, ref: &quot;v1.2.0&quot; })
+    .then(info =&gt; console.log(`Installed ${info.name} ${info.version}`))
+    .catch(err =&gt; console.error(`${err.code}: ${err.message}`))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.spoons/HSSpoonsModule.swift#L91" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.spoons/HSSpoonsModule.swift:91</a>
+        </div>
+    </div>
+    <div class="method" id="available">
+        <h3><a href="#available">hs.spoons.available(source, options) -> Promise&lt;{name: string, version: string, author: string, description: string}[]&gt;</a></h3>
+
+        <div class="description">List the Spoons that can be installed from a source, without installing anything.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.spoons.available(source, options) -> Promise&lt;{name: string, version: string, author: string, description: string}[]&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A GitHub repository (`&quot;owner/repo&quot;` or its `https://github.com/...` URL) or the `https://` URL of a zip file</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">[String: Any]</td>
+                    <td class="param-desc">As for `install()`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;{name: string, version: string, author: string, description: string}[]&gt;</div>
+        <div class="return-desc">Resolves with the Spoons found</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.spoons.available(&quot;jane/hs2-spoons&quot;).then(spoons =&gt; {
+    spoons.forEach(s =&gt; console.log(`${s.name} ${s.version}: ${s.description}`))
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.spoons/HSSpoonsModule.swift#L103" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.spoons/HSSpoonsModule.swift:103</a>
+        </div>
+    </div>
+    <div class="method" id="update">
+        <h3><a href="#update">hs.spoons.update(name) -> Promise&lt;boolean&gt;</a></h3>
+
+        <div class="description">Update an installed Spoon: download it again from where it was installed from (the same
+source, ref and URL), and reinstall it if its version has changed. A Spoon installed from
+a pinned tag, commit or versioned URL doesn&#39;t change; install the newer one with
+`install(name, { ..., force: true })` instead.
+Besides the codes `install()` uses, the Promise rejects with `ENOTINSTALLED`, `ENOSOURCE`
+for a Spoon that wasn&#39;t installed by `install()` (or was since replaced some other way, such
+as by opening a `.spoon2` file), or `ECANCELED` if the Spoon was reinstalled while the
+update was downloading.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.spoons.update(name) -> Promise&lt;boolean&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The name of the installed Spoon</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;boolean&gt;</div>
+        <div class="return-desc">Resolves with true if the Spoon was updated, or false if it was already up to date</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">// Update every Spoon that was installed from a source
+for (const spoon of hs.spoons.installed().filter(s =&gt; s.source)) {
+    hs.spoons.update(spoon.name)
+        .then(updated =&gt; { if (updated) console.log(`Updated ${spoon.name}`) })
+        .catch(err =&gt; console.error(`${spoon.name}: ${err.message}`))
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.spoons/HSSpoonsModule.swift#L125" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.spoons/HSSpoonsModule.swift:125</a>
+        </div>
+    </div>
+    <div class="method" id="uninstall">
+        <h3><a href="#uninstall">hs.spoons.uninstall(name) -> boolean</a></h3>
+
+        <div class="description">Remove an installed Spoon. If it&#39;s already loaded, it keeps running until your config is
+reloaded, so stop it first if it has a `stop()` method.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.spoons.uninstall(name) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The name of the installed Spoon</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the Spoon was removed, or false if it wasn&#39;t installed</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.spoons.uninstall(&quot;Greeter&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.spoons/HSSpoonsModule.swift#L136" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.spoons/HSSpoonsModule.swift:136</a>
+        </div>
+    </div>
+    <div class="method" id="installed">
+        <h3><a href="#installed">hs.spoons.installed() -> {name: string, version: string, author: string, description: string, source?: string, ref?: string | null, commit?: string | null}[]</a></h3>
+
+        <div class="description">List the installed Spoons. Those installed by `install()` also say where they came from.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.spoons.installed() -> {name: string, version: string, author: string, description: string, source?: string, ref?: string | null, commit?: string | null}[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{name: string, version: string, author: string, description: string, source?: string, ref?: string | null, commit?: string | null}[]</div>
+        <div class="return-desc">The installed Spoons, sorted by name</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.spoons.installed().forEach(s =&gt; console.log(`${s.name} ${s.version} from ${s.source ?? &quot;a file&quot;}`))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.spoons/HSSpoonsModule.swift#L144" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.spoons/HSSpoonsModule.swift:144</a>
+        </div>
+    </div>
+    <div class="method" id="use">
+        <h3><a href="#use">hs.spoons.use(name, options) -> Promise<Object | null></a></h3>
+
+        <div class="description">Load and configure a Spoon in one step, installing it first if it isn&#39;t installed yet - the
+built-in equivalent of Hammerspoon 1&#39;s SpoonInstall:andUse().
+If the Spoon is already installed, it&#39;s loaded and configured before `use()` returns, so
+`hs.spoons.&lt;name&gt;` can be used on the very next line, and nothing is downloaded. If it isn&#39;t
+installed and `source` is given, it&#39;s installed in the background (see `hs.spoons.install()`),
+then loaded and configured, and a notification says so; put anything that needs the Spoon in
+call `hs.spoons.update()` for that.
+each property of `config` is set on the Spoon&#39;s object, exactly as if you&#39;d assigned it
+yourself, `hotkeys` is passed to its `bindHotkeys()` method, `fn` is called with the Spoon,
+and finally `start()` is called if `start` is true.
+The Promise rejects with an `Error` with a `code`, as `hs.spoons.install()`&#39;s does, plus
+`ENOTINSTALLED` if the Spoon isn&#39;t installed and no `source` was given, or the error thrown by
+loading or configuring the Spoon.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.spoons.use(name, options) -> Promise<Object | null></code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">The name of the Spoon</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">`source`, `ref` and `sha256` say where to install the Spoon from, as for `hs.spoons.install()`. `config` holds properties to set on the Spoon&#39;s object; which ones it reads is up to the Spoon. `hotkeys` is passed to the Spoon&#39;s `bindHotkeys()`, or `&quot;default&quot;` passes its `defaultHotkeys`. `fn` is called with the Spoon after it&#39;s configured. `start: true` calls its `start()`. `disable: true` does nothing at all, which is easier than commenting the call out.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise<Object | null></div>
+        <div class="return-desc">Resolves with the Spoon once it&#39;s loaded and configured, or null if `disable` is true</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.spoons.use(&quot;Greeter&quot;, {
+source: &quot;jane/hs2-spoons&quot;,
+ref: &quot;v1.2.0&quot;,
+config: { message: &quot;Time for a break!&quot; },
+hotkeys: { show: [[&quot;cmd&quot;, &quot;alt&quot;], &quot;g&quot;] },
+fn: (greeter) =&gt; console.log(`Using Greeter ${greeter.version}`),
+start: true
+}).catch(err =&gt; console.error(`Couldn&#39;t use Greeter: ${err.message}`))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.spoons/hs.spoons.js#L41" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.spoons/hs.spoons.js:41</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.spoons');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

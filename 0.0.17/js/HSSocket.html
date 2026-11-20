@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSSocket - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="canvas-guide.html" class="">hs.canvas</a>
+                    <a href="typescript-guide.html" class="">TypeScript</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSSocket</span>
+</nav>
+<div class="page-header">
+    <h1>HSSocket</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>A TCP or Unix domain stream socket, created by <code>hs.socket.create()</code>.</p>
+<p>A socket can either connect to a server (<code>connect()</code>/<code>connectUnix()</code>) or listen for incoming
+connections (<code>listen()</code>/<code>listenUnix()</code>). Each connection a listening socket accepts is handed
+to its callback as a new <code>HSSocket</code>, which inherits the listening socket&#39;s callback.</p>
+<p>Reading is request-driven: queue a read with <code>readUntil()</code>, <code>readBytes()</code> or
+<code>readAvailable()</code>, and the callback receives a <code>&quot;data&quot;</code> event once that read can be
+satisfied. Data that arrives before you ask for it is buffered. Reads can be queued before
+the socket connects, and each one carries an optional numeric tag that is passed back to the
+callback, so a single callback can tell a protocol&#39;s reads apart (e.g. a header and a body).</p>
+<p>Received data is delivered as a <code>Uint8Array</code>. Use <code>hs.socket.decodeText()</code> to turn it into a
+string.</p>
+<p>Do not instantiate <code>HSSocket</code> directly - use <code>hs.socket.create()</code>.</p>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="identifier">
+        <h3><a href="#identifier">identifier</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">A unique identifier for this socket (UUID string).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L36" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:36</a>
+        </div>
+    </div>
+    <div class="property" id="isConnected">
+        <h3><a href="#isConnected">isConnected</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the socket is currently connected to a peer.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L43" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:43</a>
+        </div>
+    </div>
+    <div class="property" id="state">
+        <h3><a href="#state">state</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">What the socket is doing.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L50" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:50</a>
+        </div>
+    </div>
+    <div class="property" id="isListening">
+        <h3><a href="#isListening">isListening</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the socket is currently listening for incoming connections.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L57" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:57</a>
+        </div>
+    </div>
+    <div class="property" id="isSecure">
+        <h3><a href="#isSecure">isSecure</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the socket&#39;s connection is encrypted with TLS.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:64</a>
+        </div>
+    </div>
+    <div class="property" id="remoteHost">
+        <h3><a href="#remoteHost">remoteHost</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The host of the connected peer, or `null` if the socket isn&#39;t connected over TCP.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L71" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:71</a>
+        </div>
+    </div>
+    <div class="property" id="remotePort">
+        <h3><a href="#remotePort">remotePort</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The port of the connected peer, or 0 if the socket isn&#39;t connected over TCP.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L78" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:78</a>
+        </div>
+    </div>
+    <div class="property" id="localHost">
+        <h3><a href="#localHost">localHost</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The local address of the connection, or `null` if the socket isn&#39;t connected over TCP.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L85" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:85</a>
+        </div>
+    </div>
+    <div class="property" id="localPort">
+        <h3><a href="#localPort">localPort</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The local port of the connection, or the port a listening socket is listening on. 0 if
+neither applies, including while a listener is still starting up.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L95" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:95</a>
+        </div>
+    </div>
+    <div class="property" id="unixPath">
+        <h3><a href="#unixPath">unixPath</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The path of the Unix domain socket this socket is connected to or listening on, or
+`null` if it isn&#39;t using a Unix domain socket.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L103" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:103</a>
+        </div>
+    </div>
+    <div class="property" id="clients">
+        <h3><a href="#clients">clients</a></h3>
+        <div class="prop-type">HSSocket[]</div>
+        <div class="description">The connections a listening socket has accepted that are still connected.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L110" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:110</a>
+        </div>
+    </div>
+    <div class="property" id="connectTimeout">
+        <h3><a href="#connectTimeout">connectTimeout</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">How long, in seconds, connecting may take, including any TLS handshake. When it expires,
+the callback receives an `&quot;error&quot;` event and the socket disconnects. 0 (or any negative
+number) means no timeout. Defaults to `hs.socket.connectTimeout`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L119" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:119</a>
+        </div>
+    </div>
+    <div class="property" id="readTimeout">
+        <h3><a href="#readTimeout">readTimeout</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">How long, in seconds, a queued read may wait with no data arriving. The timer runs only
+while a read is queued, and restarts whenever data arrives, so a slow but steady transfer
+doesn&#39;t time out, and nor does a connection that&#39;s quiet while no read is queued. When it
+expires, the callback receives an `&quot;error&quot;` event and the socket disconnects. 0 (or any
+negative number) means no timeout. Defaults to `hs.socket.readTimeout`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L132" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:132</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="setCallback">
+        <h3>
+<a href="#setCallback">setCallback(callback) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Sets the callback that receives this socket&#39;s events.
+`HSSocket`, which has the same callback. Queue a read on it to start receiving.
+read&#39;s tag.
+connection, a `&quot;disconnected&quot;` event follows.
+reason, including calling `disconnect()`. Data received that no read had asked for yet
+is discarded.
+An `&quot;error&quot;` event on its own never changes the socket&#39;s state: errors such as calling
+`connect()` on a socket that is already connecting, or writing to an idle socket, leave it
+as it was. Every connection that ends, and every listening socket that stops, gets a
+`&quot;disconnected&quot;` event, after the `&quot;error&quot;` that caused it, if any. So reconnecting belongs
+in the `&quot;disconnected&quot;` handler, not the `&quot;error&quot;` one.
+When the peer closes the connection, data already received for the first queued read is
+delivered to it in a last `&quot;data&quot;` event, before `&quot;disconnected&quot;`, even though the read
+isn&#39;t satisfied: it may be missing its delimiter, or be shorter than asked for. This is
+how to receive the end of a stream that the peer ends by closing, such as an HTTP/1.0
+response body.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setCallback(callback) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function | null</td>
+                    <td class="param-desc">The event handler, or `null` to remove it.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">sock.setCallback((event, sock, data, tag) =&gt; {
+    if (event === &quot;data&quot;) console.log(hs.socket.decodeText(data))
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L169" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:169</a>
+        </div>
+    </div>
+    <div class="method" id="connect">
+        <h3>
+<a href="#connect">connect(host, port) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Connects to a TCP server. The callback receives `&quot;connected&quot;` once the connection is
+ready, or `&quot;error&quot;` if it fails.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">connect(host, port) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">host</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The host name or IP address to connect to.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">port</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The TCP port to connect to.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">A connected socket, and its callback, stay alive until it disconnects, even if you don&#39;t keep a reference to it</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.socket.create().setCallback((event, sock, data) =&gt; {
+    if (event === &quot;connected&quot;) sock.write(&quot;GET / HTTP/1.0&#92;r&#92;n&#92;r&#92;n&quot;).readUntil(&quot;&#92;r&#92;n&#92;r&#92;n&quot;)
+    if (event === &quot;data&quot;) console.log(hs.socket.decodeText(data))
+}).connect(&quot;example.com&quot;, 80)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L185" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:185</a>
+        </div>
+    </div>
+    <div class="method" id="connectUnix">
+        <h3>
+<a href="#connectUnix">connectUnix(path) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Connects to a Unix domain socket. The callback receives `&quot;connected&quot;` once the connection
+is ready, or `&quot;error&quot;` if it fails.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">connectUnix(path) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The path of the Unix domain socket.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">A connected socket, and its callback, stay alive until it disconnects, even if you don&#39;t keep a reference to it</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.socket.create().setCallback(handler).connectUnix(&quot;/var/run/mysql.sock&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L197" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:197</a>
+        </div>
+    </div>
+    <div class="method" id="listen">
+        <h3>
+<a href="#listen">listen(port, address) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Listens for incoming TCP connections. The callback receives `&quot;listening&quot;` once the socket
+is ready, then `&quot;connection&quot;` for each client that connects.
+By default the socket listens on all network interfaces. Pass one of this Mac&#39;s IP
+addresses to accept connections only on that address (and so only on the interface that
+has it), e.g. `&quot;127.0.0.1&quot;` to accept connections only from this Mac. Use
+`hs.network.addresses()` to find an interface&#39;s addresses.
+If the interface&#39;s address can change (e.g. it comes from DHCP), watch
+`State:/Network/Interface/&lt;name&gt;/IPv4` with `hs.network.configurationWatcher()` and listen again
+when it does.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">listen(port, address) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">port</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The TCP port to listen on, or 0 to let the system choose one (see `localPort`).</td>
+                </tr>
+                <tr>
+                    <td class="param-name">address</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A local IPv4 or IPv6 address to listen on. Defaults to all addresses.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">A listening socket, and its callback, stay alive until it stops listening, even if you don&#39;t keep a reference to it</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.socket.create().setCallback((event, sock, data) =&gt; {
+    if (event === &quot;connection&quot;) data.write(&quot;Hello!&#92;n&quot;).readUntil(&quot;&#92;n&quot;)
+    if (event === &quot;data&quot;) sock.write(data)
+}).listen(9000)
+
+// Only reachable from this Mac
+hs.socket.create().setCallback(handler).listen(9001, &quot;127.0.0.1&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L224" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:224</a>
+        </div>
+    </div>
+    <div class="method" id="listenUnix">
+        <h3>
+<a href="#listenUnix">listenUnix(path) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Listens for incoming connections on a Unix domain socket. A stale socket file left at
+`path` is replaced, and the file is removed when the socket stops listening.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">listenUnix(path) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The path to create the Unix domain socket at.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">A listening socket, and its callback, stay alive until it stops listening, even if you don&#39;t keep a reference to it</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.socket.create().setCallback(handler).listenUnix(&quot;/tmp/hammerspoon.sock&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L236" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:236</a>
+        </div>
+    </div>
+    <div class="method" id="enableTLS">
+        <h3>
+<a href="#enableTLS">enableTLS(peerName, allowUntrusted) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Makes the next `connect()` use TLS. The server&#39;s certificate is checked against the
+system&#39;s trusted certificates and against `peerName`, or the host passed to `connect()`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">enableTLS(peerName, allowUntrusted) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">peerName</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The name the server&#39;s certificate must match, if it differs from the host you connect to.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">allowUntrusted</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">`true` to accept any certificate, e.g. a self-signed one. This makes the connection vulnerable to interception, so only use it for testing.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.socket.create().enableTLS().setCallback(handler).connect(&quot;example.com&quot;, 443)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L248" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:248</a>
+        </div>
+    </div>
+    <div class="method" id="enableServerTLS">
+        <h3>
+<a href="#enableServerTLS">enableServerTLS(path, passphrase) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Makes the next `listen()` use TLS, presenting the certificate and private key stored in a
+PKCS#12 (`.p12`) file. If the file can&#39;t be loaded, `listen()` reports an error instead of
+listening without encryption.
+A PKCS#12 file can be exported from Keychain Access, or made from a certificate and key
+with `openssl pkcs12 -export -in cert.pem -inkey key.pem -out server.p12`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">enableServerTLS(path, passphrase) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The path to the PKCS#12 file.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">passphrase</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The passphrase protecting the file. Defaults to an empty passphrase.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">TLS isn&#39;t supported on Unix domain sockets, so `listenUnix()` reports an error if this has been called</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.socket.create().setCallback(handler).enableServerTLS(&quot;~/.config/server.p12&quot;, &quot;secret&quot;).listen(8443)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L265" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:265</a>
+        </div>
+    </div>
+    <div class="method" id="enableServerTLSFromKeychain">
+        <h3>
+<a href="#enableServerTLSFromKeychain">enableServerTLSFromKeychain(name) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Makes the next `listen()` use TLS, presenting a certificate and private key (an identity)
+from the keychain. The identity is found by its certificate&#39;s name, as Keychain Access
+shows it (usually the certificate&#39;s common name). If no identity has that name, `listen()`
+reports an error instead of listening without encryption.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">enableServerTLSFromKeychain(name) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The name of the certificate, e.g. `&quot;myhost.local&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">macOS may ask for permission to use the private key the first time a client connects</div>
+        <div class="note">TLS isn&#39;t supported on Unix domain sockets, so `listenUnix()` reports an error if this has been called</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.socket.create().setCallback(handler).enableServerTLSFromKeychain(&quot;myhost.local&quot;).listen(8443)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L280" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:280</a>
+        </div>
+    </div>
+    <div class="method" id="readUntil">
+        <h3>
+<a href="#readUntil">readUntil(delimiter, tag) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Queues a read that completes once `delimiter` arrives. The callback receives the data up
+to and including the delimiter.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">readUntil(delimiter, tag) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">delimiter</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The text that ends the read, e.g. `&quot;&#92;n&quot;`. It is matched as UTF-8 bytes.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">tag</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A number passed back to the callback with the data. Defaults to 0.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">sock.readUntil(&quot;&#92;r&#92;n&quot;, 1)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L292" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:292</a>
+        </div>
+    </div>
+    <div class="method" id="readBytes">
+        <h3>
+<a href="#readBytes">readBytes(length, tag) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Queues a read that completes once exactly `length` bytes have arrived.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">readBytes(length, tag) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">length</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The number of bytes to read.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">tag</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A number passed back to the callback with the data. Defaults to 0.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">sock.readBytes(4, 2)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L303" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:303</a>
+        </div>
+    </div>
+    <div class="method" id="readAvailable">
+        <h3>
+<a href="#readAvailable">readAvailable(tag) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Queues a read that completes with whatever data is available, as soon as there is any.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">readAvailable(tag) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">tag</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A number passed back to the callback with the data. Defaults to 0.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">sock.readAvailable()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L313" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:313</a>
+        </div>
+    </div>
+    <div class="method" id="write">
+        <h3>
+<a href="#write">write(text) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Sends text over the connection, encoded as UTF-8. Writes are sent in order, and can be
+made before the connection is ready.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">write(text) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">text</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The text to send.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">sock.write(&quot;HELO example.com&#92;r&#92;n&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L324" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:324</a>
+        </div>
+    </div>
+    <div class="method" id="writeBytes">
+        <h3>
+<a href="#writeBytes">writeBytes(bytes) -> HSSocket</a>
+        </h3>
+
+        <div class="description">Sends raw bytes over the connection.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">writeBytes(bytes) -> HSSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">bytes</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">The bytes to send. Any typed array is accepted.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">sock.writeBytes(new Uint8Array([0x01, 0x02, 0x03]))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L334" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:334</a>
+        </div>
+    </div>
+    <div class="method" id="disconnect">
+        <h3>
+<a href="#disconnect">disconnect() -> HSSocket</a>
+        </h3>
+
+        <div class="description">Closes the connection after sending any data already written, or stops listening. A
+listening socket also disconnects every client it accepted. Queued reads, and data received
+that no read has asked for yet, are discarded.
+The socket can be connected or listen again afterwards.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">disconnect() -> HSSocket</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSocket</div>
+        <div class="return-desc">The socket, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">The callback receives `&quot;disconnected&quot;` (for this socket, and for each client of a listening socket) before `disconnect()` returns, so update any state the handler relies on before calling it</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">sock.write(&quot;QUIT&#92;r&#92;n&quot;).disconnect()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L348" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:348</a>
+        </div>
+    </div>
+    <div class="method" id="destroy">
+        <h3>
+<a href="#destroy">destroy() -> None</a>
+        </h3>
+
+        <div class="description">Disconnects the socket and releases its callback. Unlike `disconnect()`, the callback isn&#39;t
+called.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">destroy() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">sock.destroy()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.socket/HSSocket.swift#L356" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.socket/HSSocket.swift:356</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSSocket');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
