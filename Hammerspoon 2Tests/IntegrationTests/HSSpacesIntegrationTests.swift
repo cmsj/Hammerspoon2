@@ -47,8 +47,8 @@ private func settle(_ promise: String, in harness: JSTestHarness, timeout: TimeI
 @MainActor
 private func withSpacesRestored(in harness: JSTestHarness, _ body: () async throws -> Void) async throws {
     harness.eval("""
-        var __startSpaces = Object.values(hs.spaces.allSpaces()).flat();
-        var __startActive = Object.values(hs.spaces.activeSpaces());
+        var __startSpaces = hs.spaces.allSpaces().map(s => s.id);
+        var __startCurrent = hs.spaces.displays().map(d => d.currentSpace.id);
     """)
     let result: Result<Void, any Error>
     do {
@@ -61,11 +61,13 @@ private func withSpacesRestored(in harness: JSTestHarness, _ body: () async thro
     // Queued behind anything still running, so this waits for it to finish
     _ = await settle("hs.spaces.closeMissionControl()", in: harness, timeout: 60)
     harness.eval("""
-        var __current = Object.values(hs.spaces.activeSpaces());
-        var __back = __startActive.filter(id => !__current.includes(id));
-        var __added = Object.values(hs.spaces.allSpaces()).flat().filter(id => !__startSpaces.includes(id));
+        var __current = hs.spaces.displays().map(d => d.currentSpace.id);
+        var __back = __startCurrent.filter(id => !__current.includes(id));
+        var __added = hs.spaces.allSpaces().filter(s => !__startSpaces.includes(s.id));
     """)
-    let restore = "Promise.allSettled([...__back.map(id => hs.spaces.gotoSpace(id)), ...__added.map(id => hs.spaces.removeSpace(id))])"
+    let restore = """
+        Promise.allSettled([...__back.map(id => hs.spaces.spaceForID(id).goto()), ...__added.map(s => s.remove())])
+    """
     _ = await settle(restore, in: harness, timeout: 60)
     _ = await settle("hs.spaces.closeMissionControl()", in: harness, timeout: 20)
     try result.get()
@@ -139,7 +141,7 @@ struct HSSpacesTests {
         }
     }
 
-    // MARK: - Space queries
+    // MARK: - Displays and spaces
 
     @Suite("hs.spaces query tests",
            .disabled(if: !isSkyLightAvailable(), "SkyLight is unavailable"))
@@ -151,116 +153,127 @@ struct HSSpacesTests {
             return harness
         }
 
-        /// Every space ID allSpaces() reports, flattened
-        private let allIDs = "Object.values(hs.spaces.allSpaces()).flat()"
-
-        @Test("focusedSpace() is a known space")
-        func testFocusedSpaceIsKnown() {
+        @Test("displays() each have spaces, one of which is current")
+        func testDisplays() {
             let harness = makeHarness()
-            harness.expectTrue("hs.spaces.focusedSpace() > 0")
-            harness.expectTrue("\(allIDs).includes(hs.spaces.focusedSpace())")
-        }
-
-        @Test("allSpaces() has an entry for every screen")
-        func testAllSpacesCoversScreens() {
-            let harness = makeHarness()
-            harness.eval("var all = hs.spaces.allSpaces()")
-            harness.expectTrue("Object.keys(all).length >= 1")
-            harness.expectTrue("Object.values(all).every(ids => Array.isArray(ids) && ids.length >= 1)")
-            if NSScreen.screensHaveSeparateSpaces {
-                harness.expectTrue("hs.screen.all().every(s => Array.isArray(all[s.uuid]))")
-            }
+            harness.eval("var displays = hs.spaces.displays()")
+            harness.expectTrue("displays.length >= 1")
+            harness.expectTrue("displays.every(d => d.spaces.length >= 1)")
+            harness.expectTrue("displays.every(d => d.spaces.filter(s => s.isCurrent).length === 1)")
+            harness.expectTrue("displays.every(d => d.spaces.some(s => s.id === d.currentSpace.id))")
             #expect(!harness.hasException)
         }
 
-        @Test("activeSpaces() picks one space from each display")
-        func testActiveSpacesAreOnTheirDisplay() {
+        @Test("With separate spaces, there's one display per screen, and each is its screen")
+        func testDisplaysMatchScreens() throws {
+            try #require(NSScreen.screensHaveSeparateSpaces)
             let harness = makeHarness()
-            harness.eval("""
-                var all = hs.spaces.allSpaces();
-                var active = hs.spaces.activeSpaces();
-            """)
-            harness.expectTrue("Object.keys(active).length === Object.keys(all).length")
-            harness.expectTrue("Object.keys(active).every(uuid => all[uuid].includes(active[uuid]))")
+            #expect(harness.evalString("hs.spaces.displays().map(d => d.uuid).sort().join()")
+                    == harness.evalString("hs.screen.all().map(s => s.uuid).sort().join()"))
+            harness.expectTrue("hs.spaces.displays().every(d => d.screen.uuid === d.uuid)")
             #expect(!harness.hasException)
         }
 
-        @Test("spacesForScreen() defaults to the main screen")
-        func testSpacesForScreenDefault() {
-            let harness = makeHarness()
-            harness.expectTrue("""
-                JSON.stringify(hs.spaces.spacesForScreen()) === JSON.stringify(hs.spaces.spacesForScreen(hs.screen.main()))
-            """)
-            harness.expectTrue("hs.spaces.spacesForScreen().length >= 1")
-        }
-
-        @Test("activeSpaceOnScreen() is one of that screen's spaces")
-        func testActiveSpaceOnScreen() {
-            let harness = makeHarness()
-            harness.expectTrue("""
-                hs.screen.all().every(s => hs.spaces.spacesForScreen(s).includes(hs.spaces.activeSpaceOnScreen(s)))
-            """)
-        }
-
-        @Test("spaceType() of every space is a known kind")
-        func testSpaceTypes() {
-            let harness = makeHarness()
-            harness.expectTrue("""
-                \(allIDs).every(id => ["user", "fullscreen", "system", "unknown"].includes(hs.spaces.spaceType(id)))
-            """)
-        }
-
-        @Test("spaceScreen() of the active space on each screen is that screen")
-        func testSpaceScreen() {
+        @Test("displayForScreen() finds each screen's display")
+        func testDisplayForScreen() {
             let harness = makeHarness()
             harness.expectTrue("""
                 hs.screen.all().every(s => {
-                    const screen = hs.spaces.spaceScreen(hs.spaces.activeSpaceOnScreen(s));
-                    return screen !== undefined && (screen.uuid === s.uuid || !hs.spaces.screensHaveSeparateSpaces());
+                    const d = hs.spaces.displayForScreen(s);
+                    return d !== null && (d.uuid === s.uuid || !hs.spaces.screensHaveSeparateSpaces());
                 })
             """)
+            #expect(!harness.hasException)
         }
 
-        @Test("windowsForSpace() returns an array of window IDs")
-        func testWindowsForSpace() {
+        @Test("allSpaces() is every display's spaces, in order")
+        func testAllSpaces() {
             let harness = makeHarness()
-            harness.eval("var ids = hs.spaces.windowsForSpace(hs.spaces.focusedSpace())")
+            #expect(harness.evalString("hs.spaces.allSpaces().map(s => s.id).join()")
+                    == harness.evalString("hs.spaces.displays().flatMap(d => d.spaces).map(s => s.id).join()"))
+        }
+
+        @Test("Every space knows its display, type and UUID, and can be looked up again")
+        func testSpaceProperties() {
+            let harness = makeHarness()
+            harness.eval("var spaces = hs.spaces.allSpaces()")
+            harness.expectTrue("spaces.every(s => s.exists)")
+            harness.expectTrue("spaces.every(s => ['desktop', 'fullscreen', 'unknown'].includes(s.type))")
+            harness.expectTrue("spaces.every(s => s.display.spaces.some(o => o.id === s.id))")
+            // A new account's first desktop has no UUID
+            harness.expectTrue("spaces.every(s => s.uuid === null || /^[0-9A-F-]{36}$/i.test(s.uuid))")
+            harness.expectTrue("spaces.every(s => hs.spaces.spaceForID(s.id).id === s.id)")
+            harness.expectTrue("spaces.filter(s => s.uuid).every(s => hs.spaces.spaceForUUID(s.uuid).id === s.id)")
+            harness.expectTrue("spaces.filter(s => s.uuid).every(s => hs.spaces.spaceForUUID(s.uuid.toLowerCase()).id === s.id)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("Desktops are numbered from 1 across all displays, and fullscreen spaces aren't numbered")
+        func testDesktopNumbers() {
+            let harness = makeHarness()
+            harness.eval("var spaces = hs.spaces.allSpaces()")
+            harness.expectTrue("""
+                JSON.stringify(spaces.filter(s => s.type === 'desktop').map(s => s.desktopNumber))
+                    === JSON.stringify(spaces.filter(s => s.type === 'desktop').map((s, i) => i + 1))
+            """)
+            harness.expectTrue("spaces.filter(s => s.type !== 'desktop').every(s => s.desktopNumber === null)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("focusedSpace() is focused and current on its display")
+        func testFocusedSpace() {
+            let harness = makeHarness()
+            harness.eval("var focused = hs.spaces.focusedSpace()")
+            harness.expectTrue("focused.isFocused && focused.isCurrent")
+            harness.expectTrue("focused.display.currentSpace.id === focused.id")
+            #expect(harness.evalInt("hs.spaces.allSpaces().filter(s => s.isFocused).length") == 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("windowIDs() returns an array of window IDs")
+        func testWindowIDs() {
+            let harness = makeHarness()
+            harness.eval("var ids = hs.spaces.focusedSpace().windowIDs()")
             harness.expectTrue("Array.isArray(ids)")
             harness.expectTrue("ids.every(id => typeof id === 'number' && id > 0)")
             #expect(!harness.hasException)
         }
 
-        @Test("managedDisplaySpaces() describes the same spaces as allSpaces()")
-        func testManagedDisplaySpaces() {
+        @Test("toJSON() describes spaces and displays")
+        func testToJSON() {
             let harness = makeHarness()
             harness.eval("""
-                var raw = hs.spaces.managedDisplaySpaces();
-                var rawIDs = raw.flatMap(d => d.Spaces.map(s => s.ManagedSpaceID)).sort();
+                var space = JSON.parse(JSON.stringify(hs.spaces.focusedSpace()));
+                var display = JSON.parse(JSON.stringify(hs.spaces.focusedSpace().display));
             """)
-            harness.expectTrue("Array.isArray(raw) && raw.length >= 1")
-            harness.expectTrue("raw.every(d => typeof d['Display Identifier'] === 'string')")
-            #expect(harness.evalString("JSON.stringify(rawIDs)") == harness.evalString("JSON.stringify(\(allIDs).sort())"))
+            harness.expectTrue("space.id === hs.spaces.focusedSpace().id && space.isFocused === true")
+            harness.expectTrue("space.display === display.uuid")
+            harness.expectTrue("display.spaces.includes(space.id) && display.currentSpace === space.id")
             #expect(!harness.hasException)
         }
 
-        @Test("Unknown space IDs are rejected without throwing",
+        @Test("Unknown spaces and windows aren't found",
               arguments: ["0", "-1", "999999999"])
-        func testUnknownSpaces(id: String) {
+        func testUnknownIDs(id: String) {
             let harness = makeHarness()
-            harness.expectTrue("hs.spaces.spaceType(\(id)) === null")
-            harness.expectTrue("hs.spaces.spaceScreen(\(id)) === null")
-            harness.expectTrue("hs.spaces.windowsForSpace(\(id)).length === 0")
-            harness.expectTrue("hs.spaces.windowSpacesForID(\(id)).length === 0")
+            harness.expectTrue("hs.spaces.spaceForID(\(id)) === null")
+            harness.expectTrue("hs.spaces.spacesForWindowID(\(id)).length === 0")
             #expect(!harness.hasException)
         }
 
-        @Test("gotoSpace() and removeSpace() reject unknown space IDs",
-              arguments: ["gotoSpace", "removeSpace"])
-        func testMissionControlRejectsUnknownSpaces(function: String) async {
+        @Test("spaceForUUID() doesn't find unknown UUIDs")
+        func testUnknownUUID() {
             let harness = makeHarness()
-            harness.expectTrue("hs.spaces.\(function)(999999999) instanceof Promise")
-            let result = await settle("hs.spaces.\(function)(999999999)", in: harness)
-            #expect(result?.hasPrefix("rejected:hs.spaces.\(function)():") == true, "got \(result ?? "nothing")")
+            harness.expectTrue("hs.spaces.spaceForUUID('00000000-0000-0000-0000-000000000000') === null")
+            harness.expectTrue("hs.spaces.spaceForUUID('') === null")
+            #expect(!harness.hasException)
+        }
+
+        @Test("Moving a window that doesn't exist rejects")
+        func testMoveUnknownWindow() async {
+            let harness = makeHarness()
+            let result = await settle("hs.spaces.focusedSpace().moveWindowID(999999999)", in: harness)
+            #expect(result?.hasPrefix("rejected:HSSpace.moveWindowID(): ") == true, "got \(result ?? "nothing")")
         }
     }
 
@@ -271,7 +284,7 @@ struct HSSpacesTests {
            .disabled(if: !canInspectOwnWindows(), "SkyLight unavailable or Accessibility not granted"))
     struct HSSpacesWindowTests {
         /// Shows a window owned by the test process and exposes it to JS as `testWin`
-        private func withTestWindow(_ body: (JSTestHarness) -> Void) throws {
+        private func withTestWindow(_ body: (JSTestHarness) async -> Void) async throws {
             let title = "hs.spaces test \(UUID().uuidString)"
             let window = NSWindow(contentRect: NSRect(x: 100, y: 100, width: 200, height: 100),
                                   styleMask: [.titled], backing: .buffered, defer: false)
@@ -279,7 +292,7 @@ struct HSSpacesTests {
             window.title = title
             window.orderFrontRegardless()
             defer { window.close() }
-            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.2))
+            try await Task.sleep(for: .milliseconds(200))
 
             let app = try #require(Application(NSRunningApplication.current))
             let elements: [UIElement] = (try? app.windows()) ?? []
@@ -288,25 +301,26 @@ struct HSSpacesTests {
             let harness = JSTestHarness()
             harness.loadModule(HSSpacesModule.self, as: "spaces")
             harness.context.setObject(HSWindow(element: element, app: .current), forKeyedSubscript: "testWin" as NSString)
-            body(harness)
+            await body(harness)
         }
 
-        @Test("windowSpaces() and windowsForSpace() agree about a window")
-        func testWindowSpaces() throws {
-            try withTestWindow { harness in
-                harness.eval("var spaces = hs.spaces.windowSpaces(testWin)")
-                harness.expectTrue("spaces.length >= 1")
-                harness.expectTrue("hs.spaces.windowsForSpace(spaces[0]).includes(testWin.id)")
+        @Test("spacesForWindow() and windowIDs() agree about a window")
+        func testWindowSpaces() async throws {
+            try await withTestWindow { harness in
+                harness.eval("var spaces = hs.spaces.spacesForWindow(testWin)")
+                harness.expectTrue("spaces.length === 1")
+                harness.expectTrue("spaces[0].windowIDs().includes(testWin.id)")
+                #expect(harness.evalString("hs.spaces.spacesForWindowID(testWin.id).map(s => s.id).join()")
+                        == harness.evalString("spaces.map(s => s.id).join()"))
                 #expect(!harness.hasException)
             }
         }
 
-        @Test("windowSpacesForID() matches windowSpaces()")
-        func testWindowSpacesForID() throws {
-            try withTestWindow { harness in
-                #expect(harness.evalString("JSON.stringify(hs.spaces.windowSpacesForID(testWin.id))")
-                        == harness.evalString("JSON.stringify(hs.spaces.windowSpaces(testWin))"))
-                #expect(!harness.hasException)
+        @Test("Moving a window to the space it's on resolves straight away")
+        func testMoveToSameSpace() async throws {
+            try await withTestWindow { harness in
+                let result = await settle("hs.spaces.spacesForWindow(testWin)[0].moveWindow(testWin)", in: harness)
+                #expect(result == "resolved:undefined")
             }
         }
     }
@@ -317,58 +331,161 @@ struct HSSpacesTests {
            .serialized,
            .disabled(if: !canDriveMissionControl(), "Set TEST_RUNNER_HS_TEST_MISSION_CONTROL=1 to run (takes over the screen)"))
     struct HSSpacesMissionControlTests {
-        @Test("A desktop can be added, switched to and back, and removed")
-        func testAddGotoRemove() async throws {
+        private func makeHarness() -> JSTestHarness {
             let harness = JSTestHarness()
             harness.loadModule(HSSpacesModule.self, as: "spaces")
-            harness.loadModule(HSScreenModule.self, as: "screen")
+            return harness
+        }
+
+        /// Adds a desktop to the last display and stores it in JS as `added`, with the display as
+        /// `display`, its space IDs before as `before`, and the space it was showing as `original`
+        private func addDesktop(in harness: JSTestHarness) async throws {
+            harness.eval("""
+                var display = hs.spaces.displays()[hs.spaces.displays().length - 1];
+                var original = display.currentSpace;
+                var before = display.spaces.map(s => s.id);
+                var added = null;
+            """)
+            let result = try #require(await settle("display.addSpace().then(s => { added = s; return s.id })", in: harness))
+            try #require(result.hasPrefix("resolved:"), "got \(result)")
+        }
+
+        @Test("A desktop can be added, switched to and back, and removed")
+        func testAddGotoRemove() async throws {
+            let harness = makeHarness()
             try await withSpacesRestored(in: harness) {
-                harness.eval("""
-                    var screen = hs.screen.all()[hs.screen.all().length - 1];
-                    var original = hs.spaces.activeSpaceOnScreen(screen);
-                    var before = hs.spaces.spacesForScreen(screen);
-                """)
+                try await addDesktop(in: harness)
+                harness.expectTrue("!before.includes(added.id)")
+                harness.expectTrue("display.spaces[display.spaces.length - 1].id === added.id")
+                #expect(harness.evalString("added.type") == "desktop")
+                harness.expectTrue("added.display.uuid === display.uuid")
 
-                let added = try #require(await settle("hs.spaces.addSpaceToScreen(screen)", in: harness))
-                try #require(added.hasPrefix("resolved:"), "got \(added)")
-                harness.eval("var added = \(added.dropFirst("resolved:".count))")
-                harness.expectTrue("!before.includes(added)")
-                harness.expectTrue("hs.spaces.spacesForScreen(screen).includes(added)")
-                #expect(harness.evalString("hs.spaces.spaceType(added)") == "user")
+                #expect(await settle("added.goto()", in: harness) == "resolved:undefined")
+                harness.expectTrue("added.isCurrent && display.currentSpace.id === added.id")
 
-                #expect(await settle("hs.spaces.gotoSpace(added)", in: harness) == "resolved:undefined")
-                harness.expectTrue("hs.spaces.activeSpaceOnScreen(screen) === added")
+                #expect(await settle("original.goto()", in: harness) == "resolved:undefined")
+                harness.expectTrue("original.isCurrent && !added.isCurrent")
 
-                #expect(await settle("hs.spaces.gotoSpace(original)", in: harness) == "resolved:undefined")
-                harness.expectTrue("hs.spaces.activeSpaceOnScreen(screen) === original")
-
-                #expect(await settle("hs.spaces.removeSpace(added)", in: harness) == "resolved:undefined")
-                harness.expectTrue("JSON.stringify(hs.spaces.spacesForScreen(screen)) === JSON.stringify(before)")
+                #expect(await settle("added.remove()", in: harness) == "resolved:undefined")
+                harness.expectTrue("!added.exists && added.type === null && added.display === null")
+                #expect(harness.evalString("display.spaces.map(s => s.id).join()") == harness.evalString("before.join()"))
+                let again = await settle("added.goto()", in: harness)
+                #expect(again?.hasPrefix("rejected:HSSpace.goto(): ") == true, "got \(again ?? "nothing")")
                 #expect(!harness.hasException)
             }
         }
 
-        @Test("missionControlSpaceNames() names every space")
-        func testSpaceNames() async throws {
-            let harness = JSTestHarness()
-            harness.loadModule(HSSpacesModule.self, as: "spaces")
-            let result = try #require(await settle("hs.spaces.missionControlSpaceNames().then(n => JSON.stringify(n))", in: harness))
-            try #require(result.hasPrefix("resolved:"), "got \(result)")
-            harness.eval("var names = \(result.dropFirst("resolved:".count)); var all = hs.spaces.allSpaces();")
-            harness.expectTrue("JSON.stringify(Object.keys(names).sort()) === JSON.stringify(Object.keys(all).sort())")
-            harness.expectTrue("Object.keys(all).every(u => all[u].every(id => typeof names[u][id] === 'string' && names[u][id].length > 0))")
-            #expect(await isMissionControlClosed())
-            #expect(!harness.hasException)
+        @Test("The change event says which display switched, and from and to which space")
+        func testChangeEvent() async throws {
+            let harness = makeHarness()
+            try await withSpacesRestored(in: harness) {
+                try await addDesktop(in: harness)
+                harness.eval("""
+                    var changes = [];
+                    hs.spaces.on('change', ({ display, from, to }) => changes.push([display.uuid, from && from.id, to.id]));
+                """)
+                #expect(await settle("added.goto()", in: harness) == "resolved:undefined")
+                _ = await harness.waitForAsync(timeout: 2) { harness.evalInt("changes.length") ?? 0 > 0 }
+                #expect(harness.evalString("JSON.stringify(changes)")
+                        == harness.evalString("JSON.stringify([[display.uuid, original.id, added.id]])"))
+                #expect(!harness.hasException)
+            }
+        }
+
+        @Test("The desktop a display is showing can't be removed")
+        func testRemoveCurrent() async throws {
+            let harness = makeHarness()
+            try await withSpacesRestored(in: harness) {
+                try await addDesktop(in: harness)
+                #expect(await settle("added.goto()", in: harness) == "resolved:undefined")
+                let result = await settle("added.remove()", in: harness)
+                #expect(result?.hasPrefix("rejected:HSSpace.remove(): ") == true, "got \(result ?? "nothing")")
+                harness.expectTrue("added.exists")
+            }
+        }
+
+        @Test("Another app's window can be moved to another desktop")
+        func testMoveOtherAppsWindow() async throws {
+            let app = try #require(await TestAppControl.launch(detail: "hs.spaces moves this window to another desktop"))
+            defer { app.terminate() }
+            let windowList = CGWindowListCopyWindowInfo(.optionAll, kCGNullWindowID) as? [[String: Any]] ?? []
+            let window = try #require(windowList.first {
+                ($0[kCGWindowOwnerPID as String] as? pid_t) == app.processIdentifier && ($0[kCGWindowLayer as String] as? Int) == 0
+            }?[kCGWindowNumber as String] as? Int)
+
+            let harness = makeHarness()
+            try await withSpacesRestored(in: harness) {
+                harness.eval("var win = \(window)")
+                try await addDesktop(in: harness)
+                harness.expectTrue("hs.spaces.spacesForWindowID(win)[0].id !== added.id")
+
+                #expect(await settle("added.moveWindowID(win)", in: harness) == "resolved:undefined")
+                #expect(harness.evalString("hs.spaces.spacesForWindowID(win).map(s => s.id).join()") == harness.evalString("String(added.id)"))
+                harness.expectTrue("added.windowIDs().includes(win)")
+                harness.expectTrue("!original.windowIDs().includes(win)")
+
+                #expect(await settle("original.moveWindowID(win)", in: harness) == "resolved:undefined")
+                harness.expectTrue("original.windowIDs().includes(win)")
+                #expect(!harness.hasException)
+            }
+        }
+
+        @Test("A fullscreen space is reported as one, and windows can't be moved into or out of it")
+        func testFullscreenSpace() async throws {
+            let app = try #require(await TestAppControl.launch(detail: "hs.spaces checks this app's fullscreen space"))
+            defer { app.terminate() }
+            let harness = makeHarness()
+            try await withSpacesRestored(in: harness) {
+                harness.eval("var fullscreen = null; var desktop = hs.spaces.focusedSpace();")
+                TestAppControl.openFullScreenWindow(in: app.processIdentifier)
+                let appeared = await harness.waitForAsync(timeout: 5) {
+                    harness.evalBool("(fullscreen = hs.spaces.allSpaces().find(s => s.type === 'fullscreen' && s.windowIDs().length > 0) || null) !== null") == true
+                }
+                try #require(appeared, "the test app's fullscreen space didn't appear")
+                harness.expectTrue("fullscreen.desktopNumber === null")
+                harness.eval("var win = fullscreen.windowIDs()[0]")
+
+                let into = await settle("fullscreen.moveWindowID(win)", in: harness)
+                #expect(into?.hasPrefix("rejected:HSSpace.moveWindowID(): windows can only be moved to a desktop") == true,
+                        "got \(into ?? "nothing")")
+                let outOf = await settle("desktop.moveWindowID(win)", in: harness)
+                #expect(outOf?.hasPrefix("rejected:HSSpace.moveWindowID(): ") == true && outOf?.hasSuffix("is in a fullscreen space, so it can't be moved") == true,
+                        "got \(outOf ?? "nothing")")
+                #expect(!harness.hasException)
+
+                // Quitting the app removes its space; wait for that so later tests see a normal setup
+                app.terminate()
+                _ = await harness.waitForAsync(timeout: 5) { harness.evalBool("fullscreen.exists") == false }
+            }
+        }
+
+        @Test("missionControlNames() names every space, and agrees with desktopNumber")
+        func testNames() async throws {
+            let harness = makeHarness()
+            try await withSpacesRestored(in: harness) {
+                // At least two desktops, so Mission Control numbers them
+                try await addDesktop(in: harness)
+                let result = try #require(await settle("hs.spaces.missionControlNames().then(n => JSON.stringify(n))", in: harness))
+                try #require(result.hasPrefix("resolved:"), "got \(result)")
+                harness.eval("var names = \(result.dropFirst("resolved:".count)); var all = hs.spaces.allSpaces();")
+                harness.expectTrue("all.every(s => typeof names[s.id] === 'string' && names[s.id].length > 0)")
+                // Mission Control's own "Desktop N" titles end with the same numbers desktopNumber computes
+                harness.eval("var desktops = all.filter(s => s.type === 'desktop')")
+                #expect(harness.evalString("desktops.map(s => names[s.id].split(' ').pop()).join()")
+                        == harness.evalString("desktops.map(s => s.desktopNumber).join()"),
+                        "names: \(result)")
+                #expect(await isMissionControlClosed())
+                #expect(!harness.hasException)
+            }
         }
 
         @Test("openMissionControl() keeps Mission Control open across other operations until closeMissionControl()")
         func testOpenAndClose() async throws {
-            let harness = JSTestHarness()
-            harness.loadModule(HSSpacesModule.self, as: "spaces")
+            let harness = makeHarness()
             try await withSpacesRestored(in: harness) {
                 #expect(await settle("hs.spaces.openMissionControl()", in: harness) == "resolved:undefined")
                 #expect(HSMissionControl.isOpen)
-                #expect(await settle("hs.spaces.missionControlSpaceNames()", in: harness)?.hasPrefix("resolved:") == true)
+                #expect(await settle("hs.spaces.missionControlNames()", in: harness)?.hasPrefix("resolved:") == true)
                 #expect(HSMissionControl.isOpen)
                 #expect(await settle("hs.spaces.closeMissionControl()", in: harness) == "resolved:undefined")
                 #expect(await isMissionControlClosed())
@@ -378,8 +495,7 @@ struct HSSpacesTests {
 
         @Test("toggleMissionControl() opens and closes Mission Control")
         func testToggleMissionControl() async throws {
-            let harness = JSTestHarness()
-            harness.loadModule(HSSpacesModule.self, as: "spaces")
+            let harness = makeHarness()
             try await withSpacesRestored(in: harness) {
                 harness.eval("hs.spaces.toggleMissionControl()")
                 let opened = (try? await HSMissionControl.waitUntil("not open") { HSMissionControl.isOpen }) != nil
@@ -397,23 +513,45 @@ struct HSSpacesTests {
 
         @Test("Mission Control operations queue rather than overlap")
         func testOperationsQueue() async throws {
-            let harness = JSTestHarness()
-            harness.loadModule(HSSpacesModule.self, as: "spaces")
-            harness.loadModule(HSScreenModule.self, as: "screen")
+            let harness = makeHarness()
             try await withSpacesRestored(in: harness) {
-                harness.eval("var screen = hs.screen.all()[hs.screen.all().length - 1]; var before = hs.spaces.spacesForScreen(screen);")
+                harness.eval("var display = hs.spaces.displays()[0]; var before = display.spaces.map(s => s.id); var added = [];")
 
                 // Fire both adds without waiting, then both removes
-                let both = "Promise.all([hs.spaces.addSpaceToScreen(screen), hs.spaces.addSpaceToScreen(screen)])"
-                let added = try #require(await settle(both, in: harness, timeout: 20))
-                try #require(added.hasPrefix("resolved:"), "got \(added)")
-                harness.eval("var added = [\(added.dropFirst("resolved:".count))]")
-                harness.expectTrue("added.length === 2 && added[0] !== added[1]")
+                let both = "Promise.all([display.addSpace(), display.addSpace()]).then(s => { added = s; return s.length })"
+                #expect(await settle(both, in: harness, timeout: 20) == "resolved:2")
+                harness.expectTrue("added[0].id !== added[1].id")
 
-                #expect(await settle("Promise.all(added.map(id => hs.spaces.removeSpace(id)))", in: harness, timeout: 20) == "resolved:,")
-                harness.expectTrue("JSON.stringify(hs.spaces.spacesForScreen(screen)) === JSON.stringify(before)")
+                #expect(await settle("Promise.all(added.map(s => s.remove()))", in: harness, timeout: 20) == "resolved:,")
+                #expect(harness.evalString("display.spaces.map(s => s.id).join()") == harness.evalString("before.join()"))
                 #expect(!harness.hasException)
             }
         }
+    }
+
+    // MARK: - Memory
+
+    @Test("Spaces and displays are released after shutdown")
+    func testObjectsDoNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        autoreleasepool {
+            let harness = JSTestHarness()
+            harness.loadModule(HSSpacesModule.self, as: "spaces")
+            harness.eval("""
+                var space = hs.spaces.focusedSpace();
+                var display = hs.spaces.displays()[0];
+                var spaces = display ? display.spaces : [];
+                hs.spaces.on('change', () => {});
+            """)
+            if let space = harness.evalValue("space")?.toObjectOf(HSSpace.self) as? HSSpace {
+                tracker.track(space)
+            }
+            if let display = harness.evalValue("display")?.toObjectOf(HSSpacesDisplay.self) as? HSSpacesDisplay {
+                tracker.track(display)
+            }
+            harness.eval("space = null; display = null; spaces = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
     }
 }

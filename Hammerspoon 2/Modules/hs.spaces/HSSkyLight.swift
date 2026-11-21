@@ -6,7 +6,7 @@
 import Foundation
 import CoreGraphics
 
-/// A thin wrapper around the private SkyLight framework functions hs.spaces needs.
+/// A thin wrapper around the private SkyLight framework functions hs.spaces needs to read Spaces.
 ///
 /// SkyLight is the private framework WindowServer clients (including the Dock and Mission Control)
 /// use to manage Spaces. It can report on spaces and the windows on them, but it can't add, remove,
@@ -26,12 +26,14 @@ final class HSSkyLight {
     typealias ConnectionID = Int32
     typealias SpaceID = UInt64
 
-    /// The values SLSSpaceGetType returns for the kinds of space we know about
-    enum SpaceKind: Int32 {
-        case user = 0
-        case system = 2
+    /// The `type` values SkyLight gives the kinds of managed space
+    enum SpaceKind: Int {
+        case desktop = 0
         case fullscreen = 4
     }
+
+    /// SkyLight's managed display identifier when all displays share one set of spaces
+    static let sharedSpacesDisplayIdentifier = "Main"
 
     /// Mask for SLSCopySpacesForWindows meaning "every space the window is on"
     private static let allSpacesMask: Int32 = 0x7
@@ -41,8 +43,6 @@ final class HSSkyLight {
     private typealias MainConnectionIDFn = @convention(c) () -> ConnectionID
     private typealias GetActiveSpaceFn = @convention(c) (ConnectionID) -> SpaceID
     private typealias CopyManagedDisplaySpacesFn = @convention(c) (ConnectionID) -> Unmanaged<CFArray>?
-    private typealias CopyManagedDisplayForSpaceFn = @convention(c) (ConnectionID, SpaceID) -> Unmanaged<CFString>?
-    private typealias SpaceGetTypeFn = @convention(c) (ConnectionID, SpaceID) -> Int32
     private typealias CopySpacesForWindowsFn = @convention(c) (ConnectionID, Int32, CFArray) -> Unmanaged<CFArray>?
     private typealias CopyWindowsWithOptionsAndTagsFn = @convention(c) (
         ConnectionID, UInt32, CFArray, UInt32, UnsafeMutablePointer<UInt64>, UnsafeMutablePointer<UInt64>
@@ -55,8 +55,6 @@ final class HSSkyLight {
     private let connection: ConnectionID
     private let getActiveSpaceFn: GetActiveSpaceFn
     private let copyManagedDisplaySpacesFn: CopyManagedDisplaySpacesFn
-    private let copyManagedDisplayForSpaceFn: CopyManagedDisplayForSpaceFn
-    private let spaceGetTypeFn: SpaceGetTypeFn
     private let copySpacesForWindowsFn: CopySpacesForWindowsFn
     private let copyWindowsWithOptionsAndTagsFn: CopyWindowsWithOptionsAndTagsFn
 
@@ -77,8 +75,6 @@ final class HSSkyLight {
         guard let mainConnectionID = load("SLSMainConnectionID", as: MainConnectionIDFn.self),
               let getActiveSpace = load("SLSGetActiveSpace", as: GetActiveSpaceFn.self),
               let copyManagedDisplaySpaces = unsafe load("SLSCopyManagedDisplaySpaces", as: CopyManagedDisplaySpacesFn.self),
-              let copyManagedDisplayForSpace = unsafe load("SLSCopyManagedDisplayForSpace", as: CopyManagedDisplayForSpaceFn.self),
-              let spaceGetType = load("SLSSpaceGetType", as: SpaceGetTypeFn.self),
               let copySpacesForWindows = unsafe load("SLSCopySpacesForWindows", as: CopySpacesForWindowsFn.self),
               let copyWindowsWithOptionsAndTags = unsafe load("SLSCopyWindowsWithOptionsAndTags", as: CopyWindowsWithOptionsAndTagsFn.self)
         else {
@@ -88,13 +84,23 @@ final class HSSkyLight {
         connection = mainConnectionID()
         getActiveSpaceFn = getActiveSpace
         unsafe copyManagedDisplaySpacesFn = copyManagedDisplaySpaces
-        unsafe copyManagedDisplayForSpaceFn = copyManagedDisplayForSpace
-        spaceGetTypeFn = spaceGetType
         unsafe copySpacesForWindowsFn = copySpacesForWindows
         unsafe copyWindowsWithOptionsAndTagsFn = copyWindowsWithOptionsAndTags
     }
 
     // MARK: - Displays and spaces
+
+    /// One managed space
+    struct Space {
+        let id: SpaceID
+        let uuid: String
+        /// SkyLight's raw type - see SpaceKind
+        let type: Int
+        /// For a fullscreen space, the windows of the app(s) filling it
+        let fullscreenWindows: [CGWindowID]
+
+        var kind: SpaceKind? { SpaceKind(rawValue: type) }
+    }
 
     /// One entry per managed display, in SkyLight's order
     struct ManagedDisplay {
@@ -102,7 +108,10 @@ final class HSSkyLight {
         /// share one set of spaces ("Displays have separate Spaces" turned off)
         let identifier: String
         let currentSpace: SpaceID?
-        let spaces: [SpaceID]
+        /// The display's spaces, in Mission Control's order
+        let spaces: [Space]
+
+        var spaceIDs: [SpaceID] { spaces.map(\.id) }
     }
 
     /// The space that currently has keyboard focus
@@ -112,31 +121,23 @@ final class HSSkyLight {
 
     /// Every managed display and the spaces on it
     func managedDisplays() -> [ManagedDisplay] {
-        rawManagedDisplaySpaces().compactMap { display in
+        let raw = unsafe copyManagedDisplaySpacesFn(connection)?.takeRetainedValue() as? [[String: Any]] ?? []
+        return raw.compactMap { display in
             guard let identifier = display["Display Identifier"] as? String else { return nil }
-            let spaces = (display["Spaces"] as? [[String: Any]] ?? []).compactMap(Self.spaceID(from:))
-            let currentSpace = (display["Current Space"] as? [String: Any]).flatMap(Self.spaceID(from:))
+            let spaces = (display["Spaces"] as? [[String: Any]] ?? []).compactMap(Self.space(from:))
+            let currentSpace = (display["Current Space"] as? [String: Any]).flatMap(Self.space(from:))?.id
             return ManagedDisplay(identifier: identifier, currentSpace: currentSpace, spaces: spaces)
         }
     }
 
-    /// SLSCopyManagedDisplaySpaces's result, unparsed
-    func rawManagedDisplaySpaces() -> [[String: Any]] {
-        unsafe copyManagedDisplaySpacesFn(connection)?.takeRetainedValue() as? [[String: Any]] ?? []
-    }
-
-    private static func spaceID(from space: [String: Any]) -> SpaceID? {
-        (space["ManagedSpaceID"] as? NSNumber)?.uint64Value
-    }
-
-    /// The managed display identifier of the display holding `space`
-    func displayIdentifier(for space: SpaceID) -> String? {
-        unsafe copyManagedDisplayForSpaceFn(connection, space)?.takeRetainedValue() as String?
-    }
-
-    /// The raw SLSSpaceGetType value for `space`
-    func type(of space: SpaceID) -> Int32 {
-        spaceGetTypeFn(connection, space)
+    private static func space(from space: [String: Any]) -> Space? {
+        guard let id = (space["ManagedSpaceID"] as? NSNumber)?.uint64Value else { return nil }
+        // A fullscreen space's app windows are its TileLayoutManager's tile spaces
+        let tiles = (space["TileLayoutManager"] as? [String: Any])?["TileSpaces"] as? [[String: Any]] ?? []
+        return Space(id: id,
+                     uuid: space["uuid"] as? String ?? "",
+                     type: (space["type"] as? NSNumber)?.intValue ?? -1,
+                     fullscreenWindows: tiles.compactMap { ($0["TileWindowID"] as? NSNumber)?.uint32Value })
     }
 
     // MARK: - Windows
@@ -156,5 +157,12 @@ final class HSSkyLight {
         let windows = unsafe copyWindowsWithOptionsAndTagsFn(connection, 0, spaces, Self.windowsOnSpaceOption, &setTags, &clearTags)?
             .takeRetainedValue() as? [NSNumber]
         return windows?.map(\.uint32Value) ?? []
+    }
+
+    /// Asks WindowServer to move `windows` to `space`. This returns before the move has happened.
+    /// Unlike SLSMoveWindowsToManagedSpace, which since macOS 14.5 only moves the caller's own
+    /// windows, this works for any app's windows - see HSSpacesPrivate.m.
+    func moveWindows(_ windows: [CGWindowID], toSpace space: SpaceID) -> Bool {
+        HSSpacesMoveWindowsToSpace(windows.map { NSNumber(value: $0) }, space)
     }
 }
