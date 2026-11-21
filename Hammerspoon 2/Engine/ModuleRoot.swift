@@ -166,7 +166,6 @@ import JavaScriptCoreExtras
     @objc var serial: HSSerialModule { get }
     @objc var sharing: HSSharingModule { get }
     @objc var socket: HSSocketModule { get }
-    @objc var spaces: HSSpacesModule { get }
     @objc var spotlight: HSSpotlightModule { get }
     @objc var streamdeck: HSStreamDeckModule { get }
     @objc var task: HSTaskModule { get }
@@ -265,6 +264,9 @@ import JavaScriptCoreExtras
         // object's wrapper, and with it this whole context, alive after reload.
         var leftovers: [String] = []
         if let context {
+            // Spaces operations aren't owned by any module (screens and windows start them), so
+            // they're cancelled here
+            HSSpaces.shared.cancelOperations(in: context)
             leftovers = HSActiveObjects.removeAll(in: context)
             for object in leftovers {
                 AKError("ModuleRoot: \(object) was still active after its module shut down")
@@ -457,7 +459,6 @@ import JavaScriptCoreExtras
     @objc var serial:       HSSerialModule          { getOrCreate(name: "serial",       type: HSSerialModule.self)}
     @objc var sharing:      HSSharingModule         { getOrCreate(name: "sharing",      type: HSSharingModule.self)}
     @objc var socket:       HSSocketModule          { getOrCreate(name: "socket",       type: HSSocketModule.self)}
-    @objc var spaces:       HSSpacesModule          { getOrCreate(name: "spaces",       type: HSSpacesModule.self)}
     @objc var spotlight:    HSSpotlightModule       { getOrCreate(name: "spotlight",    type: HSSpotlightModule.self)}
     @objc var streamdeck:   HSStreamDeckModule      { getOrCreate(name: "streamdeck",   type: HSStreamDeckModule.self)}
     @objc var task:         HSTaskModule            { getOrCreate(name: "task",         type: HSTaskModule.self)}

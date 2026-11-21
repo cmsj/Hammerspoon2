@@ -182,6 +182,33 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// ```
     @objc var screen: HSScreen? { get }
 
+    // MARK: - Spaces
+
+    /// The spaces this window is on. That's usually one, but windows set to appear on every
+    /// space are on all of them. Empty if Spaces are unavailable (see
+    /// `hs.screen.spacesAvailable()`).
+    /// - Example:
+    /// ```js
+    /// const win = hs.window.focusedWindow()
+    /// console.log("The focused window is on space " + win.spaces[0].id)
+    /// ```
+    @objc var spaces: [HSSpace] { get }
+
+    /// Moves this window to another space, without switching to it. This works for any app's
+    /// windows, and doesn't use Mission Control.
+    ///
+    /// Only windows on a desktop can be moved, and only to a desktop - not to or from a
+    /// fullscreen space. Windows set to appear on every space can't be moved either.
+    /// - Parameter space: The desktop to move the window to
+    /// - Returns: {Promise<void>} A Promise that resolves once the window is on that space, or
+    ///   rejects with the reason it couldn't be moved
+    /// - Example:
+    /// ```js
+    /// const desktops = hs.screen.main().spaces.filter(s => s.type === "desktop")
+    /// hs.window.focusedWindow().moveToSpace(desktops[desktops.length - 1])
+    /// ```
+    @objc func moveToSpace(_ space: HSSpace) -> JSPromise?
+
     // MARK: - Actions
 
     /// Focus this window
@@ -534,6 +561,16 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
             return aArea < bArea
         }
         return best.map { HSScreen(screen: $0) }
+    }
+
+    // MARK: - Spaces
+
+    @objc var spaces: [HSSpace] {
+        HSSpaces.shared.spaces(forWindowID: id)
+    }
+
+    @objc func moveToSpace(_ space: HSSpace) -> JSPromise? {
+        HSSpaces.shared.moveWindow(id, toSpace: space, function: "HSWindow.moveToSpace()")
     }
 
     // MARK: - Actions

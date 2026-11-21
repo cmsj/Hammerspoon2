@@ -76,6 +76,7 @@ class JSTestHarness {
             // was: a pin that survives a real reload keeps the old JSContext alive. ModuleRoot
             // drops (and returns) its leftovers itself; anything else is dropped here.
             var leftovers = moduleRoot?.shutdown() ?? []
+            HSSpaces.shared.cancelOperations(in: context)
             leftovers += HSActiveObjects.removeAll(in: context)
             if !leftovers.isEmpty {
                 Issue.record("Module shutdown left \(leftovers.count) object(s) active: \(leftovers.joined(separator: ", ")). Its module's shutdown() must destroy every tracked object and call removeAllObjects().")
@@ -612,8 +613,6 @@ extension JSTestHarness {
                 loadModule(HSChooserModule.self, as: name)
             case "window":
                 loadModule(HSWindowModule.self, as: name)
-            case "spaces":
-                loadModule(HSSpacesModule.self, as: name)
             case "spotlight":
                 loadModule(HSSpotlightModule.self, as: name)
             case "streamdeck":

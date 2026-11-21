@@ -6,13 +6,13 @@
 import Foundation
 import CoreGraphics
 
-/// A thin wrapper around the private SkyLight framework functions hs.spaces needs to read Spaces.
+/// A thin wrapper around the private SkyLight framework functions Hammerspoon needs to read Spaces.
 ///
 /// SkyLight is the private framework WindowServer clients (including the Dock and Mission Control)
 /// use to manage Spaces. It can report on spaces and the windows on them, but it can't add, remove,
 /// or switch spaces in a way the Dock notices - see HSMissionControl for those. None of this is
 /// public API: every function is resolved at runtime with dlsym, so a macOS update that renames or
-/// removes one makes `shared` nil (and hs.spaces report itself unavailable) rather than crashing at
+/// removes one makes `shared` nil (and hs.screen.spacesAvailable() report false) rather than crashing at
 /// launch. A signature change, however, can't be detected - that's the inherent risk of this
 /// module.
 ///
@@ -60,13 +60,13 @@ final class HSSkyLight {
 
     private init?() {
         guard let handle = unsafe dlopen("/System/Library/PrivateFrameworks/SkyLight.framework/SkyLight", RTLD_LAZY) else {
-            AKError("hs.spaces: unable to load the private SkyLight framework")
+            AKError("Spaces: unable to load the private SkyLight framework")
             return nil
         }
 
         func load<T>(_ name: String, as type: T.Type) -> T? {
             guard let symbol = unsafe dlsym(handle, name) else {
-                AKError("hs.spaces: SkyLight symbol \(name) is missing from this version of macOS")
+                AKError("Spaces: SkyLight symbol \(name) is missing from this version of macOS")
                 return nil
             }
             return unsafe unsafeBitCast(symbol, to: type)

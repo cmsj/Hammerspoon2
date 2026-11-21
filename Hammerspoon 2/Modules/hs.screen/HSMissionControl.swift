@@ -10,7 +10,7 @@ import ApplicationServices
 /// Drives Mission Control's user interface through the Accessibility API.
 ///
 /// Only the Dock may add, remove, or switch to managed spaces - SkyLight offers no function that
-/// does any of those from another process in a way the Dock notices. So hs.spaces does what a
+/// does any of those from another process in a way the Dock notices. So Hammerspoon does what a
 /// user would: opens Mission Control and presses the buttons in its Spaces bar.
 ///
 /// None of this UI is documented. The tree below was observed on macOS 27, and matches what
@@ -228,7 +228,7 @@ enum HSDockNotification: String {
 
     private static let sendFn: SendFn? = {
         guard let symbol = unsafe dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CoreDockSendNotification") else {
-            AKError("hs.spaces: CoreDockSendNotification is missing from this version of macOS")
+            AKError("Spaces: CoreDockSendNotification is missing from this version of macOS")
             return nil
         }
         return unsafe unsafeBitCast(symbol, to: SendFn.self)
@@ -238,7 +238,7 @@ enum HSDockNotification: String {
         guard let sendFn else { return }
         let result = sendFn(notification.rawValue as CFString, 0)
         if result != 0 {
-            AKWarning("hs.spaces: the Dock refused \(notification.rawValue) (error \(result))")
+            AKWarning("Spaces: the Dock refused \(notification.rawValue) (error \(result))")
         }
     }
 }

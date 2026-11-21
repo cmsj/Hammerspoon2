@@ -179,7 +179,7 @@ for what changed within it.
 | `hs.shortcuts` | Present | close to a direct port |
 | `hs.socket` (+`.udp`) | Gone | no raw TCP/UDP; WebSocket via `hs.http`/`hs.httpserver` |
 | `hs.sound` | Present | [details](#hssound) |
-| `hs.spaces` (+`.watcher`) | Gone | no public macOS API, never was reliable |
+| `hs.spaces` (+`.watcher`) | → `hs.screen` / `hs.window` | spaces live on screens, windows move between them, see [details](#hsscreen) |
 | `hs.speech` (+`.listener`) | Gone | no TTS or speech recognition |
 | `hs.spoons` | Present | [details](#hsspoons-and-spoons) |
 | `hs.spotify` | Gone | drive via `hs.osascript` instead |
@@ -537,8 +537,21 @@ watcher object to construct/`:start()`), and the callback still takes no argumen
 `all()`/`main()`/`primary()` inside it to inspect the new configuration. There's no v2
 equivalent of `newWithActiveScreen()`'s active-display-changed variant (it relied on an
 undocumented `NSWorkspace` notification); if your config used that specifically to detect
-Mission Control's per-display Spaces switching focus, that distinction isn't available —
-only the general "layout changed" event is.
+Mission Control's per-display Spaces switching focus, use the `spaceChange` event below.
+
+`hs.spaces` is gone as a module: Spaces are now part of `hs.screen` and `hs.window`, and still
+use private macOS APIs, as v1 did. Each screen has its own spaces (`screen.spaces`,
+`screen.currentSpace`, `screen.addSpace()`), and each space is an `HSSpace` object with an
+`id`, a durable `uuid`, a `type`, its `screen`, `desktopNumber`, `windowIDs()`, `goto()` and
+`remove()`. A window has `spaces` and `moveToSpace(space)`, which (unlike v1 on recent macOS)
+moves any app's windows without opening Mission Control. Module-wide lookups
+(`allSpaces()`, `focusedSpace()`, `spaceForID()`, `spaceForUUID()`) and the Mission Control
+functions (`openMissionControl()`, `closeMissionControl()`, `toggleMissionControl()`,
+`toggleAppExpose()`, `toggleLaunchpad()`, `toggleShowDesktop()`) are on `hs.screen`.
+`hs.spaces.watcher` becomes `hs.screen.on('spaceChange', ({screen, from, to}) => ...)`, which
+reports which screen switched. Adding, removing and switching spaces return Promises, since they
+work by briefly driving Mission Control. All of this expects "Displays have separate Spaces" to
+be on (macOS's default).
 
 ## Rebuilding UI with hs.ui
 
@@ -820,10 +833,8 @@ the convenience method names.
 `shutdownSystem()` (previously on `hs.caffeinate`) have no v2 equivalent anywhere — there is
 currently no way to trigger a logout, restart, or shutdown from a v2 config.
 
-**Spaces, speech, and misc OS integrations:** `hs.spaces` (+`.watcher` — macOS has never had a
-public Spaces API, and v1's implementation was always fragile/private-API-based; v2 doesn't
-carry that forward), `hs.speech` (+`.listener` — no text-to-speech or speech recognition of
-any kind), `hs.noises`, `hs.redshift` (macOS's native Night Shift covers most of this now).
+**Speech and misc OS integrations:** `hs.speech` (+`.listener` — no text-to-speech or speech
+recognition of any kind), `hs.noises`, `hs.redshift` (macOS's native Night Shift covers most of this now).
 
 **Networking:** `hs.socket` (+`.udp` — no raw TCP/UDP module; `hs.http`'s
 `openWebSocket()` client and `hs.httpserver`'s WebSocket support cover the common

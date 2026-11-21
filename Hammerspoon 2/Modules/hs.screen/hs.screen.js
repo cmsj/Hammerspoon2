@@ -5,29 +5,31 @@
 
 "use strict";
 
-// Lazily starts the underlying display-configuration-change watcher on the first listener and
-// stops it once the last listener is removed. See Engine/engine.js for LazyWatcherEmitter itself.
-// hs.screen only ever emits one kind of event ("change"), but on/off/once still take an explicit
-// event name for consistency with every other hs.* module-level watcher.
+// Lazily starts the underlying display-configuration and space change watcher on the first
+// listener and stops it once the last listener is removed. See Engine/engine.js for
+// LazyWatcherEmitter itself.
 hs.screen._watcherEmitter = new LazyWatcherEmitter("hs.screen", function() {
-    return hs.screen._addWatcher((event) => {
-        hs.screen._watcherEmitter.emit(event);
+    return hs.screen._addWatcher((event, details) => {
+        hs.screen._watcherEmitter.emit(event, details);
     });
 }, function() {
     hs.screen._removeWatcher();
 }, hs.screen._eventNames);
 
-/// Register a listener that fires whenever the display configuration changes — monitors
-/// connected/disconnected displays, resolution or arrangement changes, or the menu bar moving
-/// to a different display.
+/// Register a listener for screen events.
+///
+/// `"change"` fires whenever the display configuration changes — monitors connected/disconnected, resolution or arrangement changes, or the menu bar moving to a different display. The listener gets no arguments; call all()/main()/primary() inside it to inspect the new configuration.
+///
+/// `"spaceChange"` fires whenever a screen switches to a different space. If several screens switch at once, it fires once for each. The listener gets an object with the `screen` that switched (`null` if it has just been disconnected), the space it was showing before (`from`, `null` for a screen that has just been connected), and the space it's showing now (`to`).
 /// Parameters:
-///  - event: {"change"} The event to listen for (the only event this module emits)
-///  - listener: {() => void} Called with no arguments when the display configuration changes; call all()/main()/primary() inside it to inspect the new configuration
+///  - event: {"change" | "spaceChange"} The event to listen for
+///  - listener: {(change?: {screen: HSScreen | null, from: HSSpace | null, to: HSSpace}) => void} Called when the event happens; see above for its argument
 /// Throws: true
 /// Example:
 /// ```js
 /// try {
 ///     hs.screen.on('change', () => console.log("Screens changed, now: " + hs.screen.all().length))
+///     hs.screen.on('spaceChange', ({ screen, to }) => console.log(screen.name + " is now showing space " + to.id))
 /// } catch (err) {
 ///     console.error(err.message)
 /// }
@@ -36,10 +38,10 @@ hs.screen.on = function(event, listener) {
     hs.screen._watcherEmitter.on(event, listener);
 };
 
-/// Remove a previously registered display-configuration listener.
+/// Remove a previously registered screen event listener.
 /// Parameters:
-///  - event: {"change"} The event the listener was registered for
-///  - listener: {() => void} The function originally passed to `on`
+///  - event: {"change" | "spaceChange"} The event the listener was registered for
+///  - listener: {(change?: {screen: HSScreen | null, from: HSSpace | null, to: HSSpace}) => void} The function originally passed to `on`
 /// Example:
 /// ```js
 /// const onChange = () => console.log("screens changed")
@@ -51,10 +53,10 @@ hs.screen.off = function(event, listener) {
     hs.screen._watcherEmitter.off(event, listener);
 };
 
-/// Register a listener that fires at most once, the next time the display configuration changes.
+/// Register a listener that fires at most once, the next time a screen event happens. See `on()` for the events.
 /// Parameters:
-///  - event: {"change"} The event to listen for
-///  - listener: {() => void} Called once, then automatically removed
+///  - event: {"change" | "spaceChange"} The event to listen for
+///  - listener: {(change?: {screen: HSScreen | null, from: HSSpace | null, to: HSSpace}) => void} Called once, then automatically removed
 /// Throws: true
 /// Example:
 /// ```js
