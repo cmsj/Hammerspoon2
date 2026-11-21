@@ -52,7 +52,7 @@ struct WatcherEventNameTests {
         .init("keycodes", ["change"], typo: "changed"),
         .init("locale", ["change"], typo: "changed"),
         .init("pasteboard", ["change"], typo: "changed"),
-        .init("screen", ["change"], typo: "changed"),
+        .init("screen", ["change", "spaceChange"], typo: "changed"),
         .init("power",
               ["screensDidSleep", "screensDidWake", "screensDidLock", "screensDidUnlock",
                "screensaverDidStart", "screensaverDidStop", "screensaverWillStop",
