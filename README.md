@@ -14,7 +14,12 @@ Pre-releases up to (and including) 0.0.6 target macOS 15.6 and support both Appl
 
 ## Using Hammerspoon
 
- * Download one of the pre-releases from GitHub, unzip and place in /Applications
+ * Install with Homebrew:
+   ```bash
+   brew tap cmsj/hammerspoon2 https://github.com/cmsj/Hammerspoon2
+   brew install --cask cmsj/hammerspoon2/hammerspoon2
+   ```
+   or download one of the pre-releases from GitHub, unzip and place in /Applications
  * Create ~/.config/hammerspoon2/init.js
  * For the JavaScript API docs, see https://cmsj.github.io/Hammerspoon2/ or run hs.docs.show() in the Console window
 
