@@ -448,6 +448,19 @@ struct HSSpacesTests {
             }
         }
 
+        @Test("Shutting down while an operation is opening Mission Control still closes it")
+        func testShutdownWhileOpeningClosesMissionControl() async throws {
+            let harness = makeHarness()
+            try await withSpacesRestored(in: harness) {
+                harness.eval("hs.screen.missionControlNames()")
+                // Cancel as soon as Mission Control starts appearing, while it's still animating open
+                try await HSMissionControl.waitUntil("Mission Control did not start opening") { !HSMissionControl.isClosed }
+                HSSpaces.shared.cancelOperations(in: harness.context)
+                #expect(await isMissionControlClosed())
+                #expect(!harness.hasException)
+            }
+        }
+
         /// Waits for Mission Control to finish closing
         private func isMissionControlClosed() async -> Bool {
             (try? await HSMissionControl.waitUntil("not closed") { HSMissionControl.isClosed }) != nil

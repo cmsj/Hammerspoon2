@@ -343,11 +343,17 @@ final class HSSpaces {
                     result = .failure(error)
                 }
                 if wasOpen == false && !leaveOpen {
-                    do {
-                        try await HSMissionControl.close()
-                    } catch {
-                        AKWarning("\(name): \(error.localizedDescription)")
-                    }
+                    // In a Task of its own, because this one may have been cancelled by an engine
+                    // shutdown part way through opening Mission Control, which would make every wait
+                    // in close() throw straight away and leave Mission Control open. It's awaited, so
+                    // the next queued operation still starts only once Mission Control has closed.
+                    await Task { @MainActor in
+                        do {
+                            try await HSMissionControl.close()
+                        } catch {
+                            AKWarning("\(name): \(error.localizedDescription)")
+                        }
+                    }.value
                 }
 
                 switch result {
