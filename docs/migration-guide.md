@@ -179,7 +179,7 @@ for what changed within it.
 | `hs.shortcuts` | Present | close to a direct port |
 | `hs.socket` (+`.udp`) | Gone | no raw TCP/UDP; WebSocket via `hs.http`/`hs.httpserver` |
 | `hs.sound` | Present | [details](#hssound) |
-| `hs.spaces` (+`.watcher`) | → `hs.screen` / `hs.window` | spaces live on screens, windows move between them, see [details](#hsscreen) |
+| `hs.spaces` (+`.watcher`) | → `hs.screen` / `hs.window` | spaces live on screens, windows move between them, see [details](#hsspaces) |
 | `hs.speech` (+`.listener`) | Gone | no TTS or speech recognition |
 | `hs.spoons` | Present | [details](#hsspoons-and-spoons) |
 | `hs.spotify` | Gone | drive via `hs.osascript` instead |
@@ -537,21 +537,74 @@ watcher object to construct/`:start()`), and the callback still takes no argumen
 `all()`/`main()`/`primary()` inside it to inspect the new configuration. There's no v2
 equivalent of `newWithActiveScreen()`'s active-display-changed variant (it relied on an
 undocumented `NSWorkspace` notification); if your config used that specifically to detect
-Mission Control's per-display Spaces switching focus, use the `spaceChange` event below.
+Mission Control's per-display Spaces switching focus, use the `spaceChange` event instead.
 
-`hs.spaces` is gone as a module: Spaces are now part of `hs.screen` and `hs.window`, and still
-use private macOS APIs, as v1 did. Each screen has its own spaces (`screen.spaces`,
-`screen.currentSpace`, `screen.addSpace()`), and each space is an `HSSpace` object with an
-`id`, a durable `uuid`, a `type`, its `screen`, `desktopNumber`, `windowIDs()`, `goto()` and
-`remove()`. A window has `spaces` and `moveToSpace(space)`, which (unlike v1 on recent macOS)
-moves any app's windows without opening Mission Control. Module-wide lookups
-(`allSpaces()`, `focusedSpace()`, `spaceForID()`, `spaceForUUID()`) and the Mission Control
-functions (`openMissionControl()`, `closeMissionControl()`, `toggleMissionControl()`,
-`toggleAppExpose()`, `toggleLaunchpad()`, `toggleShowDesktop()`) are on `hs.screen`.
-`hs.spaces.watcher` becomes `hs.screen.on('spaceChange', ({screen, from, to}) => ...)`, which
-reports which screen switched. Adding, removing and switching spaces return Promises, since they
-work by briefly driving Mission Control. All of this expects "Displays have separate Spaces" to
-be on (macOS's default).
+Spaces are part of `hs.screen` now too: see [hs.spaces](#hsspaces) below.
+
+### hs.spaces
+
+`hs.spaces` is gone as a module. Spaces belong to screens, and windows live on spaces, so they're
+reached from `hs.screen` and `hs.window` instead. They still use private macOS APIs, as v1 did.
+
+The biggest change is that a space is an `HSSpace` object rather than a bare ID number. You read
+its details from properties instead of passing its ID to module functions, and it always reports
+the space's current state:
+
+```js
+// v1: hs.spaces.spaceType(hs.spaces.focusedSpace())
+hs.screen.focusedSpace().type
+
+// v1: hs.spaces.spacesForScreen(hs.screen.mainScreen())
+hs.screen.main().spaces
+```
+
+The numeric ID is still there as `space.id`, and `hs.screen.spaceForID(id)` turns one back into an
+`HSSpace`. IDs can change when you log out, so to remember a space between sessions, store
+`space.uuid` and look it up again with `hs.screen.spaceForUUID(uuid)`. Compare spaces by `id`,
+not with `===`.
+
+| v1 | v2 |
+|---|---|
+| `hs.spaces.focusedSpace()` | `hs.screen.focusedSpace()` |
+| `hs.spaces.allSpaces()` | `hs.screen.allSpaces()` (an array of `HSSpace`s), or `screen.spaces` for each screen |
+| `hs.spaces.spacesForScreen(screen)` | `screen.spaces` |
+| `hs.spaces.activeSpaces()` | `hs.screen.all().map(s => s.currentSpace)` |
+| `hs.spaces.activeSpaceOnScreen(screen)` | `screen.currentSpace` |
+| `hs.spaces.spaceType(id)` | `space.type`: `"desktop"` (v1's `"user"`) or `"fullscreen"` |
+| `hs.spaces.spaceDisplay(id)` | `space.screen` (an `HSScreen`, not a UUID) |
+| `hs.spaces.windowSpaces(window)` | `window.spaces`, or `hs.window.spacesForID(id)` |
+| `hs.spaces.windowsForSpace(id)` | `space.windowIDs()` |
+| `hs.spaces.moveWindowToSpace(window, id)` | `window.moveToSpace(space)`, or `hs.window.moveToSpaceForID(id, space)`; returns a Promise |
+| `hs.spaces.gotoSpace(id)` | `space.goto()`; returns a Promise |
+| `hs.spaces.addSpaceToScreen(screen, closeMC)` | `screen.addSpace()`; returns a Promise of the new `HSSpace` |
+| `hs.spaces.removeSpace(id, closeMC)` | `space.remove()`; returns a Promise |
+| `hs.spaces.missionControlSpaceNames(closeMC)` | `hs.screen.missionControlNames()`; returns a Promise of `{spaceID: name}`, not grouped by screen. For a desktop's number without opening Mission Control, use `space.desktopNumber` |
+| `hs.spaces.openMissionControl()` / `closeMissionControl()` | `hs.screen.openMissionControl()` / `closeMissionControl()`; return Promises |
+| `hs.spaces.toggleMissionControl()` / `toggleAppExpose()` / `toggleShowDesktop()` | `hs.screen.toggleMissionControl()` / `toggleAppExpose()` / `toggleShowDesktop()` |
+| `hs.spaces.toggleLaunchPad()` | `hs.screen.toggleLaunchpad()` (lowercase `p`) |
+| `hs.spaces.screensHaveSeparateSpaces()` | `hs.screen.screensHaveSeparateSpaces()` |
+| `hs.spaces.watcher.new(fn):start()` | `hs.screen.on("spaceChange", fn)` |
+| `hs.spaces.setDefaultMCwaitTime()` / `MCwaitTime` | Not needed: v2 waits for Mission Control to finish animating instead of a fixed delay |
+| `hs.spaces.data_managedDisplaySpaces()` | **No equivalent.** `screen.spaces` and the `HSSpace` properties cover what it was usually used for |
+| `hs.spaces.data_missionControlAXUIElementData()` | **No equivalent.** Use `hs.ax` to explore Mission Control's elements |
+
+Other differences worth knowing:
+
+- **Mission Control operations don't block.** `goto()`, `addSpace()`, `remove()` and
+  `missionControlNames()` work as v1's did, by briefly opening Mission Control and clicking in it,
+  but they return Promises instead of pausing your config while that happens. They run one at a
+  time, so you can start several without waiting. They all need Accessibility permission.
+- **No `closeMC` arguments.** An operation leaves Mission Control the way it found it. To keep it
+  open across several operations, call `hs.screen.openMissionControl()` first and
+  `closeMissionControl()` when you're done.
+- **Moving windows works again.** v1's `moveWindowToSpace()` stopped working for other apps'
+  windows in macOS 14.5. `moveToSpace()` moves any app's window, and doesn't open Mission Control.
+- **The space-change callback says what changed.** v1's watcher passed a space number that was
+  usually `-1`. v2's listener receives `{screen, from, to}`: the screen that switched (`null` if
+  all screens share one set of spaces), and the `HSSpace`s it switched from and to.
+- **Failures reject or return `null`** instead of returning v1's `nil, error` pair.
+- All of this expects "Displays have separate Spaces" to be turned on, which is macOS's default.
+  With it off, every screen reports the same spaces, which macOS attributes to the primary screen.
 
 ## Rebuilding UI with hs.ui
 
