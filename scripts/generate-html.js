@@ -118,6 +118,11 @@ env.addFilter('markdown', function(text) {
     return marked(text);
 });
 
+env.addFilter('inlineMarkdown', function(text) {
+    if (!text) return '';
+    return marked.parseInline(text);
+});
+
 env.addFilter('githubSourceUrl', function(item) {
     if (!item || !item.filePath || !item.lineNumber) {
         return null;

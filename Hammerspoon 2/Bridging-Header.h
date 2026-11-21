@@ -4,6 +4,7 @@
 //
 
 #import "Modules/hs.screen/HSScreenPrivate.h"
+#import "Modules/hs.screen/HSSpacesPrivate.h"
 
 // JSSynchronousGarbageCollectForDebugging is exported from JavaScriptCore.framework
 // but not declared in its public headers. It runs a full synchronous GC cycle

@@ -803,7 +803,8 @@ function parseJavaScriptFile(filePath, moduleName = null, repoRoot = REPO_ROOT) 
             for (let j = i - 1; j >= 0; j--) {
                 const prevLine = lines[j].trim();
                 if (prevLine.startsWith('///')) {
-                    docLines.unshift(prevLine.replace(/^\/\/\/\s*/, ''));
+                    // Remove /// and exactly one space (if present), but preserve any additional indentation
+                    docLines.unshift(prevLine.replace(/^\/\/\/ ?/, ''));
                 } else if (prevLine && !prevLine.startsWith('//')) {
                     break;
                 }
@@ -1349,11 +1350,15 @@ function formatDocCToJSDoc(documentation) {
 
     const lines = documentation.split('\n');
     const result = [];
-    let inParamsList = false;
+    // Set while skipping a DocC tag (a parameter, Note: or Throws:) and the indented
+    // lines that continue it; 'params' while inside a "- Parameters:" list.
+    let skipping = null;
+    let inList = false;
     let inCodeBlock = false;
 
     for (const line of lines) {
         const trimmed = line.trim();
+        const indented = /^\s/.test(line);
 
         // Track code block boundaries
         if (trimmed.startsWith('```')) {
@@ -1368,47 +1373,46 @@ function formatDocCToJSDoc(documentation) {
             continue;
         }
 
-        // Skip parameter list headers (with or without leading dash)
-        if (trimmed === '- Parameters:' || trimmed.startsWith('- Parameters:') ||
-            trimmed === 'Parameters:' || trimmed.startsWith('Parameters:')) {
-            inParamsList = true;
-            continue;
-        }
-
-        // Skip returns and example sections
-        if (trimmed.startsWith('- Returns:') || trimmed.startsWith('Returns:') ||
-            trimmed === '- Example:' || trimmed === '- Example' ||
-            trimmed === 'Example:' || trimmed === 'Example') {
+        // Returns and examples end the description
+        if (/^-?\s*Returns?:/.test(trimmed) || /^-?\s*Example\b/.test(trimmed)) {
             break;
         }
 
-        // Skip individual parameter documentation (starts with "- paramName:")
-        if (inParamsList && trimmed.match(/^-\s+\w+:/)) {
+        // Parameter lists (with or without leading dash) are rendered from the signature
+        if (/^-?\s*Parameters:/.test(trimmed)) {
+            skipping = 'params';
             continue;
         }
 
-        // If we hit a non-parameter line, we're out of the params list
-        if (inParamsList && !trimmed.startsWith('-')) {
-            inParamsList = false;
-        }
-
-        // Skip Note: lines for now (could be added as @note in future)
-        if (trimmed.startsWith('- Note:') || trimmed.startsWith('Note:')) {
+        // A single parameter, a Note: (not rendered yet) or Throws: (rendered as its own section)
+        if (/^-\s*Parameter\s+[\w?]+:/.test(trimmed) || /^-?\s*(Note|Throws):/.test(trimmed)) {
+            skipping = 'tag';
             continue;
         }
 
-        // Throws: is rendered as its own section, not as part of the description
-        if (/^-?\s*Throws:/.test(trimmed)) {
-            continue;
+        if (skipping && trimmed) {
+            const isParamItem = skipping === 'params' && /^-\s*[\w?]+:/.test(trimmed);
+            if (indented || isParamItem) continue;
+            skipping = null;
+        } else if (skipping) {
+            skipping = null;
         }
 
-        // Keep the main description line
-        if (!trimmed.startsWith('-') && trimmed && !trimmed.endsWith(':')) {
-            result.push(trimmed);
+        // Everything else is description, which is markdown: keep bullet lists (and the indentation
+        // of their nested items and continuation lines) and paragraph breaks
+        if (!trimmed) {
+            inList = false;
+            if (result.length && result[result.length - 1] !== '') result.push('');
+        } else if (/^([-*+]|\d+\.)\s/.test(trimmed)) {
+            inList = true;
+            result.push(line.trimEnd());
+        } else {
+            result.push(inList && indented ? line.trimEnd() : trimmed);
         }
     }
 
-    return result.join('\n');  // Changed from ' ' to '\n' to preserve line breaks
+    while (result.length && result[result.length - 1] === '') result.pop();
+    return result.join('\n');
 }
 
 /**

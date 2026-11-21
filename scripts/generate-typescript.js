@@ -145,6 +145,16 @@ function escapeDocComment(text) {
 }
 
 /**
+ * Format a (possibly multi-line) description as doc comment lines, prefixing every line with
+ * the comment's ` * ` so markdown such as lists, paragraphs and code blocks survives.
+ */
+function docCommentLines(text, indent) {
+    return escapeDocComment(text).split('\n')
+        .map(line => (line ? `${indent}* ${line}` : `${indent}*`))
+        .join('\n') + '\n';
+}
+
+/**
  * Generate TypeScript definitions for a module
  */
 function generateModuleDefinitions(moduleData) {
@@ -153,7 +163,7 @@ function generateModuleDefinitions(moduleData) {
     // Module namespace
     output += `/**\n`;
     if (moduleData.description) {
-        output += ` * ${escapeDocComment(moduleData.description)}\n`;
+        output += docCommentLines(moduleData.description, ' ');
     }
     output += ` */\n`;
     output += `declare namespace ${moduleData.name} {\n`;
@@ -164,7 +174,7 @@ function generateModuleDefinitions(moduleData) {
 
         output += `    /**\n`;
         if (method.description) {
-            output += `     * ${escapeDocComment(method.description)}\n`;
+            output += docCommentLines(method.description, '     ');
         }
         if (tsName !== method.name) {
             output += `     * @remarks TypeScript-only name -- \`${method.name}\` is a reserved word in TypeScript declarations, but the actual JavaScript call is \`${moduleData.name}.${method.name}(...)\`, not \`${moduleData.name}.${tsName}(...)\`.\n`;
@@ -204,7 +214,7 @@ function generateModuleDefinitions(moduleData) {
     for (const prop of moduleData.properties || []) {
         output += `    /**\n`;
         if (prop.description) {
-            output += `     * ${escapeDocComment(prop.description)}\n`;
+            output += docCommentLines(prop.description, '     ');
         }
         if (prop.notes && prop.notes.length > 0) {
             output += `     * @remarks ${prop.notes.map(escapeDocComment).join(' ')}\n`;
@@ -236,7 +246,7 @@ function generateJSClassDefinition(cls) {
 
     output += `/**\n`;
     if (cls.description) {
-        output += ` * ${escapeDocComment(cls.description)}\n`;
+        output += docCommentLines(cls.description, ' ');
     }
     output += ` */\n`;
     output += `declare class ${cls.name} {\n`;
@@ -244,7 +254,7 @@ function generateJSClassDefinition(cls) {
     for (const prop of cls.properties || []) {
         output += `    /**\n`;
         if (prop.description) {
-            output += `     * ${escapeDocComment(prop.description)}\n`;
+            output += docCommentLines(prop.description, '     ');
         }
         output += `     */\n`;
         output += `    ${prop.name}: ${prop.type};\n\n`;
@@ -253,7 +263,7 @@ function generateJSClassDefinition(cls) {
     for (const method of cls.methods || []) {
         output += `    /**\n`;
         if (method.description) {
-            output += `     * ${escapeDocComment(method.description)}\n`;
+            output += docCommentLines(method.description, '     ');
         }
         for (const param of method.params || []) {
             const desc = param.description ? ` ${escapeDocComment(param.description)}` : '';
@@ -289,7 +299,7 @@ function generateTypeDefinition(protocol) {
 
     output += `/**\n`;
     if (protocol.description) {
-        output += ` * ${escapeDocComment(protocol.description)}\n`;
+        output += docCommentLines(protocol.description, ' ');
     }
     output += ` */\n`;
 
@@ -302,7 +312,7 @@ function generateTypeDefinition(protocol) {
         if (initMethod) {
             output += `    /**\n`;
             if (initMethod.description) {
-                output += `     * ${escapeDocComment(initMethod.description)}\n`;
+                output += docCommentLines(initMethod.description, '     ');
             }
             for (const param of initMethod.params || []) {
                 const desc = param.description ? ` ${escapeDocComment(param.description)}` : '';
@@ -323,7 +333,7 @@ function generateTypeDefinition(protocol) {
 
             output += `    /**\n`;
             if (method.description) {
-                output += `     * ${escapeDocComment(method.description)}\n`;
+                output += docCommentLines(method.description, '     ');
             }
             if (method.notes && method.notes.length > 0) {
                 output += `     * @remarks ${method.notes.map(escapeDocComment).join(' ')}\n`;
@@ -355,7 +365,7 @@ function generateTypeDefinition(protocol) {
         for (const prop of protocol.properties || []) {
             output += `    /**\n`;
             if (prop.description) {
-                output += `     * ${escapeDocComment(prop.description)}\n`;
+                output += docCommentLines(prop.description, '     ');
             }
             if (prop.notes && prop.notes.length > 0) {
                 output += `     * @remarks ${prop.notes.map(escapeDocComment).join(' ')}\n`;
@@ -376,7 +386,7 @@ function generateTypeDefinition(protocol) {
         if (initMethod) {
             output += `    /**\n`;
             if (initMethod.description) {
-                output += `     * ${escapeDocComment(initMethod.description)}\n`;
+                output += docCommentLines(initMethod.description, '     ');
             }
             for (const param of initMethod.params || []) {
                 const desc = param.description ? ` ${escapeDocComment(param.description)}` : '';
@@ -395,7 +405,7 @@ function generateTypeDefinition(protocol) {
         for (const prop of protocol.properties || []) {
             output += `    /**\n`;
             if (prop.description) {
-                output += `     * ${escapeDocComment(prop.description)}\n`;
+                output += docCommentLines(prop.description, '     ');
             }
             if (prop.notes && prop.notes.length > 0) {
                 output += `     * @remarks ${prop.notes.map(escapeDocComment).join(' ')}\n`;
@@ -412,7 +422,7 @@ function generateTypeDefinition(protocol) {
 
             output += `    /**\n`;
             if (method.description) {
-                output += `     * ${escapeDocComment(method.description)}\n`;
+                output += docCommentLines(method.description, '     ');
             }
             if (method.notes && method.notes.length > 0) {
                 output += `     * @remarks ${method.notes.map(escapeDocComment).join(' ')}\n`;

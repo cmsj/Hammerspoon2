@@ -264,6 +264,9 @@ import JavaScriptCoreExtras
         // object's wrapper, and with it this whole context, alive after reload.
         var leftovers: [String] = []
         if let context {
+            // Spaces operations aren't owned by any module (screens and windows start them), so
+            // they're cancelled here
+            HSSpaces.shared.cancelOperations(in: context)
             leftovers = HSActiveObjects.removeAll(in: context)
             for object in leftovers {
                 AKError("ModuleRoot: \(object) was still active after its module shut down")

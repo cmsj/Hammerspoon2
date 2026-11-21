@@ -101,6 +101,39 @@ import AXSwift
     /// ```
     @objc func snapshotForID(_ id: Int, _ keepTransparency: Bool) -> JSPromise?
 
+    /// The spaces the window with the given ID is on. This is the same as an `HSWindow`'s
+    /// `spaces`, for windows you only have the ID of, such as those from `HSSpace.windowIDs()`
+    /// (Hammerspoon can't make `HSWindow` objects for windows on other spaces).
+    /// - Parameter id: The window's ID
+    /// - Returns: An array of HSSpace objects, empty if there's no such window
+    /// - Example:
+    /// ```js
+    /// for (const id of hs.screen.allSpaces()[0].windowIDs()) {
+    ///     console.log(id + " is on " + hs.window.spacesForID(id).length + " space(s)")
+    /// }
+    /// ```
+    @objc func spacesForID(_ id: Int) -> [HSSpace]
+
+    /// Moves the window with the given ID to another space, without switching to it. This is the
+    /// same as an `HSWindow`'s `moveToSpace()`, for windows you only have the ID of, such as
+    /// those from `HSSpace.windowIDs()`.
+    /// - Parameters:
+    ///   - id: The window's ID
+    ///   - space: The desktop to move the window to
+    /// - Returns: {Promise<void>} A Promise that resolves once the window is on that space, or
+    ///   rejects with the reason it couldn't be moved
+    /// - Example:
+    /// ```js
+    /// // Gather every window from the main screen's other desktops onto its current space
+    /// const screen = hs.screen.main()
+    /// const here = screen.currentSpace
+    /// for (const space of screen.spaces) {
+    ///     if (space.id === here.id || space.type !== "desktop") continue
+    ///     for (const id of space.windowIDs()) hs.window.moveToSpaceForID(id, here)
+    /// }
+    /// ```
+    @objc func moveToSpaceForID(_ id: Int, _ space: HSSpace) -> JSPromise?
+
     /// A list of bundle identifiers to ignore when fetching a list of all windows
     /// Note: This property is writeable, but you cannot mutate the default list in-place. To add or remove entries, assign this to a variable in JavaScript, modify that, and assign it back to this property. Also, if you find commonly used processes that should belong in this by default, please file an issue on GitHub!
     @objc var allWindowsIgnore: [String] { get set }
@@ -361,5 +394,15 @@ import AXSwift
             }
         }
         return captureWindowSnapshot(windowID: windowID, keepTransparency: keepTransparency)
+    }
+
+    // MARK: - Spaces
+
+    @objc func spacesForID(_ id: Int) -> [HSSpace] {
+        HSSpaces.shared.spaces(forWindowID: id)
+    }
+
+    @objc func moveToSpaceForID(_ id: Int, _ space: HSSpace) -> JSPromise? {
+        HSSpaces.shared.moveWindow(id, toSpace: space, function: "hs.window.moveToSpaceForID()")
     }
 }

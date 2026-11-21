@@ -24,7 +24,7 @@
     <div class="property" id="{{ prop.name }}">
         <h3><a href="#{{ prop.name }}">{{ prop.name }}</a></h3>
         <div class="prop-type">{{ prop.signature | extractPropertyType | formatType }}</div>
-        <div class="description">{{ prop.description }}</div>
+        <div class="description">{{ prop.description | markdown | safe }}</div>
         {% if prop | githubSourceUrl %}
         <div class="source-link">
             <a href="{{ prop | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">{{ prop.filePath }}:{{ prop.lineNumber }}</a>
@@ -52,7 +52,7 @@
             {% if isStatic %}<span class="static-badge">static</span>{% endif %}<a href="#{{ methodName }}">{{ declarationPrefix }}{{ methodName }}({% for param in method.params %}{% if param.rest %}...{% endif %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</a>
         </h3>
 
-        <div class="description">{{ method.description }}</div>
+        <div class="description">{{ method.description | markdown | safe }}</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">{{ declarationPrefix }}{{ methodName }}({% for param in method.params %}{% if param.rest %}...{% endif %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</code></pre>
@@ -72,7 +72,7 @@
                 <tr>
                     <td class="param-name">{% if param.rest %}...{% endif %}{{ param.name }}</td>
                     <td class="param-type">{{ param | resolveParamType }}</td>
-                    <td class="param-desc">{{ param.description }}</td>
+                    <td class="param-desc">{{ param.description | inlineMarkdown | safe }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -82,7 +82,7 @@
         <div class="card-section-label">Returns</div>
         {% if method.returns %}
         <div class="return-type">{{ method.returns | formatReturnType | safe }}</div>
-        <div class="return-desc">{{ method.returns.description }}</div>
+        <div class="return-desc">{{ method.returns.description | inlineMarkdown | safe }}</div>
         {% else %}
         <div class="return-desc" style="color: var(--text-muted);">None</div>
         {% endif %}

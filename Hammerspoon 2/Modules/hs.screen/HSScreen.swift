@@ -320,6 +320,41 @@ import ScreenCaptureKit
     /// ```
     @objc func setBrightness(_ brightness: Double) -> Bool
 
+    // MARK: - Spaces
+
+    /// The screen's spaces (its desktops and fullscreen apps), in the order Mission Control shows
+    /// them. Empty if Spaces are unavailable (see `hs.screen.spacesAvailable()`).
+    ///
+    /// This relies on "Displays have separate Spaces" being turned on in System Settings →
+    /// Desktop & Dock, which is macOS's default. If it's off, all screens share one set of
+    /// spaces, so every screen reports the same ones.
+    /// - Example:
+    /// ```js
+    /// for (const screen of hs.screen.all()) {
+    ///     console.log(screen.name + " has " + screen.spaces.length + " spaces")
+    /// }
+    /// ```
+    @objc var spaces: [HSSpace] { get }
+
+    /// The space the screen is showing, or `null` if Spaces are unavailable
+    /// - Example:
+    /// ```js
+    /// console.log("Showing space " + hs.screen.main().currentSpace.id)
+    /// ```
+    @objc var currentSpace: HSSpace? { get }
+
+    /// Adds a desktop to the end of this screen's spaces, by opening Mission Control and
+    /// clicking its add button. Needs Accessibility permission.
+    /// - Returns: {Promise<HSSpace>} A Promise that resolves to the new desktop, or rejects with
+    ///   the reason it couldn't be added
+    /// - Example:
+    /// ```js
+    /// hs.screen.main().addSpace()
+    ///     .then(space => space.goto())
+    ///     .catch(err => console.error(err))
+    /// ```
+    @objc func addSpace() -> JSPromise?
+
     /// Returns a plain object describing this screen, for JSON serialisation
     ///
     /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
@@ -636,6 +671,20 @@ private extension CGDisplayMode {
 
     @objc func setBrightness(_ brightness: Double) -> Bool {
         HSScreenSetBrightness(displayID, brightness)
+    }
+
+    // MARK: - Spaces
+
+    @objc var spaces: [HSSpace] {
+        (HSSpaces.shared.managedDisplay(forScreenUUID: uuid)?.spaces ?? []).map { HSSpace(id: $0.id) }
+    }
+
+    @objc var currentSpace: HSSpace? {
+        HSSpaces.shared.managedDisplay(forScreenUUID: uuid)?.currentSpace.map { HSSpace(id: $0) }
+    }
+
+    @objc func addSpace() -> JSPromise? {
+        HSSpaces.shared.addSpace(toScreenUUID: uuid)
     }
 
     // MARK: - Desktop

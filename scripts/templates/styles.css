@@ -856,6 +856,38 @@ a:hover {
     margin-bottom: 0.75rem;
 }
 
+.description p {
+    margin: 0.5rem 0;
+}
+
+.description p:first-child {
+    margin-top: 0;
+}
+
+.description p:last-child {
+    margin-bottom: 0;
+}
+
+.description ul,
+.description ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.description li {
+    margin: 0.25rem 0;
+}
+
+.description code,
+.param-desc code,
+.return-desc code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: var(--bg-code);
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+}
+
 /* ============================================================
    Section labels inside cards (Declaration / Parameters / Returns)
    ============================================================ */
