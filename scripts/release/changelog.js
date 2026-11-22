@@ -15,12 +15,15 @@
  *       Print release notes (markdown) for the commits in <from>..<to>.
  *       Without --from, every commit up to <to> is included.
  *   changelog.js check --from <ref> [--to <ref>] [--json]
+ *   changelog.js check --commits <file> [--json]
  *       Report the entries and any malformed or misplaced trailers in
- *       <from>..<to>. Exits 0 either way; --json prints a machine-readable
- *       result for the PR workflow.
+ *       <from>..<to>, or in the commits listed in <file> (a JSON array of
+ *       { sha, message }, e.g. from the GitHub API). Exits 0 either way;
+ *       --json prints a machine-readable result for the PR workflow.
  */
 
 const { execFileSync } = require('node:child_process');
+const fs = require('node:fs');
 
 const SECTIONS = [
     { key: 'changelog-added', title: 'Added' },
@@ -46,6 +49,13 @@ function range(from, to) {
  */
 const LOG_FORMAT = ['%H', '%P', '%s', '%B', '%(trailers:only,unfold,separator=%x00)'].join('%x1f') + '%x1e';
 
+function parseTrailers(lines) {
+    return lines.map((line) => line.trim()).filter(Boolean).map((line) => {
+        const colon = line.indexOf(':');
+        return { key: line.slice(0, colon).trim(), value: line.slice(colon + 1).trim() };
+    });
+}
+
 function parseLog(output) {
     return output.split(RECORD).map((record) => record.replace(/^\n/, '')).filter(Boolean).map((record) => {
         const [sha, parents, subject, body, trailers] = record.split(FIELD);
@@ -54,11 +64,26 @@ function parseLog(output) {
             parents: parents ? parents.split(' ') : [],
             subject,
             body,
-            trailers: (trailers || '').split('\0').map((line) => line.trim()).filter(Boolean).map((line) => {
-                const colon = line.indexOf(':');
-                return { key: line.slice(0, colon).trim(), value: line.slice(colon + 1).trim() };
-            }),
+            trailers: parseTrailers((trailers || '').split('\0')),
         };
+    });
+}
+
+/**
+ * Parse commits given as { sha, message } records, without needing them in
+ * the repository. The PR workflow gets them from the GitHub API, so it never
+ * fetches a pull request's commits. --no-divider matches %(trailers) in
+ * parseLog, which doesn't stop at a "---" line.
+ */
+function parseMessages(records) {
+    if (!Array.isArray(records)) throw new Error('commits must be a JSON array');
+    return records.map((record) => {
+        const { sha, message } = record || {};
+        if (typeof sha !== 'string' || !/^[0-9a-f]{40,64}$/.test(sha) || typeof message !== 'string') {
+            throw new Error('each commit must have a hex "sha" and a string "message"');
+        }
+        const trailers = execFileSync('git', ['interpret-trailers', '--parse', '--no-divider'], { input: message, encoding: 'utf8' });
+        return { sha, parents: [], subject: message.split('\n')[0], body: message, trailers: parseTrailers(trailers.split('\n')) };
     });
 }
 
@@ -170,17 +195,24 @@ function parseArgs(argv) {
             case '--to': options.to = value(); break;
             case '--repo': options.repo = value(); break;
             case '--version': options.version = value(); break;
+            case '--commits': options.commits = value(); break;
             case '--json': options.json = true; break;
             default: throw new Error(`unknown argument: ${arg}`);
         }
     }
     if (command !== 'notes' && command !== 'check') throw new Error('usage: changelog.js notes|check [options]');
+    if (options.commits && (command !== 'check' || options.from || rest.includes('--to'))) {
+        throw new Error('--commits only works with check, instead of --from and --to');
+    }
     return options;
 }
 
 function main(argv) {
     const options = parseArgs(argv);
-    const { entries, problems } = collectEntries(readCommits(options.from, options.to));
+    const commits = options.commits
+        ? parseMessages(JSON.parse(fs.readFileSync(options.commits, 'utf8')))
+        : readCommits(options.from, options.to);
+    const { entries, problems } = collectEntries(commits);
 
     if (options.command === 'notes') {
         for (const problem of problems) process.stderr.write(`warning: ${problem}\n`);
@@ -207,4 +239,4 @@ if (require.main === module) {
     }
 }
 
-module.exports = { parseLog, collectEntries, formatNotes, LOG_FORMAT };
+module.exports = { parseLog, parseMessages, collectEntries, formatNotes, LOG_FORMAT };

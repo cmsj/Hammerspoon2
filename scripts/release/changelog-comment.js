@@ -19,6 +19,29 @@ Changelog-Fixed: hs.foo.qux() no longer crashes on an empty string
 
 Each entry is one line of markdown (an indented following line continues it), and a commit can have as many as it needs. To change an existing commit's message, use \`git commit --amend\` or \`git rebase -i\`, then force-push.`;
 
+// Problems and previews quote commit messages, which anyone opening a pull
+// request controls, so the bot mustn't post them as-is.
+const MAX_LINE_LENGTH = 500;
+const MAX_LINES = 60;
+
+/**
+ * Make text from commit messages safe to post: break @mentions (a zero-width
+ * space after the @ stops GitHub notifying anyone, including teams), and
+ * clip long lines and long lists so the comment stays readable and under
+ * GitHub's size limit.
+ */
+function quote(text) {
+    const lines = text.replace(/\n$/, '').split('\n').map((line) => {
+        const clipped = line.length > MAX_LINE_LENGTH ? `${line.slice(0, MAX_LINE_LENGTH)}…` : line;
+        return clipped.replace(/@(?=[\w-])/g, '@\u200b');
+    });
+    if (lines.length > MAX_LINES) {
+        const more = lines.length - MAX_LINES;
+        lines.splice(MAX_LINES, more, `…and ${more} more line${more === 1 ? '' : 's'}`);
+    }
+    return lines.join('\n');
+}
+
 /**
  * What to do with the PR's changelog comment.
  *
@@ -28,7 +51,7 @@ Each entry is one line of markdown (an indented following line continues it), an
  */
 function changelogComment({ count, problems, preview }, author) {
     if (problems.length > 0) {
-        const list = problems.map((problem) => `- ${problem}`).join('\n');
+        const list = quote(problems.map((problem) => `- ${problem}`).join('\n'));
         return {
             create: true,
             body: `${MARKER}\n@${author}, some changelog trailers in this pull request won't be picked up:\n\n${list}\n\n${HOW_TO}`,
@@ -42,8 +65,8 @@ function changelogComment({ count, problems, preview }, author) {
     }
     return {
         create: false,
-        body: `${MARKER}\nThanks! This pull request will add these entries to the release notes:\n\n${preview}`,
+        body: `${MARKER}\nThanks! This pull request will add these entries to the release notes:\n\n${quote(preview)}\n`,
     };
 }
 
-module.exports = { changelogComment, MARKER };
+module.exports = { changelogComment, quote, MARKER };

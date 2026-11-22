@@ -11,7 +11,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { parseLog, collectEntries, formatNotes, LOG_FORMAT } = require('../release/changelog');
+const { parseLog, parseMessages, collectEntries, formatNotes, LOG_FORMAT } = require('../release/changelog');
 
 const SCRIPT = path.join(__dirname, '../release/changelog.js');
 
@@ -32,10 +32,17 @@ function makeRepo() {
     return { dir, git, commit, cleanup: () => fs.rmSync(dir, { recursive: true, force: true }) };
 }
 
+// Collects entries both from git log and from the commits' messages, the way
+// the PR workflow gets them from the GitHub API (without a trailing newline),
+// and checks that the two agree.
 function entriesFor(repo, ...messages) {
     for (const message of messages) repo.commit(message);
     const log = execFileSync('git', ['log', '--reverse', `--format=${LOG_FORMAT}`, 'v1..HEAD'], { cwd: repo.dir, encoding: 'utf8' });
-    return collectEntries(parseLog(log));
+    const commits = parseLog(log);
+    const result = collectEntries(commits);
+    const fromMessages = collectEntries(parseMessages(commits.map(({ sha, body }) => ({ sha, message: body.replace(/\n+$/, '') }))));
+    assert.deepEqual(fromMessages, result, 'parsing the commit messages should match git log');
+    return result;
 }
 
 function texts(entries) {
@@ -202,7 +209,55 @@ test('notes links entries to the pull requests that merged them', (t) => {
     ].join('\n'));
 });
 
-const { changelogComment, MARKER } = require('../release/changelog-comment');
+test('rejects malformed commit records', () => {
+    assert.throws(() => parseMessages({}), /JSON array/);
+    assert.throws(() => parseMessages([{ sha: 'not-a-sha', message: 'x' }]), /hex "sha"/);
+    assert.throws(() => parseMessages([{ sha: 'a'.repeat(40) }]), /string "message"/);
+});
+
+test('check reads commits from a file', (t) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'changelog-test-'));
+    t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+    const file = path.join(dir, 'commits.json');
+    fs.writeFileSync(file, JSON.stringify([
+        { sha: 'a'.repeat(40), message: 'One\n\nChangelog-Added: new thing' },
+        { sha: 'b'.repeat(40), message: 'Two\n\nChangelog-Add: typo' },
+    ]));
+    const result = JSON.parse(execFileSync('node', [SCRIPT, 'check', '--json', '--commits', file], { cwd: dir, encoding: 'utf8' }));
+    assert.equal(result.count, 1);
+    assert.deepEqual(result.entries.Added, [{ text: 'new thing', sha: 'a'.repeat(40) }]);
+    assert.equal(result.problems.length, 1);
+    assert.match(result.problems[0], /^bbbbbbbb has an unknown changelog trailer/);
+});
+
+test('--commits replaces --from and --to', () => {
+    for (const args of [['check', '--commits', 'x', '--from', 'v1'], ['check', '--commits', 'x', '--to', 'HEAD'], ['notes', '--commits', 'x']]) {
+        assert.throws(() => execFileSync('node', [SCRIPT, ...args], { stdio: 'pipe' }), /--commits only works with check/);
+    }
+});
+
+const { changelogComment, quote, MARKER } = require('../release/changelog-comment');
+
+test('quoting breaks mentions of users and teams', () => {
+    assert.equal(quote('ping @octocat and @org/team, mail a@b.com, lone @ sign'),
+        'ping @\u200boctocat and @\u200borg/team, mail a@\u200bb.com, lone @ sign');
+});
+
+test('quoting clips long lines and long lists', () => {
+    const [line] = quote('x'.repeat(600)).split('\n');
+    assert.equal(line, `${'x'.repeat(500)}…`);
+    const lines = quote(Array.from({ length: 100 }, (_, i) => `- ${i}`).join('\n')).split('\n');
+    assert.equal(lines.length, 61);
+    assert.equal(lines[60], '…and 40 more lines');
+});
+
+test('comment quotes entries and problems', () => {
+    const preview = changelogComment({ count: 1, problems: [], preview: '## Fixed\n\n- thanks @someone\n' }, 'octocat');
+    assert.match(preview.body, /- thanks @\u200bsomeone/);
+    const problems = changelogComment({ count: 0, problems: ['abc pings @someone'], preview: '' }, 'octocat');
+    assert.match(problems.body, /^@octocat, /m);
+    assert.match(problems.body, /- abc pings @\u200bsomeone/);
+});
 
 test('comment asks the author for entries when there are none', () => {
     const { body, create } = changelogComment({ count: 0, problems: [], preview: '' }, 'octocat');
