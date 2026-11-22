@@ -423,7 +423,7 @@ nonisolated enum CrashReportIssue {
     /// The URL of a new crash report issue about `report`.
     /// - Parameters:
     ///   - report: The crash
-    ///   - repository: The repository's URL, e.g. `https://github.com/cmsj/Hammerspoon2`
+    ///   - repository: The repository's URL, e.g. `https://github.com/Hammerspoon/Hammerspoon2`
     ///   - version: The version that crashed. Defaults to the report's own, but helper tools
     ///     don't have one, so pass the app's
     ///   - crashLogPlaceholder: What the crash log field starts out as. The crash log itself

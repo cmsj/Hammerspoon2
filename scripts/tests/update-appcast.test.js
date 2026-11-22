@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 
 const { updateAppcast } = require('../release/update-appcast');
 
-const PREFIX = 'https://github.com/cmsj/Hammerspoon2/releases/download/0.0.16/';
+const PREFIX = 'https://github.com/Hammerspoon/Hammerspoon2/releases/download/0.0.16/';
 
 function metadata(overrides = {}) {
     return {
@@ -29,7 +29,7 @@ function update(existing, { metadata: metadataOverrides, ...overrides } = {}) {
         metadata: metadata(metadataOverrides),
         notesHtml: '<h2>Fixed</h2><ul><li>Things</li></ul>',
         downloadPrefix: PREFIX,
-        releaseUrl: 'https://github.com/cmsj/Hammerspoon2/releases/tag/0.0.16',
+        releaseUrl: 'https://github.com/Hammerspoon/Hammerspoon2/releases/tag/0.0.16',
         pubDate: '2026-10-16T12:00:00Z',
         ...overrides,
     });

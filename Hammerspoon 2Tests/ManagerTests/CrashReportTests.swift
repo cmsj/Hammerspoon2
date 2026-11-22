@@ -157,7 +157,7 @@ struct CrashReportTests {
 
     @Suite("GitHub issues")
     struct IssueTests {
-        static let repository = URL(string: "https://github.com/cmsj/Hammerspoon2")!
+        static let repository = URL(string: "https://github.com/Hammerspoon/Hammerspoon2")!
 
         static func fields(_ url: URL) throws -> [String: String] {
             let items = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems)
@@ -169,7 +169,7 @@ struct CrashReportTests {
             let report = try fixture("abort")
             let url = try #require(CrashReportIssue.url(for: report, repository: Self.repository,
                                                         version: "0.1.0", crashLogPlaceholder: "Paste it here"))
-            #expect(url.absoluteString.hasPrefix("https://github.com/cmsj/Hammerspoon2/issues/new?"))
+            #expect(url.absoluteString.hasPrefix("https://github.com/Hammerspoon/Hammerspoon2/issues/new?"))
             #expect(url.absoluteString.count <= CrashReportIssue.maximumURLLength)
 
             let fields = try Self.fields(url)

@@ -26,7 +26,7 @@ const fs = require('fs');
 const { parseArgs } = require('util');
 
 const FEED_TITLE = 'Hammerspoon 2';
-const FEED_LINK = 'https://github.com/cmsj/Hammerspoon2';
+const FEED_LINK = 'https://github.com/Hammerspoon/Hammerspoon2';
 
 function escapeXml(value) {
     return String(value)

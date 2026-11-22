@@ -128,7 +128,7 @@ env.addFilter('githubSourceUrl', function(item) {
         return null;
     }
     // GitHub repo URL - update this if the repo changes
-    const baseUrl = 'https://github.com/cmsj/Hammerspoon2/blob/main';
+    const baseUrl = 'https://github.com/Hammerspoon/Hammerspoon2/blob/main';
     // URL encode the file path
     const encodedPath = item.filePath.split('/').map(encodeURIComponent).join('/');
     return `${baseUrl}/${encodedPath}#L${item.lineNumber}`;
