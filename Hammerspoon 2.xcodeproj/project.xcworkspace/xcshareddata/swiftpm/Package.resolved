@@ -4,7 +4,7 @@
     {
       "identity" : "axswift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/cmsj/AXSwift",
+      "location" : "https://github.com/Hammerspoon/AXSwift",
       "state" : {
         "branch" : "main",
         "revision" : "71309f6274896bbd32c67fe5c1f6ae71b9c87a64"
@@ -13,7 +13,7 @@
     {
       "identity" : "javascript-core-extras",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/cmsj/javascript-core-extras",
+      "location" : "https://github.com/Hammerspoon/javascript-core-extras",
       "state" : {
         "branch" : "main",
         "revision" : "3fff4ea69b124bc85cae75a0d8c732abd1cf0cb4"
@@ -31,7 +31,7 @@
     {
       "identity" : "swift-commandlinekit",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/cmsj/swift-commandlinekit",
+      "location" : "https://github.com/Hammerspoon/swift-commandlinekit",
       "state" : {
         "branch" : "master",
         "revision" : "58aa1a2285c5b8ad54e874a2bd66f790eb7e1766"
@@ -49,7 +49,7 @@
     {
       "identity" : "swift-mqtt",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/cmsj/swift-mqtt",
+      "location" : "https://github.com/Hammerspoon/swift-mqtt",
       "state" : {
         "branch" : "main",
         "revision" : "47e28d3e84c09e32f8ba749762e144d67eb0c0f6"

@@ -243,6 +243,6 @@ hs.window.focusedWindow() // Correct — and autocompleted for you.
   you haven't read either yet
 
 If you hit an issue with the type definitions themselves (a missing method, a wrong type),
-please open an issue on the [Hammerspoon 2 repository](https://github.com/cmsj/Hammerspoon2/issues)
+please open an issue on the [Hammerspoon 2 repository](https://github.com/Hammerspoon/Hammerspoon2/issues)
 — they're generated directly from the Swift source, so a gap there usually means a doc-comment
 gap in the module itself.

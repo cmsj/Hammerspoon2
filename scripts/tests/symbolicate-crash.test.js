@@ -88,12 +88,12 @@ test('finds attachment URLs in both forms GitHub uses', () => {
     const body = issueBody({
         crashLog:
             '[Hammerspoon 2-1.txt](https://github.com/user-attachments/files/123/Hammerspoon.2-1.txt)\n' +
-            'https://github.com/cmsj/Hammerspoon2/files/456/crash.txt and ' +
+            'https://github.com/Hammerspoon/Hammerspoon2/files/456/crash.txt and ' +
             'https://evil.example.com/user-attachments/files/789/x.txt',
     });
     assert.deepEqual(attachmentURLs(body), [
         'https://github.com/user-attachments/files/123/Hammerspoon.2-1.txt',
-        'https://github.com/cmsj/Hammerspoon2/files/456/crash.txt',
+        'https://github.com/Hammerspoon/Hammerspoon2/files/456/crash.txt',
     ]);
 });
 

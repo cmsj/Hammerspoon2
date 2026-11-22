@@ -18,7 +18,7 @@ import AppKit
 final class CrashReportManager {
     static let shared = CrashReportManager()
 
-    static let repository = URL(string: "https://github.com/cmsj/Hammerspoon2")!
+    static let repository = URL(string: "https://github.com/Hammerspoon/Hammerspoon2")!
 
     /// The UserDefaults key of the last time we looked for crash reports.
     static let lastCheckedKey = "crashReportsLastChecked"
