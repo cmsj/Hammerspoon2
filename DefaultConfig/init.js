@@ -3,12 +3,12 @@
 // This file is loaded on startup, and reloaded whenever you choose "Reload Config"
 // from the menu bar icon.
 //
-// Full API documentation: https://cmsj.github.io/Hammerspoon2
+// Full API documentation: https://www.hammerspoon.org/2
 // You can also browse it locally at any time with: hs.docs.show()
 //
 // See also:
-// - https://cmsj.github.io/Hammerspoon2/main/js/getting-started.html
-// - https://cmsj.github.io/Hammerspoon2/main/js/migration-guide.html
+// - https://www.hammerspoon.org/2/main/js/getting-started.html
+// - https://www.hammerspoon.org/2/main/js/migration-guide.html
 
 hs.notify.show("Hammerspoon 2", "Config loaded successfully.")
 

@@ -20,14 +20,16 @@ on:
         required: false
         default: ''
 
-# Pages deployment needs write access; contents write is needed to update the
-# gh-pages persistence branch.
+# gh-pages is the store for every published version of the docs and the signed
+# appcast. Hammerspoon/hammerspoon.github.io's deploy.yml puts it on the site at
+# www.hammerspoon.org/2/; this workflow asks it to redeploy after updating
+# gh-pages.
+#
+# Contents write is needed to update gh-pages.
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
-# Serialise deployments so that concurrent tag + main pushes don't race when
+# Serialise runs so that concurrent tag + main pushes don't race when
 # reading/writing the gh-pages persistence branch.
 concurrency:
   group: "pages"
@@ -155,20 +157,22 @@ jobs:
           echo "::error::Couldn't update gh-pages: it kept changing"
           exit 1
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
+      # The token comes from a GitHub App owned by the Hammerspoon org and
+      # installed on hammerspoon.github.io, with Contents read and write (which
+      # repository_dispatch needs).
+      - name: Create a token for hammerspoon.github.io
+        id: site-token
+        uses: actions/create-github-app-token@v3
         with:
-          path: site
+          client-id: ${{ vars.SITE_DEPLOY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SITE_DEPLOY_APP_PRIVATE_KEY }}
+          owner: Hammerspoon
+          repositories: hammerspoon.github.io
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+      - name: Deploy the website
+        env:
+          GH_TOKEN: ${{ steps.site-token.outputs.token }}
+        run: |
+          gh api repos/Hammerspoon/hammerspoon.github.io/dispatches \
+            -f event_type=hs2-docs \
+            -f "client_payload[version]=${{ steps.version.outputs.name }}"

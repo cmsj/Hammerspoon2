@@ -44,8 +44,8 @@
 #   2. creates the GitHub release with the notes and assets (as a draft until
 #      every asset is uploaded and checked) and publishes it
 #   3. commits appcast.xml to gh-pages and pushes it
-#   4. deploys GitHub Pages (.github/workflows/pages-deploy.yml) and checks
-#      the feed it serves is the new one
+#   4. deploys www.hammerspoon.org (deploy.yml in $SITE_REPO, which serves
+#      gh-pages at /2/) and checks the feed it serves is the new one
 #
 # Each step checks whether it's already done, so if execute stops partway, fix
 # the problem and run it again to carry on. `execute --dry-run` shows what's
@@ -82,7 +82,9 @@ TEAM_ID="VQCYSNZB89"
 METADATA_NAME="sparkle.json"
 APPCAST_NAME="appcast.xml"
 NOTES_NAME="release-notes.md"
-PAGES_WORKFLOW="pages-deploy.yml"
+# The website, which serves gh-pages at /2/, and the workflow that deploys it.
+SITE_REPO="Hammerspoon/hammerspoon.github.io"
+PAGES_WORKFLOW="deploy.yml"
 
 NOTARY_PROFILE="${NOTARY_PROFILE:-hammerspoon2-notary}"
 SPARKLE_KEY_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-ed25519}"
@@ -180,8 +182,10 @@ check_github() {
     GH_REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
     [ "$(gh api "repos/$GH_REPO" --jq .permissions.push)" = "true" ] \
         || die "your GitHub account can't push to $GH_REPO, so it can't tag or release"
-    gh workflow view "$PAGES_WORKFLOW" >/dev/null 2>&1 \
-        || die "$PAGES_WORKFLOW isn't on $GH_REPO's default branch, and execute needs it to deploy the appcast"
+    gh workflow view -R "$SITE_REPO" "$PAGES_WORKFLOW" >/dev/null 2>&1 \
+        || die "$PAGES_WORKFLOW isn't on $SITE_REPO's default branch, and execute needs it to deploy the appcast"
+    [ "$(gh api "repos/$SITE_REPO" --jq .permissions.push)" = "true" ] \
+        || die "your GitHub account can't run workflows in $SITE_REPO, so it can't deploy the appcast"
 }
 
 # Check the Sparkle signing key is in the keychain and matches the app's.
@@ -767,21 +771,21 @@ step_appcast() {
 }
 
 step_deploy() {
-    log "Deploying GitHub Pages"
+    log "Deploying www.hammerspoon.org"
     local before run_id="" deadline
-    before="$(gh run list --workflow "$PAGES_WORKFLOW" --limit 20 --json databaseId --jq '.[].databaseId')"
-    gh workflow run "$PAGES_WORKFLOW" --ref "$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)"
+    before="$(gh run list -R "$SITE_REPO" --workflow "$PAGES_WORKFLOW" --limit 20 --json databaseId --jq '.[].databaseId')"
+    gh workflow run -R "$SITE_REPO" "$PAGES_WORKFLOW" --ref "$(gh repo view "$SITE_REPO" --json defaultBranchRef --jq .defaultBranchRef.name)"
     deadline=$((SECONDS + 120))
     while [ -z "$run_id" ]; do
-        [ "$SECONDS" -lt "$deadline" ] || die "the Pages deploy didn't start; check https://github.com/$GH_REPO/actions"
+        [ "$SECONDS" -lt "$deadline" ] || die "the Pages deploy didn't start; check https://github.com/$SITE_REPO/actions"
         sleep 5
-        for id in $(gh run list --workflow "$PAGES_WORKFLOW" --limit 20 --json databaseId --jq '.[].databaseId'); do
+        for id in $(gh run list -R "$SITE_REPO" --workflow "$PAGES_WORKFLOW" --limit 20 --json databaseId --jq '.[].databaseId'); do
             grep -qx "$id" <<<"$before" || { run_id="$id"; break; }
         done
     done
-    echo "  https://github.com/$GH_REPO/actions/runs/$run_id"
-    gh run watch "$run_id" --exit-status --interval 10 >/dev/null \
-        || die "the Pages deploy failed: https://github.com/$GH_REPO/actions/runs/$run_id"
+    echo "  https://github.com/$SITE_REPO/actions/runs/$run_id"
+    gh run watch -R "$SITE_REPO" "$run_id" --exit-status --interval 10 >/dev/null \
+        || die "the Pages deploy failed: https://github.com/$SITE_REPO/actions/runs/$run_id"
 
     # publish-docs.yml carries the newest appcast through when it rewrites
     # gh-pages, but check nothing else replaced it.
