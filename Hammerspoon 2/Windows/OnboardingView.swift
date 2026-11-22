@@ -8,7 +8,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-private let docsURL = URL(string: "https://cmsj.github.io/Hammerspoon2")!
+private let docsURL = URL(string: "https://www.hammerspoon.org/2")!
 
 @_documentation(visibility: private)
 struct OnboardingView: View {

@@ -5,7 +5,7 @@
  * The release script (scripts/release/release.sh) writes a sparkle.json
  * describing the signed archive and any binary deltas, then feeds it, plus
  * the rendered release notes, through this script to add the release to the
- * appcast.xml served from GitHub Pages, which it then signs.
+ * appcast.xml served from www.hammerspoon.org/2/, which it then signs.
  *
  * Usage:
  *   node scripts/release/update-appcast.js \

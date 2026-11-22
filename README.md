@@ -27,7 +27,7 @@ Hammerspoon 2 requires macOS 27 or later.
 
  * If you are new to Hammerspoon, read our Getting Started Guide (link TBD)
  * If you are coming from the original Hammerspoon, see our Migration Guide (link TBD)
- * Full API documentation can be found here (link TBD), or by running `hs.docs.show()` in the Hammerspoon Console window.
+ * Full API documentation can be found [here](https://www.hammerspoon.org/2/), or by running `hs.docs.show()` in the Hammerspoon Console window.
 
 ## Getting Help
 
