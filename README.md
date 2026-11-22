@@ -1,22 +1,41 @@
 # Hammerspoon 2
 
-A modernized rewrite of [Hammerspoon](https://github.com/Hammerspoon/hammerspoon) - a powerful macOS application for automating your Mac using JavaScript.
+## What is Hammerspoon?
 
-## WARNING
+This is a tool for powerful automation of macOS. At its core, Hammerspoon is just a bridge between the operating system and a JavaScript scripting engine.
 
-Hammerspoon 2 is currently considered *EXPERIMENTAL*. There may be crashes, memory leaks, bugs, etc. and the JavaScript API may change radically without warning.
+What gives Hammerspoon its power is a set of modules that expose specific pieces of system functionality, to the user. With these, you can write JavaScript to control many aspects of your macOS environment.
+
+The first version of Hammerspoon used Lua for its scripting engine, this is a modernized rewrite that uses the same JavaScript engine as Safari.
 
 ## Minimum requirements
 
 Hammerspoon 2 requires macOS 27 or later.
 
-Pre-releases up to (and including) 0.0.6 target macOS 15.6 and support both Apple Silicon and Intel. Later pre-releases up to (and including) 0.0.15 require macOS 26.
+## How do I install it?
 
-## Using Hammerspoon
+### Manually
 
- * Download one of the pre-releases from GitHub, unzip and place in /Applications
- * Create ~/.config/hammerspoon2/init.js
- * For the JavaScript API docs, see https://cmsj.github.io/Hammerspoon2/ or run hs.docs.show() in the Console window
+ * Download the [latest release](https://github.com/Hammerspoon/Hammerspoon2/releases/latest)
+ * Drag `Hammerspoon 2.app` from your `Downloads` folder to `/Applications`
+
+### Homebrew
+
+ * TBC
+
+## Getting Started
+
+ * If you are new to Hammerspoon, read our Getting Started Guide (link TBD)
+ * If you are coming from the original Hammerspoon, see our Migration Guide (link TBD)
+ * Full API documentation can be found here (link TBD), or by running `hs.docs.show()` in the Hammerspoon Console window.
+
+## Getting Help
+
+ * There are multiple places you can communicate with other users: (links TBD)
+   * GitHub Discussions
+   * [Discord](https://discord.gg/vxchqkRbkR)
+   * [Reddit](https://www.reddit.com/r/Hammerspoon)
+ * If you find a bug in Hammerspoon, or want to request a new feature, please file an issue (link TBD)
 
 ## Development
 
@@ -32,4 +51,7 @@ See the LICENSE file for details.
 
 ## Acknowledgments
 
-This is a modernized rewrite of the original [Hammerspoon](https://github.com/Hammerspoon/hammerspoon) project.
+This is a modernized rewrite of the original [Hammerspoon](https://github.com/Hammerspoon/hammerspoon) project, and builds on projects such as:
+ * [AXSwift](https://github.com/mredig/AXSwift)
+ * [javascriptcore-extras](https://github.com/mhayes853/javascript-core-extras)
+ * [swift-commandlinekit](https://github.com/objecthub/swift-commandlinekit)
