@@ -5,8 +5,11 @@ name: Changelog
 # are none or some are malformed. It never fails the PR.
 #
 # pull_request_target runs with the base branch's code and a token that can
-# comment on PRs from forks. It must never run code from the PR: the PR's
-# commits are only fetched as data, and the scripts come from the base branch.
+# comment on PRs from forks. It must never check out, fetch, install or run
+# anything from the PR: the commit messages come from the GitHub API, the
+# scripts come from the base branch, and the comment escapes what it quotes
+# from the commits. Actions are pinned to commit SHAs because they get the
+# token.
 
 on:
   pull_request_target:
@@ -28,30 +31,44 @@ jobs:
 
     steps:
       - name: Checkout base branch
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.base.sha }}
-          fetch-depth: 0
           persist-credentials: false
 
-      - name: Fetch pull request commits
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: git fetch --no-tags origin "+refs/pull/${PR_NUMBER}/head:refs/remotes/pr/head"
+      - name: Get pull request commits
+        id: commits
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const pr = context.payload.pull_request;
+            // The API lists at most 250 of a pull request's commits.
+            const commits = await github.paginate(github.rest.pulls.listCommits, {
+              ...context.repo, pull_number: pr.number, per_page: 100,
+            });
+            if (commits.length < pr.commits) {
+              core.notice(`Only ${commits.length} of this pull request's ${pr.commits} commits can be listed, so its changelog entries weren't checked.`);
+              core.setOutput('complete', 'false');
+              return;
+            }
+            const records = commits.map(({ sha, commit }) => ({ sha, message: commit.message }));
+            fs.writeFileSync(`${process.env.RUNNER_TEMP}/commits.json`, JSON.stringify(records));
+            core.setOutput('complete', 'true');
 
       - name: Check changelog trailers
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        if: steps.commits.outputs.complete == 'true'
         run: |
-          node scripts/release/changelog.js check --json --from "$BASE_SHA" --to refs/remotes/pr/head > "$RUNNER_TEMP/changelog.json"
+          node scripts/release/changelog.js check --json --commits "$RUNNER_TEMP/commits.json" > "$RUNNER_TEMP/changelog.json"
           {
             echo "## Changelog entries"
             echo
-            node scripts/release/changelog.js check --from "$BASE_SHA" --to refs/remotes/pr/head
+            node scripts/release/changelog.js check --commits "$RUNNER_TEMP/commits.json"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment on pull request
-        uses: actions/github-script@v9
+        if: steps.commits.outputs.complete == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const fs = require('fs');
