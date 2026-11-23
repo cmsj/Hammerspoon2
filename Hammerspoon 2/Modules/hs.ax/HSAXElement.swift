@@ -621,8 +621,8 @@ private enum AXAttributeValueType {
 }
 
 /// Names and plain-language explanations of Accessibility API errors, for the JS errors that
-/// setAttributeValue() and performAction() throw.
-private extension AXError {
+/// setAttributeValue(), performAction() and hs.ax.on()/once() throw.
+extension AXError {
     /// The error's constant name from AXError.h, e.g. "kAXErrorAttributeUnsupported"
     var constantName: String {
         switch self {
@@ -653,8 +653,12 @@ private extension AXError {
         case .cannotComplete: return "the application did not respond, or refused the request"
         case .attributeUnsupported: return "the element does not support this attribute"
         case .actionUnsupported: return "the element does not support this action"
+        case .notificationUnsupported: return "the element does not support this notification"
         case .notImplemented: return "the application does not implement this"
-        case .apiDisabled: return "Hammerspoon does not have Accessibility permission"
+        // Returned both when Hammerspoon lacks the permission and when only this application has
+        // turned the API off (e.g. Firefox in kiosk mode), so don't send the reader to System
+        // Settings for the latter (issue #437)
+        case .apiDisabled: return "the Accessibility API is disabled, for Hammerspoon or for this application"
         case .noValue: return "the attribute has no value"
         default: return "the Accessibility API reported an error"
         }
