@@ -10,6 +10,10 @@
  *   Changelog-Changed: hs.foo.baz() now returns null instead of false
  *   Changelog-Fixed: hs.foo.qux() no longer crashes on an empty string
  *
+ * A squash merge's message is its pull request's commit messages one after
+ * another, and GitHub adds its own Co-authored-by paragraph at the end, so
+ * there the trailers in every paragraph count.
+ *
  * Usage:
  *   changelog.js notes --from <ref> [--to <ref>] [--repo owner/name] [--version <tag>]
  *       Print release notes (markdown) for the commits in <from>..<to>.
@@ -56,6 +60,26 @@ function parseTrailers(lines) {
     });
 }
 
+// GitHub squash merges are titled "... (#N)".
+const SQUASH_SUBJECT = /\(#(\d+)\)$/;
+
+/**
+ * The trailers of a squash merge: those in every paragraph of its message,
+ * each parsed by git as if it ended a message, since each of the squashed
+ * commits' trailer blocks ends up in a paragraph of its own.
+ */
+function squashTrailers(body) {
+    return body.split(/\n[ \t]*\n/)
+        .filter((paragraph) => /^[\w-]+[ \t]*:/m.test(paragraph))
+        .flatMap((paragraph) => {
+            // git never reads a message's first paragraph (its subject) as
+            // trailers, so give each paragraph one.
+            const message = `subject\n\n${paragraph}\n`;
+            const parsed = execFileSync('git', ['interpret-trailers', '--parse', '--no-divider'], { input: message, encoding: 'utf8' });
+            return parseTrailers(parsed.split('\n'));
+        });
+}
+
 function parseLog(output) {
     return output.split(RECORD).map((record) => record.replace(/^\n/, '')).filter(Boolean).map((record) => {
         const [sha, parents, subject, body, trailers] = record.split(FIELD);
@@ -64,7 +88,7 @@ function parseLog(output) {
             parents: parents ? parents.split(' ') : [],
             subject,
             body,
-            trailers: parseTrailers((trailers || '').split('\0')),
+            trailers: SQUASH_SUBJECT.test(subject) ? squashTrailers(body) : parseTrailers((trailers || '').split('\0')),
         };
     });
 }
@@ -82,8 +106,12 @@ function parseMessages(records) {
         if (typeof sha !== 'string' || !/^[0-9a-f]{40,64}$/.test(sha) || typeof message !== 'string') {
             throw new Error('each commit must have a hex "sha" and a string "message"');
         }
+        const subject = message.split('\n')[0];
+        if (SQUASH_SUBJECT.test(subject)) {
+            return { sha, parents: [], subject, body: message, trailers: squashTrailers(message) };
+        }
         const trailers = execFileSync('git', ['interpret-trailers', '--parse', '--no-divider'], { input: message, encoding: 'utf8' });
-        return { sha, parents: [], subject: message.split('\n')[0], body: message, trailers: parseTrailers(trailers.split('\n')) };
+        return { sha, parents: [], subject, body: message, trailers: parseTrailers(trailers.split('\n')) };
     });
 }
 
@@ -107,7 +135,7 @@ function pullRequestsByCommit(from, to) {
             for (const sha of branch) prs.set(sha, merge[1]);
             continue;
         }
-        const squash = commit.subject.match(/\(#(\d+)\)$/);
+        const squash = commit.subject.match(SQUASH_SUBJECT);
         if (squash) prs.set(commit.sha, squash[1]);
     }
     return prs;
