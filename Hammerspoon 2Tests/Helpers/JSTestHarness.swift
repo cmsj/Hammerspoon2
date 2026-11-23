@@ -659,6 +659,8 @@ extension JSTestHarness {
                 loadModule(HSNetworkModule.self, as: name)
             case "shortcuts":
                 loadModule(HSShortcutsModule.self, as: name)
+            case "eventkit":
+                loadModule(HSEventKitModule.self, as: name)
             case "ipc":
                 loadModule(HSIPCModule.self, as: name)
             case "mouse":

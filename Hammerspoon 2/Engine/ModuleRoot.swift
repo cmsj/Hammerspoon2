@@ -180,6 +180,7 @@ import JavaScriptCoreExtras
     @objc var mqtt: HSMQTTModule { get }
     @objc var keyboard: HSKeyboardModule { get }
     @objc var shortcuts: HSShortcutsModule { get }
+    @objc var eventkit: HSEventKitModule { get }
     @objc var sound: HSSoundModule { get }
     @objc var network: HSNetworkModule { get }
     @objc var window: HSWindowModule { get }
@@ -473,6 +474,7 @@ import JavaScriptCoreExtras
     @objc var mqtt:         HSMQTTModule            { getOrCreate(name: "mqtt",         type: HSMQTTModule.self)}
     @objc var keyboard:     HSKeyboardModule        { getOrCreate(name: "keyboard",     type: HSKeyboardModule.self)}
     @objc var shortcuts:    HSShortcutsModule       { getOrCreate(name: "shortcuts",    type: HSShortcutsModule.self)}
+    @objc var eventkit:     HSEventKitModule        { getOrCreate(name: "eventkit",     type: HSEventKitModule.self)}
     @objc var sound:        HSSoundModule           { getOrCreate(name: "sound",        type: HSSoundModule.self)}
     @objc var network:      HSNetworkModule         { getOrCreate(name: "network",      type: HSNetworkModule.self)}
     @objc var window:       HSWindowModule          { getOrCreate(name: "window",       type: HSWindowModule.self)}
