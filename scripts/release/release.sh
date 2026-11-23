@@ -46,6 +46,8 @@
 #   3. commits appcast.xml to gh-pages and pushes it
 #   4. deploys www.hammerspoon.org (deploy.yml in $SITE_REPO, which serves
 #      gh-pages at /2/) and checks the feed it serves is the new one
+#   5. commits the new version and sha256 to the Homebrew cask in $TAP_REPO,
+#      unless --channel kept the release out of the default Sparkle channel
 #
 # Each step checks whether it's already done, so if execute stops partway, fix
 # the problem and run it again to carry on. `execute --dry-run` shows what's
@@ -85,6 +87,9 @@ NOTES_NAME="release-notes.md"
 # The website, which serves gh-pages at /2/, and the workflow that deploys it.
 SITE_REPO="Hammerspoon/hammerspoon.github.io"
 PAGES_WORKFLOW="deploy.yml"
+# The Homebrew tap (brew install --cask hammerspoon/tap/hammerspoon2).
+TAP_REPO="Hammerspoon/homebrew-tap"
+CASK_PATH="Casks/hammerspoon2.rb"
 
 NOTARY_PROFILE="${NOTARY_PROFILE:-hammerspoon2-notary}"
 SPARKLE_KEY_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-ed25519}"
@@ -103,8 +108,9 @@ Commands:
                build/release/<version>/prepared. Changes nothing else.
   appcast      Rebuild and re-sign the prepared appcast, after editing
                release-notes.md or when another release has gone live since.
-  execute      Tag, push, create the GitHub release and put the appcast live,
-               from what prepare left. Run it again to resume if it stops.
+  execute      Tag, push, create the GitHub release, put the appcast live and
+               update the Homebrew cask, from what prepare left. Run it again
+               to resume if it stops.
   sparkle-bin  Print the directory holding Sparkle's command line tools
                (generate_keys, sign_update, ...).
 
@@ -192,6 +198,8 @@ check_github() {
         || die "$PAGES_WORKFLOW isn't on $SITE_REPO's default branch, and execute needs it to deploy the appcast"
     [ "$(gh api "repos/$SITE_REPO" --jq .permissions.push)" = "true" ] \
         || die "your GitHub account can't run workflows in $SITE_REPO, so it can't deploy the appcast"
+    [ "$(gh api "repos/$TAP_REPO" --jq .permissions.push)" = "true" ] \
+        || die "your GitHub account can't push to $TAP_REPO, so it can't update the Homebrew cask"
 }
 
 # Check the Sparkle signing key is in the keychain and matches the app's.
@@ -814,6 +822,51 @@ step_deploy() {
     done
 }
 
+# Write the cask on $TAP_REPO's default branch to <output>, and print its blob
+# sha, which the update has to name so it can't overwrite a newer commit.
+fetch_cask() {
+    local json
+    json="$(gh api "repos/$TAP_REPO/contents/$CASK_PATH")"
+    jq -r .content <<<"$json" | tr -d '\n' | base64 -D > "$1"
+    jq -r .sha <<<"$json"
+}
+
+# Print the build number that <appcast> gives <version>, or nothing if it
+# doesn't list it.
+appcast_build_of() {
+    awk -v version="$2" '
+        /<sparkle:version>/ { build = $0; gsub(/.*<sparkle:version>|<\/sparkle:version>.*/, "", build) }
+        /<sparkle:shortVersionString>/ {
+            short = $0; gsub(/.*<sparkle:shortVersionString>|<\/sparkle:shortVersionString>.*/, "", short)
+            if (short == version) { print build; exit }
+        }' "$1"
+}
+
+# Whether <cask> already installs this release.
+cask_is_current() {
+    grep -qx "  version \"$VERSION\"" "$1" && grep -qx "  sha256 \"$ZIP_SHA\"" "$1"
+}
+
+step_cask() {
+    log "Updating the Homebrew cask in $TAP_REPO"
+    local cask="$WORK/cask.rb" updated="$WORK/cask-updated.rb" blob
+    blob="$(fetch_cask "$cask")"
+    if cask_is_current "$cask"; then
+        echo "  already there"
+        return
+    fi
+    sed -E \
+        -e "s/^  version \".*\"$/  version \"$VERSION\"/" \
+        -e "s/^  sha256 \".*\"$/  sha256 \"$ZIP_SHA\"/" \
+        "$cask" > "$updated"
+    cask_is_current "$updated" || die "couldn't find the version and sha256 lines in $TAP_REPO's $CASK_PATH"
+    gh api -X PUT "repos/$TAP_REPO/contents/$CASK_PATH" \
+        -f message="hammerspoon2 $VERSION" \
+        -f content="$(base64 -i "$updated")" \
+        -f sha="$blob" \
+        --jq .commit.html_url
+}
+
 EXECUTING=0
 on_exit() {
     local status=$?
@@ -901,13 +954,34 @@ cmd_execute() {
     local deploy_state="to do"
     [ "$(served_appcast_sha)" != "$APPCAST_SHA" ] || deploy_state="done"
 
+    # The cask follows the default Sparkle channel, so it skips releases that
+    # --channel put somewhere else, and never goes back to an older release
+    # (when execute runs again for one after a newer release has gone live).
+    local cask_state="to do" cask_version cask_build
+    ZIP_SHA="$(jq -r --arg name "$ASSET_BASENAME-$VERSION.zip" '.assets[] | select(.name == $name) | .sha256' "$MANIFEST")"
+    [ -n "$ZIP_SHA" ] || die "$MANIFEST doesn't list $ASSET_BASENAME-$VERSION.zip"
+    if [ -n "$(jq -r '.channel // ""' "$METADATA")" ]; then
+        cask_state="skipped (not in the default channel)"
+    else
+        fetch_cask "$WORK/cask.rb" >/dev/null
+        cask_version="$(sed -n -E 's/^  version "(.*)"$/\1/p' "$WORK/cask.rb")"
+        cask_build="$(appcast_build_of "$WORK/live.xml" "$cask_version")"
+        if cask_is_current "$WORK/cask.rb"; then
+            cask_state="done"
+        elif [ -n "$cask_build" ] && [ "$cask_build" -gt "$(jq -r .build "$MANIFEST")" ]; then
+            cask_state="skipped (it has the newer $cask_version)"
+        fi
+    fi
+
     printf '\nRelease %s (build %s) from %s:\n' "$VERSION" "$(jq -r .build "$MANIFEST")" "$COMMIT"
     printf '  1. %-36s %s\n' "Tag $VERSION and push it:" "$tag_state"
     printf '  2. %-36s %s\n' "Publish the GitHub release:" "$release_state_text"
     printf '  3. %-36s %s\n' "Push $APPCAST_NAME to gh-pages:" "$appcast_state"
     printf '  4. %-36s %s\n' "Deploy Pages and check the feed:" "$deploy_state"
+    printf '  5. %-36s %s\n' "Update the Homebrew cask:" "$cask_state"
 
-    if [ "$tag_state:$release_state_text:$appcast_state:$deploy_state" = "done:done:done:done" ]; then
+    if [ "$tag_state:$release_state_text:$appcast_state:$deploy_state" = "done:done:done:done" ] \
+        && [ "$cask_state" != "to do" ]; then
         echo "Nothing left to do."
         return
     fi
@@ -924,6 +998,7 @@ cmd_execute() {
     [ "$release_state_text" = "done" ] || step_release
     [ "$appcast_state" = "done" ] || step_appcast
     step_deploy
+    [ "$cask_state" != "to do" ] || step_cask
     EXECUTING=0
 
     log "Released $VERSION"
