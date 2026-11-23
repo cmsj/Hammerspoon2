@@ -39,7 +39,7 @@ const PBXPROJ = `
 /* Begin XCRemoteSwiftPackageReference section */
 		4F463E9E2EA7A669000A2135 /* XCRemoteSwiftPackageReference "AXSwift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/cmsj/AXSwift";
+			repositoryURL = "https://github.com/Hammerspoon/AXSwift";
 			requirement = {
 				branch = main;
 				kind = branch;
@@ -82,7 +82,7 @@ function fakeAPI(routes) {
 const tags = (...names) => names.map(name => ({ name }));
 
 test('githubRepo extracts owner/repo from GitHub URLs only', () => {
-    assert.equal(githubRepo('https://github.com/cmsj/AXSwift'), 'cmsj/AXSwift');
+    assert.equal(githubRepo('https://github.com/Hammerspoon/AXSwift'), 'Hammerspoon/AXSwift');
     assert.equal(githubRepo('https://github.com/sparkle-project/Sparkle.git'), 'sparkle-project/Sparkle');
     assert.equal(githubRepo('https://github.com/a/b/'), 'a/b');
     assert.equal(githubRepo('https://gitlab.com/a/b'), null);
@@ -91,19 +91,19 @@ test('githubRepo extracts owner/repo from GitHub URLs only', () => {
 
 test('parseResolved reads branch and version pins', () => {
     const pins = parseResolved(resolved([
-        { identity: 'axswift', location: 'https://github.com/cmsj/AXSwift', branch: 'main', revision: SHA_A },
+        { identity: 'axswift', location: 'https://github.com/Hammerspoon/AXSwift', branch: 'main', revision: SHA_A },
         { identity: 'sparkle', location: 'https://github.com/sparkle-project/Sparkle', revision: SHA_B, version: '2.9.6' },
     ]));
     assert.deepEqual(pins, [
-        { identity: 'axswift', location: 'https://github.com/cmsj/AXSwift', repo: 'cmsj/AXSwift', branch: 'main', revision: SHA_A, version: null },
+        { identity: 'axswift', location: 'https://github.com/Hammerspoon/AXSwift', repo: 'Hammerspoon/AXSwift', branch: 'main', revision: SHA_A, version: null },
         { identity: 'sparkle', location: 'https://github.com/sparkle-project/Sparkle', repo: 'sparkle-project/Sparkle', branch: null, revision: SHA_B, version: '2.9.6' },
     ]);
 });
 
 test('parseRequirements reads each package reference, keyed by lowercased repo', () => {
     const requirements = parseRequirements(PBXPROJ);
-    assert.deepEqual([...requirements.keys()], ['cmsj/axswift', 'sparkle-project/sparkle', 'example/ranged']);
-    assert.deepEqual(requirements.get('cmsj/axswift'), { branch: 'main', kind: 'branch' });
+    assert.deepEqual([...requirements.keys()], ['hammerspoon/axswift', 'sparkle-project/sparkle', 'example/ranged']);
+    assert.deepEqual(requirements.get('hammerspoon/axswift'), { branch: 'main', kind: 'branch' });
     assert.deepEqual(requirements.get('sparkle-project/sparkle'), { kind: 'upToNextMajorVersion', minimumVersion: '2.8.0' });
     assert.deepEqual(requirements.get('example/ranged'), { kind: 'versionRange', maximumVersion: '3.0.0', minimumVersion: '1.5.0' });
 });
@@ -141,12 +141,12 @@ test('versionAllowed follows Xcode requirement kinds', () => {
 
 test('diffPins reports updated, added and removed packages, and skips unchanged ones', () => {
     const oldPins = parseResolved(resolved([
-        { identity: 'axswift', location: 'https://github.com/cmsj/AXSwift', branch: 'main', revision: SHA_A },
+        { identity: 'axswift', location: 'https://github.com/Hammerspoon/AXSwift', branch: 'main', revision: SHA_A },
         { identity: 'gone', location: 'https://github.com/x/gone', revision: SHA_A, version: '1.0.0' },
         { identity: 'sparkle', location: 'https://github.com/sparkle-project/Sparkle', revision: SHA_A, version: '2.9.6' },
     ]));
     const newPins = parseResolved(resolved([
-        { identity: 'axswift', location: 'https://github.com/cmsj/AXSwift', branch: 'main', revision: SHA_A },
+        { identity: 'axswift', location: 'https://github.com/Hammerspoon/AXSwift', branch: 'main', revision: SHA_A },
         { identity: 'new', location: 'https://github.com/x/new', revision: SHA_C, version: '0.1.0' },
         { identity: 'sparkle', location: 'https://github.com/sparkle-project/Sparkle', revision: SHA_B, version: '2.10.1' },
     ]));
@@ -165,8 +165,8 @@ test('diffPins reports updated, added and removed packages, and skips unchanged 
 
 test('renderUpdateSummary shows branch pins as branch@revision', () => {
     const changes = diffPins(
-        parseResolved(resolved([{ identity: 'axswift', location: 'https://github.com/cmsj/AXSwift', branch: 'main', revision: SHA_A }])),
-        parseResolved(resolved([{ identity: 'axswift', location: 'https://github.com/cmsj/AXSwift', branch: 'main', revision: SHA_B }]))
+        parseResolved(resolved([{ identity: 'axswift', location: 'https://github.com/Hammerspoon/AXSwift', branch: 'main', revision: SHA_A }])),
+        parseResolved(resolved([{ identity: 'axswift', location: 'https://github.com/Hammerspoon/AXSwift', branch: 'main', revision: SHA_B }]))
     );
     assert.match(renderUpdateSummary(changes), /\| main@aaaaaaa \| main@bbbbbbb \|/);
     assert.equal(renderUpdateSummary([]), 'No Swift package updates.');
@@ -182,36 +182,36 @@ test('forkAdvice suggests re-syncing or dropping the fork only when there is som
 
 test('collectForks compares our forks with their parent and root, and ignores everything else', async () => {
     const pins = parseResolved(resolved([
-        { identity: 'axswift', location: 'https://github.com/cmsj/AXSwift', branch: 'main', revision: SHA_A },
-        { identity: 'mqtt', location: 'https://github.com/cmsj/swift-mqtt', revision: SHA_B, version: '1.0.0' },
-        { identity: 'mine', location: 'https://github.com/cmsj/not-a-fork', branch: 'main', revision: SHA_C },
+        { identity: 'axswift', location: 'https://github.com/Hammerspoon/AXSwift', branch: 'main', revision: SHA_A },
+        { identity: 'mqtt', location: 'https://github.com/Hammerspoon/swift-mqtt', revision: SHA_B, version: '1.0.0' },
+        { identity: 'mine', location: 'https://github.com/Hammerspoon/not-a-fork', branch: 'main', revision: SHA_C },
         { identity: 'theirs', location: 'https://github.com/someone/their-fork', branch: 'main', revision: SHA_C },
     ]));
     const api = fakeAPI({
-        '/repos/cmsj/AXSwift': {
-            full_name: 'cmsj/AXSwift', fork: true,
+        '/repos/Hammerspoon/AXSwift': {
+            full_name: 'Hammerspoon/AXSwift', fork: true,
             parent: { full_name: 'mredig/AXSwift', default_branch: 'main' },
             source: { full_name: 'tmandry/AXSwift', default_branch: 'main' },
         },
-        '/repos/cmsj/AXSwift/compare/mredig%3Amain...main': { ahead_by: 4, behind_by: 0 },
-        '/repos/cmsj/AXSwift/compare/tmandry%3Amain...main': { ahead_by: 43, behind_by: 2 },
+        '/repos/Hammerspoon/AXSwift/compare/mredig%3Amain...main': { ahead_by: 4, behind_by: 0 },
+        '/repos/Hammerspoon/AXSwift/compare/tmandry%3Amain...main': { ahead_by: 43, behind_by: 2 },
         '/repos/mredig/AXSwift/tags?per_page=100&page=1': tags('0.3.2', '0.3.10'),
         '/repos/tmandry/AXSwift/tags?per_page=100&page=1': [],
-        '/repos/cmsj/swift-mqtt': {
-            full_name: 'cmsj/swift-mqtt', fork: true,
+        '/repos/Hammerspoon/swift-mqtt': {
+            full_name: 'Hammerspoon/swift-mqtt', fork: true,
             parent: { full_name: 'emqx/swift-mqtt', default_branch: 'main' },
             source: { full_name: 'emqx/swift-mqtt', default_branch: 'main' },
         },
-        [`/repos/cmsj/swift-mqtt/compare/emqx%3Amain...${SHA_B}`]: { ahead_by: 0, behind_by: 7 },
+        [`/repos/Hammerspoon/swift-mqtt/compare/emqx%3Amain...${SHA_B}`]: { ahead_by: 0, behind_by: 7 },
         '/repos/emqx/swift-mqtt/tags?per_page=100&page=1': tags('v1.5.2'),
-        '/repos/cmsj/not-a-fork': { full_name: 'cmsj/not-a-fork', fork: false },
+        '/repos/Hammerspoon/not-a-fork': { full_name: 'Hammerspoon/not-a-fork', fork: false },
     });
 
-    const forks = await collectForks(api, pins, 'CMSJ');
+    const forks = await collectForks(api, pins, 'HAMMERSPOON');
     assert.deepEqual(forks, [
-        { identity: 'axswift', repo: 'cmsj/AXSwift', ref: 'main', upstream: 'mredig/AXSwift', upstreamBranch: 'main', ahead: 4, behind: 0, latestRelease: '0.3.10' },
-        { identity: 'axswift', repo: 'cmsj/AXSwift', ref: 'main', upstream: 'tmandry/AXSwift', upstreamBranch: 'main', ahead: 43, behind: 2, latestRelease: null },
-        { identity: 'mqtt', repo: 'cmsj/swift-mqtt', ref: SHA_B, upstream: 'emqx/swift-mqtt', upstreamBranch: 'main', ahead: 0, behind: 7, latestRelease: 'v1.5.2' },
+        { identity: 'axswift', repo: 'Hammerspoon/AXSwift', ref: 'main', upstream: 'mredig/AXSwift', upstreamBranch: 'main', ahead: 4, behind: 0, latestRelease: '0.3.10' },
+        { identity: 'axswift', repo: 'Hammerspoon/AXSwift', ref: 'main', upstream: 'tmandry/AXSwift', upstreamBranch: 'main', ahead: 43, behind: 2, latestRelease: null },
+        { identity: 'mqtt', repo: 'Hammerspoon/swift-mqtt', ref: SHA_B, upstream: 'emqx/swift-mqtt', upstreamBranch: 'main', ahead: 0, behind: 7, latestRelease: 'v1.5.2' },
     ]);
     assert.ok(!api.requested.some(apiPath => apiPath.includes('someone')), 'other people\'s forks are never looked up');
 });
@@ -220,7 +220,7 @@ test('collectOutOfRange lists only newer releases the requirement rules out', as
     const pins = parseResolved(resolved([
         { identity: 'sparkle', location: 'https://github.com/sparkle-project/Sparkle', revision: SHA_A, version: '2.9.6' },
         { identity: 'ranged', location: 'https://github.com/example/Ranged', revision: SHA_A, version: '2.0.0' },
-        { identity: 'axswift', location: 'https://github.com/cmsj/AXSwift', branch: 'main', revision: SHA_A },
+        { identity: 'axswift', location: 'https://github.com/Hammerspoon/AXSwift', branch: 'main', revision: SHA_A },
         { identity: 'transitive', location: 'https://github.com/x/transitive', revision: SHA_A, version: '1.0.0' },
     ]));
     const api = fakeAPI({
@@ -249,17 +249,17 @@ test('collectOutOfRange follows tag pagination', async () => {
 });
 
 test('renderForkReport is actionable only when a fork or version needs attention', () => {
-    const upToDate = { identity: 'axswift', repo: 'cmsj/AXSwift', ref: 'main', upstream: 'mredig/AXSwift', upstreamBranch: 'main', ahead: 4, behind: 0, latestRelease: '0.3.2' };
+    const upToDate = { identity: 'axswift', repo: 'Hammerspoon/AXSwift', ref: 'main', upstream: 'mredig/AXSwift', upstreamBranch: 'main', ahead: 4, behind: 0, latestRelease: '0.3.2' };
     const quiet = renderForkReport([upToDate], []);
     assert.equal(quiet.actionable, false);
     assert.ok(quiet.body.startsWith(REPORT_MARKER));
-    assert.match(quiet.body, /\| axswift \| \[cmsj\/AXSwift@main\]\(https:\/\/github\.com\/cmsj\/AXSwift\/tree\/main\) \| \[mredig\/AXSwift@main\]\(https:\/\/github\.com\/mredig\/AXSwift\) \| 4 \| 0 \| 0\.3\.2 \| Up to date \|/);
+    assert.match(quiet.body, /\| axswift \| \[Hammerspoon\/AXSwift@main\]\(https:\/\/github\.com\/Hammerspoon\/AXSwift\/tree\/main\) \| \[mredig\/AXSwift@main\]\(https:\/\/github\.com\/mredig\/AXSwift\) \| 4 \| 0 \| 0\.3\.2 \| Up to date \|/);
 
-    const behind = { ...upToDate, identity: 'mqtt', repo: 'cmsj/swift-mqtt', ref: SHA_B, upstream: 'emqx/swift-mqtt', ahead: 2, behind: 7, latestRelease: null };
+    const behind = { ...upToDate, identity: 'mqtt', repo: 'Hammerspoon/swift-mqtt', ref: SHA_B, upstream: 'emqx/swift-mqtt', ahead: 2, behind: 7, latestRelease: null };
     const resync = renderForkReport([upToDate, behind], [], { runURL: 'https://example.com/run/1' });
     assert.equal(resync.actionable, true);
-    assert.match(resync.body, /\[cmsj\/swift-mqtt@bbbbbbb\]/);
-    assert.match(resync.body, new RegExp(`\\| \\[7\\]\\(https://github\\.com/cmsj/swift-mqtt/compare/${SHA_B}\\.\\.\\.emqx:main\\) \\| None \\| \\*\\*Re-sync`));
+    assert.match(resync.body, /\[Hammerspoon\/swift-mqtt@bbbbbbb\]/);
+    assert.match(resync.body, new RegExp(`\\| \\[7\\]\\(https://github\\.com/Hammerspoon/swift-mqtt/compare/${SHA_B}\\.\\.\\.emqx:main\\) \\| None \\| \\*\\*Re-sync`));
     assert.match(resync.body, /\[this run\]\(https:\/\/example\.com\/run\/1\)/);
 
     const outOfRange = renderForkReport([], [{ identity: 'ranged', repo: 'example/Ranged', current: '2.0.0', latest: '3.1.0', requirement: '1.5.0 up to 3.0.0' }]);
