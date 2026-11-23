@@ -21,7 +21,11 @@ Hammerspoon 2 requires macOS 27 or later.
 
 ### Homebrew
 
- * TBC
+```bash
+brew install --cask hammerspoon/tap/hammerspoon2
+```
+
+This also puts the `hs2` command line tool on your `PATH`. Hammerspoon 2 updates itself, so `brew upgrade` leaves it alone unless you pass `--greedy`.
 
 ## Getting Started
 
