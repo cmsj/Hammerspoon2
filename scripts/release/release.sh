@@ -2,7 +2,7 @@
 #
 # Build, notarise and publish a Hammerspoon 2 release, in two phases.
 #
-#   scripts/release/release.sh prepare [--notes-file FILE] [--since TAG] [--edit-notes] <version>
+#   scripts/release/release.sh prepare [--notes-file FILE] [--since TAG] [--edit-notes] [--channel NAME] <version>
 #   scripts/release/release.sh execute [--dry-run] [--yes] <version>
 #
 # prepare changes nothing outside build/release/<version>. Once it has checked
@@ -92,7 +92,7 @@ DELTA_COUNT="${DELTA_COUNT:-3}"
 
 usage() {
     cat <<EOF
-Usage: $(basename "$0") prepare [--notes-file FILE] [--since TAG] [--edit-notes] <version>
+Usage: $(basename "$0") prepare [--notes-file FILE] [--since TAG] [--edit-notes] [--channel NAME] <version>
        $(basename "$0") appcast <version>
        $(basename "$0") execute [--dry-run] [--yes] <version>
        $(basename "$0") sparkle-bin
@@ -116,14 +116,18 @@ Options:
                      contains.
   --edit-notes       (prepare) Open the release notes in \$EDITOR before
                      they're signed into the appcast.
+  --channel NAME     (prepare) Put the release in Sparkle channel NAME (e.g.
+                     beta), which only installs that opt in to it are offered.
+                     The app doesn't opt in to any channel yet, so a release
+                     in one reaches nobody through Sparkle.
   --dry-run          (execute) Run the checks and show what's done and what's
                      left, without changing anything.
   --yes              (execute) Don't ask for confirmation.
   -h, --help         Show this help.
 
-<version> is a tag name like 0.0.15 or 0.1.0-beta.1. Versions with a suffix
-become GitHub prereleases in Sparkle's "beta" channel, which stable installs
-never see.
+<version> is a tag name like 0.0.15 or 1.0.0-beta.1. Versions with a suffix
+become GitHub prereleases titled like "1.0.0 Beta 1", but are offered to
+every install, like any other release, unless --channel says otherwise.
 EOF
 }
 
@@ -136,6 +140,7 @@ COMMAND="${1:-}"
 NOTES_FILE=""
 SINCE_TAG=""
 EDIT_NOTES=0
+CHANNEL=""
 DRY_RUN=0
 ASSUME_YES=0
 VERSION=""
@@ -144,6 +149,7 @@ while [ $# -gt 0 ]; do
         prepare:--notes-file) NOTES_FILE="${2:?--notes-file needs a path}"; shift ;;
         prepare:--since) SINCE_TAG="${2:?--since needs a tag}"; shift ;;
         prepare:--edit-notes) EDIT_NOTES=1 ;;
+        prepare:--channel) CHANNEL="${2:?--channel needs a name}"; shift ;;
         execute:--dry-run) DRY_RUN=1 ;;
         execute:--yes) ASSUME_YES=1 ;;
         *:-h|*:--help) usage; exit 0 ;;
@@ -353,6 +359,7 @@ cmd_prepare() {
         NOTES_FILE="$(cd "$(dirname "$NOTES_FILE")" && pwd)/$(basename "$NOTES_FILE")"
     fi
     [ -z "$NOTES_FILE" ] || [ -z "$SINCE_TAG" ] || die "--since has no effect with --notes-file"
+    [ -z "$CHANNEL" ] || [[ "$CHANNEL" =~ ^[a-z0-9-]+$ ]] || die "channel names are lower case letters, digits and dashes, got '$CHANNEL'"
 
     log "Preflight checks"
     require_tools xcodebuild xcrun ditto plutil codesign spctl gh git node jq shasum curl file
@@ -558,13 +565,16 @@ EOF
     done
     [ "$delta_count" -gt 0 ] || echo "  no earlier releases with $METADATA_NAME, so no deltas this time"
 
-    # Prereleases go in Sparkle's beta channel, which only installs that opt in
-    # to it are offered.
-    local channel_json="" prerelease=false
-    if [[ "$VERSION" == *-* ]]; then
-        prerelease=true
-        channel_json='
-  "channel": "beta",'
+    # Prereleases go in the default channel too, unless --channel says
+    # otherwise (see releaseKind in update-appcast.js).
+    local kind channel channel_json="" prerelease
+    kind="$(node -p 'JSON.stringify(require(process.argv[1]).releaseKind(process.argv[2], process.argv[3]))' \
+        "$REPO_ROOT/scripts/release/update-appcast.js" "$VERSION" "$CHANNEL")"
+    prerelease="$(jq -r .prerelease <<<"$kind")"
+    channel="$(jq -r '.channel // ""' <<<"$kind")"
+    if [ -n "$channel" ]; then
+        channel_json="
+  \"channel\": \"$channel\","
     fi
     cat > "$METADATA" <<EOF
 {
@@ -697,7 +707,7 @@ step_release() {
     log "Creating the GitHub release"
     local release_json mismatches name
     if [ "$RELEASE_STATE" = absent ]; then
-        local create_args=(--verify-tag --draft --title "$APP_NAME $VERSION" --notes-file "$NOTES")
+        local create_args=(--verify-tag --draft --title "$RELEASE_TITLE" --notes-file "$NOTES")
         [ "$PRERELEASE" = false ] || create_args+=(--prerelease)
         gh release create "$VERSION" "${create_args[@]}" >/dev/null
         RELEASE_STATE=draft
@@ -716,7 +726,7 @@ step_release() {
         [ -z "$mismatches" ] || die "these assets didn't upload correctly: $mismatches"
 
         gh release edit "$VERSION" --draft=false --prerelease="$PRERELEASE" \
-            --title "$APP_NAME $VERSION" --notes-file "$NOTES" >/dev/null
+            --title "$RELEASE_TITLE" --notes-file "$NOTES" >/dev/null
     elif [ "$NOTES_STATE" = differ ]; then
         echo "  updating the notes"
         gh release edit "$VERSION" --notes-file "$NOTES" >/dev/null
@@ -823,6 +833,9 @@ cmd_execute() {
 
     COMMIT="$(jq -r .commit "$MANIFEST")"
     PRERELEASE="$(jq -r .prerelease "$MANIFEST")"
+    # The same title as the appcast item, e.g. "Hammerspoon 2 1.0.0 Beta 1".
+    RELEASE_TITLE="$APP_NAME $(node -p 'require(process.argv[1]).displayVersion(process.argv[2])' \
+        "$REPO_ROOT/scripts/release/update-appcast.js" "$VERSION")"
     FEED_URL="$(jq -r .feedUrl "$MANIFEST")"
     APPCAST_SHA="$(jq -r '.appcastSha256 // ""' "$MANIFEST")"
     LIVE_SHA="$(jq -r '.liveAppcastSha256 // ""' "$MANIFEST")"
