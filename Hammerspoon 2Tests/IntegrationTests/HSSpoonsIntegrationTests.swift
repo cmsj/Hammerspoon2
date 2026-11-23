@@ -693,6 +693,38 @@ struct HSSpoonsTests {
             #expect(ctx.harness.evalTypeOf("hs.spoons.Greeter") == "object")
         }
 
+        @Test("path wins over source: the Spoon is loaded from it and configured, without installing anything")
+        func testUsePathWinsOverSource() async throws {
+            let ctx = try SpoonsTestContext()
+            let devDir = ctx.configDir.appendingPathComponent("dev/Greeter.spoon2")
+            try FileManager.default.createDirectory(at: devDir, withIntermediateDirectories: true)
+            try #"{ "name": "Greeter", "author": "A. Developer", "version": "2.0.0-dev", "description": "Dev copy." }"#
+                .write(to: devDir.appendingPathComponent("spoon.json"), atomically: true, encoding: .utf8)
+            try Self.configurableSpoon.write(to: devDir.appendingPathComponent("init.js"), atomically: true, encoding: .utf8)
+
+            let spoon = await ctx.settle("""
+                hs.spoons.use('Greeter', {
+                    source: 'jane/hs2-spoons',
+                    ref: 'v1.0.0',
+                    path: 'dev/Greeter.spoon2',
+                    config: { message: 'configured' },
+                    start: true
+                })
+                """)
+            #expect(spoon?.forProperty("version").toString() == "2.0.0-dev")
+            #expect(spoon?.forProperty("log").toArray() as? [String] == ["init:default", "start:configured"])
+            #expect(ctx.downloads.requested.isEmpty)
+            #expect(!ctx.isInstalled("Greeter"))
+        }
+
+        @Test("a path that doesn't exist rejects with ENOTFOUND, rather than falling back to source")
+        func testUseMissingPath() async throws {
+            let ctx = try SpoonsTestContext()
+            await ctx.settle("hs.spoons.use('Greeter', { source: 'jane/hs2-spoons', path: 'dev/Nope.spoon2' })")
+            #expect(ctx.errorCode == "ENOTFOUND")
+            #expect(ctx.downloads.requested.isEmpty)
+        }
+
         @Test("a Spoon that isn't installed and has no source rejects with ENOTINSTALLED")
         func testUseWithoutSource() async throws {
             let ctx = try SpoonsTestContext()

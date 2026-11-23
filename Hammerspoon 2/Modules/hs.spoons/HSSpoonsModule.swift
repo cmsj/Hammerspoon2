@@ -31,7 +31,8 @@ import JavaScriptCoreExtras
 /// })
 /// ```
 @objc protocol HSSpoonsModuleAPI: JSExport {
-    /// Load an installed Spoon by name. A Spoon must contain a well-formed `spoon.json` (with
+    /// Load an installed Spoon by name, or a Spoon from any directory with the `path` option. A
+    /// Spoon must contain a well-formed `spoon.json` (with
     /// non-empty `name`, `author`, `version`, and `description` fields) and an `init.js`, or
     /// loading fails with an exception. `init.js` is loaded through the same `require()` used for
     /// the rest of your config, so it can itself `require()` further files from within the
@@ -57,10 +58,18 @@ import JavaScriptCoreExtras
     /// Spoon exports itself. A Spoon without `bindings` keeps its own `bindHotkeys()`, if it has
     /// one. See the Spoons guide for the details.
     ///
-    /// The exception's `code` is `ENOTINSTALLED` if there's no such Spoon, `EINVALIDARG` if the name
-    /// can't be a Spoon's, or `EINVALIDSPOON` if the Spoon is malformed. An exception thrown by the
-    /// Spoon's own code is passed on as it is.
-    /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`
+    /// `path` is for developing a Spoon: it loads the Spoon straight from that directory (such as
+    /// a `.spoon2` bundle in your own checkout of its repository), instead of from `Spoons/`, so
+    /// reloading your config picks up your changes. Nothing is installed or copied, and a Spoon
+    /// of the same name that's installed is ignored. A warning is logged each time, so a config
+    /// that still points at a development copy doesn't go unnoticed.
+    ///
+    /// The exception's `code` is `ENOTINSTALLED` if there's no such Spoon, `ENOTFOUND` if `path`
+    /// isn't a directory, `EINVALIDARG` if the name can't be a Spoon's or an option is malformed,
+    /// or `EINVALIDSPOON` if the Spoon is malformed. An exception thrown by the Spoon's own code is
+    /// passed on as it is.
+    /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`. It's also the name it's stored under on `hs.spoons`.
+    /// - Parameter options?: {{path?: string}} `path` is a directory to load the Spoon from instead of `Spoons/`. A relative path is relative to your config directory, and `~` is your home directory.
     /// - Returns: {Object} Whatever the Spoon's `init.js` assigned to `module.exports`
     /// - Throws: true
     /// - Example:
@@ -73,8 +82,11 @@ import JavaScriptCoreExtras
     /// } catch (err) {
     ///     console.error(err.message)
     /// }
+    ///
+    /// // While working on a Spoon, load it from your own copy of it
+    /// hs.spoons.load("MySpoon", { path: "~/src/my-spoons/MySpoon.spoon2" })
     /// ```
-    @objc func load(_ name: String) -> JSValue?
+    @objc func load(_ name: String, _ options: [String: Any]?) -> JSValue?
 
     /// Download a Spoon and install it into the `Spoons` directory. It isn't loaded: call
     /// `hs.spoons.load()` (or use `hs.spoons.use()`, which does both) once it's installed.
@@ -212,7 +224,7 @@ import JavaScriptCoreExtras
 
     // MARK: - Loading
 
-    @objc func load(_ name: String) -> JSValue? {
+    @objc func load(_ name: String, _ options: [String: Any]?) -> JSValue? {
         guard let context = JSContext.current() else { return nil }
 
         func fail(_ message: String, code: SpoonInstallError.Code = .invalidSpoon) -> JSValue? {
@@ -232,14 +244,33 @@ import JavaScriptCoreExtras
             return fail("'\(name)' can't be loaded, because hs.spoons.\(name) is part of hs.spoons itself", code: .invalidArgument)
         }
 
-        let spoonDir = installer.spoonManager.spoonsDirectory.appendingPathComponent(name)
+        let path: String?
+        do {
+            path = try Options(options).string("path")
+        } catch let error as SpoonInstallError {
+            return fail(error.message, code: error.code)
+        } catch {
+            return fail(error.localizedDescription, code: .invalidArgument)
+        }
+
+        let spoonDir: URL
+        if let path {
+            spoonDir = developmentDirectory(path)
+            let isDirectory = try? spoonDir.resolvingSymlinksInPath().resourceValues(forKeys: [.isDirectoryKey]).isDirectory
+            guard isDirectory == true else {
+                return fail("'\(name)' can't be loaded from \(spoonDir.path), because it isn't a directory", code: .notFound)
+            }
+            AKWarning("hs.spoons: loading '\(name)' from \(spoonDir.path), not from \(installer.spoonManager.spoonsDirectory.path)")
+        } else {
+            spoonDir = installer.spoonManager.spoonsDirectory.appendingPathComponent(name)
+        }
         let initJSURL = spoonDir.appendingPathComponent("init.js")
 
         let metadata: SpoonMetadata
         do {
             metadata = try installer.spoonManager.validateSpoon(at: spoonDir)
         } catch {
-            if !installer.isInstalled(name) {
+            if path == nil, !installer.isInstalled(name) {
                 return fail("No Spoon named '\(name)' is installed in \(installer.spoonManager.spoonsDirectory.path)", code: .notInstalled)
             }
             return fail("'\(name)' \(error.localizedDescription)")
@@ -263,7 +294,7 @@ import JavaScriptCoreExtras
         }
 
         if metadata.name != name {
-            AKWarning("hs.spoons: '\(name)' has the name '\(metadata.name)' in its spoon.json, which doesn't match its directory name")
+            AKWarning("hs.spoons: '\(name)' has the name '\(metadata.name)' in its spoon.json, which doesn't match the name it was loaded as")
         }
 
         // Authoritative from spoon.json, so these always reflect it even if the Spoon's own
@@ -355,6 +386,14 @@ import JavaScriptCoreExtras
     }
 
     // MARK: - Private
+
+    /// The directory a `path` passed to `load()` names: relative to the config directory, with
+    /// `~` expanded
+    private func developmentDirectory(_ path: String) -> URL {
+        let expanded = (path as NSString).expandingTildeInPath
+        let configDir = installer.spoonManager.spoonsDirectory.deletingLastPathComponent()
+        return URL(filePath: expanded, directoryHint: .isDirectory, relativeTo: configDir).absoluteURL.standardizedFileURL
+    }
 
     /// Runs `body` as a Promise in `context`, rejecting with a coded Error if it throws. The work
     /// is cancelled, and the Promise never settles, if the module shuts down first.
