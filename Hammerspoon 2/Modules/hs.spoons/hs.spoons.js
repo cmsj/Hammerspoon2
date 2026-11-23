@@ -5,6 +5,122 @@
 
 "use strict";
 
+// The bindHotkeys() functions made by makeBindHotkeys(), so loading a Spoon again keeps its own
+const generatedBindHotkeys = new WeakSet();
+
+// Called by hs.spoons.load() before the Spoon's init(). A Spoon that exports `bindings` gets a
+// generic bindHotkeys() for them, replacing any it exports itself. Otherwise, the Spoon's own
+// bindHotkeys(), if any, is left as it is.
+/// SKIP_DOCS
+hs.spoons._installBindHotkeys = function(spoon, spoonName) {
+    const bindings = spoon.bindings;
+    if (bindings === null || typeof bindings !== "object") {
+        return;
+    }
+    if (generatedBindHotkeys.has(spoon.bindHotkeys)) {
+        return;
+    }
+    if (typeof spoon.bindHotkeys === "function") {
+        console.warn(`hs.spoons: '${spoonName}' exports both bindings and bindHotkeys(); its bindHotkeys() is replaced by one for its bindings`);
+    }
+    const bindHotkeys = makeBindHotkeys(spoon, spoonName);
+    generatedBindHotkeys.add(bindHotkeys);
+    spoon.bindHotkeys = bindHotkeys;
+};
+
+// Makes a bindHotkeys() for a Spoon's `bindings`. See `bindings` in docs/spoons-guide.md for the
+// shapes it accepts.
+function makeBindHotkeys(spoon, spoonName) {
+    // Action name -> the HSHotkey bound for it, so binding an action again replaces its hotkey
+    const bound = {};
+
+    function invalid(message) {
+        const err = new Error(`${spoonName}.bindHotkeys(): ${message}`);
+        err.code = "EINVALIDARG";
+        return err;
+    }
+
+    // A binding is a function (called when pressed), or {pressed?, released?, repeat?, message?}
+    function callbacksFor(action) {
+        const binding = spoon.bindings[action];
+        if (typeof binding === "function") {
+            return { pressed: binding, released: null, repeat: null, message: null };
+        }
+        if (binding !== null && typeof binding === "object") {
+            const callbacks = { message: typeof binding.message === "string" ? binding.message : null };
+            for (const event of ["pressed", "released", "repeat"]) {
+                const fn = binding[event];
+                if (fn !== undefined && fn !== null && typeof fn !== "function") {
+                    throw invalid(`bindings.${action}.${event} must be a function`);
+                }
+                callbacks[event] = fn ?? null;
+            }
+            if (callbacks.pressed || callbacks.released || callbacks.repeat) {
+                return callbacks;
+            }
+        }
+        throw invalid(`bindings.${action} must be a function, or an object with a pressed, released or repeat function`);
+    }
+
+    // A spec is [mods, key, message?] or {mods, key, message?}. message `true` uses the Spoon's own.
+    function hotkeyFor(action, spec) {
+        if (typeof spec !== "object") {
+            throw invalid(`the hotkey for '${action}' must be [mods, key, message?] or {mods, key, message?}`);
+        }
+        const [mods, key, message] = Array.isArray(spec) ? spec : [spec.mods, spec.key, spec.message];
+        if (!Array.isArray(mods) || !mods.every(m => typeof m === "string")) {
+            throw invalid(`the modifiers for '${action}' must be an array of strings`);
+        }
+        if (typeof key !== "string" && typeof key !== "number") {
+            throw invalid(`the key for '${action}' must be a string or a number`);
+        }
+        if (message !== undefined && message !== null && typeof message !== "string" && typeof message !== "boolean") {
+            throw invalid(`the message for '${action}' must be a string or a boolean`);
+        }
+        return { mods, key, message };
+    }
+
+    return function bindHotkeys(mapping) {
+        if (mapping === null || typeof mapping !== "object" || Array.isArray(mapping)) {
+            throw invalid("the mapping must be an object, keyed by action name");
+        }
+        const bindings = spoon.bindings;
+        const actions = bindings !== null && typeof bindings === "object" ? Object.keys(bindings) : [];
+
+        // Check everything before binding anything, so a mistake doesn't leave half of it bound
+        const plan = [];
+        for (const [action, spec] of Object.entries(mapping)) {
+            if (!Object.hasOwn(bindings ?? {}, action)) {
+                throw invalid(`'${action}' isn't one of ${spoonName}'s actions (${actions.join(", ") || "it has none"})`);
+            }
+            const callbacks = callbacksFor(action);
+            const hotkey = spec === null || spec === undefined || spec === false ? null : hotkeyFor(action, spec);
+            plan.push({ action, callbacks, hotkey });
+        }
+
+        for (const { action, callbacks, hotkey } of plan) {
+            if (bound[action]) {
+                bound[action].destroy();
+                delete bound[action];
+            }
+            if (!hotkey) {
+                continue;
+            }
+            const hk = hs.hotkey.bind(hotkey.mods, hotkey.key, callbacks.pressed, callbacks.released, callbacks.repeat);
+            if (!hk) {
+                throw invalid(`couldn't bind '${action}' to ${JSON.stringify([hotkey.mods, hotkey.key])}`);
+            }
+            if (hotkey.message === true) {
+                if (callbacks.message) hk.message = `${spoonName}: ${callbacks.message}`;
+            } else if (typeof hotkey.message === "string") {
+                hk.message = hotkey.message;
+            }
+            bound[action] = hk;
+        }
+        return spoon;
+    };
+}
+
 /// Load and configure a Spoon in one step, installing it first if it isn't installed yet - the
 /// built-in equivalent of Hammerspoon 1's SpoonInstall:andUse().
 ///
