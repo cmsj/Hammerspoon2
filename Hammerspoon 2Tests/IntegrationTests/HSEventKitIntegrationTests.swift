@@ -44,7 +44,17 @@ struct HSEventKitIntegrationTests {
             """, true)
     }
 
-    @Test("Events are listed with JS Dates", .enabled(if: EKEventStore.authorizationStatus(for: .event) == .fullAccess))
+    @Test("Event objects reach JS with Date fields and nulls")
+    func testEventBridgesToJS() {
+        let harness = makeHarness()
+        harness.context.setObject(HSEventKitModule.eventToDict(makeEvent()), forKeyedSubscript: "ev" as NSString)
+        harness.expectTrue("ev.startDate instanceof Date && ev.startDate.getTime() === 1000000")
+        harness.expectTrue("ev.endDate instanceof Date && ev.endDate.getTime() === 2000000")
+        harness.expectTrue("ev.url === null")
+        harness.expectEqual("ev.location", "https://example.zoom.us/j/123")
+    }
+
+    @Test("Events are listed", .enabled(if: EKEventStore.authorizationStatus(for: .event) == .fullAccess))
     func testEventsWithAccess() {
         let harness = makeHarness()
         harness.expectEqual("Array.isArray(hs.eventkit.events(new Date(), new Date(Date.now() + 86400000)))", true)

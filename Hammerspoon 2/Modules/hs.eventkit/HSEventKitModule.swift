@@ -59,7 +59,7 @@ import EventKit
     /// The calendars that hold events.
     ///
     /// Each entry is an object with `id`, `title` and `source` (the account, e.g. "iCloud") keys.
-    /// - Returns: An array of calendar objects
+    /// - Returns: {{id: string, title: string, source: string | null}[]} An array of calendar objects
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -77,7 +77,7 @@ import EventKit
     /// - Parameter start: The start of the range
     /// - Parameter end: The end of the range
     /// - Parameter calendarIDs?: The `id`s of the calendars to search (default: all of them)
-    /// - Returns: An array of event objects
+    /// - Returns: {{id: string, title: string, location: string | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, allDay: boolean, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -96,7 +96,7 @@ import EventKit
     /// - Parameter query: The text to look for
     /// - Parameter start: The start of the range
     /// - Parameter end: The end of the range
-    /// - Returns: An array of event objects
+    /// - Returns: {{id: string, title: string, location: string | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, allDay: boolean, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -119,6 +119,9 @@ import EventKit
     var moduleName = "hs.eventkit"
     let engineID: UUID
     private let store = EKEventStore()
+    /// Promises from `requestAccess()` waiting for the user to answer the permission dialog.
+    /// Held here, not in the EventKit completion, so `shutdown()` can drop them (and their JSContext).
+    private var pendingAccessRequests: [JSPromiseHolder] = []
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -126,7 +129,9 @@ import EventKit
         AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
-    func shutdown() {}
+    func shutdown() {
+        pendingAccessRequests = []
+    }
 
     isolated deinit {
         AKGarbage("Deinit of \(moduleName): \(engineID)")
@@ -148,12 +153,19 @@ import EventKit
 
     @objc func requestAccess() -> JSPromise? {
         guard let context = JSContext.current() else { return nil }
-        return wrapAsyncInJSPromise(in: context) { holder in
-            self.store.requestFullAccessToEvents { granted, error in
+        return wrapAsyncInJSPromise(in: context) { [weak self] holder in
+            guard let self else { return }
+            pendingAccessRequests.append(holder)
+            store.requestFullAccessToEvents { [weak self] granted, error in
                 let message = error?.localizedDescription
                 Task { @MainActor in
                     if let message { AKError("hs.eventkit.requestAccess(): \(message)") }
-                    holder.resolveWith(granted)
+                    // Every pending request gets the same answer; after shutdown() there are none,
+                    // so a late answer never calls into a torn-down JSContext.
+                    guard let self else { return }
+                    let holders = self.pendingAccessRequests
+                    self.pendingAccessRequests = []
+                    holders.forEach { $0.resolveWith(granted) }
                 }
             }
         }
