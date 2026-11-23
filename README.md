@@ -16,7 +16,7 @@ Hammerspoon 2 requires macOS 27 or later.
 
 ### Manually
 
- * Download the [latest release](https://github.com/Hammerspoon/Hammerspoon2/releases/latest)
+ * Download the [latest release](https://github.com/Hammerspoon/Hammerspoon2/releases)
  * Drag `Hammerspoon 2.app` from your `Downloads` folder to `/Applications`
 
 ### Homebrew

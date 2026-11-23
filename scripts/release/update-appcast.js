@@ -37,6 +37,24 @@ function escapeXml(value) {
         .replace(/'/g, '&apos;');
 }
 
+/**
+ * How a version reads in titles: "1.0.0-beta.1" -> "1.0.0 Beta 1",
+ * "1.0.0-rc.2" -> "1.0.0 RC 2". Versions without a suffix are unchanged.
+ */
+function displayVersion(version) {
+    const [release, ...rest] = String(version).split('-');
+    if (rest.length === 0) {
+        return release;
+    }
+    const words = rest.join('-').split('.').map((word) => {
+        if (word.toLowerCase() === 'rc') {
+            return 'RC';
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    });
+    return [release, ...words].join(' ');
+}
+
 function cdata(text) {
     // A literal "]]>" would terminate the section early, so split it across two.
     return `<![CDATA[${String(text).replace(/]]>/g, ']]]]><![CDATA[>')}]]>`;
@@ -101,7 +119,7 @@ function buildItem({ metadata, notesHtml, downloadPrefix, releaseUrl, pubDate })
 
     const lines = [
         '    <item>',
-        `      <title>${escapeXml(`${FEED_TITLE} ${metadata.version}`)}</title>`,
+        `      <title>${escapeXml(`${FEED_TITLE} ${displayVersion(metadata.version)}`)}</title>`,
         `      <pubDate>${date.toUTCString()}</pubDate>`,
         `      <sparkle:version>${escapeXml(metadata.build)}</sparkle:version>`,
         `      <sparkle:shortVersionString>${escapeXml(metadata.version)}</sparkle:shortVersionString>`,
@@ -229,4 +247,4 @@ if (require.main === module) {
     }
 }
 
-module.exports = { updateAppcast, buildItem, validateMetadata };
+module.exports = { updateAppcast, buildItem, validateMetadata, displayVersion };
