@@ -33,31 +33,74 @@ final class CrashReportManager {
         self.defaults = defaults
     }
 
-    /// Looks for crashes since the app last launched, and offers to report the newest one.
+    /// The alert offering to report a crash, and the target of its buttons, while it's on screen.
+    private var offer: (alert: NSAlert, handler: AlertHandler)?
+
+    /// Looks for crashes since the app last launched, in the background, and offers to report the
+    /// newest one.
+    ///
+    /// This returns straight away, so it doesn't hold up startup: the offer appears when the
+    /// search is done, and doesn't block the app while it waits for an answer. A crash isn't
+    /// marked as seen until it has been offered, so if the app crashes again before then (say,
+    /// while loading the config), it's offered next time.
     func offerToReportNewCrashes() {
         guard SettingsManager.shared.offerCrashReports else { return }
-        // The test host is the app itself, and a modal alert would stall the tests.
+        // The test host is the app itself, and the alert would get in the way of the tests.
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
         guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return }
 
-        let crashes = newCrashReports(bundleIdentifier: bundleIdentifier)
-        guard let newest = crashes.last else { return }
-        AKInfo("Found \(crashes.count) new crash report(s), the newest at \(newest.file.path)")
-        offerToReport(newest.report, otherCrashes: crashes.count - 1)
+        // Before the search, so that if the app crashes before it finishes, the first check
+        // has still been recorded and the crash is found next time.
+        let now = Date()
+        guard let lastChecked = lastChecked(recordingFirstCheckAt: now) else { return }
+        Task {
+            let crashes = await Self.crashReports(in: reportsDirectory, since: lastChecked,
+                                                  bundleIdentifier: bundleIdentifier)
+            guard let newest = crashes.last else {
+                markChecked(now)
+                return
+            }
+            AKInfo("Found \(crashes.count) new crash report(s), the newest at \(newest.file.path)")
+            offerToReport(newest.report, otherCrashes: crashes.count - 1) { [weak self] in
+                self?.markChecked(now)
+            }
+        }
     }
 
-    /// Crash reports of the app or its helpers written since the last call, oldest first.
+    /// Crash reports of the app or its helpers written since the last check, oldest first.
     ///
-    /// The first call only records when it happened, so crashes from before crash reporting
-    /// existed (and whose dSYMs may not be published) aren't offered.
-    func newCrashReports(bundleIdentifier: String, now: Date = Date()) -> [(file: URL, report: CrashReport)] {
-        let lastChecked = defaults.object(forKey: Self.lastCheckedKey) as? Date
-        defaults.set(now, forKey: Self.lastCheckedKey)
-        guard let lastChecked else { return [] }
+    /// The search runs in the background. It doesn't record that it happened: call
+    /// `markChecked(_:)` once the crashes have been dealt with. The first search only records
+    /// when it happened, so crashes from before crash reporting existed (and whose dSYMs may
+    /// not be published) aren't offered.
+    func newCrashReports(bundleIdentifier: String, now: Date = Date()) async -> [(file: URL, report: CrashReport)] {
+        guard let lastChecked = lastChecked(recordingFirstCheckAt: now) else { return [] }
+        return await Self.crashReports(in: reportsDirectory, since: lastChecked, bundleIdentifier: bundleIdentifier)
+    }
 
+    /// When crashes were last checked for, or nil (after recording `now` as the first check) if
+    /// they never have been.
+    private func lastChecked(recordingFirstCheckAt now: Date) -> Date? {
+        guard let lastChecked = defaults.object(forKey: Self.lastCheckedKey) as? Date else {
+            markChecked(now)
+            return nil
+        }
+        return lastChecked
+    }
+
+    /// Records that crashes up to `date` have been dealt with.
+    func markChecked(_ date: Date) {
+        defaults.set(date, forKey: Self.lastCheckedKey)
+    }
+
+    /// Crash reports in `directory` (or its `Retired` subdirectory) of the process with
+    /// `bundleIdentifier` or its helpers, created after `date`, oldest first.
+    @concurrent
+    nonisolated private static func crashReports(in directory: URL, since date: Date,
+                                                 bundleIdentifier: String) async -> sending [(file: URL, report: CrashReport)] {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         // Reports macOS has already sent to Apple may have been moved into Retired.
-        let directories = [reportsDirectory, reportsDirectory.appending(path: "Retired", directoryHint: .isDirectory)]
+        let directories = [directory, directory.appending(path: "Retired", directoryHint: .isDirectory)]
         var seenIncidents = Set<String>()
         var found: [(file: URL, report: CrashReport, date: Date)] = []
         for directory in directories {
@@ -65,8 +108,10 @@ final class CrashReportManager {
                 at: directory, includingPropertiesForKeys: [.creationDateKey], options: [.skipsHiddenFiles])) ?? []
             for file in files where file.pathExtension == "ips" {
                 guard let created = try? file.resourceValues(forKeys: [.creationDateKey]).creationDate,
-                      created > lastChecked,
+                      created > date,
                       let text = try? String(contentsOf: file, encoding: .utf8),
+                      // Skip other apps' crashes, hangs and so on before the (slower) full parse.
+                      CrashReport.mightBeCrash(text, ofBundleIdentifier: bundleIdentifier),
                       let report = try? CrashReport(text: text, redactingHomeDirectory: home),
                       report.belongs(toBundleIdentifier: bundleIdentifier) else { continue }
                 if let incident = report.incidentID, !seenIncidents.insert(incident).inserted { continue }
@@ -76,9 +121,9 @@ final class CrashReportManager {
         return found.sorted { $0.date < $1.date }.map { ($0.file, $0.report) }
     }
 
-    private func offerToReport(_ report: CrashReport, otherCrashes: Int) {
-        NSApplication.shared.activate(ignoringOtherApps: true)
-
+    /// Shows an alert offering to report `report`, without blocking the app, and calls
+    /// `completion` once the user has answered it.
+    private func offerToReport(_ report: CrashReport, otherCrashes: Int, completion: @escaping () -> Void) {
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = "\(report.processName) Quit Unexpectedly"
@@ -96,12 +141,51 @@ final class CrashReportManager {
         alert.showsSuppressionButton = true
         alert.suppressionButton?.title = "Don't offer to report crashes"
 
-        let response = alert.runModal()
-        if alert.suppressionButton?.state == .on {
-            SettingsManager.shared.offerCrashReports = false
+        // runModal() would stop the config's timers, hotkeys and so on until the alert is
+        // answered, so the alert is shown as an ordinary window and its buttons are rewired to
+        // answer it here.
+        let handler = AlertHandler { [weak self, weak alert] response in
+            guard let self, let alert else { return }
+            alert.window.orderOut(nil)
+            self.offer = nil
+            if alert.suppressionButton?.state == .on {
+                SettingsManager.shared.offerCrashReports = false
+            }
+            if response == .alertFirstButtonReturn {
+                self.openIssue(for: report)
+            }
+            completion()
         }
-        guard response == .alertFirstButtonReturn else { return }
-        openIssue(for: report)
+        for (index, button) in alert.buttons.enumerated() {
+            button.tag = NSApplication.ModalResponse.alertFirstButtonReturn.rawValue + index
+            button.target = handler
+            button.action = #selector(AlertHandler.buttonPressed(_:))
+        }
+        offer = (alert, handler)
+
+        alert.layout()
+        let window = alert.window
+        // Hammerspoon 2 usually starts at login, as a background app that macOS may not let
+        // take focus, so float the alert where it can't end up hidden behind other windows.
+        window.level = .floating
+        (window as? NSPanel)?.hidesOnDeactivate = false
+        window.collectionBehavior.insert(.moveToActiveSpace)
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApplication.shared.activate()
+    }
+
+    /// The target of a non-modal alert's buttons, which answers the alert with the button's tag.
+    private final class AlertHandler: NSObject {
+        let answer: (NSApplication.ModalResponse) -> Void
+
+        init(answer: @escaping (NSApplication.ModalResponse) -> Void) {
+            self.answer = answer
+        }
+
+        @objc func buttonPressed(_ sender: NSButton) {
+            answer(NSApplication.ModalResponse(rawValue: sender.tag))
+        }
     }
 
     private func openIssue(for report: CrashReport) {
