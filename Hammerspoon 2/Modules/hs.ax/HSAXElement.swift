@@ -370,8 +370,7 @@ import AXSwift
                 return
             }
             do {
-                try element.setAttribute(.position, value: newValue.origin.point)
-                try element.setAttribute(.size, value: newValue.size.size)
+                try element.setFrameAcrossScreens(newValue.rect)
             } catch {
                 AKError("Failed to set frame: \(error.localizedDescription)")
             }

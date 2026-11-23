@@ -503,8 +503,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     @objc func moveAndResize(_ frame: HSRect) -> Bool {
         do {
             try withEnhancedUserInterfaceDisabled {
-                try element.setAttribute(.position, value: frame.origin.point)
-                try element.setAttribute(.size, value: frame.size.size)
+                try element.setFrameAcrossScreens(frame.rect)
             }
             return true
         } catch {
