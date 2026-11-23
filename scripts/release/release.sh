@@ -831,6 +831,17 @@ fetch_cask() {
     jq -r .sha <<<"$json"
 }
 
+# Print the build number that <appcast> gives <version>, or nothing if it
+# doesn't list it.
+appcast_build_of() {
+    awk -v version="$2" '
+        /<sparkle:version>/ { build = $0; gsub(/.*<sparkle:version>|<\/sparkle:version>.*/, "", build) }
+        /<sparkle:shortVersionString>/ {
+            short = $0; gsub(/.*<sparkle:shortVersionString>|<\/sparkle:shortVersionString>.*/, "", short)
+            if (short == version) { print build; exit }
+        }' "$1"
+}
+
 # Whether <cask> already installs this release.
 cask_is_current() {
     grep -qx "  version \"$VERSION\"" "$1" && grep -qx "  sha256 \"$ZIP_SHA\"" "$1"
@@ -944,15 +955,22 @@ cmd_execute() {
     [ "$(served_appcast_sha)" != "$APPCAST_SHA" ] || deploy_state="done"
 
     # The cask follows the default Sparkle channel, so it skips releases that
-    # --channel put somewhere else.
-    local cask_state="to do"
+    # --channel put somewhere else, and never goes back to an older release
+    # (when execute runs again for one after a newer release has gone live).
+    local cask_state="to do" cask_version cask_build
     ZIP_SHA="$(jq -r --arg name "$ASSET_BASENAME-$VERSION.zip" '.assets[] | select(.name == $name) | .sha256' "$MANIFEST")"
     [ -n "$ZIP_SHA" ] || die "$MANIFEST doesn't list $ASSET_BASENAME-$VERSION.zip"
     if [ -n "$(jq -r '.channel // ""' "$METADATA")" ]; then
         cask_state="skipped (not in the default channel)"
     else
         fetch_cask "$WORK/cask.rb" >/dev/null
-        ! cask_is_current "$WORK/cask.rb" || cask_state="done"
+        cask_version="$(sed -n -E 's/^  version "(.*)"$/\1/p' "$WORK/cask.rb")"
+        cask_build="$(appcast_build_of "$WORK/live.xml" "$cask_version")"
+        if cask_is_current "$WORK/cask.rb"; then
+            cask_state="done"
+        elif [ -n "$cask_build" ] && [ "$cask_build" -gt "$(jq -r .build "$MANIFEST")" ]; then
+            cask_state="skipped (it has the newer $cask_version)"
+        fi
     fi
 
     printf '\nRelease %s (build %s) from %s:\n' "$VERSION" "$(jq -r .build "$MANIFEST")" "$COMMIT"
