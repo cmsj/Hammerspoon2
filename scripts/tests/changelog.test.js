@@ -97,6 +97,57 @@ test('reports a changelog line outside the trailer block', (t) => {
     assert.match(problems[0], /a "Changelog-Added:" line that git doesn't read as a trailer/);
 });
 
+test('reads trailers above the Co-authored-by paragraph GitHub adds to a squash merge', (t) => {
+    const repo = makeRepo();
+    t.after(repo.cleanup);
+    const { entries, problems } = entriesFor(repo, [
+        'Add hs.foo (#12)',
+        '',
+        'Body text.',
+        '',
+        'Changelog-Added: hs.foo.bar()',
+        '',
+        'Co-authored-by: Someone <someone@example.com>',
+    ].join('\n'));
+    assert.deepEqual(problems, []);
+    assert.deepEqual(texts(entries).Added, ['hs.foo.bar()']);
+});
+
+test('reads the trailers of every commit in a squash merge', (t) => {
+    const repo = makeRepo();
+    t.after(repo.cleanup);
+    const { entries, problems } = entriesFor(repo, [
+        'Add hs.foo (#12)',
+        '',
+        '* Add hs.foo',
+        '',
+        'Changelog-Added: hs.foo.bar()',
+        'Co-Authored-By: Someone <someone@example.com>',
+        '',
+        '* Fix hs.foo',
+        '',
+        'Changelog-Fixed: hs.foo.bar() no longer crashes',
+        '',
+        '---------',
+        '',
+        'Co-authored-by: Someone <someone@example.com>',
+    ].join('\n'));
+    assert.deepEqual(problems, []);
+    assert.deepEqual(texts(entries), {
+        Added: ['hs.foo.bar()'],
+        Changed: [],
+        Fixed: ['hs.foo.bar() no longer crashes'],
+    });
+});
+
+test('still reports changelog lines git rejects as trailers in a squash merge', (t) => {
+    const repo = makeRepo();
+    t.after(repo.cleanup);
+    const { entries, problems } = entriesFor(repo, 'Add hs.foo (#12)\n\nSome prose.\nChangelog-Added: lost\n\nCo-authored-by: Someone <someone@example.com>\n');
+    assert.deepEqual(texts(entries).Added, []);
+    assert.equal(problems.length, 1);
+});
+
 test('reports a misplaced line even when a trailer starts the same way', (t) => {
     const repo = makeRepo();
     t.after(repo.cleanup);
