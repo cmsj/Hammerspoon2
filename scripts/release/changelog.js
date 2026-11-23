@@ -126,7 +126,12 @@ function readCommits(from, to) {
  */
 function pullRequestsByCommit(from, to) {
     const prs = new Map();
-    const mainline = parseLog(git(['log', '--first-parent', `--format=${LOG_FORMAT}`, range(from, to)]));
+    // Only the subjects and parents are needed, so don't parse any trailers.
+    const mainline = git(['log', '--first-parent', '--format=%H%x1f%P%x1f%s%x1e', range(from, to)])
+        .split(RECORD).map((record) => record.replace(/^\n/, '')).filter(Boolean).map((record) => {
+            const [sha, parents, subject] = record.split(FIELD);
+            return { sha, parents: parents ? parents.split(' ') : [], subject };
+        });
     for (const commit of mainline) {
         const merge = commit.subject.match(/^Merge pull request #(\d+)\b/);
         if (merge && commit.parents.length > 1) {
