@@ -722,4 +722,182 @@ struct HSSpoonsTests {
             #expect(ctx.errorCode == "EINVALIDARG")
         }
     }
+
+    @Suite("bindHotkeys()")
+    @MainActor
+    struct BindHotkeysTests {
+
+        // Unlikely to clash with anything else bound on the machine running the tests
+        private static let mods = #"["cmd", "alt", "ctrl", "shift"]"#
+
+        private static let actionsSpoon = """
+            const log = [];
+            module.exports = {
+                log,
+                bindings: {
+                    show: () => log.push("show"),
+                    hide: {
+                        pressed: () => log.push("hide:pressed"),
+                        released: () => log.push("hide:released"),
+                        repeat: () => log.push("hide:repeat"),
+                        message: "Hide"
+                    }
+                }
+            };
+            """
+
+        /// A context with hs.hotkey loaded too, whose hs.hotkey.bind() records its arguments in
+        /// `__binds` before binding, and a Spoon called Actions installed
+        private func makeContext(initJS: String = Self.actionsSpoon) throws -> SpoonsTestContext {
+            let ctx = try SpoonsTestContext()
+            ctx.harness.loadModule(HSHotkeyModule.self, as: "hotkey")
+            ctx.harness.eval("""
+                globalThis.__binds = [];
+                const realBind = hs.hotkey.bind;
+                hs.hotkey.bind = function(...args) { __binds.push(args); return realBind.apply(hs.hotkey, args); };
+                """)
+            let dir = ctx.spoonsDir.appendingPathComponent("Actions")
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try #"{ "name": "Actions", "author": "A. Developer", "version": "1.0.0", "description": "Actions." }"#
+                .write(to: dir.appendingPathComponent("spoon.json"), atomically: true, encoding: .utf8)
+            try initJS.write(to: dir.appendingPathComponent("init.js"), atomically: true, encoding: .utf8)
+            return ctx
+        }
+
+        /// The hotkeys that are bound, as "key:message"
+        private func boundHotkeys(_ ctx: SpoonsTestContext) -> [String] {
+            let hotkeys = ctx.harness.evalValue("hs.hotkey.getHotkeys().map(h => h.key + ':' + h.message).sort()")
+            return hotkeys?.toArray() as? [String] ?? []
+        }
+
+        @Test("a Spoon that exports bindings gets a bindHotkeys() that binds both hotkey forms to them")
+        func testBindsBothForms() throws {
+            let ctx = try makeContext()
+            ctx.harness.eval("""
+                var spoon = hs.spoons.load('Actions');
+                var returned = spoon.bindHotkeys({
+                    show: [\(Self.mods), "f17"],
+                    hide: { mods: \(Self.mods), key: "f18" }
+                });
+                """)
+            #expect(!ctx.harness.hasException)
+            #expect(ctx.harness.evalBool("returned === spoon") == true)
+            #expect(boundHotkeys(ctx) == ["f17:null", "f18:null"])
+
+            // A plain function is the pressed callback; an object's callbacks are passed as they are
+            ctx.harness.eval("__binds.forEach(([, , pressed, released, repeat]) => { pressed?.(); released?.(); repeat?.(); })")
+            #expect(ctx.harness.evalValue("spoon.log")?.toArray() as? [String] == ["show", "hide:pressed", "hide:released", "hide:repeat"])
+        }
+
+        @Test("a hotkey has the user's message, or the Spoon's own, prefixed with its name, for true")
+        func testMessages() throws {
+            let ctx = try makeContext()
+            ctx.harness.eval("""
+                hs.spoons.load('Actions').bindHotkeys({
+                    show: [\(Self.mods), "f17", "Show it"],
+                    hide: [\(Self.mods), "f18", true]
+                });
+                """)
+            #expect(!ctx.harness.hasException)
+            #expect(boundHotkeys(ctx) == ["f17:Show it", "f18:Actions: Hide"])
+        }
+
+        @Test("binding an action again replaces its hotkey, and null unbinds it")
+        func testRebinding() throws {
+            let ctx = try makeContext()
+            ctx.harness.eval("var spoon = hs.spoons.load('Actions'); spoon.bindHotkeys({ show: [\(Self.mods), 'f17'], hide: [\(Self.mods), 'f18'] })")
+            ctx.harness.eval("spoon.bindHotkeys({ show: [\(Self.mods), 'f19'] })")
+            #expect(boundHotkeys(ctx) == ["f18:null", "f19:null"])
+            ctx.harness.eval("spoon.bindHotkeys({ hide: null })")
+            #expect(!ctx.harness.hasException)
+            #expect(boundHotkeys(ctx) == ["f19:null"])
+        }
+
+        @Test("two actions can swap hotkeys in one call")
+        func testSwapping() throws {
+            let ctx = try makeContext()
+            ctx.harness.eval("var spoon = hs.spoons.load('Actions'); spoon.bindHotkeys({ show: [\(Self.mods), 'f17', 'show'], hide: [\(Self.mods), 'f18', 'hide'] })")
+            ctx.harness.eval("spoon.bindHotkeys({ show: [\(Self.mods), 'f18', 'show'], hide: [\(Self.mods), 'f17', 'hide'] })")
+            #expect(!ctx.harness.hasException)
+            #expect(boundHotkeys(ctx) == ["f17:hide", "f18:show"])
+        }
+
+        @Test("an action can have the name of an Object.prototype property")
+        func testPrototypeNamedAction() throws {
+            let ctx = try makeContext(initJS: "module.exports = { bindings: { constructor() {}, toString() {} } };")
+            ctx.harness.eval("var spoon = hs.spoons.load('Actions'); spoon.bindHotkeys({ constructor: [\(Self.mods), 'f17'], toString: [\(Self.mods), 'f18'] })")
+            #expect(!ctx.harness.hasException)
+            #expect(boundHotkeys(ctx) == ["f17:null", "f18:null"])
+        }
+
+        @Test("a mistake in the mapping throws EINVALIDARG without binding any of it")
+        func testInvalidMappings() throws {
+            let ctx = try makeContext()
+            ctx.harness.eval("var spoon = hs.spoons.load('Actions')")
+            for mapping in [
+                "{ show: [\(Self.mods), 'f17'], shwo: [\(Self.mods), 'f18'] }",
+                "{ show: [\(Self.mods), 'f17'], hide: ['cmd', 'f18'] }",
+                "{ show: [\(Self.mods), 'f17'], hide: [\(Self.mods)] }",
+                "{ show: 'cmd-f17' }",
+                "{ show: [\(Self.mods), 'f17', 42] }",
+                "null",
+            ] {
+                ctx.harness.eval("var code = null; try { spoon.bindHotkeys(\(mapping)) } catch (e) { code = e.code }")
+                #expect(ctx.harness.evalString("code") == "EINVALIDARG", "\(mapping)")
+            }
+            #expect(boundHotkeys(ctx).isEmpty)
+            #expect(ctx.harness.evalBool("spoon.bindHotkeys({}) === spoon") == true)
+        }
+
+        @Test("a binding that isn't a function or an object with callbacks throws when it's bound")
+        func testInvalidBinding() throws {
+            let ctx = try makeContext(initJS: "module.exports = { bindings: { show: 'nope', hide: { message: 'Hide' } } };")
+            ctx.harness.eval("var spoon = hs.spoons.load('Actions')")
+            for action in ["show", "hide"] {
+                ctx.harness.eval("var code = null; try { spoon.bindHotkeys({ \(action): [\(Self.mods), 'f17'] }) } catch (e) { code = e.code }")
+                #expect(ctx.harness.evalString("code") == "EINVALIDARG", "\(action)")
+            }
+            #expect(boundHotkeys(ctx).isEmpty)
+        }
+
+        @Test("bindings replace a Spoon's own bindHotkeys(), which is kept only without bindings")
+        func testBindingsTakePrecedence() throws {
+            let both = try makeContext(initJS: "module.exports = { bindings: { show() {} }, bindHotkeys() { return 'own' } };")
+            both.harness.eval("var spoon = hs.spoons.load('Actions'); var returned = spoon.bindHotkeys({ show: [\(Self.mods), 'f17'] })")
+            #expect(!both.harness.hasException)
+            #expect(both.harness.evalBool("returned === spoon") == true)
+            #expect(boundHotkeys(both) == ["f17:null"])
+
+            let own = try makeContext(initJS: "module.exports = { bindHotkeys() { return 'own' } };")
+            #expect(own.harness.evalString("hs.spoons.load('Actions').bindHotkeys({})") == "own")
+
+            let plain = try makeContext(initJS: "module.exports = {};")
+            #expect(plain.harness.evalTypeOf("hs.spoons.load('Actions').bindHotkeys") == "undefined")
+        }
+
+        @Test("init() can bind hotkeys, and loading again doesn't replace bindHotkeys() or its hotkeys")
+        func testFromInitAndReload() throws {
+            let ctx = try makeContext(initJS: """
+                module.exports = {
+                    bindings: { show() {} },
+                    init() { this.bindHotkeys({ show: [\(Self.mods), "f17"] }); }
+                };
+                """)
+            ctx.harness.eval("var first = hs.spoons.load('Actions').bindHotkeys")
+            ctx.harness.eval("var second = hs.spoons.load('Actions').bindHotkeys")
+            #expect(!ctx.harness.hasException)
+            #expect(ctx.harness.evalBool("first === second") == true)
+            #expect(boundHotkeys(ctx) == ["f17:null"])
+        }
+
+        @Test("use()'s hotkeys option binds through the generic bindHotkeys()")
+        func testUse() async throws {
+            let ctx = try makeContext(initJS: Self.actionsSpoon.replacingOccurrences(
+                of: "module.exports = {", with: "module.exports = { defaultHotkeys: { show: [\(Self.mods), 'f17'] },"))
+            await ctx.settle("hs.spoons.use('Actions', { hotkeys: 'default' })")
+            #expect(boundHotkeys(ctx) == ["f17:null"])
+            await ctx.settle("hs.spoons.use('Actions', { hotkeys: { hide: [\(Self.mods), 'f18', true] } })")
+            #expect(boundHotkeys(ctx) == ["f17:null", "f18:Actions: Hide"])
+        }
+    }
 }

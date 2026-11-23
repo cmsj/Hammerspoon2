@@ -51,6 +51,12 @@ import JavaScriptCoreExtras
     /// since the same cached object is returned each time - write it to be safe to call more
     /// than once, or do one-time setup at `init.js`'s top level instead.
     ///
+    /// If the object has a `bindings` object (its actions, keyed by name), it's given a generic
+    /// `bindHotkeys(mapping)` before `init()` runs, which binds the hotkeys in `mapping` (e.g.
+    /// `{ show: [["cmd", "alt"], "g"] }`) to those actions. This replaces any `bindHotkeys()` the
+    /// Spoon exports itself. A Spoon without `bindings` keeps its own `bindHotkeys()`, if it has
+    /// one. See the Spoons guide for the details.
+    ///
     /// The exception's `code` is `ENOTINSTALLED` if there's no such Spoon, `EINVALIDARG` if the name
     /// can't be a Spoon's, or `EINVALIDSPOON` if the Spoon is malformed. An exception thrown by the
     /// Spoon's own code is passed on as it is.
@@ -148,6 +154,8 @@ import JavaScriptCoreExtras
     // Set by hs.spoons.js. Must be pre-declared properties, or JSC drops them on GC (issue #185).
     /// SKIP_DOCS
     @objc var use: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var _installBindHotkeys: JSFunction? { get set }
 }
 
 @_documentation(visibility: private)
@@ -157,6 +165,7 @@ import JavaScriptCoreExtras
     let engineID: UUID
     let installer: SpoonInstaller
     @objc var use: JSFunction?
+    @objc var _installBindHotkeys: JSFunction?
 
     private let session: URLSession
     private var operations: [UUID: Task<Void, Never>] = [:]
@@ -186,6 +195,7 @@ import JavaScriptCoreExtras
         session.invalidateAndCancel()
         loadedNames.removeAll()
         use = nil
+        _installBindHotkeys = nil
     }
 
     isolated deinit {
@@ -262,6 +272,17 @@ import JavaScriptCoreExtras
         result.setValue(metadata.author, forProperty: "author")
         result.setValue(metadata.description, forProperty: "description")
         result.setValue(metadata.version, forProperty: "version")
+
+        // A Spoon that exports `bindings` gets a generic bindHotkeys() for them, in place of any of
+        // its own. Before init(), so init() can use it too.
+        if let installBindHotkeys = _installBindHotkeys {
+            _ = context.callCapturingException {
+                installBindHotkeys.call(withArguments: [result, metadata.name])
+            }
+            if context.exception != nil {
+                return nil
+            }
+        }
 
         // Matches v1: call init() automatically if the Spoon defines one.
         if let initFn = result.objectForKeyedSubscript("init"), !initFn.isUndefined {

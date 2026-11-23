@@ -8,8 +8,9 @@ start there — everything below builds on it.
 
 This part of Hammerspoon 2 is newer and smaller in scope than the rest of the app. One piece of
 Hammerspoon 1 lifecycle *is* built in - `init()` is called automatically, same as v1's `:init()`
-- but `start()`/`stop()` and `bindHotkeys()` below are recommended patterns for Spoon authors to
-follow, not things the runtime calls for you (unless you ask `hs.spoons.use()` to).
+- and so is a generic `bindHotkeys()` for Spoons that export their actions as `bindings`, but
+`start()`/`stop()` below are recommended patterns for Spoon authors to follow, not things the
+runtime calls for you (unless you ask `hs.spoons.use()` to).
 
 ## Finding Spoons
 
@@ -185,7 +186,7 @@ hs.spoons.load("Greeter")
 hs.spoons.Greeter.show("Hello again")
 ```
 
-If the Spoon exposes `start()`/`stop()` methods (see [conventions](#conventions-worth-following)
+If the Spoon exposes `start()`/`stop()` methods (see [Lifecycle](#lifecycle)
 below), call `start()` yourself after loading — nothing calls it for you:
 
 ```js
@@ -232,39 +233,91 @@ points at that directory too — useful for loading bundled assets:
 const iconPath = __dirname + "/icon.png"
 ```
 
-**`init.js` must set `module.exports` to an object** (or a function — functions are objects in
-JS, so this works too) — `hs.spoons.load()` throws if it doesn't, since that's what the injected
-metadata needs to attach itself to. Keep the top level of `init.js` light: build the object and
-return it, but avoid starting timers, watchers, or hotkeys until `start()` is called (or, for a
-Spoon simple enough not to need a `start()`/`stop()` split at all, until the caller invokes
-whatever method actually needs them). Anything started keeps running until it's stopped
-(see [object lifecycle](getting-started.html#object-lifecycle-running-things-keep-running)), so
-`stop()` needs references to what `start()` started.
+**`init.js` must set `module.exports` to an object**, and not a function —
+`hs.spoons.load()` throws if it doesn't, since that's what the metadata from `spoon.json` is
+set on. Keep the top level of `init.js` light: build the object and
+return it, but don't start timers, watchers or hotkeys there (see [Lifecycle](#lifecycle)).
 
-**If the returned object has an `init()` method, it's called automatically** — matching
-Hammerspoon 1, where `:init()` ran the same way. Use it for setup that needs to happen once the
-object exists but shouldn't wait for `start()` — reading a config file, computing a derived
-value, and so on. `this` inside `init()` refers to the object itself, and by the time it runs,
-`author`/`description`/`version` are already set on `this`, since metadata injection happens
-first. A thrown exception inside `init()` fails the whole load: `hs.spoons.load()` throws, and
-nothing is stored on `hs.spoons`.
-
-One subtlety worth knowing: `init.js`'s own top level only ever runs once (`require()` caches
-the module), but `init()` runs again every time `hs.spoons.load()` is called for that Spoon, since
-the same cached object is handed back each time. Write `init()` to be safe to call more than
-once — or better, do true one-time setup directly at `init.js`'s top level, and reserve `init()`
-for things that are genuinely fine to redo.
+What else the object holds is up to you. The next section covers the names that Hammerspoon 2,
+`hs.spoons.use()` and your users expect to mean particular things.
 
 ## Conventions worth following
 
-These conventions are worth following for consistency with how other Spoons will likely behave,
-and they're what `hs.spoons.use()`'s options rely on, even though — unlike `init()` — nothing in
-the runtime calls them for you when a Spoon is loaded:
+Apart from `module.exports` being an object, everything a Spoon exports is optional. But a few
+names have a meaning that `hs.spoons.load()` and/or `hs.spoons.use()` can take advantage of, so use them
+where they fit, and your Spoon will work the way people expect a Spoon to:
 
-**Settings as properties** of the exported object, with their defaults, so users can change
-them with `use()`'s `config` option or by setting them directly. `config` copies each of its
-properties onto your Spoon's object, and that's all it does. It doesn't call anything to tell
-you, so:
+| Export | What it's for | What uses it |
+|--------|---------------|--------------|
+| `init()` | Setup once the Spoon's object exists | `hs.spoons.load()` calls it, every time |
+| `start()` / `stop()` | Starting and stopping anything that keeps running | Users, and `use()`'s `start` option (`start()` only) |
+| Settings | Properties that change how the Spoon behaves | Users, and `use()`'s `config` option |
+| `bindings` | Actions users can bind hotkeys to | `hs.spoons.load()`, which makes a `bindHotkeys()` for them |
+| `defaultHotkeys` | Suggested hotkeys for those actions | `use()`'s `hotkeys: "default"` option |
+| `bindHotkeys(mapping)` | Binding hotkeys yourself, when `bindings` isn't enough | Users, and `use()`'s `hotkeys` option |
+
+Don't export `name`, `author`, `description` or `version`: `hs.spoons.load()` sets them from
+`spoon.json`, replacing anything of the same name.
+
+### Lifecycle
+
+`hs.spoons.load("Greeter")` does this, in order:
+
+1. Runs `init.js` with `require()`. `require()` caches it, so the
+   top level only ever runs once, however many times the Spoon is loaded.
+2. Sets `name`, `author`, `description` and `version` on the exported object, from `spoon.json`.
+3. Gives the object a `bindHotkeys()`, if it exports `bindings` (see [Hotkeys](#hotkeys)).
+4. Calls the object's `init()`, if it has one.
+5. Stores the object in `hs.spoons` (as `hs.spoons.Greeter`) and returns it.
+
+`hs.spoons.use()` then applies its options to the loaded Spoon: `config`, then `hotkeys`, then
+`fn`, then `start` (see [`use()`'s options](#uses-options)).
+
+**`init()`** is for setup that needs to happen once the object exists, but shouldn't wait for
+`start()`: reading a file, working out a value from others, and so on. It's called with `this`
+set to the object, which by then has its `spoon.json` fields, and its `bindHotkeys()` if it
+exports `bindings`. Hammerspoon 1
+called `:init()` the same way.
+
+- **It runs on every `hs.spoons.load()`** of the Spoon, not just the first, since each one
+  hands back the same cached object. Write it to be safe to run more than once, or do one-time
+  setup at the top level of `init.js` instead.
+- **It runs before `use()`'s `config` is applied**, so it only ever sees your settings' defaults
+  (see [Configuration](#configuration)).
+- **An exception thrown in it fails the load**: `hs.spoons.load()` throws it, and nothing is
+  stored on `hs.spoons`.
+
+**`start()` and `stop()`** are for a Spoon that does anything that keeps running: timers,
+watchers, hotkeys that are always bound. Build the object and its settings in `init.js`, but
+don't start anything until `start()` is called. Nothing in Hammerspoon 2 calls `start()` unless
+a user passes `start: true` to `hs.spoons.use()` (which fails if there's no `start()`), and
+nothing ever calls `stop()`; both are for users to call when they want to. Anything started
+keeps running until it's stopped (see
+[object lifecycle](getting-started.html#object-lifecycle-running-things-keep-running)), so keep
+a reference to what `start()` starts, for `stop()` to stop. Make both safe to call twice:
+
+```js
+let timer = null
+
+function start() {
+    if (timer) return          // already started
+    timer = hs.timer.doEvery(3600, () => show())
+}
+
+function stop() {
+    if (timer) { timer.stop(); timer = null }
+}
+```
+
+A Spoon with nothing to start, such as one whose only job is to provide actions for hotkeys,
+doesn't need `start()` or `stop()` at all.
+
+### Configuration
+
+Make your Spoon's settings be properties of the exported object, set to their defaults, so
+users can change them by setting them directly, or with `use()`'s `config` option. `config`
+copies each of its properties onto your Spoon's object, and that's all it does. It doesn't call
+anything to tell you, so:
 
 - **Read a setting from the object whenever you use it**, rather than copying it into a
   variable. A variable in `init.js` can't be reached by `config`, and a copy taken earlier
@@ -290,45 +343,91 @@ function show() {
 If a setting needs checking, or something has to happen when it changes, make it a property
 with a setter: `config` assigns properties, so the setter runs.
 
-**`start()` / `stop()`** for a Spoon that does anything ongoing (timers, watchers, hotkeys bound
-persistently). Build the object and its configuration in `init.js`, but don't activate anything
-until `start()` runs:
+### Hotkeys
+
+Don't bind hotkeys to keys of your choosing: let users choose their own. The recommended way is
+to export **`bindings`**, the actions a hotkey can trigger, keyed by name, and Hammerspoon 2
+does the binding for you:
 
 ```js
-function start() {
-    if (timer) return          // already started
-    timer = hs.timer.doEvery(3600, () => show())
-}
-
-function stop() {
-    if (timer) { timer.stop(); timer = null }
+module.exports = {
+    bindings: {
+        show,                          // a function, called when the hotkey is pressed
+        peek: {                        // or an object, for more control
+            pressed: () => showPanel(),
+            released: () => hidePanel(),
+            repeat: null,              // called repeatedly while the hotkey is held down
+            message: "Peek"            // a description users can choose to show (see below)
+        }
+    },
+    // ...
 }
 ```
 
-**`bindHotkeys(mapping)`** for a Spoon whose behavior a user should be able to trigger with a
-hotkey, taking an object keyed by action name so the caller chooses their own keys rather than
-the Spoon hardcoding them:
+Any of `pressed`, `released` and `repeat` can be left out, but there must be at least one.
 
-```js
-function bindHotkeys(mapping) {
-    if (mapping.show) {
-        hs.hotkey.bind(mapping.show[0], mapping.show[1], () => show())
-    }
-}
-```
+`hs.spoons.load()` gives a Spoon that exports `bindings` a `bindHotkeys(mapping)` method, which
+binds the hotkeys in `mapping`, keyed by action name, to those actions. That's also what
+`hs.spoons.use()`'s `hotkeys` option calls. A hotkey is `[mods, key, message]` or
+`{ mods, key, message }`, where `message` is optional:
 
 ```js
 // in the user's init.js
 const Greeter = hs.spoons.load("Greeter")
-Greeter.bindHotkeys({ show: [["cmd", "alt"], "g"] })
+Greeter.bindHotkeys({
+    show: [["cmd", "alt"], "g"],
+    peek: { mods: ["cmd", "alt"], key: "p", message: true }
+})
 ```
 
-If your Spoon has sensible keys to suggest, export them as `defaultHotkeys`, in the same shape.
-Users can then pass `hotkeys: "default"` to `hs.spoons.use()` to bind them.
+- **`message`** is shown when the hotkey is pressed, as for any hotkey (see
+  `hs.hotkey`'s `message`). A string is used as it is, and `true` uses the action's own
+  `message`, prefixed with the Spoon's name — `"Greeter: Peek"` above. Without one, nothing is
+  shown.
+- **Binding an action again replaces its hotkey**, and `null` (or `false`) in place of a hotkey
+  unbinds it, so `bindHotkeys()` can be called as often as you like.
+- **Mistakes throw**, with a `code` of `EINVALIDARG`: an action the Spoon doesn't have
+  (so a misspelled name doesn't silently do nothing), or a hotkey of the wrong shape. Nothing in
+  that call is bound if one of its hotkeys is wrong. If a key can't be bound (it's not a real key,
+  or something else has it), it throws too. The actions before it in that call are bound, and
+  the ones from it on have no hotkey, even if they had one before.
+- **It returns the Spoon**, so calls can be chained.
+- **It's there before `init()` runs**, so `init()` can call it too.
 
-**Logging:** there's no per-Spoon logger like v1's `hs.logger` — use `console.log()`/`.error()`
-directly, optionally prefixing messages with the Spoon's name so they're identifiable in a
-config that's loaded several Spoons:
+If your Spoon has sensible keys to suggest, export them as **`defaultHotkeys`**, in the same
+shape as `mapping`. Users can then pass `hotkeys: "default"` to `hs.spoons.use()` to bind them.
+
+**Your own `bindHotkeys(mapping)`** is for when `bindings` can't do what your Spoon needs: say,
+hotkeys that are only active while a mode is on, keys made up at runtime rather than chosen
+from a fixed set of actions, or a mapping in some other shape. Export a `bindHotkeys()` method
+instead of `bindings`, and it's kept as it is: users call it the same way, and `use()`'s
+`hotkeys` option (including `"default"`) passes the mapping to it. It's then up to you to check
+the mapping, and to unbind a hotkey that's bound again:
+
+```js
+let modal = null
+
+module.exports = {
+    bindHotkeys(mapping) {
+        // The "enter" hotkey starts a mode in which "s" shows a greeting, and escape leaves it
+        if (modal) modal.destroy()
+        modal = hs.hotkey.createModal(mapping.enter[0], mapping.enter[1])
+        modal.bind([], "escape", () => modal.exit())
+        modal.bind([], "s", () => show())
+        return this
+    },
+    // ...
+}
+```
+
+Don't export both: if a Spoon exports both `bindings` and `bindHotkeys()`, `hs.spoons.load()` will replace 
+`bindHotkeys()` with the generic one, and log a warning to the Console.
+
+### Logging
+
+There's no per-Spoon logger like v1's `hs.logger` — use `console.log()`/`.error()` directly,
+optionally prefixing messages with the Spoon's name so they're identifiable in a config that's
+loaded several Spoons:
 
 ```js
 console.log("[Greeter] started")
@@ -348,9 +447,13 @@ const greeter = module.exports = {
     message: "Hello from Greeter!",   // the notification's text
     interval: 3600,                   // seconds between notifications once started
 
+    // Actions users can bind hotkeys to, with Greeter.bindHotkeys() or use()'s hotkeys option
+    bindings: {
+        show: { pressed: show, message: "Show a greeting" }
+    },
     defaultHotkeys: { show: [["cmd", "alt"], "g"] },
 
-    show, init, start, stop, bindHotkeys
+    show, init, start, stop
 }
 
 function show() {
@@ -374,12 +477,6 @@ function start() {
 function stop() {
     if (timer) { timer.stop(); timer = null }
     console.log("[Greeter] stopped")
-}
-
-function bindHotkeys(mapping) {
-    if (mapping.show) {
-        hs.hotkey.bind(mapping.show[0], mapping.show[1], show)
-    }
 }
 ```
 
@@ -444,13 +541,14 @@ If you're coming from v1, the shape is familiar but several specifics changed:
   `homepage` optional). v2 doesn't currently check for a license field at all.
 - **`init()` is called automatically, same as v1.** One difference worth knowing: v2's `require()`
   caches `init.js`'s top-level code (it only ever runs once), but `init()` itself runs again on
-  every `hs.spoons.load()` call for that Spoon — see [above](#anatomy-of-a-spoon) for what that
+  every `hs.spoons.load()` call for that Spoon — see [Lifecycle](#lifecycle) for what that
   means for what you put in it.
 - **`hs.spoons` has different helpers.** v1's `hs.spoons` had `resourcePath()`, `scriptPath()`,
   and `bindHotkeysToSpec()`. v2's `hs.spoons` has `load()`, the installing functions above, and
   every loaded Spoon by name — use `__dirname` (built into `require()`) in place of
-  `resourcePath()`/`scriptPath()`, and see [`bindHotkeys()`](#conventions-worth-following) above
-  for the closest equivalent to `bindHotkeysToSpec()`.
+  `resourcePath()`/`scriptPath()`. In place of `bindHotkeysToSpec()`, export your actions as
+  [`bindings`](#hotkeys), and `bindHotkeys()` is written for you, with
+  `released` and `repeat` callbacks, and default messages, which v1's couldn't have.
 - **SpoonInstall is built in**, as `hs.spoons.use()` (v1's `andUse()`) and friends, but there's
   no default repository: each Spoon names its own `source`.
 - **JavaScript, not Lua** — `module.exports = {...}` instead of `return obj` at the end of
