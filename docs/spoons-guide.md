@@ -19,12 +19,16 @@ you choose where each one comes from. Good places to look:
 - **The [`hammerspoon2-spoon` topic on GitHub](https://github.com/topics/hammerspoon2-spoon)**
   lists repositories whose authors have tagged them as containing Hammerspoon 2 Spoons. Each
   repository's README should say which Spoons it holds and how to configure them.
+  [Searching for the topic](https://github.com/search?q=topic%3Ahammerspoon2-spoon&type=repositories)
+  lets you sort them by stars or by when they were last updated.
 - **[r/Hammerspoon](https://www.reddit.com/r/Hammerspoon)** is where people share Spoons and
   configs, and where you can ask whether something that does what you need already exists.
 
 Make sure it's a Hammerspoon 2 Spoon (a `.spoon2` bundle written in JavaScript) and not a
 Hammerspoon 1 `.spoon`, which won't load. As with any code you run in your config, read a
 Spoon before installing it: it runs with all the permissions you've granted Hammerspoon 2.
+Hammerspoon 1 Spoons are listed separately, on the
+[Hammerspoon 1 Spoons site](https://www.hammerspoon.org/Spoons/).
 
 ## Installing Spoons from GitHub or a URL
 
