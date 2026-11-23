@@ -639,7 +639,11 @@ import Security
         case nil:
             parameters = .tcp
         }
-        parameters.allowLocalEndpointReuse = true
+        // Reuse lets a server listen again on its fixed port while connections from its last run are
+        // still closing. A port the system picks needs none, and reuse would let it pick a port that a
+        // closing connection still holds, so a local client could get that connection's exact
+        // address pair and fail to connect.
+        parameters.allowLocalEndpointReuse = port != 0
         if let localHost {
             parameters.requiredLocalEndpoint = .hostPort(host: localHost, port: nwPort)
         }
