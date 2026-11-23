@@ -461,7 +461,9 @@ import SwiftUI
             window.ignoresMouseEvents = true
             window.level = .screenSaver
             window.isReleasedWhenClosed = false
-            window.contentView = NSHostingView(rootView: HSUIAlertStackView(manager: alertStackManager))
+            window.contentView = alertContainerView(
+                hosting: NSHostingView(rootView: HSUIAlertStackView(manager: alertStackManager)),
+                size: screen.visibleFrame.size)
             window.orderFrontRegardless()
             alertStackWindow = window
         }
@@ -534,4 +536,22 @@ import SwiftUI
             UIWebView()
         }
     }
+}
+
+/// A view the size of an alert window, holding the alert's SwiftUI content.
+///
+/// The window must keep the size of the screen whatever its content needs. As the window's
+/// content view, an `NSHostingView` makes the window follow the size of its SwiftUI content, and
+/// a stack of alerts taller than the screen then resizes the window again on every layout pass.
+/// Inside a modal loop such as `hs.ui.textPrompt`'s, those passes repeated until AppKit threw "more
+/// Update Constraints in Window passes than there are views in the window", which crashed
+/// Hammerspoon 2. Held in a plain view with an autoresizing mask instead, the content takes the
+/// window's size, and what does not fit is cut off.
+@MainActor
+func alertContainerView<Content: View>(hosting: NSHostingView<Content>, size: NSSize) -> NSView {
+    let container = NSView(frame: NSRect(origin: .zero, size: size))
+    hosting.frame = container.bounds
+    hosting.autoresizingMask = [.width, .height]
+    container.addSubview(hosting)
+    return container
 }

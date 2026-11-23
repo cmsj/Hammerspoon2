@@ -202,7 +202,9 @@ import SwiftUI
         )
 
         let contentView = UIAlertView(alert: self)
-        window.contentView = NSHostingView(rootView: contentView)
+        // See alertContainerView(): the window keeps the size of the screen.
+        window.contentView = alertContainerView(hosting: NSHostingView(rootView: contentView),
+                                                size: screen.visibleFrame.size)
         window.isOpaque = false
         window.backgroundColor = .clear
         window.ignoresMouseEvents = true
