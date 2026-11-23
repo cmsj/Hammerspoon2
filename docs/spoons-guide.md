@@ -73,6 +73,7 @@ the name it's stored under on `hs.spoons`) and an object of options, all of them
 | `source` | Where to install the Spoon from if it isn't installed: a GitHub repository or a zip file's URL (see below). Without it, `use()` only uses an installed Spoon, and rejects with `ENOTINSTALLED` if there isn't one. |
 | `ref` | The tag, branch or commit to install from a GitHub `source`. |
 | `sha256` | The SHA-256 hash a zip file `source` must have. |
+| `path` | A directory to load the Spoon from instead, for working on a Spoon (see [Developing a Spoon](#developing-a-spoon)). It takes precedence over `source`, `ref` and `sha256`. |
 | `config` | An object whose properties are set on the Spoon. |
 | `hotkeys` | Passed to the Spoon's `bindHotkeys()` method. `"default"` passes the Spoon's own `defaultHotkeys` instead. |
 | `fn` | A function that's called with the Spoon, for any setup the other options don't cover. |
@@ -513,6 +514,43 @@ Greeter.start()
 
 console.log(`Loaded ${Greeter.description} v${Greeter.version} by ${Greeter.author}`)
 ```
+
+## Developing a Spoon
+
+While you're writing or changing a Spoon, you want your config to run the copy you're editing,
+not one installed into `Spoons/`. Give `hs.spoons.load()` or `hs.spoons.use()` a `path`, and
+the Spoon is loaded straight from that directory, with nothing installed or copied:
+
+```js
+hs.spoons.use("Greeter", {
+    source: "jane/hs2-spoons",                 // where everyone else gets it from
+    path: "~/src/hs2-spoons/Greeter.spoon2",   // your working copy, which wins while it's here
+    config: { message: "Time for a break!" },
+    start: true
+})
+```
+
+`path` takes precedence over `source` (and `ref` and `sha256`), so you can keep the `source`
+the rest of the world uses in your config, and add or remove `path` as you start and stop
+working on the Spoon. A relative path is relative to your config directory, so a Spoon checked
+out next to it is `"../hs2-spoons/Greeter.spoon2"`, and `~` is your home directory. An installed
+copy with the same name is ignored while `path` is there, and the Spoon is still stored as
+`hs.spoons.Greeter`.
+
+Reload your config to pick up your changes: `require()` only runs a file once per config load,
+so edits to `init.js` and anything it requires take effect on the next reload.
+
+A few things to know:
+
+- If there's no directory at `path`, `load()` throws and `use()` rejects with `ENOTFOUND`. It
+  doesn't fall back to `source`, so a typo in `path` doesn't quietly run the published version
+  instead of yours.
+- A warning is logged every time a Spoon is loaded from a `path`, so you'll notice if you forget
+  to take it out.
+- A Spoon loaded from a `path` isn't installed, so `hs.spoons.installed()`, `update()` and
+  `uninstall()` don't know about it.
+
+`hs.spoons.load("Greeter", { path: "..." })` does the same for a Spoon you load yourself.
 
 ## Sharing a Spoon
 

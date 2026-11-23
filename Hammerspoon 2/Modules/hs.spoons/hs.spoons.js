@@ -136,6 +136,11 @@ function makeBindHotkeys(spoon, spoonName) {
 /// `fn`, or after the returned Promise resolves. An installed Spoon is never updated by `use()`:
 /// call `hs.spoons.update()` for that.
 ///
+/// `path` loads the Spoon from a directory of your own instead, as `hs.spoons.load()` does, for
+/// developing a Spoon: nothing is installed, and an installed copy is ignored. It takes precedence
+/// over `source`, `ref` and `sha256`, which are ignored while it's given, so a config can keep its
+/// `source` for everyone else and add `path` while you work on the Spoon.
+///
 /// Configuration is applied after the Spoon is loaded (and its `init()` has run), in this order:
 /// each property of `config` is set on the Spoon's object, exactly as if you'd assigned it
 /// yourself, `hotkeys` is passed to its `bindHotkeys()` method, `fn` is called with the Spoon,
@@ -146,7 +151,7 @@ function makeBindHotkeys(spoon, spoonName) {
 /// loading or configuring the Spoon.
 /// Parameters:
 ///  - name: {string} The name of the Spoon
-///  - options: {{source?: string, ref?: string, sha256?: string, config?: Record<string, any>, hotkeys?: Record<string, any> | "default", fn?: (spoon: Object) => void, start?: boolean, disable?: boolean}} `source`, `ref` and `sha256` say where to install the Spoon from, as for `hs.spoons.install()`. `config` holds properties to set on the Spoon's object; which ones it reads is up to the Spoon. `hotkeys` is passed to the Spoon's `bindHotkeys()`, or `"default"` passes its `defaultHotkeys`. `fn` is called with the Spoon after it's configured. `start: true` calls its `start()`. `disable: true` does nothing at all, which is easier than commenting the call out.
+///  - options: {{source?: string, ref?: string, sha256?: string, path?: string, config?: Record<string, any>, hotkeys?: Record<string, any> | "default", fn?: (spoon: Object) => void, start?: boolean, disable?: boolean}} `source`, `ref` and `sha256` say where to install the Spoon from, as for `hs.spoons.install()`. `path` loads it from a directory instead (relative to your config directory), as for `hs.spoons.load()`, and takes precedence over `source`. `config` holds properties to set on the Spoon's object; which ones it reads is up to the Spoon. `hotkeys` is passed to the Spoon's `bindHotkeys()`, or `"default"` passes its `defaultHotkeys`. `fn` is called with the Spoon after it's configured. `start: true` calls its `start()`. `disable: true` does nothing at all, which is easier than commenting the call out.
 /// Returns: {Promise<Object | null>} Resolves with the Spoon once it's loaded and configured, or null if `disable` is true
 /// Example:
 /// ```js
@@ -158,6 +163,13 @@ function makeBindHotkeys(spoon, spoonName) {
 ///     fn: (greeter) => console.log(`Using Greeter ${greeter.version}`),
 ///     start: true
 /// }).catch(err => console.error(`Couldn't use Greeter: ${err.message}`))
+///
+/// // While working on Greeter, use your own copy of it. source is ignored until path is removed.
+/// hs.spoons.use("Greeter", {
+///     source: "jane/hs2-spoons",
+///     path: "~/src/hs2-spoons/Greeter.spoon2",
+///     start: true
+/// })
 /// ```
 hs.spoons.use = function(name, options) {
     const opts = options ?? {};
@@ -205,6 +217,14 @@ hs.spoons.use = function(name, options) {
             spoon.start();
         }
         return spoon;
+    }
+
+    if (opts.path !== undefined && opts.path !== null) {
+        try {
+            return Promise.resolve(configure(hs.spoons.load(name, { path: opts.path })));
+        } catch (err) {
+            return Promise.reject(err);
+        }
     }
 
     let spoon;
