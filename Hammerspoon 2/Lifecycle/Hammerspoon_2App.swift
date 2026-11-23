@@ -25,7 +25,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Before anything posts a notification, and before launching finishes
         UserNotificationRouter.shared.install()
         ConsoleCompletionEngine.shared.prewarm()
-        // Before the config loads, so a config that crashes the app can still be reported.
+        // Looks for crashes in the background and doesn't hold up startup. Crashes are only marked
+        // as seen once they've been offered, so if the config crashes the app before then, they're
+        // offered again next time.
         CrashReportManager.shared.offerToReportNewCrashes()
         let managerManager = ManagerManager.shared
         do {

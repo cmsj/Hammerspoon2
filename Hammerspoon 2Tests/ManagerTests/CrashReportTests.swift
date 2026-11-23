@@ -248,17 +248,17 @@ struct CrashReportTests {
         }
 
         @Test("The first check only records when it happened")
-        func testFirstCheckFindsNothing() throws {
+        func testFirstCheckFindsNothing() async throws {
             defer { cleanUp() }
             try write("abort", as: "Hammerspoon 2-2026-10-20-120000.ips")
             let manager = CrashReportManager(reportsDirectory: directory, defaults: defaults)
             let now = Date()
-            #expect(manager.newCrashReports(bundleIdentifier: bundleIdentifier, now: now).isEmpty)
+            #expect(await manager.newCrashReports(bundleIdentifier: bundleIdentifier, now: now).isEmpty)
             #expect(defaults.object(forKey: CrashReportManager.lastCheckedKey) as? Date == now)
         }
 
         @Test("Later checks find our crashes since the last one, oldest first, once each")
-        func testFindsNewCrashes() throws {
+        func testFindsNewCrashes() async throws {
             defer { cleanUp() }
             defaults.set(Date.distantPast, forKey: CrashReportManager.lastCheckedKey)
 
@@ -269,23 +269,40 @@ struct CrashReportTests {
             try write("abort", as: "Other-2026-10-20-120002.ips",
                       replacing: #""codeSigningID": "net.tenshu.Hammerspoon-2""#,
                       with: #""codeSigningID": "com.example.other""#)
+            // A report of something other than a crash, such as a hang, isn't offered.
+            try write("abort", as: "Hammerspoon 2-2026-10-20-120002.ips",
+                      replacing: #""bug_type":"309""#, with: #""bug_type":"288""#)
             try write("abort", as: "Hammerspoon 2-2026-10-20-120003.txt")
 
             let manager = CrashReportManager(reportsDirectory: directory, defaults: defaults)
-            let found = manager.newCrashReports(bundleIdentifier: bundleIdentifier)
+            let found = await manager.newCrashReports(bundleIdentifier: bundleIdentifier)
             #expect(found.map(\.report.processName) == ["HammerspoonIPCBroker", "Hammerspoon 2"])
-            #expect(manager.newCrashReports(bundleIdentifier: bundleIdentifier).isEmpty)
+            manager.markChecked(Date())
+            #expect(await manager.newCrashReports(bundleIdentifier: bundleIdentifier).isEmpty)
+        }
+
+        @Test("Crashes are found again until they're marked as checked")
+        func testUncheckedCrashesAreFoundAgain() async throws {
+            defer { cleanUp() }
+            defaults.set(Date.distantPast, forKey: CrashReportManager.lastCheckedKey)
+            try write("abort", as: "Hammerspoon 2-2026-10-20-120000.ips")
+
+            // As if the app crashed again before the crash could be offered.
+            let manager = CrashReportManager(reportsDirectory: directory, defaults: defaults)
+            #expect(await manager.newCrashReports(bundleIdentifier: bundleIdentifier).count == 1)
+            #expect(await manager.newCrashReports(bundleIdentifier: bundleIdentifier).count == 1)
+            #expect(defaults.object(forKey: CrashReportManager.lastCheckedKey) as? Date == .distantPast)
         }
 
         @Test("Found reports are redacted")
-        func testFoundReportsAreRedacted() throws {
+        func testFoundReportsAreRedacted() async throws {
             defer { cleanUp() }
             defaults.set(Date.distantPast, forKey: CrashReportManager.lastCheckedKey)
             let realHome = FileManager.default.homeDirectoryForCurrentUser.path
             try write("abort", as: "Hammerspoon 2-2026-10-20-120000.ips", replacing: home, with: realHome)
 
             let manager = CrashReportManager(reportsDirectory: directory, defaults: defaults)
-            let report = try #require(manager.newCrashReports(bundleIdentifier: bundleIdentifier).first?.report)
+            let report = try #require(await manager.newCrashReports(bundleIdentifier: bundleIdentifier).first?.report)
             #expect(!report.compactText().contains(realHome + "/"))
         }
     }
