@@ -49,9 +49,13 @@ final class CrashReportManager {
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
         guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return }
 
+        // Before the search, so that if the app crashes before it finishes, the first check
+        // has still been recorded and the crash is found next time.
         let now = Date()
+        guard let lastChecked = lastChecked(recordingFirstCheckAt: now) else { return }
         Task {
-            let crashes = await newCrashReports(bundleIdentifier: bundleIdentifier, now: now)
+            let crashes = await Self.crashReports(in: reportsDirectory, since: lastChecked,
+                                                  bundleIdentifier: bundleIdentifier)
             guard let newest = crashes.last else {
                 markChecked(now)
                 return
@@ -70,11 +74,18 @@ final class CrashReportManager {
     /// when it happened, so crashes from before crash reporting existed (and whose dSYMs may
     /// not be published) aren't offered.
     func newCrashReports(bundleIdentifier: String, now: Date = Date()) async -> [(file: URL, report: CrashReport)] {
+        guard let lastChecked = lastChecked(recordingFirstCheckAt: now) else { return [] }
+        return await Self.crashReports(in: reportsDirectory, since: lastChecked, bundleIdentifier: bundleIdentifier)
+    }
+
+    /// When crashes were last checked for, or nil (after recording `now` as the first check) if
+    /// they never have been.
+    private func lastChecked(recordingFirstCheckAt now: Date) -> Date? {
         guard let lastChecked = defaults.object(forKey: Self.lastCheckedKey) as? Date else {
             markChecked(now)
-            return []
+            return nil
         }
-        return await Self.crashReports(in: reportsDirectory, since: lastChecked, bundleIdentifier: bundleIdentifier)
+        return lastChecked
     }
 
     /// Records that crashes up to `date` have been dealt with.
