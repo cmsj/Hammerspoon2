@@ -385,7 +385,8 @@ Greeter.bindHotkeys({
 - **Mistakes throw**, with a `code` of `EINVALIDARG`: an action the Spoon doesn't have
   (so a misspelled name doesn't silently do nothing), or a hotkey of the wrong shape. Nothing in
   that call is bound if one of its hotkeys is wrong. If a key can't be bound (it's not a real key,
-  or something else has it), it throws too, after binding the actions before it.
+  or something else has it), it throws too. The actions before it in that call are bound, and
+  the ones from it on have no hotkey, even if they had one before.
 - **It returns the Spoon**, so calls can be chained.
 - **It's there before `init()` runs**, so `init()` can call it too.
 

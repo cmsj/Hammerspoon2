@@ -31,8 +31,9 @@ hs.spoons._installBindHotkeys = function(spoon, spoonName) {
 // Makes a bindHotkeys() for a Spoon's `bindings`. See `bindings` in docs/spoons-guide.md for the
 // shapes it accepts.
 function makeBindHotkeys(spoon, spoonName) {
-    // Action name -> the HSHotkey bound for it, so binding an action again replaces its hotkey
-    const bound = {};
+    // Action name -> the HSHotkey bound for it, so binding an action again replaces its hotkey.
+    // No prototype, so an action named e.g. "constructor" isn't mistaken for a bound one.
+    const bound = Object.create(null);
 
     function invalid(message) {
         const err = new Error(`${spoonName}.bindHotkeys(): ${message}`);
@@ -98,11 +99,15 @@ function makeBindHotkeys(spoon, spoonName) {
             plan.push({ action, callbacks, hotkey });
         }
 
-        for (const { action, callbacks, hotkey } of plan) {
+        // Release every hotkey being replaced before binding any, so actions can swap keys
+        for (const { action } of plan) {
             if (bound[action]) {
                 bound[action].destroy();
                 delete bound[action];
             }
+        }
+
+        for (const { action, callbacks, hotkey } of plan) {
             if (!hotkey) {
                 continue;
             }

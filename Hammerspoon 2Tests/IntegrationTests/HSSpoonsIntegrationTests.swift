@@ -813,6 +813,23 @@ struct HSSpoonsTests {
             #expect(boundHotkeys(ctx) == ["f19:null"])
         }
 
+        @Test("two actions can swap hotkeys in one call")
+        func testSwapping() throws {
+            let ctx = try makeContext()
+            ctx.harness.eval("var spoon = hs.spoons.load('Actions'); spoon.bindHotkeys({ show: [\(Self.mods), 'f17', 'show'], hide: [\(Self.mods), 'f18', 'hide'] })")
+            ctx.harness.eval("spoon.bindHotkeys({ show: [\(Self.mods), 'f18', 'show'], hide: [\(Self.mods), 'f17', 'hide'] })")
+            #expect(!ctx.harness.hasException)
+            #expect(boundHotkeys(ctx) == ["f17:hide", "f18:show"])
+        }
+
+        @Test("an action can have the name of an Object.prototype property")
+        func testPrototypeNamedAction() throws {
+            let ctx = try makeContext(initJS: "module.exports = { bindings: { constructor() {}, toString() {} } };")
+            ctx.harness.eval("var spoon = hs.spoons.load('Actions'); spoon.bindHotkeys({ constructor: [\(Self.mods), 'f17'], toString: [\(Self.mods), 'f18'] })")
+            #expect(!ctx.harness.hasException)
+            #expect(boundHotkeys(ctx) == ["f17:null", "f18:null"])
+        }
+
         @Test("a mistake in the mapping throws EINVALIDARG without binding any of it")
         func testInvalidMappings() throws {
             let ctx = try makeContext()
