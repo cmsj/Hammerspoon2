@@ -565,14 +565,16 @@ EOF
     done
     [ "$delta_count" -gt 0 ] || echo "  no earlier releases with $METADATA_NAME, so no deltas this time"
 
-    # Only installs that opt in to a channel are offered releases in it, and
-    # the app doesn't opt in to any yet, so releases (prereleases included) go
-    # in the default channel unless --channel says otherwise.
-    local channel_json="" prerelease=false
-    [[ "$VERSION" != *-* ]] || prerelease=true
-    if [ -n "$CHANNEL" ]; then
+    # Prereleases go in the default channel too, unless --channel says
+    # otherwise (see releaseKind in update-appcast.js).
+    local kind channel channel_json="" prerelease
+    kind="$(node -p 'JSON.stringify(require(process.argv[1]).releaseKind(process.argv[2], process.argv[3]))' \
+        "$REPO_ROOT/scripts/release/update-appcast.js" "$VERSION" "$CHANNEL")"
+    prerelease="$(jq -r .prerelease <<<"$kind")"
+    channel="$(jq -r '.channel // ""' <<<"$kind")"
+    if [ -n "$channel" ]; then
         channel_json="
-  \"channel\": \"$CHANNEL\","
+  \"channel\": \"$channel\","
     fi
     cat > "$METADATA" <<EOF
 {

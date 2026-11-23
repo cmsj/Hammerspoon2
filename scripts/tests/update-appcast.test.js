@@ -7,7 +7,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { updateAppcast, displayVersion } = require('../release/update-appcast');
+const { updateAppcast, displayVersion, releaseKind } = require('../release/update-appcast');
 
 const PREFIX = 'https://github.com/Hammerspoon/Hammerspoon2/releases/download/0.0.16/';
 
@@ -81,8 +81,12 @@ test('puts a release in the channel its metadata names, and others in the defaul
     assert.doesNotMatch(update(''), /sparkle:channel/);
 });
 
-test('a channel is only set when the metadata asks for one', () => {
-    assert.doesNotMatch(update('', { metadata: { version: '1.0.0-beta.1' } }), /sparkle:channel/);
+test('prereleases go in the default channel unless one is asked for', () => {
+    // The app doesn't opt in to any channel, so a release in one reaches nobody.
+    assert.deepEqual(releaseKind('1.0.0-beta.1', ''), { prerelease: true });
+    assert.deepEqual(releaseKind('1.0.0-beta.1', 'beta'), { prerelease: true, channel: 'beta' });
+    assert.deepEqual(releaseKind('1.0.0', ''), { prerelease: false });
+    assert.deepEqual(releaseKind('1.0.0', 'beta'), { prerelease: false, channel: 'beta' });
 });
 
 test('titles prereleases readably', () => {

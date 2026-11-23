@@ -55,6 +55,21 @@ function displayVersion(version) {
     return [release, ...words].join(' ');
 }
 
+/**
+ * Whether a release is a GitHub prerelease, and the Sparkle channel it goes in.
+ *
+ * Only installs that opt in to a channel are offered releases in it, and the
+ * app doesn't opt in to any yet, so every release (prereleases included) goes
+ * in the default channel unless one is asked for.
+ */
+function releaseKind(version, channel) {
+    const kind = { prerelease: String(version).includes('-') };
+    if (channel) {
+        kind.channel = channel;
+    }
+    return kind;
+}
+
 function cdata(text) {
     // A literal "]]>" would terminate the section early, so split it across two.
     return `<![CDATA[${String(text).replace(/]]>/g, ']]]]><![CDATA[>')}]]>`;
@@ -247,4 +262,4 @@ if (require.main === module) {
     }
 }
 
-module.exports = { updateAppcast, buildItem, validateMetadata, displayVersion };
+module.exports = { updateAppcast, buildItem, validateMetadata, displayVersion, releaseKind };
