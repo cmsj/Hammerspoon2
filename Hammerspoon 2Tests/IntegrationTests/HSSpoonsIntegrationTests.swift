@@ -14,7 +14,7 @@ import Synchronization
 
 /// Serves archives to `HSSpoonsModule` in place of the network, recording what was requested
 private final class FakeDownloads: Sendable {
-    private let state = Mutex<(archives: [URL: Data], requested: [URL])>(([:], []))
+    private let state = Mutex<(archives: [URL: Data], requested: [URL], finished: Int)>(([:], [], 0))
     private let gate = Mutex<(closed: Set<URL>, waiting: [(url: URL, continuation: CheckedContinuation<Void, Never>)])>(([], []))
     /// When set, a download waits until cancelled instead of answering
     let hangs: Bool
@@ -28,6 +28,9 @@ private final class FakeDownloads: Sendable {
     }
 
     var requested: [URL] { state.withLock { $0.requested } }
+
+    /// How many downloads have returned or thrown, including by being cancelled
+    var finishedCount: Int { state.withLock { $0.finished } }
 
     /// Makes downloads of `url` wait, once requested, until it's opened again
     func close(_ url: String) {
@@ -48,6 +51,7 @@ private final class FakeDownloads: Sendable {
     var waitingCount: Int { gate.withLock { $0.waiting.count } }
 
     func fetch(_ url: URL) async throws -> Data {
+        defer { state.withLock { $0.finished += 1 } }
         await withCheckedContinuation { continuation in
             let wait = gate.withLock { gate in
                 if gate.closed.contains(url) { gate.waiting.append((url, continuation)) }
@@ -784,6 +788,7 @@ struct HSSpoonsTests {
 
             ctx.module.shutdown()
             // The download hangs for a minute unless it's cancelled
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.downloads.finishedCount == 1 })
             #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.module.installer.downloadCallerCount == 0 })
             await JSTestHarness.drainMainActorQueue()
             #expect(ctx.harness.evalBool("__settled") == false)
