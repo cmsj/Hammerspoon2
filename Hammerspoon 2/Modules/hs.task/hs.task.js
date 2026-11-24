@@ -14,9 +14,11 @@
      * @param {Object} options.environment - Environment variables (optional)
      * @param {string} options.workingDirectory - Working directory (optional)
      * @param {Function} options.onOutput - Callback for streaming output: (stream, data) => {} (optional)
+     * @param {string} options.input - Text to write to the task's standard input (optional). Standard input is closed after it is written, or straight away if there is no input, so a command that reads standard input finishes instead of waiting for more
      * @param {Function} legacyStreamCallback - Legacy streaming callback (optional)
      * @example
      * hs.task.runAsync("/bin/echo", ["hi"]).then(r => console.log(r.stdout))
+     * hs.task.runAsync("/usr/bin/sort", [], { input: "b\na\n" }).then(r => console.log(r.stdout))
      * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The task's result. If the task exits with a non-zero status or is killed by a signal, the promise rejects with an Error that also has the result's exitCode, stdout, stderr and reason
      */
     hs.task.runAsync = function(launchPath, args, options, legacyStreamCallback) {
@@ -26,6 +28,7 @@
             let environment = null;
             let workingDirectory = null;
             let onOutput = null;
+            let input = null;
             let streamCallback = null;
 
             // Handle legacy API: hs.task.runAsync(path, args, callback, streamCallback)
@@ -43,6 +46,12 @@
                 environment = options.environment || null;
                 workingDirectory = options.workingDirectory || null;
                 onOutput = options.onOutput || null;
+                input = options.input ?? null;
+            }
+
+            if (input !== null && typeof input !== 'string') {
+                reject(new TypeError('hs.task.runAsync(): options.input must be a string'));
+                return;
             }
 
             // Create streaming callback that accumulates output
@@ -89,6 +98,12 @@
             }
 
             task.start();
+
+            // Always close stdin, so a command that reads it doesn't wait forever
+            if (input !== null) {
+                task.sendInput(input);
+            }
+            task.closeInput();
         });
     };
 
@@ -157,6 +172,7 @@
             this.env = null;
             this.cwd = null;
             this.outputCallback = null;
+            this.input = null;
         }
 
         /**
@@ -200,6 +216,16 @@
         }
 
         /**
+         * Set text to write to the task's standard input when it is run
+         * @param {string} input - Text to write to standard input
+         * @returns {TaskBuilder} This builder, for chaining
+         */
+        withInput(input) {
+            this.input = input;
+            return this;
+        }
+
+        /**
          * Build and run the task
          * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The task's result
          */
@@ -207,7 +233,8 @@
             const options = {
                 environment: this.env,
                 workingDirectory: this.cwd,
-                onOutput: this.outputCallback
+                onOutput: this.outputCallback,
+                input: this.input
             };
             return hs.task.runAsync(this.launchPath, this.args, options);
         }

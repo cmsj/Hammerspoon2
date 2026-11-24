@@ -645,6 +645,136 @@ import JavaScriptCore
         #expect(rejection?["reason"] as? String == "uncaughtSignal")
     }
 
+    @Test("hs.task.runAsync() writes the input option to stdin")
+    func testRunAsyncInput() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var output: String?
+        harness.registerCallback("onResolve") { (stdout: String) in
+            output = stdout
+        }
+
+        harness.eval("""
+        hs.task.runAsync('/usr/bin/sort', [], { input: 'b\\na\\n' }).then(function(result) {
+            onResolve(result.stdout);
+        });
+        """)
+
+        let success = await harness.waitForAsync(timeout: 2.0) { output != nil }
+        #expect(success, "Promise should resolve")
+        #expect(output == "a\nb\n")
+    }
+
+    @Test("hs.task.runAsync() closes stdin when there is no input")
+    func testRunAsyncClosesStdin() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var output: String?
+        harness.registerCallback("onResolve") { (stdout: String) in
+            output = stdout
+        }
+
+        harness.eval("""
+        hs.task.runAsync('/bin/cat', []).then(function(result) {
+            onResolve(result.stdout);
+        });
+        """)
+
+        let success = await harness.waitForAsync(timeout: 2.0) { output != nil }
+        #expect(success, "A command that reads stdin should finish instead of waiting for input")
+        #expect(output == "")
+    }
+
+    @Test("hs.task.runAsync() writes input larger than the pipe buffer")
+    func testRunAsyncLargeInput() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var outputLength: Int?
+        harness.registerCallback("onResolve") { (length: Int) in
+            outputLength = length
+        }
+
+        // Much larger than a pipe's buffer, so writing it would block until cat reads it
+        harness.eval("""
+        hs.task.runAsync('/bin/cat', [], { input: 'x'.repeat(4 * 1024 * 1024) }).then(function(result) {
+            onResolve(result.stdout.length);
+        });
+        """)
+
+        let success = await harness.waitForAsync(timeout: 10.0) { outputLength != nil }
+        #expect(success, "Promise should resolve")
+        #expect(outputLength == 4 * 1024 * 1024)
+    }
+
+    @Test("hs.task.runAsync() settles when the task exits without reading its input")
+    func testRunAsyncUnreadInput() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var exitCode: Int?
+        harness.registerCallback("onResolve") { (code: Int) in
+            exitCode = code
+        }
+
+        // true never reads stdin, so writing to it fails once true has exited. That must not
+        // raise SIGPIPE, which would kill the test host.
+        harness.eval("""
+        hs.task.runAsync('/usr/bin/true', [], { input: 'x'.repeat(4 * 1024 * 1024) }).then(function(result) {
+            onResolve(result.exitCode);
+        });
+        """)
+
+        let success = await harness.waitForAsync(timeout: 5.0) { exitCode != nil }
+        #expect(success, "Promise should resolve")
+        #expect(exitCode == 0)
+    }
+
+    @Test("hs.task.runAsync() rejects input that isn't a string")
+    func testRunAsyncRejectsNonStringInput() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var errorName: String?
+        harness.registerCallback("onReject") { (name: String) in
+            errorName = name
+        }
+
+        harness.eval("""
+        hs.task.runAsync('/bin/cat', [], { input: 42 }).catch(function(error) {
+            onReject(error.name);
+        });
+        """)
+
+        let success = await harness.waitForAsync(timeout: 2.0) { errorName != nil }
+        #expect(success, "Promise should reject")
+        #expect(errorName == "TypeError")
+        #expect(await harness.waitForTasksToComplete(), "No task should have been started")
+    }
+
+    @Test("TaskBuilder.withInput() writes to stdin")
+    func testBuilderWithInput() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var output: String?
+        harness.registerCallback("onResolve") { (stdout: String) in
+            output = stdout
+        }
+
+        harness.eval("""
+        hs.task.builder('/usr/bin/sort').withInput('d\\nc\\n').run().then(function(result) {
+            onResolve(result.stdout);
+        });
+        """)
+
+        let success = await harness.waitForAsync(timeout: 2.0) { output != nil }
+        #expect(success, "Promise should resolve")
+        #expect(output == "c\nd\n")
+    }
+
     @Test("hs.task.runAsync() supports onOutput streaming callback")
     func testRunOnOutput() async {
         let harness = JSTestHarness()
