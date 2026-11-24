@@ -132,7 +132,10 @@ import SwiftUI
 
     // MARK: Appearance
 
-    /// Width of the chooser as a fraction of the screen width (default: `0.5` = 50 %).
+    /// Width of the chooser as a fraction of the main screen's width (default: `0.5` = 50 %).
+    ///
+    /// Changing it after the chooser has been shown resizes it about its centre. Setting `frame`
+    /// also updates it. Values that aren't finite, or aren't positive, are ignored.
     /// - Example:
     /// ```js
     /// chooser.width = 0.4
@@ -153,9 +156,9 @@ import SwiftUI
     /// main screen, a quarter of the way down it. It then stays wherever it was last placed.
     ///
     /// Setting `frame` moves the chooser so its top left corner is at `x`, `y`, and makes it `w`
-    /// points wide. `h` is ignored, since the chooser's height always follows its rows
-    /// (see `visibleRows`). Setting a frame whose values aren't finite, or whose width isn't
-    /// positive, does nothing.
+    /// points wide, updating `width` to match. `h` is ignored, since the chooser's height always
+    /// follows its rows (see `visibleRows`). Setting a frame whose values aren't finite, or whose
+    /// width isn't positive, does nothing.
     /// - Example:
     /// ```js
     /// const f = chooser.frame
@@ -480,7 +483,24 @@ import SwiftUI
 
     @objc var searchSubText = false
     @objc var enableDefaultForQuery = false
-    @objc var width: Double = 0.5
+    private var _width: Double = 0.5
+    @objc var width: Double {
+        get { _width }
+        set {
+            guard newValue.isFinite, newValue > 0 else {
+                AKWarning("hs.chooser.width: ignoring invalid width \(newValue)")
+                return
+            }
+            _width = newValue
+            guard let window else { return }
+            // Resize about the centre, so a chooser in its default place stays centred
+            var appKitFrame = window.frame
+            appKitFrame.origin.x = appKitFrame.midX - windowWidth / 2
+            appKitFrame.size.width = windowWidth
+            window.setFrame(appKitFrame, display: true)
+            window.refreshShadow()
+        }
+    }
     @objc var visibleRows: Int {
         get { viewModel.visibleRows }
         set { viewModel.visibleRows = newValue }
@@ -620,12 +640,12 @@ import SwiftUI
             guard let window else {
                 let initial = ChooserPanel.initialFrame(
                     on: NSScreen.main ?? NSScreen.screens[0],
-                    width: initialWindowWidth,
+                    width: windowWidth,
                     height: viewModel.expectedHeight()
                 )
-                return Self.flipped(initial).toBridge()
+                return initial.flippedScreenCoordinates().toBridge()
             }
-            var topDown = Self.flipped(window.frame)
+            var topDown = window.frame.flippedScreenCoordinates()
             // A hidden panel is only resized to fit its rows by the next show(), so report that height
             if !window.isVisible {
                 topDown.size.height = viewModel.expectedHeight()
@@ -645,7 +665,9 @@ import SwiftUI
             // The height follows the rows, so ignore the requested one and pin the top-left corner
             let topDown = CGRect(x: newValue.x, y: newValue.y, width: newValue.w,
                                  height: viewModel.expectedHeight())
-            window.setFrame(Self.flipped(topDown), display: true)
+            window.setFrame(topDown.flippedScreenCoordinates(), display: true)
+            // Keep `width` describing the panel
+            _width = newValue.w / mainScreenWidth
             window.refreshShadow()
         }
     }
@@ -996,23 +1018,12 @@ import SwiftUI
 
     // MARK: - Private
 
-    /// The panel's width when it's first created: `width` as a fraction of the main screen's width.
-    private var initialWindowWidth: CGFloat {
-        CGFloat(width) * (NSScreen.main?.frame.width ?? 1440)
-    }
+    private var mainScreenWidth: CGFloat { NSScreen.main?.frame.width ?? 1440 }
 
-    /// Converts a rect between AppKit's coordinates (origin at the bottom left of the primary screen,
-    /// y up) and Hammerspoon's (origin at its top left, y down). The conversion is its own inverse.
-    private static func flipped(_ rect: CGRect) -> CGRect {
-        let primaryScreenHeight = NSScreen.screens.first?.frame.height ?? 0
-        return CGRect(x: rect.origin.x,
-                      y: primaryScreenHeight - rect.origin.y - rect.height,
-                      width: rect.width,
-                      height: rect.height)
-    }
+    /// The panel's width in points: `width` as a fraction of the main screen's width.
+    private var windowWidth: CGFloat { CGFloat(width) * mainScreenWidth }
 
     private func createWindow() {
-        let windowWidth = initialWindowWidth
         let screen = NSScreen.main
 
         viewModel.onContentSizeChange = { [weak self] height in

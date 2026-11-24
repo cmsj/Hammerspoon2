@@ -1274,6 +1274,62 @@ extension HSChooserTests {
             harness.expectTrue("Math.abs(c.frame.w - 450) < 0.5")
         }
 
+        @Test("setting width after the chooser has been shown resizes it about its centre")
+        func testWidthResizesExistingPanel() throws {
+            let screenWidth = try #require(NSScreen.main).frame.width
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([{text: 'One'}])
+            c.show()
+            c.hide()
+            var before = c.frame
+            c.width = 0.3
+            var after = c.frame
+            """)
+            let w = try #require(harness.evalDouble("after.w"))
+            // AppKit rounds the frame to whole pixels
+            #expect(abs(w - Double(screenWidth) * 0.3) <= 1)
+            harness.expectTrue("Math.abs((before.x + before.w / 2) - (after.x + after.w / 2)) <= 1")
+            harness.expectTrue("Math.abs(before.y - after.y) < 0.5")
+            #expect(!harness.hasException)
+        }
+
+        @Test("setting width while the chooser is shown resizes it")
+        func testWidthResizesVisiblePanel() throws {
+            let screenWidth = try #require(NSScreen.main).frame.width
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create(); c.setChoices([{text: 'One'}]); c.show(); c.width = 0.4")
+            defer { harness.eval("c.hide()") }
+            let w = try #require(harness.evalDouble("c.frame.w"))
+            // AppKit rounds the frame to whole pixels
+            #expect(abs(w - Double(screenWidth) * 0.4) <= 1)
+        }
+
+        @Test("setting frame updates width to match")
+        func testFrameUpdatesWidth() throws {
+            let screenWidth = try #require(NSScreen.main).frame.width
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create(); c.frame = new HSRect(100, 100, 400, 0)")
+            let width = try #require(harness.evalDouble("c.width"))
+            #expect(abs(width - 400 / Double(screenWidth)) < 0.001)
+        }
+
+        @Test("setting an invalid width is ignored")
+        func testSetInvalidWidth() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.width = 0.4
+            c.width = 0
+            c.width = -1
+            c.width = NaN
+            c.width = Infinity
+            """)
+            harness.expectTrue("Math.abs(c.width - 0.4) < 0.0001")
+            #expect(!harness.hasException)
+        }
+
         @Test("setting an invalid frame is ignored")
         func testSetInvalidFrame() {
             let harness = makeHarness()
