@@ -146,6 +146,24 @@ import SwiftUI
     /// ```
     @objc var visibleRows: Int { get set }
 
+    /// The chooser panel's frame on screen, in the same coordinates as `hs.window` and `hs.screen`
+    /// (y = 0 at the top of the primary screen, increasing downwards).
+    ///
+    /// Before the chooser is first shown, this is where it will appear: centred horizontally on the
+    /// main screen, a quarter of the way down it. It then stays wherever it was last placed.
+    ///
+    /// Setting `frame` moves the chooser so its top left corner is at `x`, `y`, and makes it `w`
+    /// points wide. `h` is ignored, since the chooser's height always follows its rows
+    /// (see `visibleRows`). Setting a frame whose values aren't finite, or whose width isn't
+    /// positive, does nothing.
+    /// - Example:
+    /// ```js
+    /// const f = chooser.frame
+    /// console.log(`The chooser's top left corner is at ${f.x}, ${f.y}`)
+    /// chooser.frame = new HSRect(100, 100, 600, 0)
+    /// ```
+    @objc var frame: HSRect? { get set }
+
     /// Background color of the chooser panel. When `nil` (the default), the panel uses
     /// the system's translucent glass/material effect.
     ///
@@ -273,6 +291,18 @@ import SwiftUI
     /// if (!chooser.isVisible) chooser.show()
     /// ```
     @objc var isVisible: Bool { get }
+
+    /// The window ID of the chooser panel while it's on screen, or `null` while it's hidden.
+    ///
+    /// The ID is the same one `hs.window` uses, so it can be passed to any function that takes a
+    /// window ID, such as `hs.window.snapshotForID()`.
+    /// - Example:
+    /// ```js
+    /// chooser.show()
+    /// const id = chooser.windowID
+    /// hs.window.snapshotForID(id).then(img => console.log("Captured " + img.size.w + "pt wide"))
+    /// ```
+    @objc var windowID: NSNumber? { get }
 
     // MARK: Callbacks
 
@@ -579,6 +609,46 @@ import SwiftUI
     }
 
     @objc var isVisible: Bool { window?.isVisible ?? false }
+
+    @objc var windowID: NSNumber? {
+        guard let window, window.isVisible else { return nil }
+        return NSNumber(value: window.windowNumber)
+    }
+
+    @objc var frame: HSRect? {
+        get {
+            guard let window else {
+                let initial = ChooserPanel.initialFrame(
+                    on: NSScreen.main ?? NSScreen.screens[0],
+                    width: initialWindowWidth,
+                    height: viewModel.expectedHeight()
+                )
+                return Self.flipped(initial).toBridge()
+            }
+            var topDown = Self.flipped(window.frame)
+            // A hidden panel is only resized to fit its rows by the next show(), so report that height
+            if !window.isVisible {
+                topDown.size.height = viewModel.expectedHeight()
+            }
+            return topDown.toBridge()
+        }
+        set {
+            guard let newValue else { return }
+            guard newValue.x.isFinite, newValue.y.isFinite, newValue.w.isFinite, newValue.w > 0 else {
+                AKWarning("hs.chooser.frame: ignoring invalid frame \(newValue.toString())")
+                return
+            }
+            if window == nil {
+                createWindow()
+            }
+            guard let window else { return }
+            // The height follows the rows, so ignore the requested one and pin the top-left corner
+            let topDown = CGRect(x: newValue.x, y: newValue.y, width: newValue.w,
+                                 height: viewModel.expectedHeight())
+            window.setFrame(Self.flipped(topDown), display: true)
+            window.refreshShadow()
+        }
+    }
 
     @objc var selectedRow: Int {
         get { viewModel.selectedIndex }
@@ -926,9 +996,23 @@ import SwiftUI
 
     // MARK: - Private
 
+    /// The panel's width when it's first created: `width` as a fraction of the main screen's width.
+    private var initialWindowWidth: CGFloat {
+        CGFloat(width) * (NSScreen.main?.frame.width ?? 1440)
+    }
+
+    /// Converts a rect between AppKit's coordinates (origin at the bottom left of the primary screen,
+    /// y up) and Hammerspoon's (origin at its top left, y down). The conversion is its own inverse.
+    private static func flipped(_ rect: CGRect) -> CGRect {
+        let primaryScreenHeight = NSScreen.screens.first?.frame.height ?? 0
+        return CGRect(x: rect.origin.x,
+                      y: primaryScreenHeight - rect.origin.y - rect.height,
+                      width: rect.width,
+                      height: rect.height)
+    }
+
     private func createWindow() {
-        let screenWidth = NSScreen.main?.frame.width ?? 1440
-        let windowWidth = CGFloat(width) * screenWidth
+        let windowWidth = initialWindowWidth
         let screen = NSScreen.main
 
         viewModel.onContentSizeChange = { [weak self] height in
