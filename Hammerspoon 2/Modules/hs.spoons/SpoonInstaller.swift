@@ -214,31 +214,74 @@ final class SpoonInstaller {
         }
     }
 
-    /// Updates every installed Spoon that was installed from a source, one at a time, carrying on
-    /// past any that fail, and skipping any that weren't installed from a source
-    /// - Parameter report: Called with what happened to each Spoon, in name order, as it finishes
+    /// Updates every installed Spoon that was installed from a source, carrying on past any that
+    /// fail, and skipping any that weren't installed from a source. Spoons installed from the same
+    /// download are updated together, so they share it (see `withArchive()`); different downloads
+    /// are made one at a time.
+    /// - Parameter report: Called with what happened to each Spoon, in name order, as soon as it
+    ///   and every Spoon before it have finished
     /// - Returns: What happened to each Spoon, in name order
     func updateAll(_ report: (SpoonUpdateResult) -> Void) async throws -> [SpoonUpdateResult] {
-        var results: [SpoonUpdateResult] = []
-        for spoon in installed() {
-            let result: SpoonUpdateResult
-            if spoon.record == nil {
-                result = SpoonUpdateResult(name: spoon.name, status: .skipped, error: nil)
-            } else {
-                do {
-                    let updated = try await update(name: spoon.name)
-                    result = SpoonUpdateResult(name: spoon.name, status: updated ? .updated : .upToDate, error: nil)
-                } catch is CancellationError {
-                    throw CancellationError()
-                } catch {
-                    let error = error as? SpoonInstallError ?? SpoonInstallError(.io, error.localizedDescription)
-                    result = SpoonUpdateResult(name: spoon.name, status: .failed, error: error)
+        let spoons = installed()
+        var results = [SpoonUpdateResult?](repeating: nil, count: spoons.count)
+        var reported = 0
+        func finish(_ index: Int, with result: SpoonUpdateResult) {
+            results[index] = result
+            while reported < results.count, let next = results[reported] {
+                report(next)
+                reported += 1
+            }
+        }
+
+        // The Spoons (as indices into `spoons`) installed from each download, in the order each
+        // download is first needed
+        var batches: [[Int]] = []
+        var batchForDownload: [SharedDownload.Key: Int] = [:]
+        for (index, spoon) in spoons.enumerated() {
+            guard let record = spoon.record else {
+                finish(index, with: SpoonUpdateResult(name: spoon.name, status: .skipped, error: nil))
+                continue
+            }
+            // update() rejects a record without a usable URL, so it needn't share a batch
+            if let url = URL(string: record.url) {
+                let key = SharedDownload.Key(url: url, sha256: record.sha256)
+                if let batch = batchForDownload[key] {
+                    batches[batch].append(index)
+                    continue
+                }
+                batchForDownload[key] = batches.count
+            }
+            batches.append([index])
+        }
+
+        for batch in batches {
+            try await withThrowingTaskGroup(of: (Int, SpoonUpdateResult).self) { group in
+                for index in batch {
+                    let name = spoons[index].name
+                    group.addTask {
+                        let result = try await self.updateResult(for: name)
+                        return (index, result)
+                    }
+                }
+                for try await (index, result) in group {
+                    finish(index, with: result)
                 }
             }
-            report(result)
-            results.append(result)
         }
-        return results
+        return results.compactMap { $0 }
+    }
+
+    /// Updates one Spoon for `updateAll()`, turning any error but cancellation into a result
+    private func updateResult(for name: String) async throws -> SpoonUpdateResult {
+        do {
+            let updated = try await update(name: name)
+            return SpoonUpdateResult(name: name, status: updated ? .updated : .upToDate, error: nil)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            let error = error as? SpoonInstallError ?? SpoonInstallError(.io, error.localizedDescription)
+            return SpoonUpdateResult(name: name, status: .failed, error: error)
+        }
     }
 
     /// Removes an installed Spoon

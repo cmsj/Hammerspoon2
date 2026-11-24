@@ -577,11 +577,14 @@ struct HSSpoonsTests {
             renamed.spoon(at: "Alarms.spoon2", name: "Alarms")
             ctx.downloads.serve(renamed.data, at: otherURL)
 
-            // Alarm is updated first, then Clock waits for its download
+            // Alarm is updated first, then Clock and Greeter wait for the one download they share
+            let requestedBefore = ctx.downloads.requested.count
             ctx.downloads.close(repositoryURL)
             ctx.start("hs.spoons.updateAll().then(r => r.map(x => `${x.name}:${x.status}:${x.error === null ? 'ok' : x.error.code}`).join(','))")
             #expect(ctx.harness.evalBool("hs.spoons.isUpdating") == true)
-            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.downloads.waitingCount == 1 })
+            #expect(await ctx.harness.waitForAsync(timeout: 5) {
+                ctx.downloads.waitingCount == 1 && ctx.module.installer.downloadCallerCount == 2
+            })
             #expect(ctx.harness.evalBool("hs.spoons.isUpdating") == true)
             ctx.downloads.open(repositoryURL)
             #expect(await ctx.settled()?.toString() == "Alarm:failed:ENOTFOUND,Clock:upToDate:ok,Greeter:updated:ok,Local:skipped:ok")
@@ -591,6 +594,7 @@ struct HSSpoonsTests {
             #expect(try ctx.installedVersion("Clock") == "1.0.0")
             #expect(try ctx.installedVersion("Alarm") == "1.0.0")
             #expect(!ctx.downloads.requested.contains { $0.absoluteString.contains("Local") })
+            #expect(ctx.downloads.requested.dropFirst(requestedBefore).map(\.absoluteString) == [otherURL, repositoryURL])
 
             func logged(_ fragment: String) -> Bool {
                 HammerspoonLog.shared.entries(minimumLevel: .Info).contains { $0.msg.contains(fragment) }
