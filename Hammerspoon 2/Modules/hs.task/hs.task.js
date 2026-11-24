@@ -17,7 +17,7 @@
      * @param {Function} legacyStreamCallback - Legacy streaming callback (optional)
      * @example
      * hs.task.runAsync("/bin/echo", ["hi"]).then(r => console.log(r.stdout))
-     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The task's result
+     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The task's result. If the task exits with a non-zero status or is killed by a signal, the promise rejects with an Error that also has the result's exitCode, stdout, stderr and reason
      */
     hs.task.runAsync = function(launchPath, args, options, legacyStreamCallback) {
         return new Promise((resolve, reject) => {
@@ -69,9 +69,13 @@
                     reason: reason
                 };
 
-                // Reject promise on non-zero exit codes or abnormal termination
+                // Reject promise on non-zero exit codes or abnormal termination,
+                // with an Error that also carries the result's fields
                 if (exitCode !== 0 || (reason && reason !== 'exit')) {
-                    reject(result);
+                    const message = reason === 'uncaughtSignal'
+                        ? `${launchPath} was terminated by signal ${exitCode}`
+                        : `${launchPath} exited with status ${exitCode}`;
+                    reject(Object.assign(new Error(message), result));
                 } else {
                     resolve(result);
                 }

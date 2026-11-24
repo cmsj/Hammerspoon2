@@ -589,6 +589,62 @@ import JavaScriptCore
         #expect(capturedExitCode == 5, "Should capture non-zero exit code")
     }
 
+    @Test("hs.task.runAsync() rejects with an Error that carries the result")
+    func testRunRejectsWithError() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var rejection: [String: Any]?
+        harness.registerCallback("onReject") { (info: [String: Any]) in
+            rejection = info
+        }
+
+        harness.eval("""
+        hs.task.runAsync('/bin/sh', ['-c', 'echo out; echo err >&2; exit 5']).catch(function(error) {
+            onReject({
+                isError: error instanceof Error,
+                message: error.message,
+                exitCode: error.exitCode,
+                stdout: error.stdout,
+                stderr: error.stderr,
+                reason: error.reason
+            });
+        });
+        """)
+
+        let success = await harness.waitForAsync(timeout: 2.0) { rejection != nil }
+        #expect(success, "Promise should reject on failure")
+        #expect(rejection?["isError"] as? Bool == true)
+        #expect(rejection?["message"] as? String == "/bin/sh exited with status 5")
+        #expect(rejection?["exitCode"] as? Int == 5)
+        #expect(rejection?["stdout"] as? String == "out\n")
+        #expect(rejection?["stderr"] as? String == "err\n")
+        #expect(rejection?["reason"] as? String == "exit")
+    }
+
+    @Test("hs.task.runAsync() rejection names the signal that killed the task")
+    func testRunRejectsWithSignalError() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var rejection: [String: Any]?
+        harness.registerCallback("onReject") { (info: [String: Any]) in
+            rejection = info
+        }
+
+        harness.eval("""
+        hs.task.runAsync('/bin/sh', ['-c', 'kill -TERM $$']).catch(function(error) {
+            onReject({ isError: error instanceof Error, message: error.message, reason: error.reason });
+        });
+        """)
+
+        let success = await harness.waitForAsync(timeout: 2.0) { rejection != nil }
+        #expect(success, "Promise should reject when the task is killed")
+        #expect(rejection?["isError"] as? Bool == true)
+        #expect(rejection?["message"] as? String == "/bin/sh was terminated by signal 15")
+        #expect(rejection?["reason"] as? String == "uncaughtSignal")
+    }
+
     @Test("hs.task.runAsync() supports onOutput streaming callback")
     func testRunOnOutput() async {
         let harness = JSTestHarness()

@@ -107,33 +107,33 @@ import SwiftUI
     // MARK: Window position and size
 
     /// The canvas window's current position and size
-    /// - Returns: {object} A `{x, y, w, h}` dictionary, in the same unflipped AppKit screen coordinates as `create()`
+    /// - Returns: {object} A `{x, y, w, h}` dictionary, in the same screen coordinates as `create()` and `hs.screen` (`y = 0` at the top of the primary screen)
     @objc func frame() -> [String: Any]
 
     /// Move and/or resize the canvas window
-    /// - Parameter rect: {object} A `{x, y, w, h}` dictionary. Any keys left out keep their current value
+    /// - Parameter rect: {HSRect | object} An HSRect (e.g. a window's or screen's `frame`) or a `{x, y, w, h}` dictionary, in the same screen coordinates as `hs.screen` and `hs.window`. Any keys left out of a dictionary keep their current value
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js
     /// c.setFrame({x: 200, y: 200, w: 300, h: 300})
+    /// c.setFrame(hs.window.focusedWindow().frame)
     /// ```
-    @objc func setFrame(_ rect: [String: Any]) -> HSCanvas
+    @objc func setFrame(_ rect: JSValue) -> HSCanvas
 
     /// The canvas window's current top-left corner
     ///
-    /// "Top-left" here means the same unflipped AppKit sense `create()`/`frame()` use:
-    /// the point at the window's highest `y` (its screen-visual top), not `y = 0`.
+    /// This is the same point as `frame()`'s `x`/`y`.
     /// - Returns: {object} An `{x, y}` dictionary
     @objc func topLeft() -> [String: Any]
 
     /// Move the canvas window without changing its size
-    /// - Parameter point: {object} An `{x, y}` dictionary giving the new top-left corner. Any keys left out keep their current value
+    /// - Parameter point: {HSPoint | object} An HSPoint or an `{x, y}` dictionary giving the new top-left corner. Any keys left out of a dictionary keep their current value
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js
-    /// c.setTopLeft({x: 200, y: 800})
+    /// c.setTopLeft({x: 200, y: 100})
     /// ```
-    @objc func setTopLeft(_ point: [String: Any]) -> HSCanvas
+    @objc func setTopLeft(_ point: JSValue) -> HSCanvas
 
     /// The canvas window's current size
     /// - Returns: {object} A `{w, h}` dictionary
@@ -226,10 +226,8 @@ import SwiftUI
 
     /// Append one or more elements to the end of the canvas
     ///
-    /// Element `frame`/`center`/`coordinates` values are y-down (`y = 0` at the top of
-    /// the canvas) -- a different sense from the canvas *window's* own `x`/`y` position,
-    /// which is unflipped AppKit screen coordinates. See `hs.canvas`'s module-level docs
-    /// for the full explanation.
+    /// Element `frame`/`center`/`coordinates` values are relative to the canvas itself:
+    /// `{x: 0, y: 0}` is the canvas's top-left corner, and `y` increases downward.
     /// - Parameter elements: {object[]} Array of element dictionaries (each needs at least a `type`)
     /// - Returns: Self for chaining
     /// - Throws: true
@@ -473,6 +471,7 @@ import SwiftUI
 
     @objc let identifier = UUID().uuidString
 
+    /// The window's frame in Hammerspoon screen coordinates (`y = 0` at the top of the primary screen)
     private var canvasFrame: CGRect
     private var nsWindow: NSWindow?
     private weak var module: HSCanvasModule?
@@ -510,6 +509,9 @@ import SwiftUI
     /// The window's actual collectionBehavior, for tests -- not exposed to JS.
     var windowCollectionBehavior: NSWindow.CollectionBehavior? { nsWindow?.collectionBehavior }
 
+    /// The window's actual frame, in AppKit screen coordinates, for tests -- not exposed to JS.
+    var windowAppKitFrame: CGRect? { nsWindow?.frame }
+
     private var windowLevelRaw: Int?
     private var windowBehaviorRaw: NSWindow.CollectionBehavior = []
     private var isClickActivating = true
@@ -529,11 +531,11 @@ import SwiftUI
         module.canvases.add(self)
     }
 
-    convenience init(dict: [String: Any], module: HSCanvasModule) {
-        let x = (dict["x"] as? NSNumber)?.doubleValue ?? 0
-        let y = (dict["y"] as? NSNumber)?.doubleValue ?? 0
-        let w = (dict["w"] as? NSNumber)?.doubleValue ?? 200
-        let h = (dict["h"] as? NSNumber)?.doubleValue ?? 200
+    convenience init(rect: JSValue, module: HSCanvasModule) {
+        let x = rect.optionalNumber(forProperty: "x") ?? 0
+        let y = rect.optionalNumber(forProperty: "y") ?? 0
+        let w = rect.optionalNumber(forProperty: "w") ?? 200
+        let h = rect.optionalNumber(forProperty: "h") ?? 200
         self.init(frame: CGRect(x: x, y: y, width: w, height: h), module: module)
     }
 
@@ -572,7 +574,7 @@ import SwiftUI
                 styleMask.insert(.nonactivatingPanel)
             }
             let window = HSCanvasWindow(
-                contentRect: canvasFrame,
+                contentRect: canvasFrame.flippedScreenCoordinates(),
                 styleMask: styleMask,
                 backing: .buffered,
                 defer: false,
@@ -737,54 +739,61 @@ import SwiftUI
 
     // MARK: - Window position and size
 
+    /// The current frame, in Hammerspoon screen coordinates
+    private var currentFrame: CGRect {
+        nsWindow?.frame.flippedScreenCoordinates() ?? canvasFrame
+    }
+
+    /// Records a new frame, in Hammerspoon screen coordinates, and moves the window to it
+    private func applyFrame(_ frame: CGRect) {
+        canvasFrame = frame
+        nsWindow?.setFrame(frame.flippedScreenCoordinates(), display: true)
+    }
+
     @objc func frame() -> [String: Any] {
-        let rect = nsWindow?.frame ?? canvasFrame
+        let rect = currentFrame
         return ["x": rect.origin.x, "y": rect.origin.y, "w": rect.size.width, "h": rect.size.height]
     }
 
-    @objc func setFrame(_ rect: [String: Any]) -> HSCanvas {
-        let x = (rect["x"] as? NSNumber)?.doubleValue ?? Double(canvasFrame.origin.x)
-        let y = (rect["y"] as? NSNumber)?.doubleValue ?? Double(canvasFrame.origin.y)
-        let w = (rect["w"] as? NSNumber)?.doubleValue ?? Double(canvasFrame.size.width)
-        let h = (rect["h"] as? NSNumber)?.doubleValue ?? Double(canvasFrame.size.height)
-        canvasFrame = CGRect(x: x, y: y, width: w, height: h)
-        nsWindow?.setFrame(canvasFrame, display: true)
+    @objc func setFrame(_ rect: JSValue) -> HSCanvas {
+        let current = currentFrame
+        applyFrame(CGRect(
+            x: rect.optionalNumber(forProperty: "x") ?? current.origin.x,
+            y: rect.optionalNumber(forProperty: "y") ?? current.origin.y,
+            width: rect.optionalNumber(forProperty: "w") ?? current.size.width,
+            height: rect.optionalNumber(forProperty: "h") ?? current.size.height
+        ))
         return self
     }
 
     @objc func topLeft() -> [String: Any] {
-        let rect = nsWindow?.frame ?? canvasFrame
-        return ["x": rect.origin.x, "y": rect.origin.y + rect.size.height]
+        let rect = currentFrame
+        return ["x": rect.origin.x, "y": rect.origin.y]
     }
 
-    @objc func setTopLeft(_ point: [String: Any]) -> HSCanvas {
-        let x = (point["x"] as? NSNumber)?.doubleValue ?? Double(canvasFrame.origin.x)
-        let topY = (point["y"] as? NSNumber)?.doubleValue ?? Double(canvasFrame.origin.y + canvasFrame.size.height)
-        canvasFrame = CGRect(
-            origin: CGPoint(x: x, y: topY - canvasFrame.size.height),
-            size: canvasFrame.size
-        )
-        nsWindow?.setFrame(canvasFrame, display: true)
+    @objc func setTopLeft(_ point: JSValue) -> HSCanvas {
+        let current = currentFrame
+        applyFrame(CGRect(
+            origin: CGPoint(
+                x: point.optionalNumber(forProperty: "x") ?? current.origin.x,
+                y: point.optionalNumber(forProperty: "y") ?? current.origin.y
+            ),
+            size: current.size
+        ))
         return self
     }
 
     @objc func size() -> [String: Any] {
-        let rect = nsWindow?.frame ?? canvasFrame
+        let rect = currentFrame
         return ["w": rect.size.width, "h": rect.size.height]
     }
 
     @objc func setSize(_ dimensions: [String: Any]) -> HSCanvas {
-        let w = (dimensions["w"] as? NSNumber)?.doubleValue ?? Double(canvasFrame.size.width)
-        let h = (dimensions["h"] as? NSNumber)?.doubleValue ?? Double(canvasFrame.size.height)
-        // canvasFrame.origin is the AppKit bottom-left, not the top-left this method
-        // promises to preserve -- recompute the origin from the previous top edge so a
-        // height change doesn't silently shift where the canvas visually sits.
-        let topY = canvasFrame.origin.y + canvasFrame.size.height
-        canvasFrame = CGRect(
-            origin: CGPoint(x: canvasFrame.origin.x, y: topY - h),
-            size: CGSize(width: w, height: h)
-        )
-        nsWindow?.setFrame(canvasFrame, display: true)
+        let current = currentFrame
+        let w = (dimensions["w"] as? NSNumber)?.doubleValue ?? Double(current.size.width)
+        let h = (dimensions["h"] as? NSNumber)?.doubleValue ?? Double(current.size.height)
+        // The origin is the top-left corner, so keeping it keeps the canvas where it visually sits.
+        applyFrame(CGRect(origin: current.origin, size: CGSize(width: w, height: h)))
         return self
     }
 
