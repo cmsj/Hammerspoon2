@@ -473,7 +473,7 @@ import SwiftUI
     @objc let identifier = UUID().uuidString
 
     // Window properties
-    /// The window's frame in Hammerspoon screen coordinates (`y = 0` at the top of the primary screen)
+    /// The whole window's frame, title bar included, in Hammerspoon screen coordinates (`y = 0` at the top of the primary screen)
     private var windowFrame: CGRect
     private var nsWindow: NSWindow?
     private var windowBackgroundColor: Color = .clear
@@ -585,9 +585,12 @@ import SwiftUI
     }
 
     private func makeWindow(root: any HSUIElement) -> NSWindow {
+        // windowFrame is the whole window, title bar included, so lay the content out in what's left
+        let styleMask = resolvedStyleMask()
+        let contentRect = NSWindow.contentRect(forFrameRect: windowFrame.flippedScreenCoordinates(), styleMask: styleMask)
         let window = HSUIWindowNSWindow(
-            contentRect: windowFrame.flippedScreenCoordinates(),
-            styleMask: resolvedStyleMask(),
+            contentRect: contentRect,
+            styleMask: styleMask,
             backing: .buffered,
             defer: false
         )
@@ -595,7 +598,7 @@ import SwiftUI
         let contentView = UICanvasView(
             element: root,
             backgroundColor: windowBackgroundColor,
-            containerSize: windowFrame.size
+            containerSize: contentRect.size
         )
         window.contentView = NSHostingView(rootView: contentView)
         window.isOpaque = false

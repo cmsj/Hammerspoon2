@@ -268,8 +268,8 @@ import SwiftUI
     /// SwiftUI-like syntax with shapes, text, and layout containers.
     ///
     /// The window is placed in the same screen coordinates as `hs.screen` and `hs.window`:
-    /// `y = 0` is the top of the primary screen, and `y` increases downward. The rect gives the
-    /// window's content area; a titled window's title bar sits above it.
+    /// `y = 0` is the top of the primary screen, and `y` increases downward. Like `hs.window`'s
+    /// `frame`, the rect is the whole window, including its title bar if it has one.
     ///
     /// - Parameter rect: {HSRect | object} The window's frame: an HSRect (e.g. a screen's `frame`) or a dictionary with keys `x`, `y`, `w`, `h` (all numbers)
     /// - Returns: An `HSUIWindow` object for chaining

@@ -261,7 +261,7 @@ hs.ui.alert("Saved!").duration(2).show()
 A small window with a couple of elements and a click handler:
 
 ```js
-const win = hs.ui.window({ x: 100, y: 100, w: 240, h: 120 })
+const win = hs.ui.window({ x: 100, y: 100, w: 240, h: 150 })
     .windowTitle("Quick Actions")
     .vstack()
         .text("Pick something:")
@@ -280,7 +280,7 @@ And a window whose text updates live via a reactive value, driven by a timer:
 ```js
 const clockText = hs.ui.string(new Date().toLocaleTimeString())
 
-const clockWindow = hs.ui.window({ x: 20, y: 20, w: 160, h: 60 })
+const clockWindow = hs.ui.window({ x: 20, y: 60, w: 160, h: 90 })
     .vstack()
         .text(clockText)
     .end()

@@ -277,8 +277,9 @@ struct HSUITests {
             let rectWin = try #require(harness.evalValue("r")?.toObjectOf(HSUIWindow.self) as? HSUIWindow)
             let nsWindow = try #require(NSApp.windows.first { ($0.delegate as AnyObject?) === win })
             let rectNSWindow = try #require(NSApp.windows.first { ($0.delegate as AnyObject?) === rectWin })
-            // A titled window's rect is its content area, with the title bar above it
-            #expect(nsWindow.contentRect(forFrameRect: nsWindow.frame) == CGRect(x: 10, y: primaryHeight - 250, width: 100, height: 50))
+            // A titled window's rect is the whole window, title bar included, like hs.window's frame
+            #expect(nsWindow.frame == CGRect(x: 10, y: primaryHeight - 250, width: 100, height: 50))
+            #expect(nsWindow.contentRect(forFrameRect: nsWindow.frame).height < 50)
             // A borderless window at y = 0 covers the menu bar: AppKit mustn't push it down below it
             #expect(rectNSWindow.frame == CGRect(x: 30, y: primaryHeight - 60, width: 120, height: 60))
             harness.eval("w.destroy(); r.destroy()")
