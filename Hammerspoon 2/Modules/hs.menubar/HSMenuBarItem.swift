@@ -75,9 +75,9 @@ import JavaScriptCore
     /// - `shortcut` (string or object): A keyboard shortcut to show at the right-hand side of the item. Either a
     ///   string of modifier symbols (`⌘` `⇧` `⌥` `⌃`) followed by one key, as the menu shows it (`"⌘T"`, `"⇧⌘N"`,
     ///   or just `"F"` for no modifiers), or an object with the modifiers and key spelled out
-    ///   (`{ mods: ["cmd", "shift"], key: "n" }`; leave out `mods` for no modifiers). The key can be a character
-    ///   or a key name such as `"return"`, `"delete"`, `"left"` or `"f5"`, and modifier and key names are the
-    ///   same as for `hs.hotkey.bind()`.
+    ///   (`{ mods: ["cmd", "shift"], key: "n" }`; leave out `mods` for no modifiers). The key can be a character,
+    ///   a key name such as `"return"`, `"delete"`, `"left"` or `"f5"`, or the symbol a menu draws for it such as
+    ///   `↩`, `⌫`, `⎋` or `←` (`"⌘⌫"`). Modifier and key names are the same as for `hs.hotkey.bind()`.
     ///
     ///   **A menu shortcut is not a system-wide hotkey.** Pressing it chooses the item only while the menu is
     ///   open; while the menu is closed it does nothing. To run something from anywhere with a key combination,

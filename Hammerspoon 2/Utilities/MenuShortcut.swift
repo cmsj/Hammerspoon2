@@ -104,13 +104,35 @@ struct MenuShortcut: Equatable {
             guard let keyName = KeyboardLayout.shared.keyCodes.name(forKeyCode: code) else { return nil }
             name = keyName
         }
-        if let special = specialKeys[name] {
+        if let special = specialKeys[symbolKeyNames[name] ?? name] {
             return special
         }
         let character = KeyCodeTable.characterAliases[name] ?? name
         guard character.count == 1 else { return nil }
         return character
     }
+
+    /// The symbols menus draw for named keys, so a shortcut can be written as the menu shows it (e.g. `"⌘⌫"`).
+    private static let symbolKeyNames: [String: String] = [
+        // swiftlint:disable colon
+        "↩": "return",
+        "⏎": "return",
+        "⌅": "padenter",
+        "⇥": "tab",
+        "␣": "space",
+        "⌫": "delete",
+        "⌦": "forwarddelete",
+        "⎋": "escape",
+        "↖": "home",
+        "↘": "end",
+        "⇞": "pageup",
+        "⇟": "pagedown",
+        "←": "left",
+        "→": "right",
+        "↑": "up",
+        "↓": "down",
+        // swiftlint:enable colon
+    ]
 
     private static let backspace = "\u{8}"
 
