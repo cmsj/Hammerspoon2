@@ -725,6 +725,14 @@ local_cleanup() {
     fi
 }
 
+# local_unlock: release this run's lock on its work directory, if it holds it.
+local_unlock() {
+    if [ -n "${LOCAL_LOCK:-}" ]; then
+        rm -rf "$LOCAL_LOCK"
+        LOCAL_LOCK=""
+    fi
+}
+
 cmd_local() {
     local pr
     for pr in ${LOCAL_PRS[@]+"${LOCAL_PRS[@]}"}; do
@@ -754,6 +762,24 @@ cmd_local() {
     done
     [ -n "$label" ] || label="$(git rev-parse --short "$base_sha")"
     local work="$WORK_ROOT/local/$label"
+
+    # Another run building the same pull requests would share (and delete)
+    # this work directory, so only one may use it at a time. A lock left by a
+    # run that's no longer alive is taken over.
+    mkdir -p "$WORK_ROOT/local"
+    local lock="$work.lock" holder
+    if ! mkdir "$lock" 2>/dev/null; then
+        holder="$(cat "$lock/pid" 2>/dev/null || true)"
+        if [ -n "$holder" ] && kill -0 "$holder" 2>/dev/null; then
+            die "another local build (pid $holder) is already using $work"
+        fi
+        rm -rf "$lock"
+        mkdir "$lock" || die "couldn't lock $work"
+    fi
+    LOCAL_LOCK="$lock"
+    echo $$ > "$lock/pid"
+    trap 'local_cleanup; local_unlock' EXIT
+
     rm -rf "$work"
     git worktree prune
     mkdir -p "$work"
@@ -761,7 +787,6 @@ cmd_local() {
     # Build in a throwaway worktree, so neither this checkout nor its
     # uncommitted changes are touched or included.
     LOCAL_SRC="$work/src"
-    trap local_cleanup EXIT
     git worktree add --quiet --detach "$LOCAL_SRC" "$base_sha"
     echo "Base: $LOCAL_BASE ($(git log -1 --format='%h %s' "$base_sha"))"
 
@@ -815,9 +840,20 @@ cmd_local() {
         if [ -e "$installed" ]; then
             [ "$(plutil -extract CFBundleIdentifier raw "$installed/Contents/Info.plist" 2>/dev/null || true)" = "$bundle_id" ] \
                 || die "$installed isn't $APP_NAME ($bundle_id), so it won't be replaced"
-            rm -rf "$installed"
         fi
-        ditto "$app" "$installed"
+        # Copy beside the installed app first, so a failed copy leaves it alone.
+        local incoming="$INSTALL_DIR/.$APP_NAME.app.new-$$" outgoing="$INSTALL_DIR/.$APP_NAME.app.old-$$"
+        rm -rf "$incoming" "$outgoing"
+        ditto "$app" "$incoming" || { rm -rf "$incoming"; die "couldn't copy the build to $INSTALL_DIR"; }
+        if [ -e "$installed" ]; then
+            mv "$installed" "$outgoing" || { rm -rf "$incoming"; die "couldn't move $installed aside"; }
+        fi
+        if ! mv "$incoming" "$installed"; then
+            [ ! -e "$outgoing" ] || mv "$outgoing" "$installed"
+            rm -rf "$incoming"
+            die "couldn't move the build into $installed"
+        fi
+        rm -rf "$outgoing"
         open "$installed"
     fi
 
