@@ -136,6 +136,14 @@ nonisolated enum TestAppControl {
         send("closeWindows", to: pid)
     }
 
+    /// Has a copy change the titles of the windows `openWindow` and `openFullScreenWindow` opened.
+    /// - Parameters:
+    ///   - title: The new title
+    ///   - pid: The copy; the suite's copy by default
+    static func retitleWindows(to title: String, in pid: pid_t? = TestAppControl.pid) {
+        send("retitleWindows", to: pid, ["title": title])
+    }
+
     /// Has a copy put the window titled `title` back in front just after each time it becomes
     /// active, as Google Chrome does with its previous main window (#356).
     /// - Parameters:

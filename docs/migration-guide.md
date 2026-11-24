@@ -199,7 +199,8 @@ for what changed within it.
 | `hs.watchable` | Gone | only per-module watchers remain, no generic pub/sub |
 | `hs.webview` (+`.datastore`,`.toolbar`,`.usercontent`) | → `hs.ui` | [details](#rebuilding-ui-with-hsui) |
 | `hs.wifi` (+`.watcher`) | Present | watcher folded in, new permission gate |
-| `hs.window` (+`.filter`,`.highlight`,`.layout`,`.switcher`,`.tiling`) | Present, ecosystem gone | [details](#window-management) |
+| `hs.window` (+`.highlight`,`.layout`,`.switcher`,`.tiling`) | Present, ecosystem gone | [details](#window-management) |
+| `hs.window.filter` | → `hs.windowfilter` | v2-style API, title strings match exactly, see [details](#hswindowfilter) |
 
 ## Present, but check before you port
 
@@ -356,14 +357,11 @@ Two real capability regressions to know about:
 
 Core `hs.window` covers direct queries and single-window actions well — `focusedWindow()`,
 `allWindows()`, `windowsForApp()`, `forID()` (v1's `hs.window.get(id)`), and instance actions like `focus()`, `raise()`,
-`toggleFullscreen()`, `centerOnScreen()`. What's gone is the rest of v1's window ecosystem,
+`toggleFullscreen()`, `centerOnScreen()`, and v1's directional `windowsToEast()`/`focusWindowEast()`
+family. Window filters are now
+[`hs.windowfilter`](#hswindowfilter). What's gone is the rest of v1's window ecosystem,
 module by module:
 
-- **`hs.window.filter`** — no equivalent. This was one of v1's most-used modules: persistent,
-  rule-based window filters with subscriptions to lifecycle events. `hs.window` gives you
-  one-shot queries and direct actions only, with no "tell me whenever a window matching X
-  changes" subscription system. Reactive window management needs to be hand-built on top of
-  `hs.ax`'s app-level `on()` notifications.
 - **`hs.window.highlight`** — no equivalent. The animated focus flash/dim effects have nothing
   built-in; approximate it yourself with `hs.ui` if needed.
 - **`hs.window.layout`** — no equivalent saved-layout/continuous-enforcement system.
@@ -379,9 +377,72 @@ module by module:
   with `hs.window` + `hs.ui`.
 
 If your v1 config's window management was mostly "get the focused window, move/resize/center
-it," porting to `hs.window` is straightforward. If it leaned on filters, subscriptions, saved
-layouts, or a switcher/highlight/expose UI, expect to rebuild that logic yourself on the
-smaller primitive set (`hs.window` + `hs.ax` + `hs.ui` + `hs.screen`).
+it," porting to `hs.window` is straightforward. If it leaned on saved layouts, or a
+switcher/highlight/expose UI, expect to rebuild that logic yourself on the smaller primitive set
+(`hs.window` + `hs.windowfilter` + `hs.ax` + `hs.ui` + `hs.screen`).
+
+### hs.windowfilter
+
+v1's `hs.window.filter` is now the top-level `hs.windowfilter` module. The ideas are the same: a
+filter has an `override` rule every window must pass, rules for particular applications, and a
+`default` rule for the rest, with the same conditions (`visible`, `currentSpace`, `fullscreen`,
+`allowTitles`, `allowRoles`, and so on). The API is v2-style:
+
+```lua
+-- v1
+local wf = hs.window.filter.new{ override = { currentSpace = true }, default = { visible = true },
+                                 Finder = false, Safari = { allowTitles = 1 } }
+wf:subscribe(hs.window.filter.windowFocused, function(win, appName) print(appName) end)
+```
+
+```js
+// v2
+const wf = hs.windowfilter.create({
+    override: { currentSpace: true },
+    default: { visible: true },
+    apps: { Finder: false, Safari: { allowTitles: 1 } },
+})
+wf.on("windowFocused", (win, appName) => console.log(appName))
+```
+
+| v1 | v2 |
+|---|---|
+| `hs.window.filter.new()` | `hs.windowfilter.create()` |
+| `hs.window.filter.new(true)` | `hs.windowfilter.create({})`: every window with a standard role, visible or not |
+| `hs.window.filter.new(false)` | `hs.windowfilter.create({ default: false })` |
+| `hs.window.filter.new{ Safari = true, ... }` | `hs.windowfilter.create({ default: false, apps: { Safari: true } })`: app rules go under `apps` |
+| `hs.window.filter.new(fn)` | `hs.windowfilter.create(fn)` |
+| `hs.window.filter.copy(wf)` | `wf.duplicate()` |
+| `hs.window.filter.default` / `.defaultCurrentSpace` | `hs.windowfilter.defaultFilter` / `.currentSpaceFilter` |
+| `wf:setAppFilter(app, rule)` | `wf.setAppRule(app, rule)`; `null` removes it |
+| `wf:setDefaultFilter(rule)` / `wf:setOverrideFilter(rule)` | `wf.setDefaultRule(rule)` / `wf.setOverrideRule(rule)` |
+| `wf:setFilters(t)` / `wf:getFilters()` | `wf.setRules(rules)` / `wf.rules` |
+| `wf:setSortOrder(hs.window.filter.sortByCreated)` | `wf.sortOrder = "created"` |
+| `wf:getWindows()` | `wf.windows()` |
+| `wf:subscribe(event, fn)` / `wf:unsubscribe(event, fn)` | `wf.on(event, fn)` / `wf.off(event, fn)`; also `once()` |
+| `wf:subscribe(event, fn, true)` (immediate) | `wf.windows().forEach(fn)`, then `wf.on(event, fn)` |
+| `wf:unsubscribeAll()` | `off()` each listener |
+| `hs.window.filter.ignoreAlways` | gone: background-only applications and helper processes are skipped automatically |
+| `hs.window.filter.switchedToSpace()`, `.forceRefreshOnSpaceChange` | gone: Space changes are always tracked |
+
+Things that behave differently:
+
+- **Title strings match exactly.** v1 matched `allowTitles`/`rejectTitles` strings as Lua
+  patterns anywhere in the title, so `"Preferences"` matched `"Safari Preferences"`, and
+  punctuation such as `-` had special meanings. In v2 a string must be the whole title; use a
+  RegExp for anything else, e.g. `/Preferences/`. RegExps support the `i`, `m` and `s` flags.
+- **Applications can be named by bundle ID** as well as by name.
+- **The override rule allows any window role** unless it has its own `allowRoles`, so it no
+  longer also applies `allowedWindowRoles`.
+- **Focus follows visibility.** A hidden or minimized window doesn't count as focused, so
+  unhiding an application emits `windowUnhidden`, `windowVisible`, then `windowFocused`. Focus
+  moving between two windows of the same application now emits `windowUnfocused` for the first.
+- **`hasNoWindows`** is only emitted once the last allowed window has gone.
+- **Hammerspoon's own windows are never included.**
+- **Directional focus**: `wf:focusWindowEast(win, frontmost, strict)` is
+  `wf.focusWindowEast({ window, frontmost, strict })`, and `hs.window.filter.focusEast()` is
+  `hs.windowfilter.focusEast()`. `HSWindow` has its own `windowsToEast()`/`focusWindowEast()`
+  family, which only considers windows actually on screen.
 
 ### hs.power
 

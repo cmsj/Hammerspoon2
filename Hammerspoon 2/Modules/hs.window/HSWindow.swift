@@ -128,6 +128,24 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// ```
     @objc var isStandard: Bool { get }
 
+    /// The window's accessibility role, usually `"AXWindow"`, or null if it can't be read
+    /// - Example:
+    /// ```js
+    /// const win = hs.window.focusedWindow()
+    /// console.log(win.role)
+    /// ```
+    @objc var role: String? { get }
+
+    /// The window's accessibility subrole, which says what kind of window it is: e.g.
+    /// `"AXStandardWindow"` for an ordinary window, `"AXDialog"`, `"AXSystemDialog"` or
+    /// `"AXFloatingWindow"`. Null if the window has no subrole, or it can't be read.
+    /// - Example:
+    /// ```js
+    /// const win = hs.window.focusedWindow()
+    /// if (win.subrole === "AXDialog") console.log("A dialog has focus")
+    /// ```
+    @objc var subrole: String? { get }
+
     // MARK: - Geometry
 
     /// The window's position on screen, as an HSPoint
@@ -293,6 +311,124 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// ```
     @objc func centerOnScreen()
 
+    // MARK: - Neighbouring windows
+
+    /// The windows to the right of this one, nearest first
+    ///
+    /// Windows straight ahead are preferred to nearer windows off to the side.
+    /// - Parameter options?: How to choose the windows
+    ///   - windows?: {HSWindow[]} The windows to choose from, e.g. those allowed by a window filter. Defaults to every window on screen. Windows that aren't on screen are always ignored
+    ///   - frontmost?: {boolean} `true` to put windows that can be seen before windows hidden behind others
+    ///   - strict?: {boolean} `true` to only consider windows within 45° of the direction, rather than anywhere on that side of this window
+    /// - Returns: {HSWindow[]} The windows to the right of this one, nearest first
+    /// - Example:
+    /// ```js
+    /// const next = hs.window.focusedWindow()?.windowsToEast()[0]
+    /// if (next) console.log("Next window east: " + next.title)
+    /// ```
+    @objc func windowsToEast(_ options: [String: Any]?) -> [HSWindow]
+
+    /// Focuses the nearest window to the right of this one
+    /// - Parameter options?: How to choose the windows
+    ///   - windows?: {HSWindow[]} The windows to choose from, e.g. those allowed by a window filter. Defaults to every window on screen. Windows that aren't on screen are always ignored
+    ///   - frontmost?: {boolean} `true` to put windows that can be seen before windows hidden behind others
+    ///   - strict?: {boolean} `true` to only consider windows within 45° of the direction, rather than anywhere on that side of this window
+    /// - Returns: `true` if a window was focused, `false` if there was none to focus
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.bind(["cmd", "ctrl"], "right", () => {
+    ///     hs.window.focusedWindow()?.focusWindowEast({ frontmost: true })
+    /// })
+    /// ```
+    @objc func focusWindowEast(_ options: [String: Any]?) -> Bool
+
+    /// The windows to the left of this one, nearest first
+    ///
+    /// Windows straight ahead are preferred to nearer windows off to the side.
+    /// - Parameter options?: How to choose the windows
+    ///   - windows?: {HSWindow[]} The windows to choose from, e.g. those allowed by a window filter. Defaults to every window on screen. Windows that aren't on screen are always ignored
+    ///   - frontmost?: {boolean} `true` to put windows that can be seen before windows hidden behind others
+    ///   - strict?: {boolean} `true` to only consider windows within 45° of the direction, rather than anywhere on that side of this window
+    /// - Returns: {HSWindow[]} The windows to the left of this one, nearest first
+    /// - Example:
+    /// ```js
+    /// const next = hs.window.focusedWindow()?.windowsToWest()[0]
+    /// if (next) console.log("Next window west: " + next.title)
+    /// ```
+    @objc func windowsToWest(_ options: [String: Any]?) -> [HSWindow]
+
+    /// Focuses the nearest window to the left of this one
+    /// - Parameter options?: How to choose the windows
+    ///   - windows?: {HSWindow[]} The windows to choose from, e.g. those allowed by a window filter. Defaults to every window on screen. Windows that aren't on screen are always ignored
+    ///   - frontmost?: {boolean} `true` to put windows that can be seen before windows hidden behind others
+    ///   - strict?: {boolean} `true` to only consider windows within 45° of the direction, rather than anywhere on that side of this window
+    /// - Returns: `true` if a window was focused, `false` if there was none to focus
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.bind(["cmd", "ctrl"], "left", () => {
+    ///     hs.window.focusedWindow()?.focusWindowWest({ frontmost: true })
+    /// })
+    /// ```
+    @objc func focusWindowWest(_ options: [String: Any]?) -> Bool
+
+    /// The windows above this one, nearest first
+    ///
+    /// Windows straight ahead are preferred to nearer windows off to the side.
+    /// - Parameter options?: How to choose the windows
+    ///   - windows?: {HSWindow[]} The windows to choose from, e.g. those allowed by a window filter. Defaults to every window on screen. Windows that aren't on screen are always ignored
+    ///   - frontmost?: {boolean} `true` to put windows that can be seen before windows hidden behind others
+    ///   - strict?: {boolean} `true` to only consider windows within 45° of the direction, rather than anywhere on that side of this window
+    /// - Returns: {HSWindow[]} The windows above this one, nearest first
+    /// - Example:
+    /// ```js
+    /// const next = hs.window.focusedWindow()?.windowsToNorth()[0]
+    /// if (next) console.log("Next window north: " + next.title)
+    /// ```
+    @objc func windowsToNorth(_ options: [String: Any]?) -> [HSWindow]
+
+    /// Focuses the nearest window above this one
+    /// - Parameter options?: How to choose the windows
+    ///   - windows?: {HSWindow[]} The windows to choose from, e.g. those allowed by a window filter. Defaults to every window on screen. Windows that aren't on screen are always ignored
+    ///   - frontmost?: {boolean} `true` to put windows that can be seen before windows hidden behind others
+    ///   - strict?: {boolean} `true` to only consider windows within 45° of the direction, rather than anywhere on that side of this window
+    /// - Returns: `true` if a window was focused, `false` if there was none to focus
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.bind(["cmd", "ctrl"], "up", () => {
+    ///     hs.window.focusedWindow()?.focusWindowNorth({ frontmost: true })
+    /// })
+    /// ```
+    @objc func focusWindowNorth(_ options: [String: Any]?) -> Bool
+
+    /// The windows below this one, nearest first
+    ///
+    /// Windows straight ahead are preferred to nearer windows off to the side.
+    /// - Parameter options?: How to choose the windows
+    ///   - windows?: {HSWindow[]} The windows to choose from, e.g. those allowed by a window filter. Defaults to every window on screen. Windows that aren't on screen are always ignored
+    ///   - frontmost?: {boolean} `true` to put windows that can be seen before windows hidden behind others
+    ///   - strict?: {boolean} `true` to only consider windows within 45° of the direction, rather than anywhere on that side of this window
+    /// - Returns: {HSWindow[]} The windows below this one, nearest first
+    /// - Example:
+    /// ```js
+    /// const next = hs.window.focusedWindow()?.windowsToSouth()[0]
+    /// if (next) console.log("Next window south: " + next.title)
+    /// ```
+    @objc func windowsToSouth(_ options: [String: Any]?) -> [HSWindow]
+
+    /// Focuses the nearest window below this one
+    /// - Parameter options?: How to choose the windows
+    ///   - windows?: {HSWindow[]} The windows to choose from, e.g. those allowed by a window filter. Defaults to every window on screen. Windows that aren't on screen are always ignored
+    ///   - frontmost?: {boolean} `true` to put windows that can be seen before windows hidden behind others
+    ///   - strict?: {boolean} `true` to only consider windows within 45° of the direction, rather than anywhere on that side of this window
+    /// - Returns: `true` if a window was focused, `false` if there was none to focus
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.bind(["cmd", "ctrl"], "down", () => {
+    ///     hs.window.focusedWindow()?.focusWindowSouth({ frontmost: true })
+    /// })
+    /// ```
+    @objc func focusWindowSouth(_ options: [String: Any]?) -> Bool
+
     // MARK: - Screenshot
 
     /// Capture the current on-screen contents of this window as an image.
@@ -352,6 +488,8 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
             "isMinimized": isMinimized,
             "isFullscreen": isFullscreen,
             "isStandard": isStandard,
+            "role": role.orNSNull,
+            "subrole": subrole.orNSNull,
         ]
     }
 
@@ -365,6 +503,15 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
 
         self.id = Int(WindowEnumerator.windowID(of: element))
 
+        super.init()
+    }
+
+    /// For a window whose ID is already known, which also keeps working for a window that has
+    /// gone, whose ID can no longer be read from its element
+    init(element: UIElement, app: NSRunningApplication, id: Int) {
+        self.element = element
+        self.app = app
+        self.id = id
         super.init()
     }
 
@@ -435,6 +582,14 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
             return false
         }
         return subrole == .standardWindow
+    }
+
+    @objc var role: String? {
+        try? element.attribute(.role)
+    }
+
+    @objc var subrole: String? {
+        try? element.attribute(.subrole)
     }
 
     // MARK: - Geometry
@@ -540,9 +695,14 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     }
 
     @objc var screen: HSScreen? {
+        guard let windowAX: CGRect = try? element.attribute(.frame) else { return nil }
+        return Self.screen(containing: windowAX).map { HSScreen(screen: $0) }
+    }
+
+    /// The screen holding most of a frame (top-left origin)
+    static func screen(containing windowAX: CGRect) -> NSScreen? {
         // AX frames have top-left origin, y-down. NSScreen.frame has bottom-left origin, y-up.
         // Flip the window frame into macOS coordinates so it can be intersected with screen frames.
-        guard let windowAX: CGRect = try? element.attribute(.frame) else { return nil }
         let screens = NSScreen.screens
         guard !screens.isEmpty else { return nil }
 
@@ -552,14 +712,13 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
                                width: windowAX.width,
                                height: windowAX.height)
 
-        let best = screens.max {
+        return screens.max {
             let aInter = $0.frame.intersection(windowMac)
             let bInter = $1.frame.intersection(windowMac)
             let aArea = aInter.isNull ? 0 : aInter.width * aInter.height
             let bArea = bInter.isNull ? 0 : bInter.width * bInter.height
             return aArea < bArea
         }
-        return best.map { HSScreen(screen: $0) }
     }
 
     // MARK: - Spaces
@@ -702,6 +861,53 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     }
 
     // MARK: - Advanced
+
+    // MARK: - Neighbouring windows
+
+    @objc func windowsToEast(_ options: [String: Any]?) -> [HSWindow] {
+        neighbours(.east, options)
+    }
+
+    @objc func focusWindowEast(_ options: [String: Any]?) -> Bool {
+        focusFirst(neighbours(.east, options))
+    }
+
+    @objc func windowsToWest(_ options: [String: Any]?) -> [HSWindow] {
+        neighbours(.west, options)
+    }
+
+    @objc func focusWindowWest(_ options: [String: Any]?) -> Bool {
+        focusFirst(neighbours(.west, options))
+    }
+
+    @objc func windowsToNorth(_ options: [String: Any]?) -> [HSWindow] {
+        neighbours(.north, options)
+    }
+
+    @objc func focusWindowNorth(_ options: [String: Any]?) -> Bool {
+        focusFirst(neighbours(.north, options))
+    }
+
+    @objc func windowsToSouth(_ options: [String: Any]?) -> [HSWindow] {
+        neighbours(.south, options)
+    }
+
+    @objc func focusWindowSouth(_ options: [String: Any]?) -> Bool {
+        focusFirst(neighbours(.south, options))
+    }
+
+    /// The windows in `direction`, chosen as `options` (see `windowsToEast()`) says
+    private func neighbours(_ direction: WindowNeighbours.Direction, _ options: [String: Any]?) -> [HSWindow] {
+        let candidates = (options?["windows"] as? [Any])?.compactMap { $0 as? HSWindow }
+        let frontmost = options?["frontmost"] as? Bool ?? false
+        let strict = options?["strict"] as? Bool ?? false
+        return WindowNeighbours.windows(from: self, in: direction, candidates: candidates, frontmost: frontmost, strict: strict)
+    }
+
+    /// Focuses the first of `windows` that can be focused
+    private func focusFirst(_ windows: [HSWindow]) -> Bool {
+        windows.contains { $0.focus() }
+    }
 
     @objc func axElement() -> HSAXElement {
         return HSAXElement(element: element)
