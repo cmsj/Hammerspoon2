@@ -253,7 +253,7 @@ where they fit, and your Spoon will work the way people expect a Spoon to:
 | `init()` | Setup once the Spoon's object exists | `hs.spoons.load()` calls it, every time |
 | `start()` / `stop()` | Starting and stopping anything that keeps running | Users, and `use()`'s `start` option (`start()` only) |
 | Settings | Properties that change how the Spoon behaves | Users, and `use()`'s `config` option |
-| `bindings` | Actions users can bind hotkeys to | `hs.spoons.load()`, which makes a `bindHotkeys()` for them |
+| `bindings` | Actions users can bind hotkeys to | `hs.spoons.load()`, which makes a `bindHotkeys()` and `unbindHotkeys()` for them |
 | `defaultHotkeys` | Suggested hotkeys for those actions | `use()`'s `hotkeys: "default"` option |
 | `bindHotkeys(mapping)` | Binding hotkeys yourself, when `bindings` isn't enough | Users, and `use()`'s `hotkeys` option |
 
@@ -267,7 +267,8 @@ Don't export `name`, `author`, `description` or `version`: `hs.spoons.load()` se
 1. Runs `init.js` with `require()`. `require()` caches it, so the
    top level only ever runs once, however many times the Spoon is loaded.
 2. Sets `name`, `author`, `description` and `version` on the exported object, from `spoon.json`.
-3. Gives the object a `bindHotkeys()`, if it exports `bindings` (see [Hotkeys](#hotkeys)).
+3. Gives the object a `bindHotkeys()` and an `unbindHotkeys()`, if it exports `bindings` (see
+   [Hotkeys](#hotkeys)).
 4. Calls the object's `init()`, if it has one.
 5. Stores the object in `hs.spoons` (as `hs.spoons.Greeter`) and returns it.
 
@@ -276,8 +277,8 @@ Don't export `name`, `author`, `description` or `version`: `hs.spoons.load()` se
 
 **`init()`** is for setup that needs to happen once the object exists, but shouldn't wait for
 `start()`: reading a file, working out a value from others, and so on. It's called with `this`
-set to the object, which by then has its `spoon.json` fields, and its `bindHotkeys()` if it
-exports `bindings`. Hammerspoon 1
+set to the object, which by then has its `spoon.json` fields, and its `bindHotkeys()` and
+`unbindHotkeys()` if it exports `bindings`. Hammerspoon 1
 called `:init()` the same way.
 
 - **It runs on every `hs.spoons.load()`** of the Spoon, not just the first, since each one
@@ -395,6 +396,22 @@ Greeter.bindHotkeys({
 - **It returns the Spoon**, so calls can be chained.
 - **It's there before `init()` runs**, so `init()` can call it too.
 
+It also gets an **`unbindHotkeys(actions)`** method, which unbinds the hotkeys of the actions
+named in `actions`, an array, or of all of them if `actions` is left out. An action without a
+hotkey is skipped, and one the Spoon doesn't have throws, as for `bindHotkeys()`. It returns the
+Spoon too.
+
+```js
+Greeter.unbindHotkeys(["peek"])   // just peek's hotkey
+Greeter.unbindHotkeys()           // all of them
+```
+
+The hotkeys are the user's, so `stop()` usually shouldn't unbind them: a user may well have
+bound a hotkey to start the Spoon again, or to toggle it. `unbindHotkeys()` is for when the
+hotkeys should go too, such as a method that tears the Spoon down completely, or a user who
+wants them gone. A Spoon that's loaded again keeps its hotkeys, so there's no need to unbind
+them first.
+
 If your Spoon has sensible keys to suggest, export them as **`defaultHotkeys`**, in the same
 shape as `mapping`. Users can then pass `hotkeys: "default"` to `hs.spoons.use()` to bind them.
 
@@ -421,8 +438,9 @@ module.exports = {
 }
 ```
 
-Don't export both: if a Spoon exports both `bindings` and `bindHotkeys()`, `hs.spoons.load()` will replace 
-`bindHotkeys()` with the generic one, and log a warning to the Console.
+Don't export both: if a Spoon exports both `bindings` and `bindHotkeys()` (or
+`unbindHotkeys()`), `hs.spoons.load()` will replace them with the generic ones, and log a warning
+to the Console.
 
 ### Logging
 

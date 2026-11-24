@@ -5,12 +5,12 @@
 
 "use strict";
 
-// The bindHotkeys() functions made by makeBindHotkeys(), so loading a Spoon again keeps its own
+// The bindHotkeys() functions made by makeHotkeyMethods(), so loading a Spoon again keeps its own
 const generatedBindHotkeys = new WeakSet();
 
 // Called by hs.spoons.load() before the Spoon's init(). A Spoon that exports `bindings` gets a
-// generic bindHotkeys() for them, replacing any it exports itself. Otherwise, the Spoon's own
-// bindHotkeys(), if any, is left as it is.
+// generic bindHotkeys() and unbindHotkeys() for them, replacing any it exports itself. Otherwise,
+// the Spoon's own methods, if any, are left as they are.
 /// SKIP_DOCS
 hs.spoons._installBindHotkeys = function(spoon, spoonName) {
     const bindings = spoon.bindings;
@@ -20,23 +20,26 @@ hs.spoons._installBindHotkeys = function(spoon, spoonName) {
     if (generatedBindHotkeys.has(spoon.bindHotkeys)) {
         return;
     }
-    if (typeof spoon.bindHotkeys === "function") {
-        console.warn(`hs.spoons: '${spoonName}' exports both bindings and bindHotkeys(); its bindHotkeys() is replaced by one for its bindings`);
+    for (const method of ["bindHotkeys", "unbindHotkeys"]) {
+        if (typeof spoon[method] === "function") {
+            console.warn(`hs.spoons: '${spoonName}' exports both bindings and ${method}(); its ${method}() is replaced by one for its bindings`);
+        }
     }
-    const bindHotkeys = makeBindHotkeys(spoon, spoonName);
+    const { bindHotkeys, unbindHotkeys } = makeHotkeyMethods(spoon, spoonName);
     generatedBindHotkeys.add(bindHotkeys);
     spoon.bindHotkeys = bindHotkeys;
+    spoon.unbindHotkeys = unbindHotkeys;
 };
 
-// Makes a bindHotkeys() for a Spoon's `bindings`. See `bindings` in docs/spoons-guide.md for the
-// shapes it accepts.
-function makeBindHotkeys(spoon, spoonName) {
+// Makes a bindHotkeys() and unbindHotkeys() for a Spoon's `bindings`. See `bindings` in
+// docs/spoons-guide.md for the shapes they accept.
+function makeHotkeyMethods(spoon, spoonName) {
     // Action name -> the HSHotkey bound for it, so binding an action again replaces its hotkey.
     // No prototype, so an action named e.g. "constructor" isn't mistaken for a bound one.
     const bound = Object.create(null);
 
-    function invalid(message) {
-        const err = new Error(`${spoonName}.bindHotkeys(): ${message}`);
+    function invalid(message, method = "bindHotkeys") {
+        const err = new Error(`${spoonName}.${method}(): ${message}`);
         err.code = "EINVALIDARG";
         return err;
     }
@@ -81,7 +84,7 @@ function makeBindHotkeys(spoon, spoonName) {
         return { mods, key, message };
     }
 
-    return function bindHotkeys(mapping) {
+    function bindHotkeys(mapping) {
         if (mapping === null || typeof mapping !== "object" || Array.isArray(mapping)) {
             throw invalid("the mapping must be an object, keyed by action name");
         }
@@ -123,7 +126,28 @@ function makeBindHotkeys(spoon, spoonName) {
             bound[action] = hk;
         }
         return spoon;
-    };
+    }
+
+    function unbindHotkeys(actions) {
+        if (actions !== undefined && actions !== null && !(Array.isArray(actions) && actions.every(a => typeof a === "string"))) {
+            throw invalid("the actions must be an array of action names", "unbindHotkeys");
+        }
+        const bindings = spoon.bindings;
+        for (const action of actions ?? []) {
+            if (!Object.hasOwn(bindings ?? {}, action)) {
+                throw invalid(`'${action}' isn't one of ${spoonName}'s actions (${Object.keys(bindings ?? {}).join(", ") || "it has none"})`, "unbindHotkeys");
+            }
+        }
+        for (const action of actions ?? Object.keys(bound)) {
+            if (bound[action]) {
+                bound[action].destroy();
+                delete bound[action];
+            }
+        }
+        return spoon;
+    }
+
+    return { bindHotkeys, unbindHotkeys };
 }
 
 /// Load and configure a Spoon in one step, installing it first if it isn't installed yet - the
