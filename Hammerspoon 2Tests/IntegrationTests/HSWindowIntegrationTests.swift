@@ -528,6 +528,59 @@ extension HSWindowIntegrationTests {
     }
 }
 
+// MARK: - frontmostWindow()
+
+/// Stubs the two lookups `frontmostWindow()` is built from, so each branch can be tested without
+/// depending on which window the host happens to have focused.
+@MainActor
+private final class StubbedFocusWindowModule: HSWindowModule {
+    var stubbedFocusedWindow: HSWindow?
+    var stubbedOrderedWindows: [HSWindow] = []
+
+    override func focusedWindow() -> HSWindow? { stubbedFocusedWindow }
+    override func orderedWindows() -> [HSWindow] { stubbedOrderedWindows }
+}
+
+extension HSWindowIntegrationTests {
+    @MainActor
+    @Suite("hs.window.frontmostWindow()")
+    struct HSWindowFrontmostTests {
+        /// A window object that's distinct by identity. It wraps this process's own application
+        /// element, which is enough here: frontmostWindow() only passes windows through.
+        private func makeStubWindow() -> HSWindow {
+            HSWindow(element: UIElement(AXUIElementCreateApplication(getpid())), app: .current)
+        }
+
+        @Test("frontmostWindow() returns the focused window when there is one")
+        func testReturnsFocusedWindow() {
+            let module = StubbedFocusWindowModule(engineID: UUID())
+            let focused = makeStubWindow()
+            module.stubbedFocusedWindow = focused
+            module.stubbedOrderedWindows = [makeStubWindow()]
+
+            #expect(module.frontmostWindow() === focused)
+        }
+
+        @Test("frontmostWindow() falls back to the first of orderedWindows() when nothing has focus")
+        func testFallsBackToFirstOrderedWindow() {
+            let module = StubbedFocusWindowModule(engineID: UUID())
+            let first = makeStubWindow()
+            module.stubbedOrderedWindows = [first, makeStubWindow()]
+
+            #expect(module.frontmostWindow() === first)
+        }
+
+        @Test("frontmostWindow() returns null to JavaScript when there are no windows")
+        func testReturnsNullWithoutWindows() {
+            let harness = JSTestHarness()
+            harness.loadModule(StubbedFocusWindowModule.self, as: "window")
+
+            harness.expectTrue("hs.window.frontmostWindow() === null")
+            #expect(!harness.hasException)
+        }
+    }
+}
+
 // MARK: - Lookup by ID (#448)
 
 extension HSWindowIntegrationTests {
