@@ -532,6 +532,72 @@ struct HSSpoonsTests {
             #expect(ctx.errorCode == "ENOSOURCE")
         }
 
+        @Test("update() sets isUpdating until it finishes")
+        func testUpdateIsUpdating() async throws {
+            let ctx = try SpoonsTestContext()
+            #expect(ctx.harness.evalBool("hs.spoons.isUpdating") == false)
+            ctx.downloads.serve(repositoryArchive(), at: repositoryURL)
+            await ctx.settle("hs.spoons.install('Greeter', { source: 'jane/hs2-spoons' })")
+
+            ctx.downloads.close(repositoryURL)
+            ctx.start("hs.spoons.update('Greeter')")
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.downloads.waitingCount == 1 })
+            #expect(ctx.harness.evalBool("hs.spoons.isUpdating") == true)
+            ctx.downloads.open(repositoryURL)
+            await ctx.settled()
+            #expect(ctx.harness.evalBool("hs.spoons.isUpdating") == false)
+        }
+
+        @Test("updateAll() updates every Spoon installed from a source, logging and resolving with what happened")
+        func testUpdateAll() async throws {
+            let ctx = try SpoonsTestContext()
+            ctx.downloads.serve(repositoryArchive(version: "1.0.0"), at: repositoryURL)
+            await ctx.settle("hs.spoons.install('Greeter', { source: 'jane/hs2-spoons' })")
+            await ctx.settle("hs.spoons.install('Clock', { source: 'jane/hs2-spoons' })")
+            // Unique, so this test's log messages can be told apart from any other's
+            let otherURL = "https://example.com/\(UUID().uuidString)/Alarm.zip"
+            var other = ZipFixture()
+            other.spoon(at: "Alarm.spoon2", name: "Alarm")
+            ctx.downloads.serve(other.data, at: otherURL)
+            await ctx.settle("hs.spoons.install('Alarm', { source: '\(otherURL)' })")
+
+            // Installed without a source, so skipped
+            let local = ctx.spoonsDir.appendingPathComponent("Local")
+            try FileManager.default.createDirectory(at: local, withIntermediateDirectories: true)
+            try #"{ "name": "Local", "author": "Me", "version": "1", "description": "Mine" }"#
+                .write(to: local.appendingPathComponent("spoon.json"), atomically: true, encoding: .utf8)
+            try "module.exports = {};".write(to: local.appendingPathComponent("init.js"), atomically: true, encoding: .utf8)
+
+            ctx.downloads.serve(repositoryArchive(version: "1.1.0"), at: repositoryURL)
+            var renamed = ZipFixture()
+            renamed.spoon(at: "Alarms.spoon2", name: "Alarms")
+            ctx.downloads.serve(renamed.data, at: otherURL)
+
+            // Alarm is updated first, then Clock waits for its download
+            ctx.downloads.close(repositoryURL)
+            ctx.start("hs.spoons.updateAll().then(r => r.map(x => `${x.name}:${x.status}:${x.error === null ? 'ok' : x.error.code}`).join(','))")
+            #expect(ctx.harness.evalBool("hs.spoons.isUpdating") == true)
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.downloads.waitingCount == 1 })
+            #expect(ctx.harness.evalBool("hs.spoons.isUpdating") == true)
+            ctx.downloads.open(repositoryURL)
+            #expect(await ctx.settled()?.toString() == "Alarm:failed:ENOTFOUND,Clock:upToDate:ok,Greeter:updated:ok,Local:skipped:ok")
+            #expect(ctx.harness.evalBool("hs.spoons.isUpdating") == false)
+
+            #expect(try ctx.installedVersion("Greeter") == "1.1.0")
+            #expect(try ctx.installedVersion("Clock") == "1.0.0")
+            #expect(try ctx.installedVersion("Alarm") == "1.0.0")
+            #expect(!ctx.downloads.requested.contains { $0.absoluteString.contains("Local") })
+
+            func logged(_ fragment: String) -> Bool {
+                HammerspoonLog.shared.entries(minimumLevel: .Info).contains { $0.msg.contains(fragment) }
+            }
+            #expect(await ctx.harness.waitForAsync(timeout: 5) {
+                logged("couldn't update Alarm: \(otherURL) has no Spoon named 'Alarm'")
+                    && logged("skipped Local, which wasn't installed by hs.spoons.install()")
+                    && logged("finished: 1 updated (Greeter), 1 up to date, 1 skipped, 1 failed")
+            })
+        }
+
         @Test("a Spoon replaced by opening a .spoon2 file forgets where it was installed from")
         func testImportForgetsSource() async throws {
             let ctx = try SpoonsTestContext()

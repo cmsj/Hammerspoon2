@@ -147,14 +147,39 @@ import JavaScriptCoreExtras
     /// - Returns: {Promise<boolean>} Resolves with true if the Spoon was updated, or false if it was already up to date
     /// - Example:
     /// ```js
-    /// // Update every Spoon that was installed from a source
-    /// for (const spoon of hs.spoons.installed().filter(s => s.source)) {
-    ///     hs.spoons.update(spoon.name)
-    ///         .then(updated => { if (updated) console.log(`Updated ${spoon.name}`) })
-    ///         .catch(err => console.error(`${spoon.name}: ${err.message}`))
-    /// }
+    /// hs.spoons.update("Greeter")
+    ///     .then(updated => { if (updated) console.log("Updated Greeter") })
+    ///     .catch(err => console.error(`Greeter: ${err.message}`))
     /// ```
     @objc func update(_ name: String) -> JSPromise?
+
+    /// Update every installed Spoon, one at a time, as `update()` does, logging each one to the
+    /// Console as it's done, and then a summary. Spoons installed some other way than by
+    /// `install()` (such as by opening a `.spoon2` file) are skipped, since there's nowhere to
+    /// update them from. A Spoon that fails to update doesn't stop the others. `isUpdating` is
+    /// true until they've all finished.
+    ///
+    /// Typing `hs.spoons.updateAll()` into the Console is enough: the updates start straight away,
+    /// and their progress is logged there. The returned Promise is for code that wants the
+    /// results. It never rejects: a Spoon that couldn't be updated has a status of `"failed"`, and
+    /// an `error` with the code and message `update()` would have rejected with.
+    /// - Returns: {Promise<{name: string, status: "updated" | "upToDate" | "skipped" | "failed", error: {code: string, message: string} | null}[]>} Resolves with what happened to each installed Spoon, sorted by name
+    /// - Example:
+    /// ```js
+    /// hs.spoons.updateAll().then(results => {
+    ///     const updated = results.filter(r => r.status === "updated").map(r => r.name)
+    ///     if (updated.length > 0) hs.notify.show("Spoons updated", updated.join(", "))
+    /// })
+    /// ```
+    @objc func updateAll() -> JSPromise?
+
+    /// Whether `update()` or `updateAll()` is running. It stays true for the whole of an
+    /// `updateAll()`.
+    /// - Example:
+    /// ```js
+    /// if (!hs.spoons.isUpdating) hs.spoons.updateAll()
+    /// ```
+    @objc var isUpdating: Bool { get }
 
     /// Remove an installed Spoon. If it's already loaded, it keeps running until your config is
     /// reloaded, so stop it first if it has a `stop()` method.
@@ -193,6 +218,9 @@ import JavaScriptCoreExtras
 
     private let session: URLSession
     private var operations: [UUID: Task<Void, Never>] = [:]
+    // How many update() and updateAll() calls haven't finished. Each counts from when it's called,
+    // so isUpdating is true as soon as it returns, and updateAll() counts once for its whole run.
+    private var activeUpdates = 0
     // Names stored on this module's JS wrapper by load(), which may be overwritten by loading
     // them again. Any other name the wrapper already has is one of the module's own members.
     private var loadedNames: Set<String> = []
@@ -377,9 +405,42 @@ import JavaScriptCoreExtras
 
     @objc func update(_ name: String) -> JSPromise? {
         guard let context = JSContext.current() else { return nil }
-        return run(in: context) { [installer] in
-            try await installer.update(name: name)
+        activeUpdates += 1
+        return run(in: context) { [weak self, installer] in
+            defer { self?.activeUpdates -= 1 }
+            return try await installer.update(name: name)
         }
+    }
+
+    @objc func updateAll() -> JSPromise? {
+        guard let context = JSContext.current() else { return nil }
+        AKInfo("hs.spoons.updateAll(): checking for updates")
+        activeUpdates += 1
+        return run(in: context) { [weak self, installer] in
+            defer { self?.activeUpdates -= 1 }
+            let results = try await installer.updateAll { result in
+                switch result.status {
+                case .updated:
+                    break // update() has already logged the old and new versions
+                case .upToDate:
+                    AKInfo("hs.spoons.updateAll(): \(result.name) is up to date")
+                case .skipped:
+                    AKInfo("hs.spoons.updateAll(): skipped \(result.name), which wasn't installed by hs.spoons.install()")
+                case .failed:
+                    let error = result.error.map { "\($0.message) (\($0.code.rawValue))" } ?? "unknown error"
+                    AKError("hs.spoons.updateAll(): couldn't update \(result.name): \(error)")
+                }
+            }
+            let count = { (status: SpoonUpdateResult.Status) in results.count { $0.status == status } }
+            let updated = results.filter { $0.status == .updated }.map(\.name)
+            let updatedNames = updated.isEmpty ? "" : " (\(updated.joined(separator: ", ")))"
+            AKInfo("hs.spoons.updateAll(): finished: \(updated.count) updated\(updatedNames), \(count(.upToDate)) up to date, \(count(.skipped)) skipped, \(count(.failed)) failed")
+            return results.map(\.dictionary)
+        }
+    }
+
+    @objc var isUpdating: Bool {
+        activeUpdates > 0
     }
 
     @objc func uninstall(_ name: String) -> Bool {

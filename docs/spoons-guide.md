@@ -128,6 +128,10 @@ hs.spoons.installed().forEach(s => console.log(`${s.name} ${s.version} from ${s.
 // Download again from where it was installed from, and reinstall if its version changed
 hs.spoons.update("Greeter").then(updated => console.log(updated ? "Updated" : "Up to date"))
 
+// The same for every installed Spoon, logging what happens to the Console. It resolves with
+// each Spoon's status, and hs.spoons.isUpdating is true until it has finished.
+hs.spoons.updateAll().then(results => console.log(results.map(r => `${r.name}: ${r.status}`).join(", ")))
+
 hs.spoons.uninstall("Greeter")
 ```
 
@@ -137,9 +141,9 @@ Failures reject with an `Error` whose `code` says what went wrong (`ENOTFOUND`, 
 **Only install Spoons from people you trust.** A Spoon is code that runs with all of
 Hammerspoon 2's permissions. Pinning a version — a tag or commit with `ref`, or a `sha256` for a
 zip file — means you keep running the code you chose, even if the repository changes later.
-`use()` never updates a Spoon that's already installed; `update()` is the only thing that
-does, and only when you call it. It fetches the Spoon from exactly where it was installed from,
-so a Spoon pinned to a tag or commit stays as it is — to move to a newer version, install it
+`use()` never updates a Spoon that's already installed; `update()` and `updateAll()` are the
+only things that do, and only when you call them. They fetch each Spoon from exactly where it was
+installed from, so a Spoon pinned to a tag or commit stays as it is — to move to a newer version, install it
 with the new `ref` and `force: true`.
 
 ## Installing a Spoon by hand
