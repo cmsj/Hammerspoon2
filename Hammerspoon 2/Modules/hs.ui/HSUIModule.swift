@@ -267,7 +267,11 @@ import SwiftUI
     /// Creates a borderless window that can contain custom UI elements built using a declarative,
     /// SwiftUI-like syntax with shapes, text, and layout containers.
     ///
-    /// - Parameter dict: Dictionary with keys: `x`, `y`, `w`, `h` (all numbers)
+    /// The window is placed in the same screen coordinates as `hs.screen` and `hs.window`:
+    /// `y = 0` is the top of the primary screen, and `y` increases downward. The rect gives the
+    /// window's content area; a titled window's title bar sits above it.
+    ///
+    /// - Parameter rect: {HSRect | object} The window's frame: an HSRect (e.g. a screen's `frame`) or a dictionary with keys `x`, `y`, `w`, `h` (all numbers)
     /// - Returns: An `HSUIWindow` object for chaining
     /// - Example:
     /// ```js
@@ -277,7 +281,7 @@ import SwiftUI
     ///         .frame({w: "100%", h: "100%"})
     ///     .show()
     /// ```
-    @objc func window(_ dict: [String: Any]) -> HSUIWindow
+    @objc func window(_ rect: JSValue) -> HSUIWindow
 
     /// Create a temporary on-screen alert
     ///
@@ -486,10 +490,10 @@ import SwiftUI
 
     // MARK: - Factory Methods
 
-    @objc func window(_ dict: [String: Any]) -> HSUIWindow {
+    @objc func window(_ rect: JSValue) -> HSUIWindow {
         // Use assumeIsolated since JSContext evaluates on main thread
         return MainActor.assumeIsolated {
-            let window = HSUIWindow(dict: dict, module: self)
+            let window = HSUIWindow(rect: rect, module: self)
             return window
         }
     }

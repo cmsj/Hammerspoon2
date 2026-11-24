@@ -348,7 +348,7 @@ struct HSCanvasTests {
             harness.expectEqual("f.h", 100)
         }
 
-        @Test("topLeft() is the frame's origin plus its height (unflipped AppKit sense)")
+        @Test("topLeft() is the frame's origin")
         func topLeftMatchesFrame() {
             let harness = makeHarness()
             harness.eval("""
@@ -357,7 +357,7 @@ struct HSCanvasTests {
                 """)
             #expect(!harness.hasException)
             harness.expectEqual("tl.x", 10)
-            harness.expectEqual("tl.y", 70)
+            harness.expectEqual("tl.y", 20)
         }
 
         @Test("setTopLeft() moves the window without changing its size")
@@ -371,7 +371,8 @@ struct HSCanvasTests {
                 var f = c.frame()
                 """)
             #expect(!harness.hasException)
-            harness.expectEqual("f.y", 250) // topLeft y (300) - height (50)
+            harness.expectEqual("f.x", 200)
+            harness.expectEqual("f.y", 300)
             harness.expectEqual("f.w", 100)
             harness.expectEqual("f.h", 50)
         }
@@ -400,14 +401,60 @@ struct HSCanvasTests {
                 var tl = c.topLeft()
                 """)
             #expect(!harness.hasException)
-            // The origin (bottom-left, f.x/f.y) is expected to move -- only the top-left
-            // corner (tl) is promised to stay fixed when the height changes.
             harness.expectEqual("f.x", 30)
-            harness.expectEqual("f.y", -10) // topY (40 + 100 = 140) - new height (150)
+            harness.expectEqual("f.y", 40)
             harness.expectEqual("f.w", 200)
             harness.expectEqual("f.h", 150)
             harness.expectEqual("tl.x", 30)
-            harness.expectEqual("tl.y", 140) // unchanged from before the resize
+            harness.expectEqual("tl.y", 40)
+        }
+
+        @Test("create(), setFrame() and setTopLeft() accept HSRect and HSPoint")
+        func acceptsGeometryTypes() {
+            let harness = makeHarness()
+            harness.eval("""
+                var c = hs.canvas.create(new HSRect(10, 20, 100, 50))
+                var created = c.frame()
+                c.setFrame(new HSRect(30, 40, 120, 60))
+                var moved = c.frame()
+                c.setTopLeft(new HSPoint(5, 6))
+                var tl = c.topLeft()
+                """)
+            #expect(!harness.hasException)
+            harness.expectEqual("created.x", 10)
+            harness.expectEqual("created.y", 20)
+            harness.expectEqual("created.w", 100)
+            harness.expectEqual("created.h", 50)
+            harness.expectEqual("moved.x", 30)
+            harness.expectEqual("moved.y", 40)
+            harness.expectEqual("moved.w", 120)
+            harness.expectEqual("moved.h", 60)
+            harness.expectEqual("tl.x", 5)
+            harness.expectEqual("tl.y", 6)
+        }
+
+        @Test("The window is placed with y = 0 at the top of the primary screen, like hs.screen")
+        @MainActor
+        func windowUsesTopDownScreenCoordinates() throws {
+            let primaryHeight = try #require(NSScreen.screens.first?.frame.height)
+            let harness = makeHarness()
+            harness.eval("""
+                var c = hs.canvas.create({x: 10, y: 0, w: 100, h: 50}).show()
+                void 0
+                """)
+            let canvas = try #require(harness.evalValue("c")?.toObjectOf(HSCanvas.self) as? HSCanvas)
+            // y = 0 covers the menu bar: AppKit mustn't push the canvas down below it
+            #expect(canvas.windowAppKitFrame == CGRect(x: 10, y: primaryHeight - 50, width: 100, height: 50))
+
+            harness.eval("c.setFrame({x: 30, y: 40, w: 120, h: 60}); void 0")
+            #expect(canvas.windowAppKitFrame == CGRect(x: 30, y: primaryHeight - 100, width: 120, height: 60))
+
+            // Reading the frame back from the shown window converts it back again
+            harness.eval("var f = c.frame()")
+            harness.expectEqual("f.x", 30)
+            harness.expectEqual("f.y", 40)
+            #expect(!harness.hasException)
+            harness.eval("c.destroy()")
         }
     }
 
