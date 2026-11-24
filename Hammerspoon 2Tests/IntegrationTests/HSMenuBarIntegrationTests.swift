@@ -563,3 +563,26 @@ extension HSMenuBarTests {
         #expect(item == nil, "A hidden item nobody references must not be kept alive")
     }
 }
+
+@Suite("JSMenuBuilder shortcut parsing")
+struct JSMenuShortcutTests {
+    @Test("parses modifiers and keys", arguments: [
+        ("⌘F", "f", NSEvent.ModifierFlags.command),
+        ("⇧⌘N", "n", [.command, .shift]),
+        ("⌃⌥↩", "\r", [.control, .option]),
+        ("⌘-", "-", .command),
+        ("f", "f", []),
+    ] as [(String, String, NSEvent.ModifierFlags)])
+    @MainActor
+    func parses(input: String, key: String, mask: NSEvent.ModifierFlags) {
+        let result = JSMenuBuilder.parseShortcut(input)
+        #expect(result?.0 == key)
+        #expect(result?.1 == mask)
+    }
+
+    @Test("rejects invalid shortcuts", arguments: ["", "⌘", "cmd-f", "⌘FF"])
+    @MainActor
+    func rejects(input: String) {
+        #expect(JSMenuBuilder.parseShortcut(input) == nil)
+    }
+}

@@ -16,6 +16,7 @@ import JavaScriptCore
 /// - `tooltip` (string): Shown when hovering over the item.
 /// - `color` (HSColor or hex string): The colour of the title text.
 /// - `icon` (HSImage): Shown to the left of the title.
+/// - `shortcut` (string): Keyboard shortcut, e.g. `"⌘F"` or `"⇧⌘N"`. See `parseShortcut`.
 /// - `menu` (array): Nested menu item objects, making a submenu.
 ///
 /// The `fn` callbacks are owned by `owner`, and their handlers are collected in `handlers`, which the caller
@@ -57,6 +58,27 @@ struct JSMenuBuilder {
             }
         }
         return items
+    }
+
+    private static let shortcutModifiers: [Character: NSEvent.ModifierFlags] = [
+        "⌘": .command, "⇧": .shift, "⌥": .option, "⌃": .control,
+    ]
+    private static let shortcutKeys: [Character: String] = [
+        "↩": "\r", "⇥": "\t", "⎋": "\u{1B}", "⌫": "\u{8}", "⌦": "\u{7F}", "␣": " ",
+        "←": "\u{F702}", "→": "\u{F703}", "↑": "\u{F700}", "↓": "\u{F701}",
+    ]
+
+    /// Parses a shortcut such as `"⌘F"` or `"⌃⌥⇧↩"`: any of ⌘ ⇧ ⌥ ⌃ followed by a single key character.
+    /// Besides plain characters the key can be ↩ ⇥ ⎋ ⌫ ⌦ ␣ or an arrow. No modifiers means none (not cmd).
+    static func parseShortcut(_ shortcut: String) -> (String, NSEvent.ModifierFlags)? {
+        var mask: NSEvent.ModifierFlags = []
+        var rest = Substring(shortcut)
+        while let c = rest.first, let flag = shortcutModifiers[c] {
+            mask.insert(flag)
+            rest = rest.dropFirst()
+        }
+        guard rest.count == 1, let c = rest.first else { return nil }
+        return (shortcutKeys[c] ?? String(c).lowercased(), mask)
     }
 
     private mutating func makeItem(from entry: JSValue) -> NSMenuItem? {
@@ -105,6 +127,16 @@ struct JSMenuBuilder {
            let img = hsImage.image.copy() as? NSImage {
             img.size = NSSize(width: 16, height: 16)
             item.image = img
+        }
+
+        if let sv = entry.objectForKeyedSubscript("shortcut"),
+           !sv.isUndefined, !sv.isNull {
+            if let str = sv.toString(), let (key, mask) = Self.parseShortcut(str) {
+                item.keyEquivalent = key
+                item.keyEquivalentModifierMask = mask
+            } else {
+                AKWarning("\(logPrefix): Ignoring menu item shortcut for \"\(title)\": expected a string like \"⌘F\"")
+            }
         }
 
         if let fv = entry.objectForKeyedSubscript("fn"),

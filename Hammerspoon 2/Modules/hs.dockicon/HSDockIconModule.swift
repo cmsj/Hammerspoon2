@@ -39,6 +39,7 @@ import JavaScriptCoreExtras
     /// - `tooltip` (string): Tooltip shown when hovering over the item.
     /// - `color` (HSColor or hex string): The colour of the item's title text.
     /// - `icon` (HSImage): Icon shown to the left of the title.
+    /// - `shortcut` (string): Keyboard shortcut shown next to the item: any of ⌘ ⇧ ⌥ ⌃ followed by one key, e.g. `"⌘F"` or `"⇧⌘N"`. The key can also be ↩ ⇥ ⎋ ⌫ ⌦ ␣ or an arrow.
     /// - `menu` (array): Nested array of menu item objects to create a submenu.
     ///
     /// The menu is removed when the config is reloaded.
