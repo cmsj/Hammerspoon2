@@ -47,6 +47,33 @@ struct InstalledSpoon {
     }
 }
 
+/// What happened to one Spoon in `updateAll()`
+struct SpoonUpdateResult {
+    enum Status: String {
+        /// A newer version was installed
+        case updated
+        /// The source had the same version
+        case upToDate
+        /// It wasn't installed by `install()`, so there's nowhere to update it from
+        case skipped
+        /// Updating it failed; see `error`
+        case failed
+    }
+
+    let name: String
+    let status: Status
+    let error: SpoonInstallError?
+
+    var dictionary: [String: Any] {
+        [
+            "name": name,
+            "status": status.rawValue,
+            // A nil dictionary value would just drop the key, which JS sees as undefined
+            "error": error.map { ["code": $0.code.rawValue, "message": $0.message] } ?? NSNull(),
+        ]
+    }
+}
+
 /// Installs, updates and removes Spoons from GitHub repositories and zip URLs. Used by
 /// `HSSpoonsModule`; holds no JS state.
 @MainActor
@@ -164,6 +191,33 @@ final class SpoonInstaller {
             AKInfo("hs.spoons: updated \(name) from \(installed.version) to \(candidate.metadata.version)")
             return true
         }
+    }
+
+    /// Updates every installed Spoon that was installed from a source, one at a time, carrying on
+    /// past any that fail, and skipping any that weren't installed from a source
+    /// - Parameter report: Called with what happened to each Spoon, in name order, as it finishes
+    /// - Returns: What happened to each Spoon, in name order
+    func updateAll(_ report: (SpoonUpdateResult) -> Void) async throws -> [SpoonUpdateResult] {
+        var results: [SpoonUpdateResult] = []
+        for spoon in installed() {
+            let result: SpoonUpdateResult
+            if spoon.record == nil {
+                result = SpoonUpdateResult(name: spoon.name, status: .skipped, error: nil)
+            } else {
+                do {
+                    let updated = try await update(name: spoon.name)
+                    result = SpoonUpdateResult(name: spoon.name, status: updated ? .updated : .upToDate, error: nil)
+                } catch is CancellationError {
+                    throw CancellationError()
+                } catch {
+                    let error = error as? SpoonInstallError ?? SpoonInstallError(.io, error.localizedDescription)
+                    result = SpoonUpdateResult(name: spoon.name, status: .failed, error: error)
+                }
+            }
+            report(result)
+            results.append(result)
+        }
+        return results
     }
 
     /// Removes an installed Spoon
