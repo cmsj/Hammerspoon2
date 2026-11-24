@@ -585,7 +585,7 @@ import SwiftUI
     }
 
     private func makeWindow(root: any HSUIElement) -> NSWindow {
-        let window = NSWindow(
+        let window = HSUIWindowNSWindow(
             contentRect: windowFrame.flippedScreenCoordinates(),
             styleMask: resolvedStyleMask(),
             backing: .buffered,

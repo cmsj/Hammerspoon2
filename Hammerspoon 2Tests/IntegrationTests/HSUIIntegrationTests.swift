@@ -267,7 +267,7 @@ struct HSUITests {
             let harness = makeHarness()
             harness.eval("""
                 var w = hs.ui.window({x: 10, y: 200, w: 100, h: 50}).text("Test")
-                var r = hs.ui.window(new HSRect(30, 300, 120, 60)).titled(false).text("Test")
+                var r = hs.ui.window(new HSRect(30, 0, 120, 60)).titled(false).text("Test")
                 w.show()
                 r.show()
                 void 0
@@ -279,7 +279,8 @@ struct HSUITests {
             let rectNSWindow = try #require(NSApp.windows.first { ($0.delegate as AnyObject?) === rectWin })
             // A titled window's rect is its content area, with the title bar above it
             #expect(nsWindow.contentRect(forFrameRect: nsWindow.frame) == CGRect(x: 10, y: primaryHeight - 250, width: 100, height: 50))
-            #expect(rectNSWindow.frame == CGRect(x: 30, y: primaryHeight - 360, width: 120, height: 60))
+            // A borderless window at y = 0 covers the menu bar: AppKit mustn't push it down below it
+            #expect(rectNSWindow.frame == CGRect(x: 30, y: primaryHeight - 60, width: 120, height: 60))
             harness.eval("w.destroy(); r.destroy()")
         }
 
