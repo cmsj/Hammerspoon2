@@ -21,19 +21,21 @@ lifecycle, showing/hiding, mouse callbacks, element mutation, and so on). This g
 the other half: what an element dictionary can actually contain, then a series of worked
 examples combining several of them.
 
-## Coordinate systems — read this first
+## Coordinates
 
-A canvas's **window position** (`hs.canvas.create({x, y, w, h})`, and any later `x`/`y` you
-compare it against, e.g. from `hs.screen`) uses unflipped AppKit screen coordinates:
-`y = 0` is the *bottom* of the screen, and `y` increases upward. This matches `hs.ui.window`.
+A canvas's **window position** (`hs.canvas.create({x, y, w, h})`, `frame()`, `setFrame()`,
+`topLeft()`) uses the same screen coordinates as `hs.screen`, `hs.window` and `hs.ui.window`:
+`y = 0` is the *top* of the primary screen, and `y` increases downward. `create()` and
+`setFrame()` also take an `HSRect`, so you can cover a window or a screen by passing its
+`frame` directly:
 
-But **element content** positioned *inside* a canvas — every `frame`, `center`, and
-`coordinates` value you pass to `appendElements()` and friends — is drawn top-down:
-`y = 0` is the *top* of the canvas, and `y` increases downward. These two coordinate senses
-are independent of each other and easy to conflate, especially when a script computes an
-element's position from the same screen geometry it used for the window's own placement. If
-a shape appears vertically mirrored from where you expect, this mismatch is the first thing
-to check.
+```js
+const overlay = hs.canvas.create(hs.window.focusedWindow().frame)
+```
+
+**Element content** positioned *inside* a canvas — every `frame`, `center`, and
+`coordinates` value you pass to `appendElements()` and friends — is relative to the canvas:
+`{x: 0, y: 0}` is the canvas's top-left corner, and `y` increases downward.
 
 Most numeric position/size values — `frame`, `center`, `radius`, and the `x`/`y` of each
 `segments`/`points` coordinate — also accept a percentage string like `"50%"`, resolved

@@ -473,6 +473,7 @@ import SwiftUI
     @objc let identifier = UUID().uuidString
 
     // Window properties
+    /// The whole window's frame, title bar included, in Hammerspoon screen coordinates (`y = 0` at the top of the primary screen)
     private var windowFrame: CGRect
     private var nsWindow: NSWindow?
     private var windowBackgroundColor: Color = .clear
@@ -530,11 +531,11 @@ import SwiftUI
         module.windows.add(self)
     }
 
-    convenience init(dict: [String: Any], module: HSUIModule) {
-        let x = (dict["x"] as? NSNumber)?.doubleValue ?? 0
-        let y = (dict["y"] as? NSNumber)?.doubleValue ?? 0
-        let w = (dict["w"] as? NSNumber)?.doubleValue ?? 200
-        let h = (dict["h"] as? NSNumber)?.doubleValue ?? 200
+    convenience init(rect: JSValue, module: HSUIModule) {
+        let x = rect.optionalNumber(forProperty: "x") ?? 0
+        let y = rect.optionalNumber(forProperty: "y") ?? 0
+        let w = rect.optionalNumber(forProperty: "w") ?? 200
+        let h = rect.optionalNumber(forProperty: "h") ?? 200
 
         self.init(frame: CGRect(x: x, y: y, width: w, height: h), module: module)
     }
@@ -584,9 +585,12 @@ import SwiftUI
     }
 
     private func makeWindow(root: any HSUIElement) -> NSWindow {
-        let window = NSWindow(
-            contentRect: windowFrame,
-            styleMask: resolvedStyleMask(),
+        // windowFrame is the whole window, title bar included, so lay the content out in what's left
+        let styleMask = resolvedStyleMask()
+        let contentRect = NSWindow.contentRect(forFrameRect: windowFrame.flippedScreenCoordinates(), styleMask: styleMask)
+        let window = HSUIWindowNSWindow(
+            contentRect: contentRect,
+            styleMask: styleMask,
             backing: .buffered,
             defer: false
         )
@@ -594,7 +598,7 @@ import SwiftUI
         let contentView = UICanvasView(
             element: root,
             backgroundColor: windowBackgroundColor,
-            containerSize: windowFrame.size
+            containerSize: contentRect.size
         )
         window.contentView = NSHostingView(rootView: contentView)
         window.isOpaque = false

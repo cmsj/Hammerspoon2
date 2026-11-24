@@ -18,20 +18,16 @@ import AppKit
 /// builder for app-like interfaces -- reach for `hs.canvas` when you need absolute
 /// positioning, clipped/composited shapes, or direct window-level/Spaces control.
 ///
-/// ## Coordinate systems -- read this before positioning elements
+/// ## Coordinates
 ///
-/// A canvas's **window position** (`create({x, y, w, h})`, and any later `x`/`y` you
-/// compare it against, e.g. from `hs.screen`) uses unflipped AppKit screen coordinates:
-/// `y = 0` is the *bottom* of the screen, and `y` increases upward. This matches
-/// `hs.ui.window`.
+/// A canvas's **window position** (`create({x, y, w, h})`, `frame()`, `setFrame()`,
+/// `topLeft()`) uses the same screen coordinates as `hs.screen`, `hs.window` and
+/// `hs.ui.window`: `y = 0` is the *top* of the primary screen, and `y` increases downward.
+/// You can pass a window's or screen's `frame` straight to `create()` or `setFrame()`.
 ///
-/// But **element content** positioned *inside* a canvas -- every `frame`, `center`, and
-/// `coordinates` value you pass to `appendElements()` and friends -- is drawn top-down:
-/// `y = 0` is the *top* of the canvas, and `y` increases downward. These two coordinate
-/// senses are independent of each other and easy to conflate, especially when a script
-/// computes an element's position from the same screen geometry it used for the
-/// window's own placement. If a shape appears vertically mirrored from where you
-/// expect, this mismatch is the first thing to check.
+/// **Element content** positioned *inside* a canvas -- every `frame`, `center`, and
+/// `coordinates` value you pass to `appendElements()` and friends -- is relative to the
+/// canvas: `{x: 0, y: 0}` is the canvas's top-left corner, and `y` increases downward.
 ///
 /// ## Example: a rounded screen corner overlay
 /// ```javascript
@@ -76,13 +72,14 @@ import AppKit
     /// JavaScriptCore-exported method name (it collides with the JS `new` operator
     /// keyword at the bridging layer), and this codebase's conventions additionally
     /// forbid method names starting with `new`/`alloc`/`copy` (an ARC/ObjC hazard).
-    /// - Parameter rect: {object} A `{x, y, w, h}` dictionary describing the canvas window's frame
+    /// - Parameter rect: {HSRect | object} The canvas window's frame: an HSRect (e.g. a window's or screen's `frame`) or a `{x, y, w, h}` dictionary, with `y = 0` at the top of the primary screen
     /// - Returns: A new HSCanvas, not yet shown
     /// - Example:
     /// ```js
     /// const c = hs.canvas.create({x: 100, y: 100, w: 200, h: 200})
+    /// const overlay = hs.canvas.create(hs.window.focusedWindow().frame)
     /// ```
-    @objc func create(_ rect: [String: Any]) -> HSCanvas
+    @objc func create(_ rect: JSValue) -> HSCanvas
 }
 
 @_documentation(visibility: private)
@@ -154,7 +151,7 @@ import AppKit
     @objc var windowBehaviors: [String: Int] { HSCanvasModule.windowBehaviorValues }
     @objc var compositeTypes: [String: String] { HSCanvasModule.compositeTypeValues }
 
-    @objc func create(_ rect: [String: Any]) -> HSCanvas {
-        HSCanvas(dict: rect, module: self)
+    @objc func create(_ rect: JSValue) -> HSCanvas {
+        HSCanvas(rect: rect, module: self)
     }
 }

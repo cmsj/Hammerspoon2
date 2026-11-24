@@ -29,4 +29,10 @@ final class HSCanvasWindow: NSWindow {
         }
         super.sendEvent(event)
     }
+
+    // AppKit moves a window that overlaps the menu bar down below it, so a canvas couldn't
+    // cover the top of a screen. Like v1, put the canvas exactly where it was asked to go.
+    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+        frameRect
+    }
 }

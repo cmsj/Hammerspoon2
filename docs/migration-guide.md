@@ -721,9 +721,7 @@ c:delete()
 becomes:
 
 ```js
-// y now counts up from the bottom: on a 900pt-tall primary screen, v1's y = 100 becomes
-// 900 - 100 - 100 = 700 (see "Window position" below)
-const c = hs.canvas.create({x: 100, y: 700, w: 200, h: 100})
+const c = hs.canvas.create({x: 100, y: 100, w: 200, h: 100})
 c.appendElements([
     { type: "rectangle", action: "fill", roundedRectRadii: 8,
       fillColor: { red: 0.2, green: 0.4, blue: 0.6, alpha: 1 } },
@@ -769,12 +767,9 @@ v1 had no direct equivalent for.
 `setElementAttribute()`/`elementAttribute()`, `appendElements()`/`assignElement()`, and
 `elementCount()` in place of `#c`.
 
-**Window position uses unflipped coordinates.** v1 placed a canvas in Hammerspoon's flipped
-screen coordinates (`y = 0` at the *top* of the primary screen). v2's `create()`, `frame()`,
-and `topLeft()` use AppKit's unflipped coordinates (`y = 0` at the *bottom*, increasing
-upward), matching `hs.ui.window`. A canvas that should sit `y` points from the top of a
-screen with height `H` needs `y: H - y - h`. Element geometry *inside* the canvas (`frame`,
-`center`, `coordinates`) is unchanged — still top-down, relative to the canvas.
+**Window position uses the same coordinates as v1.** As in v1, `y = 0` is the *top* of the
+primary screen, matching `hs.screen` and `hs.window`, so v1's rects work unchanged.
+`create()` and `setFrame()` also take an `HSRect`, such as a window's or screen's `frame`.
 
 **Colors are `{red, green, blue, alpha}` only.** v1's other color forms — `{hex = ...}`,
 `{white = ...}`, `{hue, saturation, brightness}`, and `{list, name}` — aren't accepted, and

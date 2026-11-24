@@ -261,6 +261,30 @@ struct HSUITests {
             harness.eval("w.destroy()")
         }
 
+        @Test("The window is placed with y = 0 at the top of the primary screen, like hs.screen")
+        func testWindowUsesTopDownScreenCoordinates() throws {
+            let primaryHeight = try #require(NSScreen.screens.first?.frame.height)
+            let harness = makeHarness()
+            harness.eval("""
+                var w = hs.ui.window({x: 10, y: 200, w: 100, h: 50}).text("Test")
+                var r = hs.ui.window(new HSRect(30, 0, 120, 60)).titled(false).text("Test")
+                w.show()
+                r.show()
+                void 0
+            """)
+            #expect(!harness.hasException)
+            let win = try #require(harness.evalValue("w")?.toObjectOf(HSUIWindow.self) as? HSUIWindow)
+            let rectWin = try #require(harness.evalValue("r")?.toObjectOf(HSUIWindow.self) as? HSUIWindow)
+            let nsWindow = try #require(NSApp.windows.first { ($0.delegate as AnyObject?) === win })
+            let rectNSWindow = try #require(NSApp.windows.first { ($0.delegate as AnyObject?) === rectWin })
+            // A titled window's rect is the whole window, title bar included, like hs.window's frame
+            #expect(nsWindow.frame == CGRect(x: 10, y: primaryHeight - 250, width: 100, height: 50))
+            #expect(nsWindow.contentRect(forFrameRect: nsWindow.frame).height < 50)
+            // A borderless window at y = 0 covers the menu bar: AppKit mustn't push it down below it
+            #expect(rectNSWindow.frame == CGRect(x: 30, y: primaryHeight - 60, width: 120, height: 60))
+            harness.eval("w.destroy(); r.destroy()")
+        }
+
         @Test("onHide does not fire if the window was never shown")
         func testOnHideDoesNotFireWithoutShow() {
             let harness = makeHarness()

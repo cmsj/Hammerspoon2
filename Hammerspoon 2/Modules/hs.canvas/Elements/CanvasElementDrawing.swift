@@ -296,7 +296,7 @@ enum CanvasElementDrawing {
         let imageSize = textImageSize(naturalSize: naturalSize, frame: rect)
 
         // `flipped: true` matches every other element's y-down frame convention (see the
-        // module-level coordinate systems doc) -- text draws top-down starting at the rect's
+        // module-level coordinates doc) -- text draws top-down starting at the rect's
         // visual top, not AppKit's unflipped bottom-left origin.
         let image = NSImage(size: imageSize, flipped: true) { imageRect in
             (string as NSString).draw(in: imageRect, withAttributes: attributes)
