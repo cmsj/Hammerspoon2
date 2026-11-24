@@ -355,7 +355,7 @@ Two real capability regressions to know about:
 ### Window management
 
 Core `hs.window` covers direct queries and single-window actions well — `focusedWindow()`,
-`allWindows()`, `windowsForApp()`, and instance actions like `focus()`, `raise()`,
+`allWindows()`, `windowsForApp()`, `forID()` (v1's `hs.window.get(id)`), and instance actions like `focus()`, `raise()`,
 `toggleFullscreen()`, `centerOnScreen()`. What's gone is the rest of v1's window ecosystem,
 module by module:
 
