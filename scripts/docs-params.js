@@ -194,27 +194,31 @@ function resolveFieldTypes(node, where) {
         delete node.fields;
         return;
     }
+
+    // Merge before resolving the fields themselves, so a field's declared type (and through it,
+    // its own fields' types) comes from here when it isn't documented on the field
+    const declared = locateObjectType(node.tsType)?.fields;
+    if (declared) {
+        const documented = new Map(node.fields.map(f => [f.name, f]));
+        const merged = declared.map(d => {
+            const doc = documented.get(d.name);
+            documented.delete(d.name);
+            return doc ? { ...doc, optional: d.optional, tsType: d.tsType } : { ...d, description: '' };
+        });
+        for (const extra of documented.values()) {
+            console.warn(`⚠ ${where}: field '${extra.name}' is documented but not in its type ${node.tsType}`);
+            merged.push(extra);
+        }
+        node.fields = merged;
+    }
+
     for (const field of node.fields) {
         resolveFieldTypes(field, `${where}.${field.name}`);
     }
 
-    const declared = locateObjectType(node.tsType)?.fields;
-    if (!declared) {
-        if (!node.tsType) node.tsType = objectTypeFromFields(node.fields);
-        return;
+    if (!node.tsType) {
+        node.tsType = objectTypeFromFields(node.fields);
     }
-
-    const documented = new Map(node.fields.map(f => [f.name, f]));
-    const merged = declared.map(d => {
-        const doc = documented.get(d.name);
-        documented.delete(d.name);
-        return doc ? { ...doc, optional: d.optional, tsType: d.tsType } : { ...d, description: '' };
-    });
-    for (const extra of documented.values()) {
-        console.warn(`⚠ ${where}: field '${extra.name}' is documented but not in its type ${node.tsType}`);
-        merged.push(extra);
-    }
-    node.fields = merged;
 }
 
 const lineIndent = line => line.length - line.trimStart().length;

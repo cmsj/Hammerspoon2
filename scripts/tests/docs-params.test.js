@@ -152,3 +152,17 @@ test('typeWithFieldDocs documents each field in place, at any depth', () => {
     ].join('\n'));
     assert.equal(typeWithFieldDocs('{a: string}', [{ name: 'a', tsType: 'string', description: '' }], ''), '{a: string}');
 });
+
+test('a partially documented nested object takes its types from a hint further up', () => {
+    const params = extractParamDescriptions([
+        '- Parameter options: {{retry: {count: number, delay?: number}}} Options',
+        '  - retry: How to retry',
+        '    - count: How many times'
+    ]);
+    const [retry] = params.options.fields;
+    assert.equal(retry.tsType, '{count: number, delay?: number}');
+    assert.deepEqual(retry.fields.map(f => [f.name, f.optional, f.tsType, f.description]), [
+        ['count', false, 'number', 'How many times'],
+        ['delay', true, 'number', '']
+    ]);
+});

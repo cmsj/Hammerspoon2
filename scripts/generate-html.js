@@ -104,7 +104,8 @@ env.addFilter('formatReturnType', function(returns) {
 // The object of one whose fields are listed beneath it is just "object", rather than every field
 // again.
 env.addFilter('resolveParamType', function(param) {
-    const type = param.tsType || formatType(param.type);
+    // A documented field may have no type at all
+    const type = param.tsType || (param.type ? formatType(param.type) : 'any');
     return param.fields && param.fields.length > 0 ? displayType(type) : type;
 });
 
