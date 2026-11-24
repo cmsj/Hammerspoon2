@@ -175,7 +175,19 @@ function makeHotkeyMethods(spoon, spoonName) {
 /// loading or configuring the Spoon.
 /// Parameters:
 ///  - name: {string} The name of the Spoon
-///  - options: {{source?: string, ref?: string, sha256?: string, path?: string, config?: Record<string, any>, hotkeys?: Record<string, any> | "default", fn?: (spoon: Object) => void, start?: boolean, disable?: boolean}} `source`, `ref` and `sha256` say where to install the Spoon from, as for `hs.spoons.install()`. `path` loads it from a directory instead (relative to your config directory), as for `hs.spoons.load()`, and takes precedence over `source`. `config` holds properties to set on the Spoon's object; which ones it reads is up to the Spoon. `hotkeys` is passed to the Spoon's `bindHotkeys()`, or `"default"` passes its `defaultHotkeys`. `fn` is called with the Spoon after it's configured. `start: true` calls its `start()`. `disable: true` does nothing at all, which is easier than commenting the call out.
+///  - options?: How to install, load and configure the Spoon
+///    - source?: {string} Where to install the Spoon from if it isn't installed, as for `hs.spoons.install()`
+///    - ref?: {string} The branch, tag or commit to install from, as for `hs.spoons.install()`
+///    - sha256?: {string} The expected SHA-256 of the download, as for `hs.spoons.install()`
+///    - path?: {string} A directory to load the Spoon from instead (relative to your config
+///      directory), as for `hs.spoons.load()`. Takes precedence over `source`, `ref` and `sha256`
+///    - config?: {Record<string, any>} Properties to set on the Spoon's object; which ones it
+///      reads is up to the Spoon
+///    - hotkeys?: {Record<string, any> | "default"} Passed to the Spoon's `bindHotkeys()`, or
+///      `"default"` passes its `defaultHotkeys`
+///    - fn?: {(spoon: Object) => void} Called with the Spoon after it's configured
+///    - start?: {boolean} `true` calls the Spoon's `start()` last
+///    - disable?: {boolean} `true` does nothing at all, which is easier than commenting the call out
 /// Returns: {Promise<Object | null>} Resolves with the Spoon once it's loaded and configured, or null if `disable` is true
 /// Example:
 /// ```js

@@ -5,13 +5,13 @@
 /// just ones created via bindSpec()) by setting `.message` directly on the returned object;
 /// see hs.hotkey's message property for exactly when it is shown.
 /// Parameters:
-///  - spec: An object with the following fields:
+///  - spec: The hotkey to bind
 ///    - mods: {string[]} Modifier keys (e.g. ["cmd", "shift"])
 ///    - key: {string | number} Key name or character (e.g. "h"), or a numeric key code
-///    - message: {string} [optional] A description shown as a toast when the hotkey fires
-///    - pressed: {(() => void) | null} [optional] Called when the hotkey is pressed
-///    - released: {(() => void) | null} [optional] Called when the hotkey is released
-///    - repeat: {(() => void) | null} [optional] Called repeatedly while the hotkey is held down
+///    - message?: {string} A description shown as a toast when the hotkey fires
+///    - pressed?: {(() => void) | null} Called when the hotkey is pressed
+///    - released?: {(() => void) | null} Called when the hotkey is released
+///    - repeat?: {(() => void) | null} Called repeatedly while the hotkey is held down
 /// Returns: A hotkey object, or null if binding failed
 /// Example:
 /// ```js

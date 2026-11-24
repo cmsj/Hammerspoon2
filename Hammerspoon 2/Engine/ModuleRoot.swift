@@ -68,25 +68,20 @@ import JavaScriptCoreExtras
     /// the Console window shows, so it's limited by the "Console history length" setting (which
     /// applies to each level separately), and `hs.clearConsole()` empties it.
     ///
-    /// Each message is an object with:
-    ///  - `sequence`: a number that's higher for each newer message. Pass the last one you've seen
-    ///    as `since` to get only the messages logged after it
-    ///  - `date`: a `Date` for when the message was logged
-    ///  - `level`: `"garbage"`, `"debug"`, `"info"`, `"warning"`, `"error"` or `"javascript"`
-    ///    (for `console.log()` and friends)
-    ///  - `message`: the message's text
-    ///
-    /// Options (all optional):
-    ///  - `minimumLevel`: only get messages at this level or above, e.g. `"warning"` for warnings
-    ///    and errors (and `"javascript"` messages, which count as the highest level). Defaults to
-    ///    every level
-    ///  - `search`: only get messages that contain this text, ignoring case
-    ///  - `since`: only get messages whose `sequence` is higher than this
-    ///
     /// - Note: Messages reach the Console asynchronously, so one logged moments ago, including
     ///   by `console.log()` in the same function, may not be included yet.
-    /// - Parameter options?: {{minimumLevel?: "garbage" | "debug" | "info" | "warning" | "error" | "javascript", search?: string, since?: number}} Which messages to get
+    /// - Parameter options?: Which messages to get
+    ///   - minimumLevel?: {"garbage" | "debug" | "info" | "warning" | "error" | "javascript"} Only get
+    ///     messages at this level or above, e.g. `"warning"` for warnings and errors (and
+    ///     `"javascript"` messages, which count as the highest level). Defaults to every level
+    ///   - search?: {string} Only get messages that contain this text, ignoring case
+    ///   - since?: {number} Only get messages whose `sequence` is higher than this
     /// - Returns: {{sequence: number, date: Date, level: "garbage" | "debug" | "info" | "warning" | "error" | "javascript", message: string}[]} The matching messages, oldest first
+    ///   - sequence: A number that's higher for each newer message. Pass the last one you've seen
+    ///     as `since` to get only the messages logged after it
+    ///   - date: When the message was logged
+    ///   - level: The message's level, where `"javascript"` is for `console.log()` and friends
+    ///   - message: The message's text
     /// - Throws: true
     /// - Example:
     /// ```js

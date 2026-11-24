@@ -15,6 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 const { THROWS_DESCRIPTION } = require('./docs-strings');
+const { parseParamDescription, extractParamDescriptions, extractReturnDetails } = require('./docs-params');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const MODULES_DIR = path.join(__dirname, '..', 'Hammerspoon 2', 'Modules');
@@ -452,92 +453,6 @@ function parseSwiftFile(filePath, repoRoot) {
 }
 
 /**
- * Parse a parameter description that may start with a TypeScript type hint.
- * A hint looks like "{(path: string) => void} Called when done" — the braced
- * expression becomes the explicit TS type and the rest is the human description.
- * Returns { description, tsType: string|null }.
- */
-function parseParamDescription(raw) {
-    const trimmed = raw.trim();
-    if (trimmed.startsWith('{')) {
-        // Find the closing brace at depth 0
-        let depth = 0;
-        let end = -1;
-        for (let i = 0; i < trimmed.length; i++) {
-            if (trimmed[i] === '{') depth++;
-            else if (trimmed[i] === '}') {
-                depth--;
-                if (depth === 0) { end = i; break; }
-            }
-        }
-        if (end !== -1) {
-            const tsType = trimmed.slice(1, end).trim();
-            const description = trimmed.slice(end + 1).trim();
-            return { description, tsType };
-        }
-    }
-    return { description: trimmed, tsType: null };
-}
-
-/**
- * Extract parameter descriptions from documentation.
- * Returns a map of { paramName: { description, optional, tsType } }.
- * A parameter name suffixed with '?' in the doc comment (e.g. "- Parameter allWindows?: ...")
- * sets optional: true, which causes the TypeScript generator to emit `name?: type`.
- * A description starting with "{TypeScript type}" (e.g. "{(x: number) => void}")
- * sets tsType, which overrides the Swift-derived TypeScript type in the output.
- */
-function extractParamDescriptions(docLines) {
-    const descriptions = {};
-    let inParams = false;
-
-    for (const line of docLines) {
-        const trimmed = line.trim();
-
-        // Check for Parameters section (with or without leading dash)
-        if (trimmed === '- Parameters:' || trimmed === '- Parameters' ||
-            trimmed === 'Parameters:' || trimmed === 'Parameters') {
-            inParams = true;
-            continue;
-        }
-
-        // Check for single Parameter (with or without leading dash).
-        // The parameter name may be suffixed with '?' to mark it as optional in TypeScript.
-        const singleParamMatch = trimmed.match(/^-?\s*Parameter\s+(\w+)(\?)?\s*:\s*(.+)$/);
-        if (singleParamMatch) {
-            const { description, tsType } = parseParamDescription(singleParamMatch[3]);
-            descriptions[singleParamMatch[1]] = {
-                description,
-                optional: !!singleParamMatch[2],
-                tsType
-            };
-            continue;
-        }
-
-        // If we're in Parameters section, look for individual parameters
-        if (inParams) {
-            const paramMatch = trimmed.match(/^-\s+(\w+)(\?)?\s*:\s*(.+)$/);
-            if (paramMatch) {
-                const { description, tsType } = parseParamDescription(paramMatch[3]);
-                descriptions[paramMatch[1]] = {
-                    description,
-                    optional: !!paramMatch[2],
-                    tsType
-                };
-                continue;
-            }
-            // Stop if we hit a non-parameter line or Returns section
-            if ((trimmed.startsWith('- ') && !trimmed.match(/^-\s+\w+\s*:/)) ||
-                trimmed.startsWith('Returns:') || trimmed.startsWith('- Returns:')) {
-                inParams = false;
-            }
-        }
-    }
-
-    return descriptions;
-}
-
-/**
  * Extract parameters from a Swift function signature and documentation
  */
 function extractParams(signature, docLines = []) {
@@ -565,7 +480,8 @@ function extractParams(signature, docLines = []) {
                 type: paramMatch[2].trim(),
                 description: paramInfo.description,
                 optional: paramInfo.optional,
-                tsType: paramInfo.tsType || null
+                tsType: paramInfo.tsType || null,
+                ...(paramInfo.fields ? { fields: paramInfo.fields } : {})
             });
         }
     }
@@ -660,6 +576,15 @@ function extractReturns(signature, docLines) {
         // Add promiseType if we found one in the documentation
         if (promiseType) {
             result.promiseType = promiseType;
+        }
+
+        // Fields of the returned object nested under the Returns: line, and any continuation
+        // of its description
+        const fieldsType = promiseType ? `Promise<${promiseType}>` : typeOverride;
+        const details = extractReturnDetails(docLines, fieldsType, returnDesc);
+        if (details) {
+            result.description = details.description;
+            if (details.fields) result.fields = details.fields;
         }
 
         return result;
@@ -996,15 +921,15 @@ function extractBracedType(text) {
  * Parse DocC-style comment (used in Swift and some JavaScript files)
  * @param {string[]|null} realParamNames - The actual parameter names from the function's
  * signature, in order. When given, only bullets matching these names become `doc.params`
- * entries; other bullets (e.g. sub-fields of an options-object parameter, documented as
- * nested `- foo: ...` bullets under `- spec: ...`) are treated as descriptive text only,
- * since the doc-comment bullet list has no indentation left to distinguish nesting by the
- * time it reaches this function (stripped by the `///` comment extraction upstream).
- * When omitted, every parsed bullet is used, matching the old flatten-everything behavior.
+ * entries, so a stray bullet can't add a parameter that doesn't exist in the signature.
+ * Bullets nested under a parameter (e.g. `- mods: ...` under `- spec: ...`) become its
+ * `fields`. When omitted, every parsed parameter bullet is used.
  */
 function parseDocCStyleComment(docText, realParamNames = null) {
-    const lines = docText.split('\n').map(line => line.trim());
-    const descriptions = extractParamDescriptions(lines);
+    const rawLines = docText.split('\n');
+    const lines = rawLines.map(line => line.trim());
+    // Indentation tells a parameter's fields apart from the parameters themselves
+    const descriptions = extractParamDescriptions(rawLines);
 
     const doc = {
         description: '',
@@ -1024,9 +949,7 @@ function parseDocCStyleComment(docText, realParamNames = null) {
     doc.description = descLines.join(' ').trim();
 
     // Extract parameters - they're in the descriptions map. When the real parameter names
-    // are known, use exactly those (in signature order) so a documented options-object
-    // parameter (e.g. `spec`) whose fields are described as nested bullets doesn't get
-    // flattened into extra top-level parameters that don't exist in the actual signature.
+    // are known, use exactly those (in signature order).
     const paramNames = realParamNames || Object.keys(descriptions);
     for (const paramName of paramNames) {
         const paramInfo = descriptions[paramName] || { description: '', optional: false, tsType: null };
@@ -1035,7 +958,8 @@ function parseDocCStyleComment(docText, realParamNames = null) {
             type: 'any',
             description: paramInfo.description,
             optional: paramInfo.optional,
-            tsType: paramInfo.tsType || null
+            tsType: paramInfo.tsType || null,
+            ...(paramInfo.fields ? { fields: paramInfo.fields } : {})
         });
     }
 
@@ -1052,9 +976,15 @@ function parseDocCStyleComment(docText, realParamNames = null) {
         remainder = remainder.replace(/^-\s*/, '');
 
         const { type: typeAnnotation, rest: description } = extractBracedType(remainder);
+        const type = typeAnnotation || 'any';
+        // A remainder on its own line has nothing nested under the Returns: line
+        const details = headerMatch[1].trim()
+            ? extractReturnDetails(rawLines, type, description.trim())
+            : null;
         doc.returns = {
-            type: typeAnnotation || 'any',
-            description: description.trim()
+            type,
+            description: details ? details.description : description.trim(),
+            ...(details?.fields ? { fields: details.fields } : {})
         };
         break;
     }

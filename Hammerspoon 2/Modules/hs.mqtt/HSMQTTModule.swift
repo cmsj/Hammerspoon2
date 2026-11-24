@@ -48,25 +48,31 @@ import JavaScriptCoreExtras
     /// `wss://` (WebSocket over TLS, port 443). A URL may include a port, a username and password
     /// (`mqtt://user:pass@host`), and for WebSockets a path (defaults to `/mqtt`).
     ///
-    /// Options (all optional, and overriding anything given in the URL):
-    ///  - `port`: the broker's port
-    ///  - `clientID`: the MQTT client identifier. Defaults to `"hammerspoon-"` followed by eight random characters. Brokers disconnect an existing client when another connects with the same identifier
-    ///  - `username`, `password`: credentials for the broker
-    ///  - `tls`: `true` to connect with TLS
-    ///  - `websocket`: `true` to connect over a WebSocket, and `websocketPath` for its path
-    ///  - `version`: the MQTT version, `"3.1.1"` (the default) or `"5"`
-    ///  - `keepAlive`: seconds between keep-alive pings. Defaults to `60`
-    ///  - `connectTimeout`: seconds to wait for the broker to accept the connection. Defaults to `10`
-    ///  - `timeout`: seconds to wait for the broker to acknowledge a `subscribe()`, an `unsubscribe()`, or a `publish()` with QoS 1 or 2, before its Promise rejects. Defaults to `5`
-    ///  - `cleanSession`: `false` to ask the broker to keep the client's subscriptions and queued messages while it's disconnected. Defaults to `true`
-    ///  - `will`: `{topic, payload, qos, retain}`, a message the broker publishes if the client disconnects without calling `disconnect()`
-    ///  - `reconnectInterval`: seconds to wait before trying to reconnect when the connection is lost, retrying until `disconnect()` is called. While the network is unavailable, the client waits for it to return instead. Defaults to `0`, which doesn't reconnect
-    ///  - `caCertificate`: the CA certificate to trust for the broker instead of the system's, e.g. for a self-signed certificate: the path of a DER or PEM file, or `"keychain:<name>"` for the certificates with that name in your keychain. Without it, the broker's certificate must be trusted by macOS, which includes CA certificates you've added to your keychain and marked as trusted
-    ///  - `clientCertificate`: the path of a PKCS#12 (.p12) file with a certificate and private key to identify the client, and `clientCertificatePassword` for its password
-    ///  - `allowUntrustedCertificates`: `true` to accept any certificate from the broker. This makes the connection insecure, so use `caCertificate` instead if you can
     /// - Parameters:
     ///   - server: The broker's host name or URL
-    ///   - options?: {{port?: number, clientID?: string, username?: string, password?: string, tls?: boolean, websocket?: boolean, websocketPath?: string, version?: "3.1.1" | "5", keepAlive?: number, connectTimeout?: number, timeout?: number, cleanSession?: boolean, will?: {topic: string, payload?: string, qos?: 0 | 1 | 2, retain?: boolean}, reconnectInterval?: number, caCertificate?: string, clientCertificate?: string, clientCertificatePassword?: string, allowUntrustedCertificates?: boolean}} Connection options
+    ///   - options?: Connection options, which override anything given in the URL
+    ///     - port?: {number} The broker's port
+    ///     - clientID?: {string} The MQTT client identifier. Defaults to `"hammerspoon-"` followed by eight random characters. Brokers disconnect an existing client when another connects with the same identifier
+    ///     - username?: {string} The username for the broker
+    ///     - password?: {string} The password for the broker
+    ///     - tls?: {boolean} `true` to connect with TLS
+    ///     - websocket?: {boolean} `true` to connect over a WebSocket
+    ///     - websocketPath?: {string} The WebSocket's path. Defaults to `/mqtt`
+    ///     - version?: {"3.1.1" | "5"} The MQTT version. Defaults to `"3.1.1"`
+    ///     - keepAlive?: {number} Seconds between keep-alive pings. Defaults to `60`
+    ///     - connectTimeout?: {number} Seconds to wait for the broker to accept the connection. Defaults to `10`
+    ///     - timeout?: {number} Seconds to wait for the broker to acknowledge a `subscribe()`, an `unsubscribe()`, or a `publish()` with QoS 1 or 2, before its Promise rejects. Defaults to `5`
+    ///     - cleanSession?: {boolean} `false` to ask the broker to keep the client's subscriptions and queued messages while it's disconnected. Defaults to `true`
+    ///     - will?: A message the broker publishes if the client disconnects without calling `disconnect()`
+    ///       - topic: {string} The topic to publish it to
+    ///       - payload?: {string} The message. Defaults to an empty one
+    ///       - qos?: {0 | 1 | 2} Its quality of service. Defaults to `0`
+    ///       - retain?: {boolean} `true` for the broker to retain it. Defaults to `false`
+    ///     - reconnectInterval?: {number} Seconds to wait before trying to reconnect when the connection is lost, retrying until `disconnect()` is called. While the network is unavailable, the client waits for it to return instead. Defaults to `0`, which doesn't reconnect
+    ///     - caCertificate?: {string} The CA certificate to trust for the broker instead of the system's, e.g. for a self-signed certificate: the path of a DER or PEM file, or `"keychain:<name>"` for the certificates with that name in your keychain. Without it, the broker's certificate must be trusted by macOS, which includes CA certificates you've added to your keychain and marked as trusted
+    ///     - clientCertificate?: {string} The path of a PKCS#12 (.p12) file with a certificate and private key to identify the client
+    ///     - clientCertificatePassword?: {string} The password for `clientCertificate`
+    ///     - allowUntrustedCertificates?: {boolean} `true` to accept any certificate from the broker. This makes the connection insecure, so use `caCertificate` instead if you can
     /// - Returns: A new `HSMQTTClient`, or `null` if the server or options are invalid (the reason is logged to the Console)
     /// - Example:
     /// ```js
