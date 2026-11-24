@@ -892,19 +892,60 @@ struct HSSpoonsTests {
             #expect(boundHotkeys(ctx).isEmpty)
         }
 
-        @Test("bindings replace a Spoon's own bindHotkeys(), which is kept only without bindings")
+        @Test("unbindHotkeys() unbinds the named actions' hotkeys, or all of them")
+        func testUnbinding() throws {
+            let ctx = try makeContext()
+            ctx.harness.eval("var spoon = hs.spoons.load('Actions'); spoon.bindHotkeys({ show: [\(Self.mods), 'f17'], hide: [\(Self.mods), 'f18'] })")
+            #expect(ctx.harness.evalBool("spoon.unbindHotkeys(['hide']) === spoon") == true)
+            #expect(boundHotkeys(ctx) == ["f17:null"])
+
+            // An action that has no hotkey is skipped
+            ctx.harness.eval("spoon.unbindHotkeys(['hide'])")
+            #expect(!ctx.harness.hasException)
+            #expect(boundHotkeys(ctx) == ["f17:null"])
+
+            ctx.harness.eval("spoon.bindHotkeys({ hide: [\(Self.mods), 'f18'] })")
+            #expect(ctx.harness.evalBool("spoon.unbindHotkeys() === spoon") == true)
+            #expect(boundHotkeys(ctx).isEmpty)
+
+            // Its actions can be bound again afterwards
+            ctx.harness.eval("spoon.bindHotkeys({ show: [\(Self.mods), 'f19'] })")
+            #expect(!ctx.harness.hasException)
+            #expect(boundHotkeys(ctx) == ["f19:null"])
+        }
+
+        @Test("a mistake in unbindHotkeys()'s actions throws EINVALIDARG without unbinding any of them")
+        func testInvalidUnbinding() throws {
+            let ctx = try makeContext()
+            ctx.harness.eval("var spoon = hs.spoons.load('Actions'); spoon.bindHotkeys({ show: [\(Self.mods), 'f17'], hide: [\(Self.mods), 'f18'] })")
+            for actions in ["['show', 'shwo']", "'show'", "[42]", "{ show: true }"] {
+                ctx.harness.eval("var code = null; try { spoon.unbindHotkeys(\(actions)) } catch (e) { code = e.code }")
+                #expect(ctx.harness.evalString("code") == "EINVALIDARG", "\(actions)")
+            }
+            #expect(boundHotkeys(ctx) == ["f17:null", "f18:null"])
+        }
+
+        @Test("bindings replace a Spoon's own bindHotkeys() and unbindHotkeys(), which are kept only without bindings")
         func testBindingsTakePrecedence() throws {
-            let both = try makeContext(initJS: "module.exports = { bindings: { show() {} }, bindHotkeys() { return 'own' } };")
+            let both = try makeContext(initJS: """
+                module.exports = { bindings: { show() {} }, bindHotkeys() { return 'own' }, unbindHotkeys() { return 'own' } };
+                """)
             both.harness.eval("var spoon = hs.spoons.load('Actions'); var returned = spoon.bindHotkeys({ show: [\(Self.mods), 'f17'] })")
             #expect(!both.harness.hasException)
             #expect(both.harness.evalBool("returned === spoon") == true)
             #expect(boundHotkeys(both) == ["f17:null"])
+            #expect(both.harness.evalBool("spoon.unbindHotkeys() === spoon") == true)
+            #expect(boundHotkeys(both).isEmpty)
 
-            let own = try makeContext(initJS: "module.exports = { bindHotkeys() { return 'own' } };")
-            #expect(own.harness.evalString("hs.spoons.load('Actions').bindHotkeys({})") == "own")
+            let own = try makeContext(initJS: "module.exports = { bindHotkeys() { return 'own' }, unbindHotkeys() { return 'own' } };")
+            own.harness.eval("var spoon = hs.spoons.load('Actions')")
+            #expect(own.harness.evalString("spoon.bindHotkeys({})") == "own")
+            #expect(own.harness.evalString("spoon.unbindHotkeys()") == "own")
 
             let plain = try makeContext(initJS: "module.exports = {};")
-            #expect(plain.harness.evalTypeOf("hs.spoons.load('Actions').bindHotkeys") == "undefined")
+            plain.harness.eval("var spoon = hs.spoons.load('Actions')")
+            #expect(plain.harness.evalTypeOf("spoon.bindHotkeys") == "undefined")
+            #expect(plain.harness.evalTypeOf("spoon.unbindHotkeys") == "undefined")
         }
 
         @Test("init() can bind hotkeys, and loading again doesn't replace bindHotkeys() or its hotkeys")

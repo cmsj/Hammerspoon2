@@ -54,9 +54,10 @@ import JavaScriptCoreExtras
     ///
     /// If the object has a `bindings` object (its actions, keyed by name), it's given a generic
     /// `bindHotkeys(mapping)` before `init()` runs, which binds the hotkeys in `mapping` (e.g.
-    /// `{ show: [["cmd", "alt"], "g"] }`) to those actions. This replaces any `bindHotkeys()` the
-    /// Spoon exports itself. A Spoon without `bindings` keeps its own `bindHotkeys()`, if it has
-    /// one. See the Spoons guide for the details.
+    /// `{ show: [["cmd", "alt"], "g"] }`) to those actions, and an `unbindHotkeys(actions)` that
+    /// unbinds them again. These replace any `bindHotkeys()` and `unbindHotkeys()` the Spoon
+    /// exports itself. A Spoon without `bindings` keeps its own, if it has them. See the Spoons
+    /// guide for the details.
     ///
     /// `path` is for developing a Spoon: it loads the Spoon straight from that directory (such as
     /// a `.spoon2` bundle in your own checkout of its repository), instead of from `Spoons/`, so
@@ -304,8 +305,8 @@ import JavaScriptCoreExtras
         result.setValue(metadata.description, forProperty: "description")
         result.setValue(metadata.version, forProperty: "version")
 
-        // A Spoon that exports `bindings` gets a generic bindHotkeys() for them, in place of any of
-        // its own. Before init(), so init() can use it too.
+        // A Spoon that exports `bindings` gets a generic bindHotkeys() and unbindHotkeys() for them,
+        // in place of any of its own. Before init(), so init() can use them too.
         if let installBindHotkeys = _installBindHotkeys {
             _ = context.callCapturingException {
                 installBindHotkeys.call(withArguments: [result, metadata.name])
