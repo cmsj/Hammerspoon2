@@ -23,6 +23,22 @@ import AXSwift
     /// ```
     @objc func focusedWindow() -> HSWindow?
 
+    /// Get the window with the given ID
+    ///
+    /// This is much faster than searching `allWindows()` for the ID, because it only asks the
+    /// application that owns the window for its windows. Like `allWindows()`, this can find windows
+    /// in native fullscreen and on other Spaces, with the same limitation.
+    /// - Parameter id: The window's ID (see the `id` property on `hs.window` objects)
+    /// - Returns: The window, or null if there is no window with that ID
+    /// - Example:
+    /// ```js
+    /// const id = hs.window.focusedWindow().id
+    /// // ...later
+    /// const win = hs.window.forID(id)
+    /// if (win) win.focus()
+    /// ```
+    @objc func forID(_ id: Int) -> HSWindow?
+
     /// Get all windows from all applications
     ///
     /// This includes windows in native fullscreen and on other Spaces, with one limitation: macOS
@@ -274,6 +290,25 @@ import AXSwift
             AKDebug("Failed to get focused window: \(error.localizedDescription)")
             return nil
         }
+    }
+
+    @objc func forID(_ id: Int) -> HSWindow? {
+        guard id > 0, let windowID = CGWindowID(exactly: id), checkAccessibility() else { return nil }
+
+        // Ask the WindowServer which process owns the window, so only that app has to be asked for its windows
+        let info = CGWindowListCopyWindowInfo([.optionIncludingWindow], windowID) as? [[String: Any]] ?? []
+        guard let pid = info.first?[kCGWindowOwnerPID as String] as? pid_t,
+              let app = NSRunningApplication(processIdentifier: pid) else {
+            return nil
+        }
+
+        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.25)
+        defer { AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0) }
+
+        guard let element = WindowEnumerator.windowElements(for: app).first(where: { WindowEnumerator.windowID(of: $0) == windowID }) else {
+            return nil
+        }
+        return HSWindow(element: element, app: app)
     }
 
     @objc func allWindows() -> [HSWindow] {

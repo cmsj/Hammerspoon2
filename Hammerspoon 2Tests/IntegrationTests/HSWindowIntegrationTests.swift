@@ -528,6 +528,40 @@ extension HSWindowIntegrationTests {
     }
 }
 
+// MARK: - Lookup by ID (#448)
+
+extension HSWindowIntegrationTests {
+    @Suite("hs.window.forID()", .serialized,
+           .disabled(if: !AXIsProcessTrusted(), "Accessibility permission not granted"),
+           .testApp)
+    struct HSWindowForIDTests {
+        @Test("forID() returns the window with that ID")
+        func testForIDFindsWindow() {
+            let harness = JSTestHarness()
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            harness.loadModule(HSWindowModule.self, as: "window")
+            harness.eval("var testAppPID = \(TestAppControl.pid ?? -1);")
+            TestAppControl.showCurrentTest()
+
+            harness.eval("""
+                var win = hs.application.fromPID(testAppPID).allWindows[0];
+                var found = hs.window.forID(win.id);
+                """)
+            harness.expectTrue("win.id > 0")
+            harness.expectTrue("found !== null && found.id === win.id && found.pid === testAppPID && found.title === win.title")
+            #expect(!harness.hasException)
+        }
+
+        @Test("forID() returns null when there is no such window", arguments: ["0", "-1", "999999999"])
+        func testForIDMissingWindow(id: String) {
+            let harness = JSTestHarness()
+            harness.loadModule(HSWindowModule.self, as: "window")
+            harness.expectTrue("hs.window.forID(\(id)) === null")
+            #expect(!harness.hasException)
+        }
+    }
+}
+
 // MARK: - Windows on other Spaces (#344)
 
 extension HSWindowIntegrationTests {
@@ -582,6 +616,7 @@ extension HSWindowIntegrationTests {
                 #expect(harness.evalString("describe(app.allWindows)") == expected, comment)
                 #expect(harness.evalBool("uniqueIDs(hs.window.windowsForApp(app))") == true, comment)
                 #expect(harness.evalBool("uniqueIDs(hs.window.allWindows())") == true, comment)
+                #expect(harness.evalBool("hs.window.windowsForApp(app).every(w => hs.window.forID(w.id)?.title === w.title)") == true, comment)
                 #expect(!harness.hasException, comment)
             }
 
