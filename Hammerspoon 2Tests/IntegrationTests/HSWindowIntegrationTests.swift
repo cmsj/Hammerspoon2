@@ -528,6 +528,31 @@ extension HSWindowIntegrationTests {
     }
 }
 
+// MARK: - frontmostWindow()
+
+extension HSWindowIntegrationTests {
+    @Suite("hs.window.frontmostWindow()", .serialized,
+           .disabled(if: !AXIsProcessTrusted(), "Accessibility permission not granted"),
+           .testApp)
+    struct HSWindowFrontmostTests {
+        @Test("frontmostWindow() is the focused window, or else the first of orderedWindows()")
+        func testFrontmostWindow() {
+            let harness = JSTestHarness()
+            harness.loadModule(HSWindowModule.self, as: "window")
+            TestAppControl.showCurrentTest()
+
+            harness.eval("""
+                var front = hs.window.frontmostWindow();
+                var focused = hs.window.focusedWindow();
+                var expected = focused !== null ? focused : (hs.window.orderedWindows()[0] ?? null);
+                """)
+            harness.expectTrue("front !== null")
+            harness.expectTrue("front.id === expected.id && front.pid === expected.pid")
+            #expect(!harness.hasException)
+        }
+    }
+}
+
 // MARK: - Lookup by ID (#448)
 
 extension HSWindowIntegrationTests {

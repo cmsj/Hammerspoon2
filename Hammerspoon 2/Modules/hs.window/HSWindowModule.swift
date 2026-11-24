@@ -15,6 +15,9 @@ import AXSwift
 /// Module for interacting with windows
 @objc protocol HSWindowModuleAPI: JSExport {
     /// Get the currently focused window
+    ///
+    /// This is the window with keyboard focus, which isn't always a window of `hs.application.frontmost()`:
+    /// panels that take focus without activating their app (such as Spotlight's search panel) are returned too.
     /// - Returns: The focused window, or nil if none
     /// - Example:
     /// ```js
@@ -22,6 +25,18 @@ import AXSwift
     /// console.log(win && win.title)
     /// ```
     @objc func focusedWindow() -> HSWindow?
+
+    /// Get the frontmost window
+    ///
+    /// This is the focused window or, if no window has focus (for example when the desktop is clicked, or the
+    /// active application has no windows open), the first window from `orderedWindows()`.
+    /// - Returns: The frontmost window, or nil if there are no windows
+    /// - Example:
+    /// ```js
+    /// const win = hs.window.frontmostWindow()
+    /// console.log(win && win.title)
+    /// ```
+    @objc func frontmostWindow() -> HSWindow?
 
     /// Get the window with the given ID
     ///
@@ -272,11 +287,7 @@ import AXSwift
     @objc func focusedWindow() -> HSWindow? {
         guard checkAccessibility() else { return nil }
 
-        guard let frontApp = NSWorkspace.shared.frontmostApplication else {
-            return nil
-        }
-
-        guard let axApp = Application(frontApp) else {
+        guard let frontApp = keyboardFocusedApplication(), let axApp = Application(frontApp) else {
             return nil
         }
 
@@ -290,6 +301,10 @@ import AXSwift
             AKDebug("Failed to get focused window: \(error.localizedDescription)")
             return nil
         }
+    }
+
+    @objc func frontmostWindow() -> HSWindow? {
+        return focusedWindow() ?? orderedWindows().first
     }
 
     @objc func forID(_ id: Int) -> HSWindow? {

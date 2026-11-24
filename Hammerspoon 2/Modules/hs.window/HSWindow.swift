@@ -408,7 +408,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     }
 
     @objc var isFocused: Bool {
-        guard NSWorkspace.shared.frontmostApplication?.processIdentifier == app.processIdentifier,
+        guard keyboardFocusedApplication()?.processIdentifier == app.processIdentifier,
               let axApp = Application(app),
               let focused: UIElement = try? axApp.attribute(.focusedWindow) else {
             return false
