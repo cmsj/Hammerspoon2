@@ -166,7 +166,10 @@ import Observation
     @objc func duplicate() -> HSImage?
 
     /// Create a cropped copy of the image
-    /// - Parameter rect: HSRect defining the crop area (x, y, w, h)
+    ///
+    /// The crop area is measured from the top left corner of the image, like the frames of screens and windows,
+    /// so a screen snapshot can be cropped to a window's frame (after subtracting the screen's origin).
+    /// - Parameter rect: HSRect defining the crop area (x, y, w, h), with `y` measured down from the top of the image
     /// - Returns: A new cropped HSImage, or null if the rect falls outside the image bounds
     /// - Example:
     /// ```js
@@ -411,10 +414,14 @@ import Observation
     private func cropImage(_ source: NSImage, to rect: CGRect) -> NSImage? {
         guard CGRect(origin: .zero, size: source.size).contains(rect) else { return nil }
 
+        // The rect measures y from the top, but NSImage's own coordinates measure it from the bottom
+        let sourceRect = NSRect(x: rect.minX, y: source.size.height - rect.maxY,
+                                width: rect.width, height: rect.height)
+
         let croppedImage = NSImage(size: rect.size)
         croppedImage.lockFocus()
         source.draw(in: NSRect(origin: .zero, size: rect.size),
-                    from: NSRect(origin: rect.origin, size: rect.size),
+                    from: sourceRect,
                     operation: .copy,
                     fraction: 1.0)
         croppedImage.unlockFocus()
