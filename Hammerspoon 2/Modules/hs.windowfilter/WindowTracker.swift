@@ -101,6 +101,8 @@ final class WindowTracker {
 
     /// Pending work: per-window settle delays, per-app watch retries, the Space-change refresh
     private var settleTasks: [Int: Task<Void, Never>] = [:]
+    /// Windows that couldn't be read on their last refresh, and how many times that's happened
+    private var refreshRetries: [Int: Int] = [:]
     private var retryTasks: [pid_t: Task<Void, Never>] = [:]
     private var refreshTask: Task<Void, Never>?
 
@@ -240,6 +242,7 @@ final class WindowTracker {
         for task in retryTasks.values { task.cancel() }
         refreshTask?.cancel()
         settleTasks = [:]
+        refreshRetries = [:]
         retryTasks = [:]
         refreshTask = nil
         apps = [:]
@@ -260,7 +263,9 @@ final class WindowTracker {
 
     /// Starts watching an application for new and focused windows. An application that has only
     /// just launched may not answer yet, so this retries a few times, backing off, as Hammerspoon 1
-    /// did. With `announce`, its windows are reported as created.
+    /// did. With `announce`, its windows are reported as created; otherwise, they're tracked
+    /// silently, as windows that already existed. The first attempt while starting up leaves its
+    /// windows to `start()`, which already has them.
     private func watch(_ app: NSRunningApplication, attempt: Int, announce: Bool) {
         let pid = app.processIdentifier
         guard let axClient, apps[pid] == nil, Self.isCandidate(app) else { return }
@@ -286,10 +291,10 @@ final class WindowTracker {
         }
 
         apps[pid] = TrackedApp(app: app, element: element)
-        if announce {
+        if announce || attempt > 0 {
             withShortTimeout {
                 for windowElement in WindowEnumerator.windowElements(for: app) {
-                    windowAppeared(windowElement, pid: pid)
+                    windowAppeared(windowElement, pid: pid, announce: announce)
                 }
             }
         }
@@ -371,9 +376,10 @@ final class WindowTracker {
         }
     }
 
-    /// Starts tracking a new window, and reports it. A window's ID isn't always available the
+    /// Starts tracking a new window, and reports it (or with `announce` false, tracks a window
+    /// that already existed, without reporting it). A window's ID isn't always available the
     /// moment it's created, so this retries a few times, as Hammerspoon 1 did.
-    private func windowAppeared(_ element: UIElement, pid: pid_t, attempt: Int = 0) {
+    private func windowAppeared(_ element: UIElement, pid: pid_t, announce: Bool = true, attempt: Int = 0) {
         guard windowIDs[element] == nil, let app = apps[pid] else { return }
         guard (try? element.role()) == .window else { return }
 
@@ -382,7 +388,7 @@ final class WindowTracker {
             guard attempt < 5 else { return }
             Task { [weak self] in
                 try? await Task.sleep(for: .milliseconds(200 * (attempt + 1)))
-                self?.windowAppeared(element, pid: pid, attempt: attempt + 1)
+                self?.windowAppeared(element, pid: pid, announce: announce, attempt: attempt + 1)
             }
             return
         }
@@ -391,6 +397,11 @@ final class WindowTracker {
                                          focusedWindowID: focusedWindowID, activePID: activePID) else { return }
 
         let now = Date().timeIntervalSince1970
+        guard announce else {
+            // Older than any window created since, as for those found when starting up
+            track(element, state: state, createdAt: now - 1_000_000 + Double(id) / 1000, focusedAt: state.hasFocus ? now : 0)
+            return
+        }
         track(element, state: state, createdAt: now, focusedAt: state.hasFocus ? now : 0)
         if let tracked = windows[id] {
             deliver(Change(windowID: id, old: nil, new: state, events: HSWindowFilterEvent.changes(from: nil, to: state), window: makeWindow(tracked, app: app)))
@@ -415,6 +426,7 @@ final class WindowTracker {
         guard let tracked = windows.removeValue(forKey: id) else { return }
         windowIDs.removeValue(forKey: tracked.element)
         settleTasks.removeValue(forKey: id)?.cancel()
+        refreshRetries.removeValue(forKey: id)
         axClient?.removeAll(element: tracked.element)
         if focusedWindowID == id {
             focusedWindowID = nil
@@ -436,17 +448,37 @@ final class WindowTracker {
         deliver(Change(windowID: id, old: old, new: tracked.state, events: HSWindowFilterEvent.changes(from: old, to: tracked.state), window: makeWindow(tracked, app: app)))
     }
 
-    /// Reads a window's state again, and reports any change. A window that can no longer be
-    /// read has gone.
+    /// Reads a window's state again, and reports any change. A window whose element AX says is
+    /// invalid has gone. One that just can't be read right now (e.g. its application is busy)
+    /// keeps its last state, and is tried again a few times.
     private func refresh(_ id: Int, currentSpaces: Set<Int>? = nil) {
         settleTasks.removeValue(forKey: id)?.cancel()
         guard let tracked = windows[id], let app = apps[tracked.state.pid] else { return }
         guard let state = Self.readState(of: tracked.element, app: app.app, id: id, currentSpaces: currentSpaces ?? Self.currentSpaceIDs(),
                                          focusedWindowID: focusedWindowID, activePID: activePID) else {
-            windowDisappeared(id)
+            if Self.isGone(tracked.element) {
+                windowDisappeared(id)
+            } else if refreshRetries[id, default: 0] < Self.maxRefreshRetries {
+                refreshRetries[id, default: 0] += 1
+                settle(id)
+            }
             return
         }
+        refreshRetries.removeValue(forKey: id)
         update(id) { $0 = state }
+    }
+
+    /// How many times to try again to read a window that can't be read right now
+    private static let maxRefreshRetries = 3
+
+    /// Whether AX says a window's element no longer exists, rather than just failing to answer
+    static func isGone(_ element: UIElement) -> Bool {
+        do {
+            _ = try element.role()
+            return false
+        } catch {
+            return error == .invalidUIElement
+        }
     }
 
     /// Refreshes a window once it has stopped moving, resizing or changing its title for a moment

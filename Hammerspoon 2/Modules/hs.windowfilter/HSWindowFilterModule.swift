@@ -294,12 +294,16 @@ import AppKit
     @objc var currentSpaceFilter: HSWindowFilter {
         if let sharedCurrentSpaceFilter { return sharedCurrentSpaceFilter }
         var rules = defaultFilter.currentRules
-        var override = WindowRule(allowRoles: .any)
-        if case .allow(let existing)? = rules.override {
-            override = existing
+        switch rules.override {
+        case .allow(var override)?:
+            override.currentSpace = true
+            rules.override = .allow(override)
+        case .reject?:
+            // A default filter that rejects everything still does, in the current Space
+            break
+        case nil:
+            rules.override = .allow(WindowRule(currentSpace: true, allowRoles: .any))
         }
-        override.currentSpace = true
-        rules.override = .allow(override)
         let filter = makeFilter(rules: rules)
         sharedCurrentSpaceFilter = filter
         return filter

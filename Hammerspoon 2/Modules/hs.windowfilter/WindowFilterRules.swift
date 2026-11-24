@@ -280,11 +280,13 @@ extension WindowFilterRules {
 
         if let titles = field("allowTitles") {
             if titles.isNumber {
+                // Int(exactly:) rejects fractions, infinities and numbers too big for an Int,
+                // any of which Int() would trap on or round
                 let length = titles.toDouble()
-                guard length >= 0, length == length.rounded() else {
+                guard length >= 0, let minimum = Int(exactly: length) else {
                     throw WindowFilterRuleError(message: "\(name).allowTitles must be a whole number of characters, a string, a RegExp, or an array of them")
                 }
-                rule.minTitleLength = Int(length)
+                rule.minTitleLength = minimum
             } else {
                 rule.allowTitles = try parseTitles(titles, name: "\(name).allowTitles")
             }

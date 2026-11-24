@@ -321,6 +321,8 @@ struct HSWindowFilterIntegrationTests {
             ("{ apps: { Safari: { visible: 'yes' } } }", "apps['Safari'].visible must be true or false"),
             ("{ default: { allowTitles: /a/y } }", "default.allowTitles: the 'y' flag of /a/y isn't supported (only i, m and s are)"),
             ("{ default: { allowTitles: 1.5 } }", "default.allowTitles must be a whole number of characters, a string, a RegExp, or an array of them"),
+            ("{ default: { allowTitles: 1e19 } }", "default.allowTitles must be a whole number of characters, a string, a RegExp, or an array of them"),
+            ("{ default: { allowTitles: Infinity } }", "default.allowTitles must be a whole number of characters, a string, a RegExp, or an array of them"),
             ("{ default: 3 }", "default must be true, false, or an object of conditions"),
             ("{ sortOrder: 'newest' }", "sortOrder must be one of 'focusedLast', 'focused', 'createdLast', 'created'"),
         ])
@@ -424,6 +426,15 @@ struct HSWindowFilterIntegrationTests {
             harness.expectTrue("hs.windowfilter.currentSpaceFilter.rules.apps['Cool New Launcher'] === false")
             harness.expectTrue("hs.windowfilter.create().rules.apps['Cool New Launcher'] === false")
             harness.expectFalse("hs.windowfilter.defaultFilter.isAppAllowed('Spotlight')")
+        }
+
+        @Test("currentSpaceFilter keeps a default filter override that rejects everything")
+        func testCurrentSpaceFilterKeepsRejection() {
+            let harness = makeHarness()
+            harness.eval("hs.windowfilter.defaultFilter.setOverrideRule(false)")
+            harness.expectTrue("hs.windowfilter.currentSpaceFilter.rules.override === false")
+            harness.expectFalse("hs.windowfilter.currentSpaceFilter.isAppAllowed('Safari')")
+            #expect(!harness.hasException)
         }
 
         @Test("duplicate() makes an independent copy")
