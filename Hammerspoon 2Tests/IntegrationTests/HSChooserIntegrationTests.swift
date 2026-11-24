@@ -5,6 +5,7 @@
 
 import Testing
 import JavaScriptCore
+import SwiftUI
 @testable import Hammerspoon_2
 
 @Suite("hs.chooser tests")
@@ -768,7 +769,7 @@ struct HSChooserTests {
 
         /// The JS object of the context menu item titled `title`, as the view hands it back.
         private func menuEntry(titled title: String, in chooser: HSChooser) -> [String: Any]? {
-            for case let .item(itemTitle, entry) in chooser.viewModel.contextMenuEntries where itemTitle == title {
+            for case let .item(itemTitle, _, entry) in chooser.viewModel.contextMenuEntries where itemTitle == title {
                 return entry
             }
             return nil
@@ -795,6 +796,39 @@ struct HSChooserTests {
 
             let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
             #expect(chooser.viewModel.contextMenuEntries.count == 3)
+        }
+
+        @Test("a context menu item's shortcut is parsed, and an invalid one is ignored")
+        func testContextMenuShortcut() throws {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.contextMenu = [
+                {title: "Plain"},
+                {title: "Key", shortcut: "O"},
+                {title: "Symbols", shortcut: "⇧⌘C"},
+                {title: "Object", shortcut: {mods: ["cmd", "shift"], key: "c"}},
+                {title: "Bad", shortcut: {mods: ["hyper"], key: "c"}}
+            ]
+        """)
+            #expect(!harness.hasException)
+            harness.expectEqual("c.contextMenu.length", 5)
+            harness.expectEqual("c.contextMenu[3].shortcut.key", "c")
+
+            let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
+            let shortcuts = chooser.viewModel.contextMenuEntries.map { entry -> MenuShortcut? in
+                guard case let .item(_, shortcut, _) = entry else { return nil }
+                return shortcut
+            }
+            #expect(shortcuts == [
+                nil,
+                try MenuShortcut(parsing: "O"),
+                try MenuShortcut(parsing: ["mods": ["cmd", "shift"], "key": "c"]),
+                try MenuShortcut(parsing: ["mods": ["cmd", "shift"], "key": "c"]),
+                nil,
+            ])
+            #expect(shortcuts[1]?.keyboardShortcut == KeyboardShortcut("o", modifiers: []))
+            #expect(shortcuts[2]?.keyboardShortcut == KeyboardShortcut("c", modifiers: [.command, .shift]))
         }
 
         @Test("setting contextMenu to an empty array removes the menu")

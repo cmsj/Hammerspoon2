@@ -72,6 +72,16 @@ import JavaScriptCore
     /// - `color` (HSColor or hex string): The colour of the item's title text.
     /// - `icon` (HSImage): Icon shown to the left of the title.
     /// - `menu` (array): Nested array of menu item objects to create a submenu.
+    /// - `shortcut` (string or object): A keyboard shortcut to show at the right-hand side of the item. Either a
+    ///   string of modifier symbols (`⌘` `⇧` `⌥` `⌃`) followed by one key, as the menu shows it (`"⌘T"`, `"⇧⌘N"`,
+    ///   or just `"F"` for no modifiers), or an object with the modifiers and key spelled out
+    ///   (`{ mods: ["cmd", "shift"], key: "n" }`; leave out `mods` for no modifiers). The key can be a character,
+    ///   a key name such as `"return"`, `"delete"`, `"left"` or `"f5"`, or the symbol a menu draws for it such as
+    ///   `↩`, `⌫`, `⎋` or `←` (`"⌘⌫"`). Modifier and key names are the same as for `hs.hotkey.bind()`.
+    ///
+    ///   **A menu shortcut is not a system-wide hotkey.** Pressing it chooses the item only while the menu is
+    ///   open; while the menu is closed it does nothing. To run something from anywhere with a key combination,
+    ///   also bind it with `hs.hotkey.bind()`.
     ///
     /// - Parameter menuOrFn: {Array<Record<string, any>> | ((modifiers: string[]) => Array<Record<string, any>>) | null} Array of menu item objects, a function returning such an array, or null to remove the menu
     /// - Example:
@@ -83,6 +93,16 @@ import JavaScriptCore
     ///     { title: "-" },
     ///     { title: "Option B", checked: true, fn: () => console.log("B") },
     ///     { title: "Danger", color: "#FF3B30", fn: () => console.log("danger") }
+    /// ])
+    ///
+    /// // Show shortcuts next to items. These are labels only, so bind the same keys with hs.hotkey
+    /// // for them to work while the menu is closed
+    /// const reload = () => hs.reload()
+    /// hs.hotkey.bind(["cmd", "alt", "ctrl"], "r", reload)
+    /// item.setMenu([
+    ///     { title: "Reload config", shortcut: "⌃⌥⌘R", fn: reload },
+    ///     { title: "Open Console", shortcut: { mods: ["cmd"], key: "o" }, fn: () => hs.openConsole() },
+    ///     { title: "Free draw", shortcut: "F", fn: () => console.log("free draw") }
     /// ])
     ///
     /// // Show extra entries when Option is held

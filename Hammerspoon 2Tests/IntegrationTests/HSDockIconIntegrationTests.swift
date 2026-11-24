@@ -79,6 +79,24 @@ struct HSDockIconTests {
             #expect(menu.items[3].submenu?.items.map(\.title) == ["C"])
         }
 
+        @Test("A menu entry's shortcut sets its key equivalent, in submenus too")
+        func testMenuShortcut() throws {
+            let (harness, module) = makeHarness()
+            harness.eval("""
+                hs.dockicon.setMenu([
+                    { title: 'A', shortcut: '⌘A' },
+                    { title: 'Sub', menu: [{ title: 'B', shortcut: { mods: ['alt'], key: 'b' } }] },
+                ])
+            """)
+            #expect(!harness.hasException)
+            let menu = try #require(module.makeDockMenu())
+            #expect(menu.items[0].keyEquivalent == "a")
+            #expect(menu.items[0].keyEquivalentModifierMask == .command)
+            let sub = try #require(menu.items[1].submenu?.items.first)
+            #expect(sub.keyEquivalent == "b")
+            #expect(sub.keyEquivalentModifierMask == .option)
+        }
+
         @Test("Choosing an entry of an array menu calls its function, every time the menu opens")
         func testStaticMenuCallsFunction() throws {
             let (harness, module) = makeHarness()

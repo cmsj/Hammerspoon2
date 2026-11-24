@@ -286,6 +286,59 @@ struct HSMenuBarTests {
             #expect(!harness.hasException)
         }
 
+        /// A `shortcut` value, and the key equivalent and modifiers it should give
+        struct ShortcutCase: Sendable, CustomTestStringConvertible {
+            let shortcut: String
+            let keyEquivalent: String
+            let modifiers: NSEvent.ModifierFlags
+            var testDescription: String { shortcut }
+        }
+
+        @Test("A menu entry's shortcut sets its key equivalent", arguments: [
+            ShortcutCase(shortcut: "'⌘T'", keyEquivalent: "t", modifiers: .command),
+            ShortcutCase(shortcut: "'⇧⌘N'", keyEquivalent: "n", modifiers: [.command, .shift]),
+            ShortcutCase(shortcut: "'⌘⌥⌃⇧x'", keyEquivalent: "x", modifiers: [.command, .option, .control, .shift]),
+            ShortcutCase(shortcut: "'F'", keyEquivalent: "f", modifiers: []),
+            ShortcutCase(shortcut: "'+'", keyEquivalent: "+", modifiers: []),
+            ShortcutCase(shortcut: "'⌘return'", keyEquivalent: "\r", modifiers: .command),
+            ShortcutCase(shortcut: "'⌘↩'", keyEquivalent: "\r", modifiers: .command),
+            ShortcutCase(shortcut: "'⌘⌫'", keyEquivalent: "\u{8}", modifiers: .command),
+            ShortcutCase(shortcut: "'⌥←'", keyEquivalent: "\u{F702}", modifiers: .option),
+            ShortcutCase(shortcut: "'⎋'", keyEquivalent: "\u{1B}", modifiers: []),
+            ShortcutCase(shortcut: "{ mods: ['cmd', 'shift'], key: 'r' }", keyEquivalent: "r", modifiers: [.command, .shift]),
+            ShortcutCase(shortcut: "{ mods: ['⌃', 'option'], key: 'comma' }", keyEquivalent: ",", modifiers: [.control, .option]),
+            ShortcutCase(shortcut: "{ key: 'f5' }", keyEquivalent: "\u{F708}", modifiers: []),
+            ShortcutCase(shortcut: "{ mods: ['cmd'], key: 'delete' }", keyEquivalent: "\u{8}", modifiers: .command),
+            ShortcutCase(shortcut: "{ mods: ['cmd'], key: 36 }", keyEquivalent: "\r", modifiers: .command),
+        ])
+        func testMenuEntryShortcut(_ testCase: ShortcutCase) throws {
+            let harness = makeHarness()
+            harness.eval("var item = hs.menubar.create(true)")
+            let item = try item(in: harness)
+            defer { item.destroy() }
+            let entries = try #require(harness.evalValue("[{ title: 'A', shortcut: \(testCase.shortcut) }]"))
+            let menu = try #require(item.makePopUpMenu(from: entries))
+            #expect(menu.items[0].keyEquivalent == testCase.keyEquivalent)
+            #expect(menu.items[0].keyEquivalentModifierMask == testCase.modifiers)
+            #expect(!harness.hasException)
+        }
+
+        @Test("An invalid shortcut is ignored, and the entry is still built", arguments: [
+            "42", "true", "''", "{ mods: ['cmd'] }", "{ mods: ['hyper'], key: 'r' }", "{ mods: 'cmd', key: 'r' }",
+            "{ key: 'shift' }", "{ key: 'pad1' }", "{ key: 'notakey' }", "null", "'⌘'", "'⇧⌘'", "'⌘notakey'",
+        ])
+        func testInvalidMenuEntryShortcut(shortcut: String) throws {
+            let harness = makeHarness()
+            harness.eval("var item = hs.menubar.create(true)")
+            let item = try item(in: harness)
+            defer { item.destroy() }
+            let entries = try #require(harness.evalValue("[{ title: 'A', shortcut: \(shortcut) }]"))
+            let menu = try #require(item.makePopUpMenu(from: entries))
+            #expect(menu.items.map(\.title) == ["A"])
+            #expect(menu.items[0].keyEquivalent.isEmpty)
+            #expect(!harness.hasException)
+        }
+
         @Test("titleColor colours the menu bar title, and null restores the standard colour")
         func testTitleColor() throws {
             let harness = makeHarness()
