@@ -1,0 +1,16 @@
+{# Rows for a params table, from the paramRows or returnTree filters: each parameter (or field of a
+   returned object), then the fields of any object it takes, nested beneath it as a tree #}
+{% macro treeRows(rows) %}
+{% for row in rows %}
+{% set param = row.node %}
+<tr class="param-row{% if row.depth > 0 %} param-field{% endif %}{% if row.hasFields %} param-has-fields{% endif %}{% if row.groupEnd %} param-group-end{% endif %}"{% if row.depth > 0 %} style="--depth: {{ row.depth }}"{% endif %}>
+    <td class="param-name">
+        {%- for continues in row.trunks %}{% if continues %}<span class="tree-line" style="--level: {{ loop.index }}" aria-hidden="true"></span>{% endif %}{% endfor %}
+        {%- if row.depth > 0 %}<span class="tree-line tree-branch{% if row.last %} tree-last{% endif %}" style="--level: {{ row.depth }}" aria-hidden="true"></span>{% endif %}
+        {%- if row.hasFields %}<span class="tree-line tree-stem" style="--level: {{ row.depth + 1 }}" aria-hidden="true"></span>{% endif -%}
+        <span class="param-name-text">{% if param.rest %}...{% endif %}{{ param.name }}</span>{% if param.optional %} <span class="param-optional">optional</span>{% endif %}</td>
+    <td class="param-type">{{ param | resolveParamType }}</td>
+    <td class="param-desc">{{ param.description | inlineMarkdown | safe }}</td>
+</tr>
+{% endfor %}
+{% endmacro %}

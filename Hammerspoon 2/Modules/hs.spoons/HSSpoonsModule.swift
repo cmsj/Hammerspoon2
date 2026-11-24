@@ -69,7 +69,9 @@ import JavaScriptCoreExtras
     /// or `EINVALIDSPOON` if the Spoon is malformed. An exception thrown by the Spoon's own code is
     /// passed on as it is.
     /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`. It's also the name it's stored under on `hs.spoons`.
-    /// - Parameter options?: {{path?: string}} `path` is a directory to load the Spoon from instead of `Spoons/`. A relative path is relative to your config directory, and `~` is your home directory.
+    /// - Parameter options?: Where to load the Spoon from
+    ///   - path?: {string} A directory to load the Spoon from instead of `Spoons/`. A relative path
+    ///     is relative to your config directory, and `~` is your home directory.
     /// - Returns: {Object} Whatever the Spoon's `init.js` assigned to `module.exports`
     /// - Throws: true
     /// - Example:
@@ -100,7 +102,13 @@ import JavaScriptCoreExtras
     /// `EINTEGRITY` (the download didn't match `sha256`), `EINVALIDSPOON`, `EEXISTS`, or `EIO` (for
     /// anything else, such as failing to write the Spoon to disk).
     /// - Parameter name: The name of the Spoon to install
-    /// - Parameter options: {{source: string, ref?: string, sha256?: string, force?: boolean}} `source` is a GitHub repository (`"owner/repo"` or its `https://github.com/...` URL) or the `https://` URL of a zip file. `ref` is a branch, tag or commit to install from (GitHub only; the default branch if omitted). `sha256` is the expected SHA-256 of the download. `force: true` replaces a Spoon that's already installed, rather than failing.
+    /// - Parameter options: Where to install the Spoon from
+    ///   - source: {string} A GitHub repository (`"owner/repo"` or its `https://github.com/...` URL)
+    ///     or the `https://` URL of a zip file
+    ///   - ref?: {string} A branch, tag or commit to install from (GitHub only; the default branch
+    ///     if omitted)
+    ///   - sha256?: {string} The expected SHA-256 of the download
+    ///   - force?: {boolean} `true` replaces a Spoon that's already installed, rather than failing
     /// - Returns: {Promise<{name: string, version: string, author: string, description: string, source: string, ref: string | null, commit: string | null}>} Resolves with the installed Spoon's details
     /// - Example:
     /// ```js
@@ -112,7 +120,10 @@ import JavaScriptCoreExtras
 
     /// List the Spoons that can be installed from a source, without installing anything.
     /// - Parameter source: A GitHub repository (`"owner/repo"` or its `https://github.com/...` URL) or the `https://` URL of a zip file
-    /// - Parameter options?: {{ref?: string, sha256?: string}} As for `install()`
+    /// - Parameter options?: Where to look, as for `install()`
+    ///   - ref?: {string} A branch, tag or commit to look in (GitHub only; the default branch if
+    ///     omitted)
+    ///   - sha256?: {string} The expected SHA-256 of the download
     /// - Returns: {Promise<{name: string, version: string, author: string, description: string}[]>} Resolves with the Spoons found
     /// - Example:
     /// ```js

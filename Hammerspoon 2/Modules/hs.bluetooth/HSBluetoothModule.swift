@@ -113,10 +113,10 @@ import CoreBluetooth
     ///
     /// Each peripheral found is also delivered to `'discovered'` listeners (see `on()`) as soon as it's seen.
     ///
-    /// - Parameter options?: An object with any of:
-    ///   - `seconds` (number, default `10`): how long to scan for, counted from when Bluetooth is ready (e.g. after the permission prompt is answered)
-    ///   - `services` (string[]): only report peripherals advertising one of these service UUIDs
-    ///   - `allowDuplicates` (boolean, default `false`): deliver every advertisement to `'discovered'` listeners, not just the first from each peripheral, e.g. to follow signal strength
+    /// - Parameter options?: How to scan
+    ///   - seconds?: {number} How long to scan for, counted from when Bluetooth is ready (e.g. after the permission prompt is answered). Defaults to `10`
+    ///   - services?: {string[]} Only report peripherals advertising one of these service UUIDs
+    ///   - allowDuplicates?: {boolean} Deliver every advertisement to `'discovered'` listeners, not just the first from each peripheral, e.g. to follow signal strength. Defaults to `false`
     /// - Returns: {Promise<HSBluetoothPeripheral[]>} A Promise resolving to the peripherals found when the scan ends, or when `stopScan()` is called. Rejects if a scan is already running, the options are invalid, or Bluetooth is unavailable
     /// - Example:
     /// ```js

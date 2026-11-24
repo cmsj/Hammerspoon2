@@ -1,4 +1,5 @@
 {% extends "base.njk" %}
+{% from "_params.njk" import treeRows %}
 
 {% block breadcrumb %}
 <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -49,13 +50,13 @@
     {% endif %}
     <div class="method" id="{{ methodName }}">
         <h3>
-            {% if isStatic %}<span class="static-badge">static</span>{% endif %}<a href="#{{ methodName }}">{{ declarationPrefix }}{{ methodName }}({% for param in method.params %}{% if param.rest %}...{% endif %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</a>
+            {% if isStatic %}<span class="static-badge">static</span>{% endif %}<a href="#{{ methodName }}">{{ declarationPrefix }}{{ methodName }}({% for param in method.params %}{% if param.rest %}...{% endif %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ (method.returns | returnTree).type }}{% else %}None{% endif %}</a>
         </h3>
 
         <div class="description">{{ method.description | markdown | safe }}</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">{{ declarationPrefix }}{{ methodName }}({% for param in method.params %}{% if param.rest %}...{% endif %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</code></pre>
+        <pre><code class="language-javascript">{{ declarationPrefix }}{{ methodName }}({% for param in method.params %}{% if param.rest %}...{% endif %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType }}{% else %}None{% endif %}</code></pre>
 
         {% if method.params.length > 0 %}
         <div class="card-section-label">Parameters</div>
@@ -68,21 +69,30 @@
                 </tr>
             </thead>
             <tbody>
-                {% for param in method.params %}
-                <tr>
-                    <td class="param-name">{% if param.rest %}...{% endif %}{{ param.name }}</td>
-                    <td class="param-type">{{ param | resolveParamType }}</td>
-                    <td class="param-desc">{{ param.description | inlineMarkdown | safe }}</td>
-                </tr>
-                {% endfor %}
+                {{ treeRows(method.params | paramRows) }}
             </tbody>
         </table>
         {% endif %}
 
         <div class="card-section-label">Returns</div>
         {% if method.returns %}
-        <div class="return-type">{{ method.returns | formatReturnType | safe }}</div>
+        {% set returnTree = method.returns | returnTree %}
+        <div class="return-type">{{ returnTree.type }}</div>
         <div class="return-desc">{{ method.returns.description | inlineMarkdown | safe }}</div>
+        {% if returnTree.rows.length > 0 %}
+        <table class="params-table returns-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ treeRows(returnTree.rows) }}
+            </tbody>
+        </table>
+        {% endif %}
         {% else %}
         <div class="return-desc" style="color: var(--text-muted);">None</div>
         {% endif %}
