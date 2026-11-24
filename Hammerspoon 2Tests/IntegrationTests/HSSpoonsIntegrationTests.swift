@@ -14,7 +14,7 @@ import Synchronization
 
 /// Serves archives to `HSSpoonsModule` in place of the network, recording what was requested
 private final class FakeDownloads: Sendable {
-    private let state = Mutex<(archives: [URL: Data], requested: [URL])>(([:], []))
+    private let state = Mutex<(archives: [URL: Data], requested: [URL], finished: Int)>(([:], [], 0))
     private let gate = Mutex<(closed: Set<URL>, waiting: [(url: URL, continuation: CheckedContinuation<Void, Never>)])>(([], []))
     /// When set, a download waits until cancelled instead of answering
     let hangs: Bool
@@ -28,6 +28,9 @@ private final class FakeDownloads: Sendable {
     }
 
     var requested: [URL] { state.withLock { $0.requested } }
+
+    /// How many downloads have returned or thrown, including by being cancelled
+    var finishedCount: Int { state.withLock { $0.finished } }
 
     /// Makes downloads of `url` wait, once requested, until it's opened again
     func close(_ url: String) {
@@ -48,6 +51,7 @@ private final class FakeDownloads: Sendable {
     var waitingCount: Int { gate.withLock { $0.waiting.count } }
 
     func fetch(_ url: URL) async throws -> Data {
+        defer { state.withLock { $0.finished += 1 } }
         await withCheckedContinuation { continuation in
             let wait = gate.withLock { gate in
                 if gate.closed.contains(url) { gate.waiting.append((url, continuation)) }
@@ -573,11 +577,14 @@ struct HSSpoonsTests {
             renamed.spoon(at: "Alarms.spoon2", name: "Alarms")
             ctx.downloads.serve(renamed.data, at: otherURL)
 
-            // Alarm is updated first, then Clock waits for its download
+            // Alarm is updated first, then Clock and Greeter wait for the one download they share
+            let requestedBefore = ctx.downloads.requested.count
             ctx.downloads.close(repositoryURL)
             ctx.start("hs.spoons.updateAll().then(r => r.map(x => `${x.name}:${x.status}:${x.error === null ? 'ok' : x.error.code}`).join(','))")
             #expect(ctx.harness.evalBool("hs.spoons.isUpdating") == true)
-            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.downloads.waitingCount == 1 })
+            #expect(await ctx.harness.waitForAsync(timeout: 5) {
+                ctx.downloads.waitingCount == 1 && ctx.module.installer.downloadCallerCount == 2
+            })
             #expect(ctx.harness.evalBool("hs.spoons.isUpdating") == true)
             ctx.downloads.open(repositoryURL)
             #expect(await ctx.settled()?.toString() == "Alarm:failed:ENOTFOUND,Clock:upToDate:ok,Greeter:updated:ok,Local:skipped:ok")
@@ -587,6 +594,7 @@ struct HSSpoonsTests {
             #expect(try ctx.installedVersion("Clock") == "1.0.0")
             #expect(try ctx.installedVersion("Alarm") == "1.0.0")
             #expect(!ctx.downloads.requested.contains { $0.absoluteString.contains("Local") })
+            #expect(ctx.downloads.requested.dropFirst(requestedBefore).map(\.absoluteString) == [otherURL, repositoryURL])
 
             func logged(_ fragment: String) -> Bool {
                 HammerspoonLog.shared.entries(minimumLevel: .Info).contains { $0.msg.contains(fragment) }
@@ -686,6 +694,110 @@ struct HSSpoonsTests {
             await JSTestHarness.drainMainActorQueue()
             #expect(ctx.harness.evalBool("__settled") == false)
             #expect(!ctx.isInstalled("Greeter"))
+        }
+    }
+
+    @Suite("shared downloads")
+    @MainActor
+    struct SharedDownloadTests {
+
+        /// Installs each of `names` from the fake repository at once, resolving with each one's
+        /// name, or its error's code
+        private static func installAll(_ names: [String], options: String = "{ source: 'jane/hs2-spoons' }") -> String {
+            let list = names.map { "'\($0)'" }.joined(separator: ", ")
+            return """
+                Promise.allSettled([\(list)].map(name => hs.spoons.install(name, \(options))))
+                    .then(results => results.map(r => r.status === 'fulfilled' ? r.value.name : r.reason.code))
+                """
+        }
+
+        /// The archives extracted into the temporary directory and not yet removed
+        private static func extractedArchives() throws -> Set<String> {
+            let names = try FileManager.default.contentsOfDirectory(atPath: FileManager.default.temporaryDirectory.path)
+            return Set(names.filter { $0.hasPrefix("hs.spoons-") })
+        }
+
+        @Test("installs started together from one source share one download, and nothing is kept afterwards")
+        func testConcurrentInstallsShareDownload() async throws {
+            let ctx = try SpoonsTestContext()
+            ctx.downloads.serve(repositoryArchive(), at: repositoryURL)
+            let archivesBefore = try Self.extractedArchives()
+
+            ctx.downloads.close(repositoryURL)
+            ctx.start(Self.installAll(["Greeter", "Clock", "Nope"]))
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.module.installer.downloadCallerCount == 3 })
+            #expect(ctx.downloads.waitingCount == 1)
+            ctx.downloads.open(repositoryURL)
+
+            // A Spoon the source doesn't have fails on its own, without affecting the others
+            let results = await ctx.settled()
+            #expect(results?.toArray() as? [String] == ["Greeter", "Clock", "ENOTFOUND"])
+            #expect(ctx.downloads.requested == [URL(string: repositoryURL)!])
+            #expect(ctx.isInstalled("Greeter"))
+            #expect(ctx.isInstalled("Clock"))
+            #expect(ctx.module.installer.downloadCallerCount == 0)
+            #expect(try Self.extractedArchives() == archivesBefore)
+
+            // The archive isn't cached: a later install downloads it again
+            await ctx.settle("hs.spoons.install('Greeter', { source: 'jane/hs2-spoons', force: true })")
+            #expect(ctx.downloads.requested.count == 2)
+        }
+
+        @Test("a shared download that fails rejects every install waiting for it")
+        func testSharedDownloadFails() async throws {
+            let ctx = try SpoonsTestContext()
+            ctx.downloads.close(repositoryURL)
+            ctx.start(Self.installAll(["Greeter", "Clock"]))
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.module.installer.downloadCallerCount == 2 })
+            ctx.downloads.open(repositoryURL)
+
+            let results = await ctx.settled()
+            #expect(results?.toArray() as? [String] == ["ENOTFOUND", "ENOTFOUND"])
+            #expect(ctx.downloads.requested.count == 1)
+            #expect(ctx.module.installer.downloadCallerCount == 0)
+        }
+
+        @Test("installs expecting different SHA-256s don't share a download")
+        func testDifferentHashesDontShare() async throws {
+            let ctx = try SpoonsTestContext()
+            let archive = repositoryArchive()
+            ctx.downloads.serve(archive, at: repositoryURL)
+            let wrongHash = String(repeating: "0", count: 64)
+
+            ctx.downloads.close(repositoryURL)
+            ctx.start("""
+                Promise.allSettled([
+                    hs.spoons.install('Greeter', { source: 'jane/hs2-spoons', sha256: '\(sha256Hex(archive))' }),
+                    hs.spoons.install('Clock', { source: 'jane/hs2-spoons', sha256: '\(wrongHash)' }),
+                ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value.name : r.reason.code))
+                """)
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.downloads.waitingCount == 2 })
+            ctx.downloads.open(repositoryURL)
+
+            let results = await ctx.settled()
+            #expect(results?.toArray() as? [String] == ["Greeter", "EINTEGRITY"])
+            #expect(ctx.downloads.requested.count == 2)
+        }
+
+        @Test("shutting down cancels a shared download, so none of its installs are left waiting")
+        func testShutdownCancelsSharedDownload() async throws {
+            let ctx = try SpoonsTestContext(downloads: FakeDownloads(hangs: true))
+            ctx.harness.eval("""
+                globalThis.__settled = false;
+                \(Self.installAll(["Greeter", "Clock"])).then(() => { __settled = true });
+                """)
+            #expect(await ctx.harness.waitForAsync(timeout: 2) {
+                ctx.module.installer.downloadCallerCount == 2 && ctx.downloads.requested.count == 1
+            })
+
+            ctx.module.shutdown()
+            // The download hangs for a minute unless it's cancelled
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.downloads.finishedCount == 1 })
+            #expect(await ctx.harness.waitForAsync(timeout: 5) { ctx.module.installer.downloadCallerCount == 0 })
+            await JSTestHarness.drainMainActorQueue()
+            #expect(ctx.harness.evalBool("__settled") == false)
+            #expect(!ctx.isInstalled("Greeter"))
+            #expect(!ctx.isInstalled("Clock"))
         }
     }
 

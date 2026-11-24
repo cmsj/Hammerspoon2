@@ -153,8 +153,9 @@ import JavaScriptCoreExtras
     /// ```
     @objc func update(_ name: String) -> JSPromise?
 
-    /// Update every installed Spoon, one at a time, as `update()` does, logging each one to the
-    /// Console as it's done, and then a summary. Spoons installed some other way than by
+    /// Update every installed Spoon, as `update()` does, logging each one to the Console as it's
+    /// done, and then a summary. Spoons installed from the same source share one download, and
+    /// different sources are downloaded one at a time. Spoons installed some other way than by
     /// `install()` (such as by opening a `.spoon2` file) are skipped, since there's nowhere to
     /// update them from. A Spoon that fails to update doesn't stop the others. `isUpdating` is
     /// true until they've all finished.
