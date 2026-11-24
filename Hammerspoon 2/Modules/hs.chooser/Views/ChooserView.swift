@@ -164,8 +164,9 @@ extension ChooserView {
         switch entry {
         case .divider:
             Divider()
-        case .item(let title, let menuEntry):
+        case .item(let title, let shortcut, let menuEntry):
             Button(title) { viewModel.onContextMenuSelect?(item, menuEntry) }
+                .keyboardShortcut(shortcut?.keyboardShortcut)
         }
     }
 }

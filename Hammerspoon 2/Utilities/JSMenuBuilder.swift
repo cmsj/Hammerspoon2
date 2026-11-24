@@ -17,6 +17,7 @@ import JavaScriptCore
 /// - `color` (HSColor or hex string): The colour of the title text.
 /// - `icon` (HSImage): Shown to the left of the title.
 /// - `menu` (array): Nested menu item objects, making a submenu.
+/// - `shortcut` (string or `{ mods, key }`): The keyboard shortcut shown next to the item; see `MenuShortcut`.
 ///
 /// The `fn` callbacks are owned by `owner`, and their handlers are collected in `handlers`, which the caller
 /// must keep (and detach from `owner` once done with) for as long as the menu can be used. Reading the
@@ -97,6 +98,17 @@ struct JSMenuBuilder {
                 ])
             } else {
                 AKWarning("\(logPrefix): Ignoring menu item color for \"\(title)\": expected an HSColor or a hex string")
+            }
+        }
+
+        if let sv = entry.objectForKeyedSubscript("shortcut"),
+           !sv.isUndefined, !sv.isNull {
+            do {
+                let shortcut = try MenuShortcut(parsing: sv.toObject() as Any)
+                item.keyEquivalent = shortcut.keyEquivalent
+                item.keyEquivalentModifierMask = shortcut.modifiers
+            } catch {
+                AKWarning("\(logPrefix): Ignoring menu item shortcut for \"\(title)\": \(error)")
             }
         }
 

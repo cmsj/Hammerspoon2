@@ -351,13 +351,22 @@ import SwiftUI
     /// separator. Any other fields on an entry (e.g. an `id`) are passed back to
     /// `onContextMenuSelect` unchanged, so one handler can tell the entries apart.
     ///
+    /// A menu item can show a keyboard shortcut with a `shortcut` field: a string of modifier symbols
+    /// (`⌘` `⇧` `⌥` `⌃`) followed by one key, as the menu shows it (`"⇧⌘C"`, or just `"O"` for no
+    /// modifiers), or an object with the modifiers and key spelled out
+    /// (`{ mods: ["cmd", "shift"], key: "c" }`). Modifier and key names are the same as for
+    /// `hs.hotkey.bind()`.
+    ///
+    /// **A menu shortcut is not a system-wide hotkey**, nor a shortcut for the chooser: pressing it
+    /// chooses the item only while the context menu is open, and does nothing while it's closed.
+    ///
     /// Rows whose choice has `contextMenu: false` show no menu, e.g. for a "Clear history" row.
     /// - Example:
     /// ```js
     /// chooser.contextMenu = [
     ///     { title: "Reveal in Finder", id: "reveal" },
     ///     { type: "divider" },
-    ///     { title: "Copy path", id: "copy" }
+    ///     { title: "Copy path", id: "copy", shortcut: "⇧⌘C" }
     /// ]
     /// ```
     @objc var contextMenu: [Any] { get set }
@@ -666,7 +675,15 @@ import SwiftUI
                     AKWarning("hs.chooser.contextMenu: ignoring entry without a title")
                     return nil
                 }
-                return (entry, .item(title: title, entry: entry))
+                var shortcut: MenuShortcut?
+                if let shortcutValue = entry["shortcut"], !(shortcutValue is NSNull) {
+                    do {
+                        shortcut = try MenuShortcut(parsing: shortcutValue)
+                    } catch {
+                        AKWarning("hs.chooser.contextMenu: Ignoring shortcut for \"\(title)\": \(error)")
+                    }
+                }
+                return (entry, .item(title: title, shortcut: shortcut, entry: entry))
             }
             contextMenuEntries = parsed.map(\.entry)
             viewModel.contextMenuEntries = parsed.map(\.menuEntry)
