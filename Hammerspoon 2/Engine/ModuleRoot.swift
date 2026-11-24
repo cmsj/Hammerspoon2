@@ -64,6 +64,17 @@ import JavaScriptCoreExtras
     /// ```
     @objc func clearConsole()
 
+    /// Check for a newer version of Hammerspoon 2, the same as choosing "Check for Updates…" from its
+    /// menu. If there is one, a window offers to install it. This is useful when Hammerspoon 2 is
+    /// hidden from both the Dock and the menu bar, so that menu can't be reached.
+    /// - Returns: {boolean} true if the check started, false if it couldn't start, e.g. because a
+    ///   check is already in progress
+    /// - Example:
+    /// ```js
+    /// hs.checkForUpdates()
+    /// ```
+    @objc func checkForUpdates() -> Bool
+
     /// Get the messages currently in the Hammerspoon Console, oldest first. This is the same history
     /// the Console window shows, so it's limited by the "Console history length" setting (which
     /// applies to each level separately), and `hs.clearConsole()` empties it.
@@ -201,6 +212,10 @@ import JavaScriptCoreExtras
     private var _onRelaunch: JSCallback?
     private var _onOpenFile: JSCallback?
 
+    /// The updater `hs.checkForUpdates()` uses. Fetched only when it's called, so creating a
+    /// ModuleRoot (e.g. in tests) doesn't start Sparkle's updater.
+    var updateChecker: () -> UpdateChecking = { AppUpdater.updater }
+
     // The context the modules were first used from, recorded with their wrappers, so shutdown()
     // can drop any pins its modules left behind.
     private var context: JSContext?
@@ -324,6 +339,16 @@ import JavaScriptCoreExtras
         if let url = URL(string: "hammerspoon2://closeConsole") {
             NSWorkspace.shared.open(url)
         }
+    }
+
+    @objc func checkForUpdates() -> Bool {
+        let updater = updateChecker()
+        guard updater.canCheckForUpdates else {
+            AKWarning("hs.checkForUpdates(): unable to check for updates right now, a check may already be in progress")
+            return false
+        }
+        updater.checkForUpdates()
+        return true
     }
 
     // MARK: - Relaunch

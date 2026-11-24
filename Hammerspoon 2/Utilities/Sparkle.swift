@@ -16,6 +16,15 @@ enum AppUpdater {
     static var updater: SPUUpdater { controller.updater }
 }
 
+/// What `hs.checkForUpdates()` needs from an updater, so tests can stand in for Sparkle's
+@_documentation(visibility: private)
+protocol UpdateChecking: AnyObject {
+    var canCheckForUpdates: Bool { get }
+    func checkForUpdates()
+}
+
+extension SPUUpdater: UpdateChecking {}
+
 // This view model class publishes when new updates can be checked by the user
 @_documentation(visibility: private)
 final class CheckForUpdatesViewModel: ObservableObject {
