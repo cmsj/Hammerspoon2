@@ -775,6 +775,16 @@ import JavaScriptCore
         #expect(output == "c\nd\n")
     }
 
+    @Test("TaskBuilder.build() throws when withInput() was used")
+    func testBuilderBuildRejectsInput() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        harness.eval("hs.task.builder('/bin/cat').withInput('hello').build()")
+        harness.expectException()
+        #expect(await harness.waitForTasksToComplete(), "No task should have been started")
+    }
+
     @Test("hs.task.runAsync() supports onOutput streaming callback")
     func testRunOnOutput() async {
         let harness = JSTestHarness()

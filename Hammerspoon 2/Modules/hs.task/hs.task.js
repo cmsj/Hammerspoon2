@@ -216,7 +216,9 @@
         }
 
         /**
-         * Set text to write to the task's standard input when it is run
+         * Set text to write to the task's standard input when it is run with run(). A task made
+         * with build() has to be given its input with sendInput() and closeInput() after start(),
+         * so build() throws if this has been set
          * @param {string} input - Text to write to standard input
          * @returns {TaskBuilder} This builder, for chaining
          */
@@ -244,6 +246,10 @@
          * @returns {HSTask} The created task, not yet started
          */
         build() {
+            if (this.input !== null) {
+                throw new Error('hs.task.builder(): build() cannot use withInput(); call sendInput() and closeInput() after start(), or use run()');
+            }
+
             let streamCallback = null;
             if (this.outputCallback) {
                 streamCallback = this.outputCallback;
