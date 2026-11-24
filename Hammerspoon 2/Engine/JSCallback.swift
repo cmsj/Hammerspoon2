@@ -45,8 +45,9 @@ final class JSCallback {
     ///
     /// Returns nil if the value is not an object/function.
     init?(value: JSValue, owner: AnyObject, silentOnUndefined: Bool = false) {
-        if silentOnUndefined && value.isUndefined {
-            // We were called from a place that allows optional callbacks, so we silently return with no error
+        if silentOnUndefined && (value.isUndefined || value.isNull) {
+            // We were called from a place that allows optional callbacks, so we silently return with no error.
+            // Both undefined (argument omitted) and null (explicitly "no callback") mean the same thing here.
             return nil
         }
         guard value.isFunction else {
