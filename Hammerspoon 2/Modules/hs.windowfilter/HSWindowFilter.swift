@@ -687,6 +687,10 @@ final class WindowFilterSettings {
     private func handle(_ change: WindowTracker.Change) {
         guard subscription != nil else { return }
         let isAllowed = change.new.map { allows($0, window: change.window) } ?? false
+        if change.isSilent {
+            membership.record(windowID: change.windowID, isAllowed: isAllowed)
+            return
+        }
         let emissions = membership.process(windowID: change.windowID, events: change.events, isAllowed: isAllowed)
         for emission in emissions {
             // A listener may have removed the last listener, or paused the filter

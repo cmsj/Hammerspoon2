@@ -33,6 +33,9 @@ final class WindowTracker {
         let events: [HSWindowFilterEvent]
         /// The window, still usable for its ID, title, etc. after it's destroyed
         let window: HSWindow
+        /// A window that already existed, found late (e.g. its application couldn't be watched
+        /// at first): subscribers should record it without emitting anything
+        var isSilent = false
     }
 
     /// A window, with what a filter's `windows()` needs to sort it
@@ -400,6 +403,9 @@ final class WindowTracker {
         guard announce else {
             // Older than any window created since, as for those found when starting up
             track(element, state: state, createdAt: now - 1_000_000 + Double(id) / 1000, focusedAt: state.hasFocus ? now : 0)
+            if let tracked = windows[id] {
+                deliver(Change(windowID: id, old: nil, new: state, events: [], window: makeWindow(tracked, app: app), isSilent: true))
+            }
             return
         }
         track(element, state: state, createdAt: now, focusedAt: state.hasFocus ? now : 0)

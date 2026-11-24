@@ -33,6 +33,17 @@ struct WindowFilterMembership {
         hasWindow = !allowed.isEmpty
     }
 
+    /// Records whether a window is allowed, without emitting anything: for a window that already
+    /// existed but was only found late
+    mutating func record(windowID id: Int, isAllowed: Bool) {
+        if isAllowed {
+            allowed.insert(id)
+        } else {
+            allowed.remove(id)
+        }
+        hasWindow = !allowed.isEmpty
+    }
+
     /// Records whether window `id` is now allowed, after a change that amounted to `events`.
     /// - Returns: The events to emit, in order
     mutating func process(windowID id: Int, events: [HSWindowFilterEvent], isAllowed: Bool) -> [Emission] {

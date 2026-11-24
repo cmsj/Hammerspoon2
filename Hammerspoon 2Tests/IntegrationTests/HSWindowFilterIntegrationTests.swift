@@ -183,6 +183,16 @@ struct HSWindowFilterIntegrationTests {
             #expect(membership.hasWindow)
         }
 
+        @Test("a window found late is recorded silently, so its later events are delivered")
+        func testSilentlyRecordedWindow() {
+            var membership = WindowFilterMembership()
+            membership.record(windowID: 7, isAllowed: true)
+            #expect(membership.allowed == [7])
+            #expect(membership.hasWindow)
+            #expect(membership.process(windowID: 7, events: [.windowDestroyed], isAllowed: false).map(\.event)
+                    == [.windowDestroyed, .windowsChanged, .windowRejected, .hasNoWindows])
+        }
+
         @Test("windows that were never allowed produce nothing, and allowed ones just pass their events on")
         func testUnchangedMembership() {
             var membership = WindowFilterMembership()
