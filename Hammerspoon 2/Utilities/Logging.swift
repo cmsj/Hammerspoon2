@@ -61,6 +61,11 @@ final class HammerspoonLog {
     /// on every single log call.
     private(set) var latestSequence: UInt64 = 0
 
+    /// Called synchronously with every new entry. Unlike `entries(minimumLevel:)`,
+    /// this sees each entry even if the log is cleared or the entry is evicted afterwards.
+    @ObservationIgnored
+    private var observers: [UUID: (HammerspoonLogEntry) -> Void] = [:]
+
     private func capacity(for level: HammerspoonLogType) -> Int {
         level == .Garbage ? Self.garbageBufferCapacity : SettingsManager.shared.consoleHistoryLength
     }
@@ -70,13 +75,30 @@ final class HammerspoonLog {
         latestSequence = sequenceCounter
 
         var levelBuffer = buffers[level] ?? []
-        levelBuffer.append(HammerspoonLogEntry(sequence: sequenceCounter, logType: level, msg: msg))
+        let entry = HammerspoonLogEntry(sequence: sequenceCounter, logType: level, msg: msg)
+        levelBuffer.append(entry)
 
         let cap = capacity(for: level)
         if levelBuffer.count > cap {
             levelBuffer.removeFirst(levelBuffer.count - cap)
         }
         buffers[level] = levelBuffer
+
+        for observer in observers.values {
+            observer(entry)
+        }
+    }
+
+    /// Registers `observer` to be called with every new log entry.
+    /// - Returns: A token to pass to `removeObserver(_:)`.
+    func addObserver(_ observer: @escaping (HammerspoonLogEntry) -> Void) -> UUID {
+        let token = UUID()
+        observers[token] = observer
+        return token
+    }
+
+    func removeObserver(_ token: UUID) {
+        observers[token] = nil
     }
 
     /// The merged, chronological view across every per-level buffer at or above

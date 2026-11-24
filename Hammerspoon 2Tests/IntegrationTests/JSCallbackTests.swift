@@ -16,16 +16,24 @@ struct JSCallbackTests {
     /// AKLog appends to HammerspoonLog from a main-actor Task, and other suites may be logging
     /// concurrently. So `body` is bracketed by two sentinels logged in the same synchronous
     /// stretch: their Tasks are enqueued back to back with `body`'s, so whatever lands between
-    /// them came from `body`.
+    /// them came from `body`. Entries are captured by an observer as they're logged, because
+    /// other suites (e.g. HammerspoonLogTests) clear the shared log history.
     private func errorsLogged(by body: () -> Void) async -> [String] {
         let start = "JSCallbackTests start \(UUID().uuidString)"
         let end = "JSCallbackTests end \(UUID().uuidString)"
+        var messages: [String] = []
+        let token = HammerspoonLog.shared.addObserver { entry in
+            if entry.logType == .Error {
+                messages.append(entry.msg)
+            }
+        }
+        defer { HammerspoonLog.shared.removeObserver(token) }
+
         AKError(start)
         body()
         AKError(end)
 
         for _ in 0..<200 {
-            let messages = HammerspoonLog.shared.entries(minimumLevel: .Error).map(\.msg)
             if let startIndex = messages.firstIndex(of: start), let endIndex = messages.firstIndex(of: end) {
                 return Array(messages[(startIndex + 1)..<endIndex])
             }
