@@ -71,6 +71,7 @@ import JavaScriptCoreExtras
 
     /// Write data to the task's stdin
     /// - Parameter data: The string data to write
+    /// - Note: The data is written in the background, in the order `sendInput()` was called, so a large write doesn't block Hammerspoon while the task reads it. It has no effect before the task has started, after it has finished, or after `closeInput()`.
     /// - Example:
     /// ```js
     /// const t = hs.task.new("/usr/bin/cat", []).start()
@@ -79,6 +80,7 @@ import JavaScriptCoreExtras
     @objc func sendInput(_ data: String)
 
     /// Close the task's stdin
+    /// - Note: Any data passed to `sendInput()` is still written before stdin is closed.
     /// - Example:
     /// ```js
     /// const t = hs.task.new("/usr/bin/cat", []).start()
@@ -183,6 +185,11 @@ import JavaScriptCoreExtras
     private var stdoutPipe: Pipe?
     private var stderrPipe: Pipe?
     private var stdinPipe: Pipe?
+    private var inputClosed = false
+
+    // Writes to stdin block while the pipe is full, so they happen on this queue rather than
+    // the main thread. It's serial, so writes stay in order and closeInput() runs after them.
+    private let stdinQueue = DispatchQueue(label: "net.tenshu.Hammerspoon-2.hs.task.stdin")
 
     private var exitCode: Int32?
     private var exitReason: String?
@@ -288,6 +295,10 @@ import JavaScriptCoreExtras
         process.standardError = stderrPipe
         process.standardInput = stdinPipe
 
+        // If the task exits without reading all its input, writing to stdin must fail with
+        // EPIPE rather than raise SIGPIPE, which would kill Hammerspoon
+        _ = fcntl(stdinPipe.fileHandleForWriting.fileDescriptor, F_SETNOSIGPIPE, 1)
+
         self.process = process
         self.stdoutPipe = stdoutPipe
         self.stderrPipe = stderrPipe
@@ -357,25 +368,40 @@ import JavaScriptCoreExtras
     }
 
     @objc func sendInput(_ data: String) {
-        guard let stdinPipe = stdinPipe else {
-            AKWarning("hs.task:sendInput(): stdin pipe not available")
+        guard let stdinPipe, state == .running, !inputClosed else {
+            AKWarning("hs.task:sendInput(): The task isn't running, or its input has been closed")
             return
         }
 
-        if let dataToWrite = data.data(using: .utf8) {
+        let handle = stdinPipe.fileHandleForWriting
+        let dataToWrite = Data(data.utf8)
+        stdinQueue.async {
             do {
-                try stdinPipe.fileHandleForWriting.write(contentsOf: dataToWrite)
+                try handle.write(contentsOf: dataToWrite)
             } catch {
-                AKError("hs.task:sendInput(): Failed to write to stdin: \(error.localizedDescription)")
+                let nsError = error as NSError
+                let posixError = nsError.domain == NSPOSIXErrorDomain ? nsError : nsError.userInfo[NSUnderlyingErrorKey] as? NSError
+                if posixError?.domain == NSPOSIXErrorDomain && posixError?.code == Int(EPIPE) {
+                    // The task exited, or closed its stdin, without reading all its input
+                    AKDebug("hs.task:sendInput(): The task stopped reading its input")
+                } else {
+                    AKError("hs.task:sendInput(): Failed to write to stdin: \(error.localizedDescription)")
+                }
             }
         }
     }
 
     @objc func closeInput() {
-        do {
-            try stdinPipe?.fileHandleForWriting.close()
-        } catch {
-            AKError("hs.task:closeInput(): Failed to close stdin: \(error.localizedDescription)")
+        guard let stdinPipe, !inputClosed else { return }
+        inputClosed = true
+
+        let handle = stdinPipe.fileHandleForWriting
+        stdinQueue.async {
+            do {
+                try handle.close()
+            } catch {
+                AKError("hs.task:closeInput(): Failed to close stdin: \(error.localizedDescription)")
+            }
         }
     }
 
