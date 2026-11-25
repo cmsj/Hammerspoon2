@@ -377,12 +377,15 @@ final class KeyboardLayout {
     /// The key code table for the current keyboard layout.
     private(set) var keyCodes: KeyCodeTable
 
+    // Never released: this object lives for the life of the app.
+    private var inputSourceObserver: DistributedNotificationObserver?
+
     private init() {
         keyCodes = .current()
-        let name = Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
-        // Never removed: this object lives for the life of the app.
-        DistributedNotificationCenter.default().addObserver(forName: name, object: nil, queue: .main) { _ in
-            MainActor.assumeIsolated { KeyboardLayout.shared.refresh() }
+        inputSourceObserver = DistributedNotificationObserver(
+            name: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
+        ) {
+            KeyboardLayout.shared.refresh()
         }
     }
 
