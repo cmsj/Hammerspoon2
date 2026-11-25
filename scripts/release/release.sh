@@ -724,6 +724,10 @@ local_cleanup() {
         git worktree remove --force "$LOCAL_SRC" 2>/dev/null || rm -rf "$LOCAL_SRC"
         git worktree prune
     fi
+    if [ -n "${LOCAL_INSTALL_LOCK:-}" ]; then
+        rm -rf "$LOCAL_INSTALL_LOCK"
+        LOCAL_INSTALL_LOCK=""
+    fi
 }
 
 cmd_local() {
@@ -819,10 +823,21 @@ cmd_local() {
         local installed="$INSTALL_DIR/$APP_NAME.app" bundle_id
         bundle_id="$(plutil -extract CFBundleIdentifier raw "$app/Contents/Info.plist")"
         log "Installing to $installed"
+        # Two runs replacing the app at once could move one build inside the
+        # other, so installs take turns. Installs are quick, so a lock that
+        # doesn't go away was left by a run that died, and is for you to remove.
+        local install_lock="$WORK_ROOT/local/install.lock" waited=0
+        until mkdir "$install_lock" 2>/dev/null; do
+            [ "$waited" -lt 120 ] || die "another install has held $install_lock for a minute; if none is running, remove it and run again"
+            [ "$waited" -gt 0 ] || echo "Waiting for another install to finish"
+            sleep 0.5
+            waited=$((waited + 1))
+        done
+        LOCAL_INSTALL_LOCK="$install_lock"
         if pgrep -xq "$APP_NAME"; then
             echo "Quitting the running $APP_NAME"
             osascript -e "tell application id \"$bundle_id\" to quit" >/dev/null || true
-            local waited=0
+            waited=0
             while pgrep -xq "$APP_NAME"; do
                 [ "$waited" -lt 20 ] || die "$APP_NAME didn't quit; quit it and run again, or copy $app yourself"
                 sleep 0.5
@@ -840,13 +855,16 @@ cmd_local() {
         if [ -e "$installed" ]; then
             mv "$installed" "$outgoing" || { rm -rf "$incoming"; die "couldn't move $installed aside"; }
         fi
-        if ! mv "$incoming" "$installed"; then
-            [ ! -e "$outgoing" ] || mv "$outgoing" "$installed"
+        # mv would move it inside an app that's somehow still there.
+        if [ -e "$installed" ] || ! mv "$incoming" "$installed"; then
+            [ ! -e "$outgoing" ] || [ -e "$installed" ] || mv "$outgoing" "$installed"
             rm -rf "$incoming"
             die "couldn't move the build into $installed"
         fi
         rm -rf "$outgoing"
         open "$installed"
+        rm -rf "$LOCAL_INSTALL_LOCK"
+        LOCAL_INSTALL_LOCK=""
     fi
 
     log "Built $version (build $build)"
