@@ -14,7 +14,8 @@
 # macOS carries the permissions you've granted (Accessibility and so on) over
 # to it, which it doesn't for Xcode's builds. It builds in a temporary worktree
 # (so uncommitted changes aren't included), and leaves the app and its
-# archive (for symbolicating crashes) in build/release/local/<label>. It needs
+# archive (for symbolicating crashes) in build/release/local/<label>.<time>.<pid>,
+# removing earlier builds of the same pull requests once it's done. It needs
 # the Developer ID certificate and notarytool profile, but not the Sparkle key.
 #
 # prepare changes nothing outside build/release/<version>. Once it has checked
@@ -126,7 +127,7 @@ Commands:
                to resume if it stops.
   local        Build a signed, notarised app for local testing from --base
                with the given pull requests merged in, into
-               build/release/local/<label>. Being signed like a release, it
+               build/release/local/. Being signed like a release, it
                keeps the permissions you've granted to Hammerspoon 2.
   sparkle-bin  Print the directory holding Sparkle's command line tools
                (generate_keys, sign_update, ...).
@@ -725,14 +726,6 @@ local_cleanup() {
     fi
 }
 
-# local_unlock: release this run's lock on its work directory, if it holds it.
-local_unlock() {
-    if [ -n "${LOCAL_LOCK:-}" ]; then
-        rm -rf "$LOCAL_LOCK"
-        LOCAL_LOCK=""
-    fi
-}
-
 cmd_local() {
     local pr
     for pr in ${LOCAL_PRS[@]+"${LOCAL_PRS[@]}"}; do
@@ -761,28 +754,13 @@ cmd_local() {
         label+="${label:+-}pr$pr"
     done
     [ -n "$label" ] || label="$(git rev-parse --short "$base_sha")"
-    local work="$WORK_ROOT/local/$label"
-
-    # Another run building the same pull requests would share (and delete)
-    # this work directory, so only one may use it at a time. A lock left by a
-    # run that's no longer alive is taken over.
+    # Each run gets a directory of its own, so runs at the same time can't
+    # touch each other's files. Its pid marks it as in use until it's done.
     mkdir -p "$WORK_ROOT/local"
-    local lock="$work.lock" holder
-    if ! mkdir "$lock" 2>/dev/null; then
-        holder="$(cat "$lock/pid" 2>/dev/null || true)"
-        if [ -n "$holder" ] && kill -0 "$holder" 2>/dev/null; then
-            die "another local build (pid $holder) is already using $work"
-        fi
-        rm -rf "$lock"
-        mkdir "$lock" || die "couldn't lock $work"
-    fi
-    LOCAL_LOCK="$lock"
-    echo $$ > "$lock/pid"
-    trap 'local_cleanup; local_unlock' EXIT
-
-    rm -rf "$work"
-    git worktree prune
-    mkdir -p "$work"
+    local work="$WORK_ROOT/local/$label.$(date +%Y%m%d-%H%M%S).$$"
+    mkdir "$work" || die "couldn't create $work"
+    echo $$ > "$work/.pid"
+    trap local_cleanup EXIT
 
     # Build in a throwaway worktree, so neither this checkout nor its
     # uncommitted changes are touched or included.
@@ -822,6 +800,20 @@ cmd_local() {
     rm -rf "$work/export"
     local_cleanup
     LOCAL_SRC=""
+    : > "$work/.done"
+
+    # Clear out earlier builds of the same pull requests that have finished,
+    # or whose run has died, keeping only this one.
+    local other other_pid
+    for other in "$WORK_ROOT/local/$label".*; do
+        [ -d "$other" ] && [ "$other" != "$work" ] || continue
+        if [ ! -f "$other/.done" ]; then
+            other_pid="$(cat "$other/.pid" 2>/dev/null || true)"
+            [ -n "$other_pid" ] && ! kill -0 "$other_pid" 2>/dev/null || continue
+        fi
+        rm -rf "$other"
+    done
+    git worktree prune
 
     if [ -n "$INSTALL_DIR" ]; then
         local installed="$INSTALL_DIR/$APP_NAME.app" bundle_id
