@@ -5,6 +5,19 @@
 #   scripts/release/release.sh prepare [--notes-file FILE] [--since TAG] [--edit-notes] [--channel NAME] <version>
 #   scripts/release/release.sh execute [--dry-run] [--yes] <version>
 #
+# or build a signed, notarised copy of the app for local testing, from main
+# with pull requests merged in, with
+#
+#   scripts/release/release.sh local [--pr NUMBER]... [--base REF] [--install | --install-to DIR]
+#
+# It's signed with the same Developer ID and bundle identifier as releases, so
+# macOS carries the permissions you've granted (Accessibility and so on) over
+# to it, which it doesn't for Xcode's builds. It builds in a temporary worktree
+# (so uncommitted changes aren't included), and leaves the app and its
+# archive (for symbolicating crashes) in build/release/local/<label>.<time>.<pid>,
+# removing earlier builds of the same pull requests once it's done. It needs
+# the Developer ID certificate and notarytool profile, but not the Sparkle key.
+#
 # prepare changes nothing outside build/release/<version>. Once it has checked
 # that <version> is unused and that every tool, key and permission both phases
 # need is in place, it:
@@ -100,6 +113,7 @@ usage() {
 Usage: $(basename "$0") prepare [--notes-file FILE] [--since TAG] [--edit-notes] [--channel NAME] <version>
        $(basename "$0") appcast <version>
        $(basename "$0") execute [--dry-run] [--yes] <version>
+       $(basename "$0") local [--pr NUMBER]... [--base REF] [--install | --install-to DIR]
        $(basename "$0") sparkle-bin
 
 Commands:
@@ -111,6 +125,10 @@ Commands:
   execute      Tag, push, create the GitHub release, put the appcast live and
                update the Homebrew cask, from what prepare left. Run it again
                to resume if it stops.
+  local        Build a signed, notarised app for local testing from --base
+               with the given pull requests merged in, into
+               build/release/local/. Being signed like a release, it
+               keeps the permissions you've granted to Hammerspoon 2.
   sparkle-bin  Print the directory holding Sparkle's command line tools
                (generate_keys, sign_update, ...).
 
@@ -129,6 +147,13 @@ Options:
   --dry-run          (execute) Run the checks and show what's done and what's
                      left, without changing anything.
   --yes              (execute) Don't ask for confirmation.
+  --pr NUMBER        (local) Merge pull request NUMBER into the build. Give it
+                     more than once to merge several, in order.
+  --base REF         (local) Build from REF instead of origin/main (fetched
+                     first), e.g. HEAD for this checkout's last commit.
+  --install          (local) Quit Hammerspoon 2 if it's running, replace
+                     /Applications/Hammerspoon 2.app with the build and open it.
+  --install-to DIR   (local) Like --install, but into DIR.
   -h, --help         Show this help.
 
 <version> is a tag name like 0.0.15 or 1.0.0-beta.1. Versions with a suffix
@@ -149,6 +174,9 @@ EDIT_NOTES=0
 CHANNEL=""
 DRY_RUN=0
 ASSUME_YES=0
+LOCAL_PRS=()
+LOCAL_BASE="origin/main"
+INSTALL_DIR=""
 VERSION=""
 while [ $# -gt 0 ]; do
     case "$COMMAND:$1" in
@@ -158,8 +186,13 @@ while [ $# -gt 0 ]; do
         prepare:--channel) CHANNEL="${2:?--channel needs a name}"; shift ;;
         execute:--dry-run) DRY_RUN=1 ;;
         execute:--yes) ASSUME_YES=1 ;;
+        local:--pr) LOCAL_PRS+=("${2:?--pr needs a pull request number}"); shift ;;
+        local:--base) LOCAL_BASE="${2:?--base needs a git ref}"; shift ;;
+        local:--install) INSTALL_DIR="/Applications" ;;
+        local:--install-to) INSTALL_DIR="${2:?--install-to needs a directory}"; shift ;;
         *:-h|*:--help) usage; exit 0 ;;
         *:-*) usage >&2; die "unknown option for '$COMMAND': $1" ;;
+        local:*) usage >&2; die "local takes no version: $1" ;;
         *) [ -z "$VERSION" ] || die "only one version may be given"; VERSION="$1" ;;
     esac
     shift
@@ -359,6 +392,100 @@ build_appcast() {
     rm -rf "$scratch"
 }
 
+# build_notarised_app <project> <work dir> <version> <build>
+#
+# Archive the Release scheme of <project> as <work dir>/$APP_NAME.xcarchive
+# with the given version and build number, export it signed with Developer ID
+# to <work dir>/export/$APP_NAME.app, check it, then notarise and staple it.
+build_notarised_app() {
+    local project="$1" work="$2" version="$3" build="$4"
+    local archive="$work/$APP_NAME.xcarchive"
+    local export_dir="$work/export"
+    local app="$export_dir/$APP_NAME.app"
+
+    log "Archiving"
+    xcodebuild archive \
+        -project "$project" \
+        -scheme "$SCHEME" \
+        -configuration Release \
+        -destination 'generic/platform=macOS' \
+        -archivePath "$archive" \
+        -clonedSourcePackagesDirPath "$PACKAGES_DIR" \
+        -skipPackagePluginValidation \
+        MARKETING_VERSION="$version" \
+        CURRENT_PROJECT_VERSION="$build" \
+        > "$work/archive.log" 2>&1 \
+        || { tail -40 "$work/archive.log"; die "archive failed, full log in $work/archive.log"; }
+
+    log "Exporting with Developer ID"
+    cat > "$work/ExportOptions.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>developer-id</string>
+    <key>teamID</key>
+    <string>$TEAM_ID</string>
+    <key>signingStyle</key>
+    <string>automatic</string>
+</dict>
+</plist>
+EOF
+    xcodebuild -exportArchive \
+        -archivePath "$archive" \
+        -exportOptionsPlist "$work/ExportOptions.plist" \
+        -exportPath "$export_dir" \
+        > "$work/export.log" 2>&1 \
+        || { tail -40 "$work/export.log"; die "export failed, full log in $work/export.log"; }
+    [ -d "$app" ] || die "export did not produce $app"
+
+    log "Checking the exported app"
+    local app_plist="$app/Contents/Info.plist"
+    [ "$(plutil -extract CFBundleShortVersionString raw "$app_plist")" = "$version" ] || die "app has the wrong CFBundleShortVersionString"
+    [ "$(plutil -extract CFBundleVersion raw "$app_plist")" = "$build" ] || die "app has the wrong CFBundleVersion"
+    [ -z "${PLIST_KEY:-}" ] || [ "$(plutil -extract SUPublicEDKey raw "$app_plist")" = "$PLIST_KEY" ] || die "app is missing SUPublicEDKey"
+    # The app compares its build number with the IPC broker's to spot a broker left running across
+    # an update, and hs2 compares with the app's, so every binary we ship must carry the same one.
+    # The command line tools have their Info.plist embedded in a __TEXT,__info_plist section.
+    local helper_plist="$app/Contents/XPCServices/HammerspoonOSAScriptHelper.xpc/Contents/Info.plist"
+    [ "$(plutil -extract CFBundleVersion raw "$helper_plist")" = "$build" ] || die "HammerspoonOSAScriptHelper has the wrong CFBundleVersion"
+    local tool
+    for tool in HammerspoonIPCBroker hs2; do
+        [ "$(xcrun otool -X -s __TEXT __info_plist -v "$app/Contents/MacOS/$tool" | plutil -extract CFBundleVersion raw -)" = "$build" ] \
+            || die "$tool has the wrong CFBundleVersion"
+    done
+    codesign --verify --deep --strict "$app"
+    local signature_info
+    signature_info="$(codesign -dvv "$app" 2>&1)"
+    grep -q "^Authority=Developer ID Application: .*($TEAM_ID)" <<<"$signature_info" || die "app is not signed with a Developer ID for $TEAM_ID"
+    grep -q "flags=.*runtime" <<<"$signature_info" || die "app is not signed with the hardened runtime"
+
+    log "Notarising (this usually takes a few minutes)"
+    local notary_zip="$work/notarize.zip"
+    ditto -c -k --sequesterRsrc --keepParent "$app" "$notary_zip"
+    xcrun notarytool submit "$notary_zip" \
+        --keychain-profile "$NOTARY_PROFILE" \
+        --wait \
+        --output-format plist > "$work/notarytool.plist" \
+        || true
+    local notary_status notary_id
+    notary_status="$(plutil -extract status raw "$work/notarytool.plist" 2>/dev/null || echo unknown)"
+    notary_id="$(plutil -extract id raw "$work/notarytool.plist" 2>/dev/null || true)"
+    if [ "$notary_status" != "Accepted" ]; then
+        if [ -n "$notary_id" ]; then
+            xcrun notarytool log "$notary_id" --keychain-profile "$NOTARY_PROFILE" "$work/notarytool-log.json" || true
+            cat "$work/notarytool-log.json" 2>/dev/null || true
+        fi
+        die "notarisation finished with status '$notary_status'"
+    fi
+    rm -f "$notary_zip"
+
+    xcrun stapler staple "$app"
+    xcrun stapler validate "$app"
+    spctl --assess --type execute -vv "$app"
+}
+
 # --- prepare ----------------------------------------------------------------
 
 cmd_prepare() {
@@ -423,91 +550,9 @@ cmd_prepare() {
 
     # --- Build --------------------------------------------------------------
 
-    log "Archiving"
-    xcodebuild archive \
-        -project "$PROJECT" \
-        -scheme "$SCHEME" \
-        -configuration Release \
-        -destination 'generic/platform=macOS' \
-        -archivePath "$archive" \
-        -clonedSourcePackagesDirPath "$PACKAGES_DIR" \
-        -skipPackagePluginValidation \
-        MARKETING_VERSION="$VERSION" \
-        CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
-        > "$WORK/archive.log" 2>&1 \
-        || { tail -40 "$WORK/archive.log"; die "archive failed, full log in $WORK/archive.log"; }
-
-    log "Exporting with Developer ID"
-    cat > "$WORK/ExportOptions.plist" <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>developer-id</string>
-    <key>teamID</key>
-    <string>$TEAM_ID</string>
-    <key>signingStyle</key>
-    <string>automatic</string>
-</dict>
-</plist>
-EOF
-    xcodebuild -exportArchive \
-        -archivePath "$archive" \
-        -exportOptionsPlist "$WORK/ExportOptions.plist" \
-        -exportPath "$export_dir" \
-        > "$WORK/export.log" 2>&1 \
-        || { tail -40 "$WORK/export.log"; die "export failed, full log in $WORK/export.log"; }
-    [ -d "$app" ] || die "export did not produce $app"
-
-    log "Checking the exported app"
-    local app_plist="$app/Contents/Info.plist"
-    [ "$(plutil -extract CFBundleShortVersionString raw "$app_plist")" = "$VERSION" ] || die "app has the wrong CFBundleShortVersionString"
-    [ "$(plutil -extract CFBundleVersion raw "$app_plist")" = "$BUILD_NUMBER" ] || die "app has the wrong CFBundleVersion"
-    [ "$(plutil -extract SUPublicEDKey raw "$app_plist")" = "$PLIST_KEY" ] || die "app is missing SUPublicEDKey"
-    # The app compares its build number with the IPC broker's to spot a broker left running across
-    # an update, and hs2 compares with the app's, so every binary we ship must carry the same one.
-    # The command line tools have their Info.plist embedded in a __TEXT,__info_plist section.
-    local helper_plist="$app/Contents/XPCServices/HammerspoonOSAScriptHelper.xpc/Contents/Info.plist"
-    [ "$(plutil -extract CFBundleVersion raw "$helper_plist")" = "$BUILD_NUMBER" ] || die "HammerspoonOSAScriptHelper has the wrong CFBundleVersion"
-    local tool
-    for tool in HammerspoonIPCBroker hs2; do
-        [ "$(xcrun otool -X -s __TEXT __info_plist -v "$app/Contents/MacOS/$tool" | plutil -extract CFBundleVersion raw -)" = "$BUILD_NUMBER" ] \
-            || die "$tool has the wrong CFBundleVersion"
-    done
+    build_notarised_app "$PROJECT" "$WORK" "$VERSION" "$BUILD_NUMBER"
     local min_system_version
-    min_system_version="$(plutil -extract LSMinimumSystemVersion raw "$app_plist")"
-    codesign --verify --deep --strict "$app"
-    local signature_info
-    signature_info="$(codesign -dvv "$app" 2>&1)"
-    grep -q "^Authority=Developer ID Application: .*($TEAM_ID)" <<<"$signature_info" || die "app is not signed with a Developer ID for $TEAM_ID"
-    grep -q "flags=.*runtime" <<<"$signature_info" || die "app is not signed with the hardened runtime"
-
-    # --- Notarise -----------------------------------------------------------
-
-    log "Notarising (this usually takes a few minutes)"
-    local notary_zip="$WORK/notarize.zip"
-    ditto -c -k --sequesterRsrc --keepParent "$app" "$notary_zip"
-    xcrun notarytool submit "$notary_zip" \
-        --keychain-profile "$NOTARY_PROFILE" \
-        --wait \
-        --output-format plist > "$WORK/notarytool.plist" \
-        || true
-    local notary_status notary_id
-    notary_status="$(plutil -extract status raw "$WORK/notarytool.plist" 2>/dev/null || echo unknown)"
-    notary_id="$(plutil -extract id raw "$WORK/notarytool.plist" 2>/dev/null || true)"
-    if [ "$notary_status" != "Accepted" ]; then
-        if [ -n "$notary_id" ]; then
-            xcrun notarytool log "$notary_id" --keychain-profile "$NOTARY_PROFILE" "$WORK/notarytool-log.json" || true
-            cat "$WORK/notarytool-log.json" 2>/dev/null || true
-        fi
-        die "notarisation finished with status '$notary_status'"
-    fi
-    rm -f "$notary_zip"
-
-    xcrun stapler staple "$app"
-    xcrun stapler validate "$app"
-    spctl --assess --type execute -vv "$app"
+    min_system_version="$(plutil -extract LSMinimumSystemVersion raw "$app/Contents/Info.plist")"
 
     # --- Sparkle artefacts --------------------------------------------------
 
@@ -669,6 +714,167 @@ cmd_appcast() {
     build_appcast "$pub_date"
     echo "Updated $APPCAST. Review it, then publish it with:"
     echo "  $0 execute $VERSION"
+}
+
+# --- local ------------------------------------------------------------------
+
+# local_cleanup: remove the temporary source worktree, if there is one.
+local_cleanup() {
+    if [ -n "${LOCAL_SRC:-}" ] && [ -d "$LOCAL_SRC" ]; then
+        git worktree remove --force "$LOCAL_SRC" 2>/dev/null || rm -rf "$LOCAL_SRC"
+        git worktree prune
+    fi
+    if [ -n "${LOCAL_INSTALL_LOCK:-}" ]; then
+        rm -rf "$LOCAL_INSTALL_LOCK"
+        LOCAL_INSTALL_LOCK=""
+    fi
+}
+
+cmd_local() {
+    local pr
+    for pr in ${LOCAL_PRS[@]+"${LOCAL_PRS[@]}"}; do
+        [[ "$pr" =~ ^[0-9]+$ ]] || die "--pr needs a pull request number, got '$pr'"
+    done
+    if [ -n "$INSTALL_DIR" ]; then
+        [ -d "$INSTALL_DIR" ] || die "--install: no such directory: $INSTALL_DIR"
+        INSTALL_DIR="$(cd "$INSTALL_DIR" && pwd)"
+    fi
+
+    log "Preflight checks"
+    require_tools xcodebuild xcrun ditto plutil codesign spctl git node jq
+    if [ ${#LOCAL_PRS[@]} -gt 0 ]; then
+        require_tools gh
+        gh auth status >/dev/null 2>&1 || die "gh is not authenticated (run: gh auth login)"
+    fi
+    xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1 \
+        || die "notarytool profile '$NOTARY_PROFILE' is missing or invalid (see the setup notes at the top of $0)"
+
+    git fetch --quiet origin
+    local base_sha
+    base_sha="$(git rev-parse -q --verify "$LOCAL_BASE^{commit}")" || die "--base: no commit $LOCAL_BASE"
+
+    local label=""
+    for pr in ${LOCAL_PRS[@]+"${LOCAL_PRS[@]}"}; do
+        label+="${label:+-}pr$pr"
+    done
+    [ -n "$label" ] || label="$(git rev-parse --short "$base_sha")"
+    # Each run gets a directory of its own, so runs at the same time can't
+    # touch each other's files. Its pid marks it as in use until it's done.
+    mkdir -p "$WORK_ROOT/local"
+    local work="$WORK_ROOT/local/$label.$(date +%Y%m%d-%H%M%S).$$"
+    mkdir "$work" || die "couldn't create $work"
+    echo $$ > "$work/.pid"
+    trap local_cleanup EXIT
+
+    # Build in a throwaway worktree, so neither this checkout nor its
+    # uncommitted changes are touched or included.
+    LOCAL_SRC="$work/src"
+    git worktree add --quiet --detach "$LOCAL_SRC" "$base_sha"
+    echo "Base: $LOCAL_BASE ($(git log -1 --format='%h %s' "$base_sha"))"
+
+    local info
+    for pr in ${LOCAL_PRS[@]+"${LOCAL_PRS[@]}"}; do
+        info="$(gh pr view "$pr" --json number,title,state,headRefName \
+            --jq '"#\(.number) \(.title) [\(.headRefName), \(.state | ascii_downcase)]"' 2>/dev/null)" \
+            || die "couldn't find pull request #$pr"
+        echo "Merging $info"
+        git -C "$LOCAL_SRC" fetch --quiet origin "pull/$pr/head" || die "couldn't fetch pull request #$pr"
+        if ! git -C "$LOCAL_SRC" merge --quiet --no-ff --no-edit -m "Merge pull request #$pr (local build)" FETCH_HEAD; then
+            git -C "$LOCAL_SRC" merge --abort || true
+            die "pull request #$pr doesn't merge cleanly onto $LOCAL_BASE${LOCAL_PRS[1]+ plus the pull requests before it}"
+        fi
+    done
+
+    # Sparkle and the IPC broker compare build numbers, so use the same commit
+    # count a release would. The version is only there to tell builds apart.
+    local build version base_version
+    [ "$(git rev-parse --is-shallow-repository)" = "false" ] \
+        || warn "this is a shallow clone, so the build number will be too low"
+    build="$(git -C "$LOCAL_SRC" rev-list --count HEAD)"
+    base_version="$(git -C "$LOCAL_SRC" describe --tags --abbrev=0 2>/dev/null || echo 0.0.0)"
+    version="$base_version-local.${label//-/.}"
+    echo "Version $version, build $build, commit $(git -C "$LOCAL_SRC" rev-parse --short HEAD)"
+    echo "Working in $work"
+
+    build_notarised_app "$LOCAL_SRC/$(basename "$PROJECT")" "$work" "$version" "$build"
+
+    local app="$work/$APP_NAME.app"
+    rm -rf "$app"
+    ditto "$work/export/$APP_NAME.app" "$app"
+    rm -rf "$work/export"
+    local_cleanup
+    LOCAL_SRC=""
+    if [ -n "$INSTALL_DIR" ]; then
+        local installed="$INSTALL_DIR/$APP_NAME.app" bundle_id
+        bundle_id="$(plutil -extract CFBundleIdentifier raw "$app/Contents/Info.plist")"
+        log "Installing to $installed"
+        # Two runs replacing the app at once could move one build inside the
+        # other, so installs take turns. Installs are quick, so a lock that
+        # doesn't go away was left by a run that died, and is for you to remove.
+        local install_lock="$WORK_ROOT/local/install.lock" waited=0
+        until mkdir "$install_lock" 2>/dev/null; do
+            [ "$waited" -lt 120 ] || die "another install has held $install_lock for a minute; if none is running, remove it and run again"
+            [ "$waited" -gt 0 ] || echo "Waiting for another install to finish"
+            sleep 0.5
+            waited=$((waited + 1))
+        done
+        LOCAL_INSTALL_LOCK="$install_lock"
+        if pgrep -xq "$APP_NAME"; then
+            echo "Quitting the running $APP_NAME"
+            osascript -e "tell application id \"$bundle_id\" to quit" >/dev/null || true
+            waited=0
+            while pgrep -xq "$APP_NAME"; do
+                [ "$waited" -lt 20 ] || die "$APP_NAME didn't quit; quit it and run again, or copy $app yourself"
+                sleep 0.5
+                waited=$((waited + 1))
+            done
+        fi
+        if [ -e "$installed" ]; then
+            [ "$(plutil -extract CFBundleIdentifier raw "$installed/Contents/Info.plist" 2>/dev/null || true)" = "$bundle_id" ] \
+                || die "$installed isn't $APP_NAME ($bundle_id), so it won't be replaced"
+        fi
+        # Copy beside the installed app first, so a failed copy leaves it alone.
+        local incoming="$INSTALL_DIR/.$APP_NAME.app.new-$$" outgoing="$INSTALL_DIR/.$APP_NAME.app.old-$$"
+        rm -rf "$incoming" "$outgoing"
+        ditto "$app" "$incoming" || { rm -rf "$incoming"; die "couldn't copy the build to $INSTALL_DIR"; }
+        if [ -e "$installed" ]; then
+            mv "$installed" "$outgoing" || { rm -rf "$incoming"; die "couldn't move $installed aside"; }
+        fi
+        # mv would move it inside an app that's somehow still there.
+        if [ -e "$installed" ] || ! mv "$incoming" "$installed"; then
+            [ ! -e "$outgoing" ] || [ -e "$installed" ] || mv "$outgoing" "$installed"
+            rm -rf "$incoming"
+            die "couldn't move the build into $installed"
+        fi
+        rm -rf "$outgoing"
+        open "$installed"
+        rm -rf "$LOCAL_INSTALL_LOCK"
+        LOCAL_INSTALL_LOCK=""
+    fi
+
+    # Only now, after any install, is this build finished with its files.
+    : > "$work/.done"
+
+    # Clear out earlier builds of the same pull requests that have finished,
+    # or whose run has died, keeping only this one.
+    local other other_pid
+    for other in "$WORK_ROOT/local/$label".*; do
+        [ -d "$other" ] && [ "$other" != "$work" ] || continue
+        if [ ! -f "$other/.done" ]; then
+            other_pid="$(cat "$other/.pid" 2>/dev/null || true)"
+            [ -n "$other_pid" ] && ! kill -0 "$other_pid" 2>/dev/null || continue
+        fi
+        rm -rf "$other"
+    done
+    git worktree prune
+
+    log "Built $version (build $build)"
+    echo "App:     $app"
+    echo "Archive: $work/$APP_NAME.xcarchive (for symbolicating crashes)"
+    if [ -z "$INSTALL_DIR" ]; then
+        echo "Install it with:"
+        echo "  ditto \"$app\" \"/Applications/$APP_NAME.app\""
+    fi
 }
 
 # --- execute ----------------------------------------------------------------
@@ -1010,6 +1216,10 @@ case "$COMMAND" in
     sparkle-bin)
         resolve_packages
         echo "$SPARKLE_BIN"
+        exit 0
+        ;;
+    local)
+        cmd_local
         exit 0
         ;;
     prepare|appcast|execute) ;;
