@@ -93,13 +93,27 @@ final class CanvasElementStore {
     }
 
     /// Whether two attribute values are equal, comparing them as the Foundation objects
-    /// JavaScriptCore bridges them to
-    private static func isSameValue(_ a: Any?, _ b: Any?) -> Bool {
+    /// JavaScriptCore bridges them to. Booleans only equal booleans, although `NSNumber`
+    /// would otherwise call `true` and `1` equal.
+    static func isSameValue(_ a: Any?, _ b: Any?) -> Bool {
         switch (a, b) {
-        case (nil, nil): return true
-        case let (a?, b?): return (a as AnyObject).isEqual(b as AnyObject)
-        default: return false
+        case (nil, nil):
+            return true
+        case let (a as [String: Any], b as [String: Any]):
+            return a.count == b.count && a.allSatisfy { key, value in b[key].map { isSameValue(value, $0) } ?? false }
+        case let (a as [Any], b as [Any]):
+            return a.count == b.count && zip(a, b).allSatisfy { isSameValue($0, $1) }
+        case let (a?, b?):
+            if isBoolean(a) != isBoolean(b) { return false }
+            return (a as AnyObject).isEqual(b as AnyObject)
+        default:
+            return false
         }
+    }
+
+    private static func isBoolean(_ value: Any) -> Bool {
+        guard let number = value as? NSNumber else { return false }
+        return CFGetTypeID(number) == CFBooleanGetTypeID()
     }
 
     /// Clears the elements, transform and every animation, for `HSCanvas.destroy()`

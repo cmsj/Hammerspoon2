@@ -324,6 +324,22 @@ struct HSCanvasAnimationTests {
             #expect(canvas.presentationElements(at: .now)[0]["text"] as? String == "updated")
         }
 
+        @Test("assignElement() replaces a value with one of a different type that compares equal")
+        func assignElementTypeChange() throws {
+            let harness = makeHarness()
+            setUp(harness)
+            harness.eval("""
+                c.assignElement({type: "rectangle", id: true}, 0);
+                c.assignElement({type: "rectangle", id: 1}, 0);
+                var idAfterNumber = c.elementAttribute(0, "id");
+                c.assignElement({type: "rectangle", id: true}, 0);
+            """)
+            #expect(harness.evalBool("idAfterNumber === 1") == true)
+            #expect(harness.evalBool("c.elementAttribute(0, 'id') === true") == true)
+            #expect(CanvasElementStore.isSameValue(["a": [1, true]], ["a": [1, true]]))
+            #expect(!CanvasElementStore.isSameValue(["a": [1, true]], ["a": [1, 1]]))
+        }
+
         @Test("setTransformation() animates the canvas-wide transform")
         func canvasTransform() throws {
             let harness = makeHarness()
