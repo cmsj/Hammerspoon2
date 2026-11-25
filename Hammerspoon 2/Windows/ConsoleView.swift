@@ -24,6 +24,25 @@ class ConsoleViewModel: WindowAccessorDelegate {
     }
 }
 
+extension FocusedValues {
+    /// Focuses the console's search field, while the console is the key window.
+    @Entry var focusConsoleSearch: (() -> Void)?
+}
+
+/// Edit > Find…, which focuses the console's search field. It's disabled unless the console is the key window.
+@_documentation(visibility: private)
+struct ConsoleFindCommand: View {
+    @FocusedValue(\.focusConsoleSearch) private var focusConsoleSearch
+
+    var body: some View {
+        Button("Find…") {
+            focusConsoleSearch?()
+        }
+        .keyboardShortcut("f", modifiers: .command)
+        .disabled(focusConsoleSearch == nil)
+    }
+}
+
 @_documentation(visibility: private)
 struct ConsoleView: View {
     @State var logs = HammerspoonLog.shared
@@ -40,6 +59,7 @@ struct ConsoleView: View {
 
     @State var searchString: String = ""
     @State var searchPresented: Bool = true
+    @FocusState private var searchFocused: Bool
 
     @State var saveError: String?
     @State var showSaveError: Bool = false
@@ -361,7 +381,13 @@ struct ConsoleView: View {
         } message: {
             Text(saveError ?? "Unknown error")
         }
-        .searchable(text: $searchString, isPresented: $searchPresented)
+        .searchable(text: $searchString, isPresented: $searchPresented, prompt: "Search - ⌘F")
+        .searchFocused($searchFocused)
+        // Lets Edit > Find… (ConsoleFindCommand) focus the search field. A scene value rather than
+        // .focusedValue, so it's available whichever view in the console has focus.
+        .focusedSceneValue(\.focusConsoleSearch) {
+            searchFocused = true
+        }
         .handlesExternalEvents(preferring: ["closeConsole"], allowing: [])
         .onOpenURL { url in
             if let command = url.host(percentEncoded: false) {

@@ -254,6 +254,10 @@ struct Hammerspoon2App: App {
                 CheckForUpdatesView(updater: AppUpdater.updater)
             }
 
+            CommandGroup(after: .textEditing) {
+                ConsoleFindCommand()
+            }
+
             CommandMenu("Debug") {
                 Button("Reload Config") {
                     try? ManagerManager.shared.reload()
