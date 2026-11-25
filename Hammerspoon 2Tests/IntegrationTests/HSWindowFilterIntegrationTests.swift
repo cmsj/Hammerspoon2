@@ -623,8 +623,9 @@ struct HSWindowFilterIntegrationTests {
             #expect(filter == nil)
         }
 
-        @Test("a listening filter is released after shutdown")
-        func testFilterDoesNotLeakAfterReload() {
+        @Test("a listening filter is released after shutdown, and stops watching the app")
+        func testFilterDoesNotLeakAfterReload() throws {
+            let pid = try #require(TestAppControl.pid)
             let tracker = WeakLeakTracker()
             autoreleasepool {
                 let harness = makeHarness()
@@ -632,10 +633,14 @@ struct HSWindowFilterIntegrationTests {
                 if let filter = harness.evalValue("wf")?.toObjectOf(HSWindowFilter.self) as? HSWindowFilter {
                     tracker.track(filter)
                 }
+                #expect(AXObserverHub.shared.hasObserver(for: pid))
                 harness.eval("wf = null")
                 harness.shutdownForLeakTest()
             }
             tracker.assertNoLeaks()
+            // This suite's copy of the test app is watched by nothing else, so its observer only
+            // goes once the shared window tracker has stopped and released its registrations
+            #expect(!AXObserverHub.shared.hasObserver(for: pid))
         }
     }
 }
