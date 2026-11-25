@@ -613,6 +613,8 @@ extension JSTestHarness {
                 loadModule(HSChooserModule.self, as: name)
             case "window":
                 loadModule(HSWindowModule.self, as: name)
+            case "windowfilter":
+                loadModule(HSWindowFilterModule.self, as: name)
             case "spotlight":
                 loadModule(HSSpotlightModule.self, as: name)
             case "streamdeck":

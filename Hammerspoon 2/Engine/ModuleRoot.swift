@@ -189,6 +189,7 @@ import JavaScriptCoreExtras
     @objc var sound: HSSoundModule { get }
     @objc var network: HSNetworkModule { get }
     @objc var window: HSWindowModule { get }
+    @objc var windowfilter: HSWindowFilterModule { get }
     @objc var mouse: HSMouseModule { get }
     @objc var plist: HSPlistModule { get }
     @objc var userdefaults: HSUserDefaultsModule { get }
@@ -496,6 +497,7 @@ import JavaScriptCoreExtras
     @objc var sound:        HSSoundModule           { getOrCreate(name: "sound",        type: HSSoundModule.self)}
     @objc var network:      HSNetworkModule         { getOrCreate(name: "network",      type: HSNetworkModule.self)}
     @objc var window:       HSWindowModule          { getOrCreate(name: "window",       type: HSWindowModule.self)}
+    @objc var windowfilter: HSWindowFilterModule    { getOrCreate(name: "windowfilter", type: HSWindowFilterModule.self)}
     @objc var mouse:        HSMouseModule           { getOrCreate(name: "mouse",        type: HSMouseModule.self)}
     @objc var plist:        HSPlistModule           { getOrCreate(name: "plist",        type: HSPlistModule.self)}
     @objc var userdefaults: HSUserDefaultsModule    { getOrCreate(name: "userdefaults", type: HSUserDefaultsModule.self)}
