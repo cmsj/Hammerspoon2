@@ -83,10 +83,22 @@ final class CanvasElementStore {
 
     /// Replaces the element at `index` with `element`, keeping its identity, so inside
     /// `animate()` every animatable attribute that differs animates to its new value.
+    /// Unchanged attributes are left alone, so a running animation of one keeps going.
     func assign(_ element: [String: Any], at index: Int, animation: CanvasAnimationGroup?, containerSize: CGSize) {
-        let keys = Set(elements[index].keys).union(element.keys)
-        for key in keys {
+        let current = elements[index]
+        let keys = Set(current.keys).union(element.keys)
+        for key in keys where !Self.isSameValue(current[key], element[key]) {
             setAttribute(at: index, key: key, value: element[key], animation: animation, containerSize: containerSize)
+        }
+    }
+
+    /// Whether two attribute values are equal, comparing them as the Foundation objects
+    /// JavaScriptCore bridges them to
+    private static func isSameValue(_ a: Any?, _ b: Any?) -> Bool {
+        switch (a, b) {
+        case (nil, nil): return true
+        case let (a?, b?): return (a as AnyObject).isEqual(b as AnyObject)
+        default: return false
         }
     }
 

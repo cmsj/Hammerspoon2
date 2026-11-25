@@ -91,6 +91,19 @@ struct HSCanvasAnimationTests {
             #expect(HSCanvasAnimationTests.number(midpoint("rotation", nil, 90)) == 45)
         }
 
+        @Test("A partial center and corner radii given as a number animate against their full forms")
+        func equivalentForms() throws {
+            let center = try #require(midpoint("center", nil, ["x": "100%"]) as? [String: Any])
+            #expect(center["x"] as? String == "75.0%")
+            #expect(center["y"] as? String == "50.0%")
+            let radii = try #require(midpoint("roundedRectRadii", nil, ["xRadius": 20, "yRadius": 10]) as? [String: Any])
+            #expect(HSCanvasAnimationTests.number(radii["xRadius"]) == 10)
+            #expect(HSCanvasAnimationTests.number(radii["yRadius"]) == 5)
+            let fromNumber = try #require(midpoint("roundedRectRadii", 10, ["xRadius": 20]) as? [String: Any])
+            #expect(HSCanvasAnimationTests.number(fromNumber["xRadius"]) == 15)
+            #expect(HSCanvasAnimationTests.number(fromNumber["yRadius"]) == 5)
+        }
+
         @Test("Colors interpolate across their forms")
         func colors() throws {
             let color = try #require(midpoint("fillColor", "#000000", ["red": 1, "green": 0.5, "blue": 0, "alpha": 0]) as? [String: Any])
@@ -295,6 +308,22 @@ struct HSCanvasAnimationTests {
             #expect(abs((HSCanvasAnimationTests.number(color["blue"]) ?? 0) - 0.5) < 0.02)
         }
 
+        @Test("assignElement() leaves running animations of unchanged attributes alone")
+        func assignElementKeepsUnchanged() throws {
+            let harness = makeHarness()
+            setUp(harness)
+            harness.eval("""
+                hs.canvas.animate({duration: 10}, () => c.setElementAttribute(0, "frame", {x: 100, y: 0, w: 20, h: 20}));
+                var e = c.canvasElements()[0];
+                e.text = "updated";
+                c.assignElement(e, 0);
+            """)
+            #expect(!harness.hasException)
+            let canvas = try canvas(harness)
+            #expect(canvas.isAnimating)
+            #expect(canvas.presentationElements(at: .now)[0]["text"] as? String == "updated")
+        }
+
         @Test("setTransformation() animates the canvas-wide transform")
         func canvasTransform() throws {
             let harness = makeHarness()
@@ -351,6 +380,40 @@ struct HSCanvasAnimationTests {
             harness.eval("c.setTopLeft({x: 50, y: 60})")
             #expect(harness.evalDouble("c.frame().x") == 50)
             harness.eval("c.destroy()")
+        }
+
+        @Test("Replacing or destroying a window's frame or alpha animation interrupts it")
+        func windowInterrupted() async {
+            let harness = makeHarness()
+            var results: [String: Bool] = [:]
+            for name in ["moved", "faded", "destroyed", "sameCall"] {
+                harness.registerCallback(name) { (finished: Bool) in results[name] = finished }
+            }
+            harness.eval("""
+                var c = hs.canvas.create({x: 100, y: 100, w: 200, h: 100}).show();
+                var d = hs.canvas.create({x: 100, y: 300, w: 200, h: 100}).show();
+                var e = hs.canvas.create({x: 100, y: 500, w: 200, h: 100}).show();
+                hs.canvas.animate({duration: 0.2}, () => c.setTopLeft({x: 300, y: 200})).then(moved);
+                hs.canvas.animate({duration: 0.2}, () => c.setAlpha(0.5)).then(faded);
+                hs.canvas.animate({duration: 0.2}, () => d.setTopLeft({x: 300, y: 300})).then(destroyed);
+                hs.canvas.animate({duration: 0.2}, () => {
+                    e.setAlpha(0.5);
+                    e.setFrame({x: 300, y: 500});
+                    e.setAlpha(0.7);
+                    e.setSize({w: 100, h: 50});
+                }).then(sameCall);
+                c.setTopLeft({x: 50, y: 60});
+                c.setAlpha(1);
+                d.destroy();
+            """)
+            #expect(!harness.hasException)
+            #expect(await harness.waitForAsync(timeout: 2) { results.count == 4 })
+            #expect(results["moved"] == false)
+            #expect(results["faded"] == false)
+            #expect(results["destroyed"] == false)
+            // Changes made by the same animate() call don't interrupt each other
+            #expect(results["sameCall"] == true)
+            harness.eval("c.destroy(); e.destroy()")
         }
     }
 

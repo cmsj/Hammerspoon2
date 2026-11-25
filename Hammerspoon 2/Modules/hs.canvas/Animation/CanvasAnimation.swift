@@ -132,6 +132,7 @@ indirect enum CanvasAnimatable: Equatable {
     /// `{x: 50, y: 20}`: both are filled out to the same set of keys first.
     private static let subkeyDefaults: [String: [String: Any]] = [
         "frame": ["x": 0, "y": 0, "w": "100%", "h": "100%"],
+        "center": ["x": "50%", "y": "50%"],
         "transformation": identityMatrix,
         "roundedRectRadii": ["xRadius": 0, "yRadius": 0],
     ]
@@ -139,7 +140,11 @@ indirect enum CanvasAnimatable: Equatable {
     /// Parses an attribute's value, or its default if `raw` is `nil`. Returns `nil` if the
     /// attribute doesn't animate or the value can't be interpolated.
     static func make(_ raw: Any?, key: String) -> CanvasAnimatable? {
-        guard animatableKeys.contains(key), let raw = raw ?? defaults[key], !(raw is NSNull) else { return nil }
+        guard animatableKeys.contains(key), var raw = raw ?? defaults[key], !(raw is NSNull) else { return nil }
+        if key == "roundedRectRadii", let radius = plainNumber(raw) {
+            // A number means circular corners, so it can animate to or from {xRadius, yRadius}
+            raw = ["xRadius": radius, "yRadius": radius]
+        }
         if colorKeys.contains(key) {
             return color(raw)
         }

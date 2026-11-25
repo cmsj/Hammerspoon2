@@ -525,6 +525,18 @@ import SwiftUI
     private var isAnimatingFrame = false
     private var frameAnimationGeneration = 0
 
+    // The hs.canvas.animate() calls running the window's frame and alpha animations, so a
+    // change that replaces one, or destroying the canvas, can report it as interrupted.
+    // Weak: the module keeps each group alive until its duration is up.
+    private weak var frameAnimationGroup: CanvasAnimationGroup?
+    private weak var alphaAnimationGroup: CanvasAnimationGroup?
+
+    /// Marks `group` interrupted unless it's `replacement`, which is still making its changes
+    private static func interrupt(_ group: CanvasAnimationGroup?, unlessItIs replacement: CanvasAnimationGroup?) {
+        guard let group, group !== replacement else { return }
+        group.markInterrupted()
+    }
+
     /// The hs.canvas.animate() call whose closure is running, if any
     private var currentAnimation: CanvasAnimationGroup? { module?.currentAnimation }
 
@@ -633,6 +645,9 @@ import SwiftUI
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         isShown = true
+        // Showing replaces any hs.canvas.animate() of the window's alpha
+        Self.interrupt(alphaAnimationGroup, unlessItIs: nil)
+        alphaAnimationGroup = nil
         animateAlpha(to: targetAlpha, over: duration) {}
         return self
     }
@@ -664,6 +679,10 @@ import SwiftUI
         draggingCallbackRef?.detach(from: self)
         draggingCallbackRef = nil
         isShown = false
+        Self.interrupt(frameAnimationGroup, unlessItIs: nil)
+        Self.interrupt(alphaAnimationGroup, unlessItIs: nil)
+        frameAnimationGroup = nil
+        alphaAnimationGroup = nil
 
         // The elements can hold large native buffers (images) that JavaScriptCore doesn't
         // know about, so it may not collect this canvas for a long time. Release them now.
@@ -701,9 +720,16 @@ import SwiftUI
         // hs.canvas.animate().
         if !isFadingOut {
             if let animation = currentAnimation, nsWindow?.isVisible == true {
+                Self.interrupt(alphaAnimationGroup, unlessItIs: animation)
                 animation.noteWindowAnimation()
-                animateAlpha(to: targetAlpha, over: animation.duration, curve: animation.curve) {}
+                alphaAnimationGroup = animation
+                animateAlpha(to: targetAlpha, over: animation.duration, curve: animation.curve) { [weak self, weak animation] in
+                    guard let self, let animation, self.alphaAnimationGroup === animation else { return }
+                    self.alphaAnimationGroup = nil
+                }
             } else {
+                Self.interrupt(alphaAnimationGroup, unlessItIs: nil)
+                alphaAnimationGroup = nil
                 animateAlpha(to: targetAlpha, over: 0) {}
             }
         }
@@ -717,6 +743,9 @@ import SwiftUI
     /// until `completion` makes it inactive, matching v1, which held a reference during fades.
     private func fadeOut(over duration: TimeInterval, completion: @escaping @MainActor () -> Void) {
         fadeGeneration += 1
+        // The fade replaces any hs.canvas.animate() of the window's alpha
+        Self.interrupt(alphaAnimationGroup, unlessItIs: nil)
+        alphaAnimationGroup = nil
         guard duration > 0, let window = nsWindow, window.isVisible else {
             isFadingOut = false
             // Settle any running fade-in, so the window is at targetAlpha the next time it's shown.
@@ -791,6 +820,8 @@ import SwiftUI
         frameAnimationGeneration += 1
 
         guard let animation = currentAnimation, window.isVisible else {
+            Self.interrupt(frameAnimationGroup, unlessItIs: nil)
+            frameAnimationGroup = nil
             if isAnimatingFrame {
                 // Replace the running animation, or it would carry on to its old target
                 isAnimatingFrame = false
@@ -803,7 +834,9 @@ import SwiftUI
             return
         }
 
+        Self.interrupt(frameAnimationGroup, unlessItIs: animation)
         animation.noteWindowAnimation()
+        frameAnimationGroup = animation
         isAnimatingFrame = true
         let generation = frameAnimationGeneration
         NSAnimationContext.runAnimationGroup { context in
@@ -814,6 +847,7 @@ import SwiftUI
             MainActor.assumeIsolated {
                 guard let self, self.frameAnimationGeneration == generation else { return }
                 self.isAnimatingFrame = false
+                self.frameAnimationGroup = nil
             }
         }
     }
