@@ -13,7 +13,10 @@ class ConsoleViewModel: WindowAccessorDelegate {
     /// Applies `alpha` as soon as the window attaches, in case it becomes available
     /// after `alpha` has already been set (or vice versa).
     var window: NSWindow? {
-        didSet { applyAlpha() }
+        didSet {
+            applyAlpha()
+            AppWindows.shared.consoleWindow = window
+        }
     }
     var alpha: CGFloat = 1.0 {
         didSet { applyAlpha() }
@@ -393,8 +396,9 @@ struct ConsoleView: View {
             if let command = url.host(percentEncoded: false) {
                 switch command {
                 case "openConsole":
-                    // This is handled by SwiftUI for us
-                    break
+                    // SwiftUI opens the window for us, but leaves it behind other apps if
+                    // activation is refused (e.g. `open hammerspoon2://openConsole` from a script)
+                    AppWindows.shared.raiseConsole()
                 case "closeConsole":
                     Task { @MainActor in
                         dismissWindow(id: "console")

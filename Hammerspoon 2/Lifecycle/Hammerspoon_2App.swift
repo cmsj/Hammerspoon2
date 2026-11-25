@@ -196,8 +196,7 @@ struct Hammerspoon2App: App {
             }
 
             Button("Console...") {
-                NSApplication.shared.activate(ignoringOtherApps: true)
-                openWindow(id: "console")
+                AppWindows.shared.showConsole()
             }
 
             Button("API Documentation") {
@@ -234,8 +233,8 @@ struct Hammerspoon2App: App {
             NSApplication.shared.setActivationPolicy(settingsManager.dockMenuBehaviour.activationPolicy)
         }
         .onChange(of: true, initial: true) {
-            // Runs once, when the scenes exist, so code outside SwiftUI can open Settings
-            AppWindows.shared.register(openSettings: openSettings)
+            // Runs once, when the scenes exist, so code outside SwiftUI can open Settings and the Console
+            AppWindows.shared.register(openSettings: openSettings, openWindow: openWindow)
         }
 
         Window("Console", id: "console") {
@@ -264,8 +263,7 @@ struct Hammerspoon2App: App {
                 }
 
                 Button("Open Console") {
-                    NSApplication.shared.activate(ignoringOtherApps: true)
-                    openWindow(id: "console")
+                    AppWindows.shared.showConsole()
                 }
                 Button("Open Documentation") {
                     NSApplication.shared.activate(ignoringOtherApps: true)

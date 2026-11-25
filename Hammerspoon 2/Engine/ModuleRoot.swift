@@ -331,9 +331,7 @@ import JavaScriptCoreExtras
 
     // MARK: - Console
     @objc func openConsole() {
-        if let url = URL(string: "hammerspoon2://openConsole") {
-            NSWorkspace.shared.open(url)
-        }
+        AppWindows.shared.showConsole()
     }
 
     @objc func closeConsole() {
