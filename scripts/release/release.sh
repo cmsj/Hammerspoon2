@@ -804,21 +804,6 @@ cmd_local() {
     rm -rf "$work/export"
     local_cleanup
     LOCAL_SRC=""
-    : > "$work/.done"
-
-    # Clear out earlier builds of the same pull requests that have finished,
-    # or whose run has died, keeping only this one.
-    local other other_pid
-    for other in "$WORK_ROOT/local/$label".*; do
-        [ -d "$other" ] && [ "$other" != "$work" ] || continue
-        if [ ! -f "$other/.done" ]; then
-            other_pid="$(cat "$other/.pid" 2>/dev/null || true)"
-            [ -n "$other_pid" ] && ! kill -0 "$other_pid" 2>/dev/null || continue
-        fi
-        rm -rf "$other"
-    done
-    git worktree prune
-
     if [ -n "$INSTALL_DIR" ]; then
         local installed="$INSTALL_DIR/$APP_NAME.app" bundle_id
         bundle_id="$(plutil -extract CFBundleIdentifier raw "$app/Contents/Info.plist")"
@@ -866,6 +851,22 @@ cmd_local() {
         rm -rf "$LOCAL_INSTALL_LOCK"
         LOCAL_INSTALL_LOCK=""
     fi
+
+    # Only now, after any install, is this build finished with its files.
+    : > "$work/.done"
+
+    # Clear out earlier builds of the same pull requests that have finished,
+    # or whose run has died, keeping only this one.
+    local other other_pid
+    for other in "$WORK_ROOT/local/$label".*; do
+        [ -d "$other" ] && [ "$other" != "$work" ] || continue
+        if [ ! -f "$other/.done" ]; then
+            other_pid="$(cat "$other/.pid" 2>/dev/null || true)"
+            [ -n "$other_pid" ] && ! kill -0 "$other_pid" 2>/dev/null || continue
+        fi
+        rm -rf "$other"
+    done
+    git worktree prune
 
     log "Built $version (build $build)"
     echo "App:     $app"
