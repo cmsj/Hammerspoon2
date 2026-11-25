@@ -16,9 +16,15 @@ import Foundation
 ///
 /// Observing stops when this object is released.
 final class DistributedNotificationObserver: NSObject {
-    private let handler: () -> Void
+    private let handler: (Notification) -> Void
 
-    init(name: Notification.Name, handler: @escaping () -> Void) {
+    /// Observes `name`, calling `handler` with nothing but the fact that it was posted.
+    convenience init(name: Notification.Name, handler: @escaping () -> Void) {
+        self.init(name: name) { (_: Notification) in handler() }
+    }
+
+    /// Observes `name`, calling `handler` with the notification, for its `object` and `userInfo`.
+    init(name: Notification.Name, handler: @escaping (Notification) -> Void) {
         self.handler = handler
         super.init()
         DistributedNotificationCenter.default().addObserver(
@@ -36,6 +42,6 @@ final class DistributedNotificationObserver: NSObject {
 
     // Distributed notifications are delivered on the main thread.
     @objc private func didReceive(_ notification: Notification) {
-        handler()
+        handler(notification)
     }
 }

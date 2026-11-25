@@ -33,8 +33,8 @@ diving into specifics:
   construct and `:start()` — but the exact shape varies enough that it's worth checking each
   module's own signature rather than assuming. Most use Node-style `on(event, listener)`/
   `off(event, listener)`/`once(event, listener)` — `hs.application`, `hs.audiodevice`, `hs.ax`,
-  `hs.camera`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`, `hs.power`, `hs.screen`, `hs.serial`,
-  `hs.streamdeck`, `hs.usb`, `hs.userdefaults`, `hs.wifi`. The rest don't fit that shape:
+  `hs.camera`, `hs.distributednotifications`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`,
+  `hs.power`, `hs.screen`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`, `hs.wifi`. The rest don't fit that shape:
   `hs.location`'s `addWatcher()` takes no callback at all, returning a configurable watcher
   object instead; `hs.eventtap.addWatcher()` needs an event types array and a listen-only flag
   (see [below](#present-but-check-before-you-port)); and `hs.fs` uses
@@ -128,7 +128,7 @@ for what changed within it.
 | `hs.crash` | Gone | dev-only hooks, not expected to return |
 | `hs.deezer` | Gone | drive via `hs.osascript` instead |
 | `hs.dialog` (+`.color`) | → `hs.ui` | [details](#rebuilding-ui-with-hsui); no system color-picker panel |
-| `hs.distributednotifications` | Gone | no general-purpose NSDistributedNotificationCenter wrapper |
+| `hs.distributednotifications` | Present | watcher folded in, see [details](#hsdistributednotifications) |
 | `hs.doc` (+`.builder`,`.hsdocs`,`.markdown`) | Gone | `hs.docs` is unrelated (read-only bundled-doc viewer) |
 | `hs.dockicon` | Gone | no Dock icon control |
 | `hs.drawing` (+`.color`) | → `hs.ui` or `hs.canvas` | [details](#rebuilding-ui-with-hsui) |
@@ -574,6 +574,25 @@ constraints are enforced by default, integers too large for a JS number throw un
 `setReadBigInts(true)`, and blobs come back as `Uint8Array`s. User-defined SQL functions
 (`db:create_function`), aggregates, extensions and the backup API aren't available.
 
+### hs.distributednotifications
+
+There's no watcher object to construct and `:start()` any more: listen with
+`hs.distributednotifications.on(name, listener)` and stop with `off(name, listener)`, or use
+`once(name, listener)` for a single posting. The notification name is now required, because
+macOS no longer delivers every distributed notification to an observer that asks for all of
+them. v1's `object` filter is gone too; check the listener's first argument instead. The
+listener receives `(object, userInfo)`, without the name v1 passed first, and `userInfo` is
+always an object (empty if the notification had none). `post(name[, object[, userInfo]])` is
+unchanged, and returns `false` instead of posting if `userInfo` holds something that can't be
+sent (anything other than strings, numbers, booleans, Dates, arrays and objects).
+
+```js
+// v1: hs.distributednotifications.new(fn, "com.apple.Music.playerInfo"):start()
+hs.distributednotifications.on("com.apple.Music.playerInfo", (object, userInfo) => {
+    if (userInfo["Player State"] === "Stopped") playSomethingElse()
+})
+```
+
 ### hs.sound
 
 `hs.sound` is close to feature-complete against v1 despite sounding minimal — `play()`,
@@ -950,9 +969,7 @@ recognition of any kind), `hs.noises`, `hs.redshift` (macOS's native Night Shift
 bidirectional-messaging use case, but arbitrary protocol work has no home), `hs.httpserver.hsminweb`
 (+`.cgilua`/`.cgilua.lp`/`.cgilua.urlcode` — the whole CGI-style templating framework; v2's
 `hs.httpserver` is a bare HTTP(S) server with a request-handler callback, not a web
-framework), `hs.distributednotifications` (no general-purpose observer for arbitrary
-distributed notifications — v2 uses `NSDistributedNotificationCenter` internally in a couple
-of places, but doesn't expose it to JS).
+framework).
 
 **From the `hs.ui` rewrite specifically:** `hs.canvas.matrix` (the matrix-building helper —
 `hs.canvas` itself still accepts transforms as plain matrix objects, see [hs.canvas](#hscanvas)),

@@ -193,6 +193,7 @@ import JavaScriptCoreExtras
     @objc var mouse: HSMouseModule { get }
     @objc var plist: HSPlistModule { get }
     @objc var userdefaults: HSUserDefaultsModule { get }
+    @objc var distributednotifications: HSDistributedNotificationsModule { get }
     @objc var wifi: HSWifiModule { get }
     @objc var spoons: HSSpoonsModule { get }
 }
@@ -499,6 +500,9 @@ import JavaScriptCoreExtras
     @objc var mouse:        HSMouseModule           { getOrCreate(name: "mouse",        type: HSMouseModule.self)}
     @objc var plist:        HSPlistModule           { getOrCreate(name: "plist",        type: HSPlistModule.self)}
     @objc var userdefaults: HSUserDefaultsModule    { getOrCreate(name: "userdefaults", type: HSUserDefaultsModule.self)}
+    @objc var distributednotifications: HSDistributedNotificationsModule {
+        getOrCreate(name: "distributednotifications", type: HSDistributedNotificationsModule.self)
+    }
     @objc var wifi:         HSWifiModule            { getOrCreate(name: "wifi",         type: HSWifiModule.self)}
     @objc var spoons:       HSSpoonsModule          { getOrCreate(name: "spoons") { HSSpoonsModule(engineID: engineID, spoonManager: spoonManager) }}
     // swiftlint:enable colon opening_brace comma
