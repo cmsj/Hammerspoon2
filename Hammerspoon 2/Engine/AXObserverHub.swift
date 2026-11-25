@@ -189,8 +189,11 @@ final class AXObserverHub {
             guard let observer = observers[registration.pid] else { continue }
             do {
                 try observer.removeNotification(registration.notification, forElement: registration.element)
+            } catch AXError.invalidUIElement {
+                // The element has already gone away, taking its registrations with it
             } catch {
-                // Expected when the element has already gone away, taking its registrations with it
+                // Anything else (e.g. a busy app) leaves AX holding the registration until the
+                // process's observer is released; harmless, since delivery checks holders
                 AKDebug("AXObserverHub: Couldn't remove \(registration.notification.rawValue) for PID \(registration.pid): \(error)")
             }
         }
