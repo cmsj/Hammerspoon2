@@ -28,6 +28,9 @@ struct HSCanvasRenderView: View {
     /// `nil` when rendered without a hosting view (`imageFromCanvas()`), where there are
     /// no clicks to deliver.
     var pressState: HSCanvasPressState?
+    /// When set, draws the canvas as it is at this moment, once, rather than following any
+    /// running animation with a `TimelineView` -- for `imageFromCanvas()`.
+    var snapshotDate: Date?
 
     /// Sentinel id passed to `onMouseEvent` for whole-canvas tracking (`canvasMouseEvents`)
     /// when no individual element was hit.
@@ -43,40 +46,66 @@ struct HSCanvasRenderView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            Canvas { context, size in
-                var working = context
-                if let transform = store.canvasTransform {
-                    working.concatenate(transform)
+            drawing
+                .onContinuousHover(coordinateSpace: .local) { phase in
+                    handleHover(phase, size: geometry.size)
                 }
-                CanvasElementDrawing.render(elements: store.elements, into: working, size: size)
-            }
-            .onContinuousHover(coordinateSpace: .local) { phase in
-                handleHover(phase, size: geometry.size)
-            }
-            .gesture(
-                DragGesture(minimumDistance: 0, coordinateSpace: .local)
-                    .onChanged { value in
-                        switch pressState?.gestureChanged() {
-                        case .left:
-                            handleMouseDown(at: value.location, size: geometry.size)
-                        case .controlClick:
-                            handleRightMouseDown(at: value.location, size: geometry.size)
-                        case nil:
-                            break
+                .gesture(
+                    DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                        .onChanged { value in
+                            switch pressState?.gestureChanged() {
+                            case .left:
+                                handleMouseDown(at: value.location, size: geometry.size)
+                            case .controlClick:
+                                handleRightMouseDown(at: value.location, size: geometry.size)
+                            case nil:
+                                break
+                            }
                         }
-                    }
-                    .onEnded { value in
-                        switch pressState?.gestureEnded() {
-                        case .left:
-                            handleMouseUp(at: value.location, size: geometry.size)
-                        case .controlClick:
-                            handleRightMouseUp(at: value.location, size: geometry.size)
-                        case nil:
-                            break
+                        .onEnded { value in
+                            switch pressState?.gestureEnded() {
+                            case .left:
+                                handleMouseUp(at: value.location, size: geometry.size)
+                            case .controlClick:
+                                handleRightMouseUp(at: value.location, size: geometry.size)
+                            case nil:
+                                break
+                            }
                         }
-                    }
-            )
+                )
         }
+    }
+
+    /// The canvas, drawn with any running `hs.canvas.animate()` tracks interpolated in. The
+    /// `TimelineView` ticks with the display only while something is animating.
+    @ViewBuilder private var drawing: some View {
+        if let snapshotDate {
+            canvas(at: snapshotDate)
+        } else {
+            TimelineView(.animation(minimumInterval: nil, paused: !store.isAnimating)) { timeline in
+                canvas(at: timeline.date)
+            }
+        }
+    }
+
+    private func canvas(at date: Date) -> some View {
+        Canvas { context, size in
+            var working = context
+            if let transform = store.presentationTransform(at: date) {
+                working.concatenate(transform)
+            }
+            CanvasElementDrawing.render(elements: store.presentationElements(at: date, containerSize: size),
+                                        into: working, size: size)
+        }
+    }
+
+    /// The elements being drawn right now, for hit-testing, so clicks land on what's on screen
+    /// while an animation runs
+    private func trackedElementsNow(size: CGSize) -> [CanvasElementDrawing.TrackedElement] {
+        let now = Date.now
+        return CanvasElementDrawing.trackedElements(elements: store.presentationElements(at: now, containerSize: size),
+                                                    containerSize: size,
+                                                    canvasTransform: store.presentationTransform(at: now))
     }
 
     private func handleHover(_ phase: HoverPhase, size: CGSize) {
@@ -91,7 +120,7 @@ struct HSCanvasRenderView: View {
     }
 
     private func updateHover(at location: CGPoint, size: CGSize) {
-        let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size, canvasTransform: store.canvasTransform)
+        let tracked = trackedElementsNow(size: size)
         let enterExitHit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .enterExit)
         let moveHit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .move)
 
@@ -166,7 +195,7 @@ struct HSCanvasRenderView: View {
     /// Delivers a button event to the topmost element tracking `kind`, falling back to the
     /// whole-canvas sentinel when `canvasTracks` is enabled and no element was hit.
     private func deliverButtonEvent(_ message: String, kind: CanvasElementDrawing.MouseTrackingKind, canvasTracks: Bool, at location: CGPoint, size: CGSize) {
-        let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size, canvasTransform: store.canvasTransform)
+        let tracked = trackedElementsNow(size: size)
         if let hit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: kind) {
             onMouseEvent?(message, hit.id, location.x, location.y)
         } else if canvasTracks {
