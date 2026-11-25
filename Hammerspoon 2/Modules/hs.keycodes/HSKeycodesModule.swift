@@ -234,7 +234,7 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
     @objc var off: JSFunction?
     @objc var once: JSFunction?
     private var watcherCallback: JSCallback?
-    private var sourceChangeObserver: NSObjectProtocol?
+    private var sourceChangeObserver: DistributedNotificationObserver?
 
     // MARK: - Lifecycle
 
@@ -242,22 +242,16 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
         self.engineID = engineID
         super.init()
         rebuildMaps()
-        let notificationName = Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
-        sourceChangeObserver = DistributedNotificationCenter.default().addObserver(
-            forName: notificationName,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.inputSourceDidChange() }
+        sourceChangeObserver = DistributedNotificationObserver(
+            name: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
+        ) { [weak self] in
+            self?.inputSourceDidChange()
         }
         AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
-        if let obs = sourceChangeObserver {
-            DistributedNotificationCenter.default().removeObserver(obs)
-            sourceChangeObserver = nil
-        }
+        sourceChangeObserver = nil
         watcherCallback?.detach(from: self)
         watcherCallback = nil
         _watcherEmitter = nil
