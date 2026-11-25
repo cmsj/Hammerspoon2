@@ -311,7 +311,8 @@ struct ConsoleView: View {
                         }
                     }
                 }
-                .help("Save logs to file")
+                .help("Save logs to file - ⌘S")
+                .keyboardShortcut(.init("s"), modifiers: .command)
             }
             ToolbarItem(id: "copyVisibleLogs") {
                 Button("Copy Logs", systemImage: "document.on.document") {
@@ -321,13 +322,15 @@ struct ConsoleView: View {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(logText, forType: .string)
                 }
-                .help("Copy logs")
+                .help("Copy logs - ⌘⇧C")
+                .keyboardShortcut(.init("c"), modifiers: [.command, .shift])
             }
             ToolbarItem(id: "clearLogs") {
                 Button("Clear Logs", systemImage: "trash") {
                     HammerspoonLog.shared.clearLog()
                 }
-                .help("Clear logs")
+                .help("Clear logs - ⌘K")
+                .keyboardShortcut(.init("k"), modifiers: .command)
             }
 
             ToolbarSpacer(.flexible)
@@ -336,19 +339,21 @@ struct ConsoleView: View {
                 Button("Reload Config", systemImage: "arrow.clockwise") {
                     try? ManagerManager.shared.reload()
                 }
-                .help("Reload configuration")
+                .help("Reload configuration - ⌘R")
+                .keyboardShortcut(.init("r"), modifiers: .command)
             }
             ToolbarItem(id: "docs") {
                 Button("Open Documentation", systemImage: "questionmark") {
                     JSEngine.shared.eval("hs.docs.show()")
                 }
-                .help("Open documentation")
+                .help("Open documentation - ⌘?")
+                .keyboardShortcut(.init("?"), modifiers: .command)
             }
             ToolbarItem(id: "settings") {
                 Button("Settings", systemImage: "gear") {
                     openSettings()
                 }
-                .help("Settings")
+                .help("Settings - ⌘,")
             }
         }
         .alert("Save Failed", isPresented: $showSaveError) {
