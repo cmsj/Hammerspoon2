@@ -13,7 +13,10 @@ class ConsoleViewModel: WindowAccessorDelegate {
     /// Applies `alpha` as soon as the window attaches, in case it becomes available
     /// after `alpha` has already been set (or vice versa).
     var window: NSWindow? {
-        didSet { applyAlpha() }
+        didSet {
+            applyAlpha()
+            AppWindows.shared.consoleWindow = window
+        }
     }
     var alpha: CGFloat = 1.0 {
         didSet { applyAlpha() }
@@ -21,6 +24,25 @@ class ConsoleViewModel: WindowAccessorDelegate {
 
     private func applyAlpha() {
         window?.alphaValue = alpha
+    }
+}
+
+extension FocusedValues {
+    /// Focuses the console's search field, while the console is the key window.
+    @Entry var focusConsoleSearch: (() -> Void)?
+}
+
+/// Edit > Find…, which focuses the console's search field. It's disabled unless the console is the key window.
+@_documentation(visibility: private)
+struct ConsoleFindCommand: View {
+    @FocusedValue(\.focusConsoleSearch) private var focusConsoleSearch
+
+    var body: some View {
+        Button("Find…") {
+            focusConsoleSearch?()
+        }
+        .keyboardShortcut("f", modifiers: .command)
+        .disabled(focusConsoleSearch == nil)
     }
 }
 
@@ -40,6 +62,7 @@ struct ConsoleView: View {
 
     @State var searchString: String = ""
     @State var searchPresented: Bool = true
+    @FocusState private var searchFocused: Bool
 
     @State var saveError: String?
     @State var showSaveError: Bool = false
@@ -311,7 +334,8 @@ struct ConsoleView: View {
                         }
                     }
                 }
-                .help("Save logs to file")
+                .help("Save logs to file - ⌘S")
+                .keyboardShortcut(.init("s"), modifiers: .command)
             }
             ToolbarItem(id: "copyVisibleLogs") {
                 Button("Copy Logs", systemImage: "document.on.document") {
@@ -321,13 +345,15 @@ struct ConsoleView: View {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(logText, forType: .string)
                 }
-                .help("Copy logs")
+                .help("Copy logs - ⌘⇧C")
+                .keyboardShortcut(.init("c"), modifiers: [.command, .shift])
             }
             ToolbarItem(id: "clearLogs") {
                 Button("Clear Logs", systemImage: "trash") {
                     HammerspoonLog.shared.clearLog()
                 }
-                .help("Clear logs")
+                .help("Clear logs - ⌘K")
+                .keyboardShortcut(.init("k"), modifiers: .command)
             }
 
             ToolbarSpacer(.flexible)
@@ -336,19 +362,21 @@ struct ConsoleView: View {
                 Button("Reload Config", systemImage: "arrow.clockwise") {
                     try? ManagerManager.shared.reload()
                 }
-                .help("Reload configuration")
+                .help("Reload configuration - ⌘R")
+                .keyboardShortcut(.init("r"), modifiers: .command)
             }
             ToolbarItem(id: "docs") {
                 Button("Open Documentation", systemImage: "questionmark") {
                     JSEngine.shared.eval("hs.docs.show()")
                 }
-                .help("Open documentation")
+                .help("Open documentation - ⌘?")
+                .keyboardShortcut(.init("?"), modifiers: .command)
             }
             ToolbarItem(id: "settings") {
                 Button("Settings", systemImage: "gear") {
                     openSettings()
                 }
-                .help("Settings")
+                .help("Settings - ⌘,")
             }
         }
         .alert("Save Failed", isPresented: $showSaveError) {
@@ -356,14 +384,21 @@ struct ConsoleView: View {
         } message: {
             Text(saveError ?? "Unknown error")
         }
-        .searchable(text: $searchString, isPresented: $searchPresented)
+        .searchable(text: $searchString, isPresented: $searchPresented, prompt: "Search - ⌘F")
+        .searchFocused($searchFocused)
+        // Lets Edit > Find… (ConsoleFindCommand) focus the search field. A scene value rather than
+        // .focusedValue, so it's available whichever view in the console has focus.
+        .focusedSceneValue(\.focusConsoleSearch) {
+            searchFocused = true
+        }
         .handlesExternalEvents(preferring: ["closeConsole"], allowing: [])
         .onOpenURL { url in
             if let command = url.host(percentEncoded: false) {
                 switch command {
                 case "openConsole":
-                    // This is handled by SwiftUI for us
-                    break
+                    // SwiftUI opens the window for us, but leaves it behind other apps if
+                    // activation is refused (e.g. `open hammerspoon2://openConsole` from a script)
+                    AppWindows.shared.raiseConsole()
                 case "closeConsole":
                     Task { @MainActor in
                         dismissWindow(id: "console")
