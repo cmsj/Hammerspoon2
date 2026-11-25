@@ -177,7 +177,8 @@ import Observation
     /// ```
     @objc func croppedCopy(_ rect: HSRect) -> HSImage?
 
-    /// Save the image to a file
+    /// Save the image to a file. The file is written atomically, so anything reading it sees
+    /// either the previous contents or the complete new image, never a partial write.
     /// - Parameter path: Destination file path (extension determines format: png, jpg, tiff, bmp, gif)
     /// - Returns: true if saved successfully, false otherwise
     /// - Example:
@@ -371,7 +372,7 @@ import Observation
         }
 
         do {
-            try imageData.write(to: url)
+            try imageData.write(to: url, options: .atomic)
             return true
         } catch {
             AKError("HSImage: Failed to save image: \(error.localizedDescription)")
