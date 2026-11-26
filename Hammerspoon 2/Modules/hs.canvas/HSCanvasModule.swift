@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import AppKit
 
 /// # hs.canvas
@@ -80,6 +81,56 @@ import AppKit
     /// const overlay = hs.canvas.create(hs.window.focusedWindow().frame)
     /// ```
     @objc func create(_ rect: JSValue) -> HSCanvas
+
+    /// Animate changes to one or more canvases
+    ///
+    /// Calls `changes` straight away, and animates every change it makes to a canvas from
+    /// its current value to the new one, over `options.duration` seconds. The changes can be
+    /// to any number of elements, on any number of canvases, and all animate together.
+    ///
+    /// Inside `changes`, these animate:
+    /// - element attributes set with `setElementAttribute()`, `assignElement()` (each attribute
+    ///   that differs), `rotateElement()`, `rotateElementAroundPoint()` and
+    ///   `setElementTransformation()`: `frame`, `center`, `radius`, `coordinates` (with the same
+    ///   number of points), `rotation`, `rotationPoint`, `transformation`, `strokeWidth`,
+    ///   `startAngle`, `endAngle`, `roundedRectRadii`, `textSize`, `imageAlpha`, `canvasAlpha`,
+    ///   `fillColor`, `strokeColor`, `textColor`, `fillGradientColors` (with the same number of
+    ///   colors), `fillGradientAngle` and `fillGradientCenter`
+    /// - `setTransformation()` and `clearTransformation()`
+    /// - the window, with `setFrame()`, `setTopLeft()`, `setSize()` and `setAlpha()`, while the
+    ///   canvas is showing
+    ///
+    /// Everything else (e.g. `text`, `type`, `action`, or adding and removing elements) changes
+    /// immediately, as it does outside `animate()`. A number and a percentage animate between
+    /// each other (e.g. a `frame` width of `"100%"` to `50`).
+    ///
+    /// Getters return the new values as soon as `changes` returns, not the values being drawn
+    /// part way through the animation. Mouse tracking follows what's drawn.
+    ///
+    /// Changing an attribute that's already animating (inside or outside another `animate()`)
+    /// replaces that animation, starting from where it had got to on screen. Calls can be
+    /// nested: changes inside a nested call use its options.
+    ///
+    /// If `changes` throws, the error propagates to the caller, and the changes made before
+    /// the error still animate.
+    /// - Parameter options: {object} `{duration, curve}`. `duration` is in seconds (default 0.25; 0 makes the changes without animating them). `curve` is `"linear"`, `"easeIn"`, `"easeOut"`, `"easeInOut"` (the default), or a cubic bezier `[x1, y1, x2, y2]` like CSS's `cubic-bezier()`, with `x1` and `x2` between 0 and 1
+    /// - Parameter changes: {() => void} A function that changes canvases
+    /// - Returns: {Promise<boolean>} A Promise that resolves once the animation has finished: `true` if every change ran to completion, or `false` if any was interrupted (by another change to the same attribute, its element or attribute being removed, or its canvas being destroyed)
+    /// - Throws: true
+    /// - Example:
+    /// ```js
+    /// const c = hs.canvas.create({x: 100, y: 100, w: 400, h: 300}).show()
+    /// c.appendElements([{type: "rectangle", frame: {x: 10, y: 10, w: 50, h: 50}, fillColor: "#3366FF"}])
+    ///
+    /// // Move, resize, recolour and rotate the rectangle, and move the canvas, all at once
+    /// hs.canvas.animate({duration: 0.6, curve: "easeInOut"}, () => {
+    ///     c.setElementAttribute(0, "frame", {x: 300, y: 200, w: 80, h: 80})
+    ///     c.setElementAttribute(0, "fillColor", {red: 1, green: 0.3, blue: 0})
+    ///     c.rotateElement(0, 45)
+    ///     c.setTopLeft({x: 200, y: 150})
+    /// }).then(finished => console.log("Finished: " + finished))
+    /// ```
+    @objc func animate(_ options: [String: Any], _ changes: JSFunction) -> JSPromise?
 }
 
 @_documentation(visibility: private)
@@ -131,8 +182,18 @@ import AppKit
         AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
+    /// The animation whose `animate()` closure is running, which canvas setters animate with
+    private(set) var currentAnimation: CanvasAnimationGroup?
+
+    /// Animations that haven't finished yet, held until they do so they can resolve their
+    /// promises, and so shutdown() can abandon them
+    private var runningAnimations: [ObjectIdentifier: CanvasAnimationGroup] = [:]
+
     func shutdown() {
+        currentAnimation = nil
         canvases.shutdown()
+        runningAnimations.values.forEach { $0.cancel() }
+        runningAnimations = [:]
     }
 
     isolated deinit {
@@ -153,5 +214,53 @@ import AppKit
 
     @objc func create(_ rect: JSValue) -> HSCanvas {
         HSCanvas(rect: rect, module: self)
+    }
+
+    // MARK: - Animation
+
+    @objc func animate(_ options: [String: Any], _ changes: JSFunction) -> JSPromise? {
+        guard let context = JSContext.current() else { return nil }
+        func fail(_ message: String) -> JSPromise? {
+            context.exception = JSValue(newErrorFromMessage: "hs.canvas.animate(): \(message)", in: context)
+            return nil
+        }
+        guard changes.isFunction else { return fail("needs a function to make the changes") }
+
+        var duration = 0.25
+        if let raw = options["duration"] {
+            guard let seconds = CanvasAnimatable.plainNumber(raw), seconds.isFinite, seconds >= 0 else {
+                return fail("duration must be a number of seconds, not \(raw)")
+            }
+            duration = seconds
+        }
+        let curve: CanvasAnimationCurve
+        switch CanvasAnimationCurve.parse(options["curve"]) {
+        case .success(let parsed): curve = parsed
+        case .failure(let error): return fail(error.message)
+        }
+        let unknown = Set(options.keys).subtracting(["duration", "curve"])
+        if !unknown.isEmpty {
+            AKWarning("hs.canvas.animate(): ignoring unknown options \(unknown.sorted().joined(separator: ", ")) (supported: duration, curve)")
+        }
+
+        let group = CanvasAnimationGroup(duration: duration, curve: curve)
+        let previous = currentAnimation
+        // A zero duration makes the changes immediately, even inside an outer animate()
+        currentAnimation = duration > 0 ? group : nil
+        _ = context.callCapturingException { changes.call(withArguments: []) }
+        currentAnimation = previous
+
+        let onFinish: (CanvasAnimationGroup) -> Void = { [weak self] finished in
+            self?.runningAnimations[ObjectIdentifier(finished)] = nil
+        }
+        runningAnimations[ObjectIdentifier(group)] = group
+        if context.exception != nil {
+            // The error propagates to the caller; the changes made before it still animate
+            group.start(holder: nil, onFinish: onFinish)
+            return nil
+        }
+        return wrapAsyncInJSPromise(in: context) { holder in
+            group.start(holder: holder, onFinish: onFinish)
+        }
     }
 }

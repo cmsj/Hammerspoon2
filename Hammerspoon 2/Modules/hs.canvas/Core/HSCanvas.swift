@@ -519,10 +519,50 @@ import SwiftUI
     private var accessibilitySubroleValue: String?
 
     private var mouseCallbackRef: JSCallback?
+
+    // Whether hs.canvas.animate() is moving the window, so frame() reports where it's going.
+    // The generation lets a finished animation tell whether a later frame change replaced it.
+    private var isAnimatingFrame = false
+    private var frameAnimationGeneration = 0
+
+    // The hs.canvas.animate() calls running the window's frame and alpha animations, so a
+    // change that replaces one, or destroying the canvas, can report it as interrupted.
+    // Weak: the module keeps each group alive until its duration is up.
+    private weak var frameAnimationGroup: CanvasAnimationGroup?
+    private weak var alphaAnimationGroup: CanvasAnimationGroup?
+
+    /// Marks `group` interrupted unless it's `replacement`, which is still making its changes
+    private static func interrupt(_ group: CanvasAnimationGroup?, unlessItIs replacement: CanvasAnimationGroup?) {
+        guard let group, group !== replacement else { return }
+        group.markInterrupted()
+    }
+
+    /// The hs.canvas.animate() call whose closure is running, if any
+    private var currentAnimation: CanvasAnimationGroup? { module?.currentAnimation }
+
+    /// The size elements are laid out in
+    private var containerSize: CGSize { nsWindow?.frame.size ?? canvasFrame.size }
     private var draggingCallbackRef: JSCallback?
 
     /// Internal accessor for `CanvasElementDrawing.drawNestedCanvas` -- not exposed to JS.
-    var elementsForNestedRendering: [[String: Any]] { elementStore.elements }
+    /// A nested canvas is drawn as it is right now, including any animation in progress,
+    /// but only redraws when its parent does.
+    var elementsForNestedRendering: [[String: Any]] {
+        elementStore.presentationElements(at: .now, containerSize: containerSize)
+    }
+
+    /// The elements as drawn at `date`, for tests -- not exposed to JS.
+    func presentationElements(at date: Date) -> [[String: Any]] {
+        elementStore.presentationElements(at: date, containerSize: containerSize)
+    }
+
+    /// The canvas-wide transform as drawn at `date`, for tests -- not exposed to JS.
+    func presentationTransform(at date: Date) -> CGAffineTransform? {
+        elementStore.presentationTransform(at: date)
+    }
+
+    /// Whether any element or transform animation is running, for tests -- not exposed to JS.
+    var isAnimating: Bool { elementStore.isAnimating }
 
     init(frame: CGRect, module: HSCanvasModule) {
         self.canvasFrame = frame
@@ -605,6 +645,9 @@ import SwiftUI
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         isShown = true
+        // Showing replaces any hs.canvas.animate() of the window's alpha
+        Self.interrupt(alphaAnimationGroup, unlessItIs: nil)
+        alphaAnimationGroup = nil
         animateAlpha(to: targetAlpha, over: duration) {}
         return self
     }
@@ -636,11 +679,14 @@ import SwiftUI
         draggingCallbackRef?.detach(from: self)
         draggingCallbackRef = nil
         isShown = false
+        Self.interrupt(frameAnimationGroup, unlessItIs: nil)
+        Self.interrupt(alphaAnimationGroup, unlessItIs: nil)
+        frameAnimationGroup = nil
+        alphaAnimationGroup = nil
 
         // The elements can hold large native buffers (images) that JavaScriptCore doesn't
         // know about, so it may not collect this canvas for a long time. Release them now.
-        elementStore.elements = []
-        elementStore.canvasTransform = nil
+        elementStore.removeAll()
 
         guard let window = nsWindow else { return }
         window.contentView = nil
@@ -670,9 +716,22 @@ import SwiftUI
         }
         targetAlpha = CGFloat(min(max(alpha, 0), 1))
         // A fade-out keeps going, and its completion restores targetAlpha; anything else
-        // (including a fade-in) jumps straight to the new opacity.
+        // (including a fade-in) jumps straight to the new opacity, or animates to it inside
+        // hs.canvas.animate().
         if !isFadingOut {
-            animateAlpha(to: targetAlpha, over: 0) {}
+            if let animation = currentAnimation, nsWindow?.isVisible == true {
+                Self.interrupt(alphaAnimationGroup, unlessItIs: animation)
+                animation.noteWindowAnimation()
+                alphaAnimationGroup = animation
+                animateAlpha(to: targetAlpha, over: animation.duration, curve: animation.curve) { [weak self, weak animation] in
+                    guard let self, let animation, self.alphaAnimationGroup === animation else { return }
+                    self.alphaAnimationGroup = nil
+                }
+            } else {
+                Self.interrupt(alphaAnimationGroup, unlessItIs: nil)
+                alphaAnimationGroup = nil
+                animateAlpha(to: targetAlpha, over: 0) {}
+            }
         }
         return self
     }
@@ -684,6 +743,9 @@ import SwiftUI
     /// until `completion` makes it inactive, matching v1, which held a reference during fades.
     private func fadeOut(over duration: TimeInterval, completion: @escaping @MainActor () -> Void) {
         fadeGeneration += 1
+        // The fade replaces any hs.canvas.animate() of the window's alpha
+        Self.interrupt(alphaAnimationGroup, unlessItIs: nil)
+        alphaAnimationGroup = nil
         guard duration > 0, let window = nsWindow, window.isVisible else {
             isFadingOut = false
             // Settle any running fade-in, so the window is at targetAlpha the next time it's shown.
@@ -701,7 +763,7 @@ import SwiftUI
     }
 
     /// Animates the window's alphaValue, replacing any animation already running on it.
-    private func animateAlpha(to alpha: CGFloat, over duration: TimeInterval,
+    private func animateAlpha(to alpha: CGFloat, over duration: TimeInterval, curve: CanvasAnimationCurve? = nil,
                               completion: @escaping @MainActor () -> Void) {
         guard let window = nsWindow else {
             completion()
@@ -709,6 +771,9 @@ import SwiftUI
         }
         NSAnimationContext.runAnimationGroup { context in
             context.duration = duration
+            if let curve {
+                context.timingFunction = curve.timingFunction
+            }
             window.animator().alphaValue = alpha
         } completionHandler: {
             MainActor.assumeIsolated { completion() }
@@ -739,15 +804,52 @@ import SwiftUI
 
     // MARK: - Window position and size
 
-    /// The current frame, in Hammerspoon screen coordinates
+    /// The current frame, in Hammerspoon screen coordinates. While hs.canvas.animate() is
+    /// moving the window, that's the frame it's moving to, not where it is now.
     private var currentFrame: CGRect {
-        nsWindow?.frame.flippedScreenCoordinates() ?? canvasFrame
+        if isAnimatingFrame { return canvasFrame }
+        return nsWindow?.frame.flippedScreenCoordinates() ?? canvasFrame
     }
 
-    /// Records a new frame, in Hammerspoon screen coordinates, and moves the window to it
+    /// Records a new frame, in Hammerspoon screen coordinates, and moves the window to it,
+    /// animating the move inside hs.canvas.animate() if the window is on screen
     private func applyFrame(_ frame: CGRect) {
         canvasFrame = frame
-        nsWindow?.setFrame(frame.flippedScreenCoordinates(), display: true)
+        guard let window = nsWindow else { return }
+        let target = frame.flippedScreenCoordinates()
+        frameAnimationGeneration += 1
+
+        guard let animation = currentAnimation, window.isVisible else {
+            Self.interrupt(frameAnimationGroup, unlessItIs: nil)
+            frameAnimationGroup = nil
+            if isAnimatingFrame {
+                // Replace the running animation, or it would carry on to its old target
+                isAnimatingFrame = false
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0
+                    window.animator().setFrame(target, display: true)
+                }
+            }
+            window.setFrame(target, display: true)
+            return
+        }
+
+        Self.interrupt(frameAnimationGroup, unlessItIs: animation)
+        animation.noteWindowAnimation()
+        frameAnimationGroup = animation
+        isAnimatingFrame = true
+        let generation = frameAnimationGeneration
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = animation.duration
+            context.timingFunction = animation.curve.timingFunction
+            window.animator().setFrame(target, display: true)
+        } completionHandler: { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, self.frameAnimationGeneration == generation else { return }
+                self.isAnimatingFrame = false
+                self.frameAnimationGroup = nil
+            }
+        }
     }
 
     @objc func frame() -> [String: Any] {
@@ -867,7 +969,7 @@ import SwiftUI
     @objc func appendElements(_ elements: [[String: Any]]) -> HSCanvas {
         if rejectIfDestroyed("appendElements") { return self }
         elements.forEach { CanvasElementDrawing.warnAboutInvalidAttributes($0, caller: "appendElements") }
-        elementStore.elements.append(contentsOf: elements)
+        elementStore.append(elements)
         return self
     }
 
@@ -875,7 +977,7 @@ import SwiftUI
         if rejectIfDestroyed("insertElement") { return self }
         CanvasElementDrawing.warnAboutInvalidAttributes(element, caller: "insertElement")
         let clamped = max(0, min(index, elementStore.elements.count))
-        elementStore.elements.insert(element, at: clamped)
+        elementStore.insert(element, at: clamped)
         return self
     }
 
@@ -883,9 +985,9 @@ import SwiftUI
         if rejectIfDestroyed("assignElement") { return self }
         CanvasElementDrawing.warnAboutInvalidAttributes(element, caller: "assignElement")
         if index >= 0 && index < elementStore.elements.count {
-            elementStore.elements[index] = element
+            elementStore.assign(element, at: index, animation: currentAnimation, containerSize: containerSize)
         } else if index == elementStore.elements.count {
-            elementStore.elements.append(element)
+            elementStore.append([element])
         } else {
             AKWarning("hs.canvas: assignElement() index \(index) out of bounds")
         }
@@ -897,20 +999,20 @@ import SwiftUI
             AKWarning("hs.canvas: removeElement() index \(index) out of bounds")
             return self
         }
-        elementStore.elements.remove(at: index)
+        elementStore.remove(at: index)
         return self
     }
 
     @objc func removeLastElement() -> HSCanvas {
         guard !elementStore.elements.isEmpty else { return self }
-        elementStore.elements.removeLast()
+        elementStore.remove(at: elementStore.elements.count - 1)
         return self
     }
 
     @objc func replaceElements(_ elements: [[String: Any]]) -> HSCanvas {
         if rejectIfDestroyed("replaceElements") { return self }
         elements.forEach { CanvasElementDrawing.warnAboutInvalidAttributes($0, caller: "replaceElements") }
-        elementStore.elements = elements
+        elementStore.replaceAll(elements)
         return self
     }
 
@@ -938,7 +1040,7 @@ import SwiftUI
             return self
         }
         CanvasElementDrawing.warnAboutInvalidAttribute(key, value, caller: "setElementAttribute")
-        elementStore.elements[index][key] = value
+        elementStore.setAttribute(at: index, key: key, value: value, animation: currentAnimation, containerSize: containerSize)
         return self
     }
 
@@ -947,14 +1049,13 @@ import SwiftUI
             AKWarning("hs.canvas: removeElementAttribute() index \(index) out of bounds")
             return self
         }
-        elementStore.elements[index].removeValue(forKey: key)
+        elementStore.setAttribute(at: index, key: key, value: nil, animation: nil, containerSize: containerSize)
         return self
     }
 
     @objc func elementBounds(_ index: Int) -> [String: Any] {
         guard index >= 0 && index < elementStore.elements.count else { return [:] }
         let element = elementStore.elements[index]
-        let containerSize = nsWindow?.frame.size ?? canvasFrame.size
         guard var path = CanvasElementDrawing.pathFor(element: element, containerSize: containerSize) else { return [:] }
         // Match what's actually drawn: the whole-canvas transform from setTransformation()
         // is applied at render time (HSCanvasRenderView), so the reported bounds have to
@@ -1026,8 +1127,8 @@ import SwiftUI
             AKWarning("hs.canvas: rotateElement() index \(index) out of bounds")
             return self
         }
-        elementStore.elements[index]["rotation"] = angle
-        elementStore.elements[index].removeValue(forKey: "rotationPoint")
+        elementStore.setAttribute(at: index, key: "rotation", value: angle, animation: currentAnimation, containerSize: containerSize)
+        elementStore.setAttribute(at: index, key: "rotationPoint", value: nil, animation: nil, containerSize: containerSize)
         return self
     }
 
@@ -1036,8 +1137,8 @@ import SwiftUI
             AKWarning("hs.canvas: rotateElementAroundPoint() index \(index) out of bounds")
             return self
         }
-        elementStore.elements[index]["rotation"] = angle
-        elementStore.elements[index]["rotationPoint"] = point
+        elementStore.setAttribute(at: index, key: "rotation", value: angle, animation: currentAnimation, containerSize: containerSize)
+        elementStore.setAttribute(at: index, key: "rotationPoint", value: point, animation: currentAnimation, containerSize: containerSize)
         return self
     }
 
@@ -1046,17 +1147,17 @@ import SwiftUI
             AKWarning("hs.canvas: setElementTransformation() index \(index) out of bounds")
             return self
         }
-        elementStore.elements[index]["transformation"] = matrix
+        elementStore.setAttribute(at: index, key: "transformation", value: matrix, animation: currentAnimation, containerSize: containerSize)
         return self
     }
 
     @objc func setTransformation(_ matrix: [String: Any]) -> HSCanvas {
-        elementStore.canvasTransform = CanvasElementDrawing.transformMatrix(matrix)
+        elementStore.setCanvasTransform(CanvasElementDrawing.transformMatrix(matrix), animation: currentAnimation)
         return self
     }
 
     @objc func clearTransformation() -> HSCanvas {
-        elementStore.canvasTransform = nil
+        elementStore.setCanvasTransform(nil, animation: currentAnimation)
         return self
     }
 
@@ -1064,10 +1165,10 @@ import SwiftUI
 
     @objc func imageFromCanvas() -> HSImage? {
         guard !isDestroyed else { return nil }
-        let containerSize = nsWindow?.frame.size ?? canvasFrame.size
+        let containerSize = self.containerSize
         guard containerSize.width > 0, containerSize.height > 0 else { return nil }
 
-        let view = HSCanvasRenderView(store: elementStore)
+        let view = HSCanvasRenderView(store: elementStore, snapshotDate: .now)
             .frame(width: containerSize.width, height: containerSize.height)
         let renderer = ImageRenderer(content: view)
         renderer.scale = nsWindow?.backingScaleFactor ?? 2.0
@@ -1086,8 +1187,8 @@ import SwiftUI
             return self
         }
         let copy = HSCanvas(frame: canvasFrame, module: module)
-        copy.elementStore.elements = elementStore.elements
-        copy.elementStore.canvasTransform = elementStore.canvasTransform
+        copy.elementStore.replaceAll(elementStore.elements)
+        copy.elementStore.setCanvasTransform(elementStore.canvasTransform, animation: nil)
         copy.windowLevelRaw = windowLevelRaw
         copy.windowBehaviorRaw = windowBehaviorRaw
         copy.isClickActivating = isClickActivating
