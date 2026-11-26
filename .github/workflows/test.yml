@@ -63,6 +63,26 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
+      # The hs.eventkit reminder tests create and delete real reminders, so they only run on
+      # throwaway machines, with Reminders access. GitHub's runner images have SIP disabled, so
+      # the access can be written straight into the user's TCC database (as hs2vm's provision.sh
+      # does). If that ever stops working, those tests just skip.
+      - name: Grant Reminders access
+        continue-on-error: true
+        run: |
+          db="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
+          # macOS 27 keeps the per-user TCC.db in a tccd-owned container
+          for meta in /private/var/containers/Data/ProtectedSystem/*/.com.apple.containermanagerd.metadata.plist; do
+            [[ "$(sudo plutil -extract MCMMetadataIdentifier raw "$meta" 2>/dev/null)" == "com.apple.tccd" ]] || continue
+            [[ "$(sudo plutil -extract MCMMetadataOwnership.uid raw "$meta" 2>/dev/null)" == "$(id -u)" ]] || continue
+            db="$(dirname "$meta")/Data/Library/Application Support/com.apple.TCC/TCC.db"
+          done
+          sudo sqlite3 "$db" "insert or replace into access
+            (service, client, client_type, auth_value, auth_reason, auth_version, csreq, flags, indirect_object_identifier)
+            values ('kTCCServiceReminders', 'net.tenshu.Hammerspoon-2', 0, 2, 4, 1, NULL, 0, 'UNUSED');"
+          sudo sqlite3 "$db" "select service, client, auth_value from access where client = 'net.tenshu.Hammerspoon-2';"
+          killall tccd || true
+
       - name: Run tests
         env:
           # xcodebuild does NOT forward the job's own CI=true into the test host

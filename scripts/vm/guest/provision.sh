@@ -76,9 +76,10 @@ done
 # hs.shortcuts.list() asks Shortcuts Events. Without this the Automation prompt sits unanswered
 # and each list() waits out the 2-minute Apple Event timeout.
 grant "$USER_TCC" kTCCServiceAppleEvents "$APP_ID" com.apple.shortcuts.events
-# kTCCServiceCalendar is full access to events (hs.eventkit); the VM already subscribes to the
-# built-in US Holidays calendar, so there are always some real events to read.
-for service in kTCCServiceCamera kTCCServiceMicrophone kTCCServiceCalendar; do
+# kTCCServiceCalendar and kTCCServiceReminders are full access to events and reminders
+# (hs.eventkit); the VM already subscribes to the built-in US Holidays calendar, so there are
+# always some real events to read.
+for service in kTCCServiceCamera kTCCServiceMicrophone kTCCServiceCalendar kTCCServiceReminders; do
     grant "$USER_TCC" "$service" "$APP_ID"
 done
 # Let osascript run via `tart exec` (whose responsible process is the guest agent) drive System
