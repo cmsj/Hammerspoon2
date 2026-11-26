@@ -19,7 +19,7 @@
      * @example
      * hs.task.runAsync("/bin/echo", ["hi"]).then(r => console.log(r.stdout))
      * hs.task.runAsync("/usr/bin/sort", [], { input: "b\na\n" }).then(r => console.log(r.stdout))
-     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The task's result. If the task exits with a non-zero status or is killed by a signal, the promise rejects with an Error that also has the result's exitCode, stdout, stderr and reason
+     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The task's result. If the task exits with a non-zero status or is killed by a signal, the promise rejects with an Error that also has the result's exitCode, stdout, stderr and reason. If the program could not be started, the promise rejects with an Error whose reason is "launchFailed"
      */
     hs.task.runAsync = function(launchPath, args, options, legacyStreamCallback) {
         return new Promise((resolve, reject) => {
@@ -70,7 +70,7 @@
             };
 
             // Create termination callback
-            const terminationCallback = function(exitCode, reason) {
+            const terminationCallback = function(exitCode, reason, launchError) {
                 const result = {
                     exitCode: exitCode,
                     stdout: stdout,
@@ -81,9 +81,14 @@
                 // Reject promise on non-zero exit codes or abnormal termination,
                 // with an Error that also carries the result's fields
                 if (exitCode !== 0 || (reason && reason !== 'exit')) {
-                    const message = reason === 'uncaughtSignal'
-                        ? `${launchPath} was terminated by signal ${exitCode}`
-                        : `${launchPath} exited with status ${exitCode}`;
+                    let message;
+                    if (reason === 'launchFailed') {
+                        message = `${launchPath} could not be started: ${launchError}`;
+                    } else if (reason === 'uncaughtSignal') {
+                        message = `${launchPath} was terminated by signal ${exitCode}`;
+                    } else {
+                        message = `${launchPath} exited with status ${exitCode}`;
+                    }
                     reject(Object.assign(new Error(message), result));
                 } else {
                     resolve(result);
@@ -98,6 +103,12 @@
             }
 
             task.start();
+
+            // The program couldn't be started, so there's no stdin; the termination
+            // callback rejects the promise
+            if (task.terminationReason === 'launchFailed') {
+                return;
+            }
 
             // Always close stdin, so a command that reads it doesn't wait forever
             if (input !== null) {

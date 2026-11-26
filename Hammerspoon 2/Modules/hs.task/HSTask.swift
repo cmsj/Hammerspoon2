@@ -138,7 +138,7 @@ import JavaScriptCoreExtras
     @objc var terminationStatus: NSNumber? { get }
 
     /// The termination reason
-    /// - Note: Returns a string describing why the task terminated, or nil if still running
+    /// - Note: Returns a string describing why the task terminated, or nil if still running: "exit" if the task exited, "uncaughtSignal" if a signal killed it, or "launchFailed" if its program could not be started
     /// - Example:
     /// ```js
     /// const t = hs.task.new("/bin/echo", ["hi"], () => {
@@ -193,6 +193,7 @@ import JavaScriptCoreExtras
 
     private var exitCode: Int32?
     private var exitReason: String?
+    private var launchError: String?
 
     // EOF and exit coordination: the termination callback must only fire after both
     // stdout and stderr pipes have reached EOF, ensuring all streaming data has been
@@ -333,11 +334,39 @@ import JavaScriptCoreExtras
         do {
             try process.run()
         } catch {
-            AKError("hs.task:start(): Failed to start task: \(error.localizedDescription)")
-            state = .finished
+            launchFailed(error)
         }
 
         return self
+    }
+
+    // The program could not be started (e.g. it doesn't exist, or isn't executable). The task
+    // still terminates, so the termination callback is called, as it would be if the task
+    // had run and exited; that's what settles hs.task.runAsync()'s promise.
+    private func launchFailed(_ error: Error) {
+        let message = error.localizedDescription
+        AKError("hs.task:start(): Failed to start task: \(message)")
+
+        // No process will ever write to or read from the pipes, so they'd never reach EOF
+        stdoutPipe?.fileHandleForReading.readabilityHandler = nil
+        stderrPipe?.fileHandleForReading.readabilityHandler = nil
+        stdoutPipe = nil
+        stderrPipe = nil
+        stdinPipe = nil
+        inputClosed = true
+        process = nil
+
+        exitReason = "launchFailed"
+        launchError = message
+        processExited = true
+        stdoutEOF = true
+        stderrEOF = true
+
+        // Called after start() returns, as it is for a task that runs, so the caller isn't
+        // re-entered from start(). The task stays alive until then because it's still running.
+        Task { @MainActor [weak self] in
+            self?.callTerminationCallbackIfReady()
+        }
     }
 
     @objc func terminate() {
@@ -483,7 +512,11 @@ import JavaScriptCoreExtras
 
         if let cb = onTermination?.value, cb.isFunction, !cb.isUndefined {
             guard let context = cb.context else { return }
-            cb.call(withArguments: [exitCode ?? 0, exitReason ?? "unknown"])
+            var arguments: [Any] = [exitCode ?? -1, exitReason ?? "unknown"]
+            if let launchError {
+                arguments.append(launchError)
+            }
+            cb.call(withArguments: arguments)
             if let exception = context.exception, !exception.isUndefined {
                 AKError("hs.task: Error in termination callback: \(exception.toString() ?? "unknown error")")
                 context.exception = nil
