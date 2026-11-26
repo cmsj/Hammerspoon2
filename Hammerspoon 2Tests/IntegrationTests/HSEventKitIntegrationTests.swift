@@ -3,7 +3,6 @@
 //  Hammerspoon 2Tests
 //
 
-import CoreLocation
 import EventKit
 import Testing
 import JavaScriptCore
@@ -30,15 +29,6 @@ struct HSEventKitIntegrationTests {
         return event
     }
 
-    /// Setting structuredLocation also replaces location, so this is a separate event
-    private func makeEventAtPlace() -> EKEvent {
-        let event = makeEvent()
-        let place = EKStructuredLocation(title: "Office")
-        place.geoLocation = CLLocation(latitude: 51.5, longitude: -0.1)
-        event.structuredLocation = place
-        return event
-    }
-
     @Test("API is exposed")
     func testAPI() {
         let harness = makeHarness()
@@ -55,44 +45,72 @@ struct HSEventKitIntegrationTests {
             """, true)
     }
 
-    @Test("Event objects reach JS with Date fields and nulls")
-    func testEventBridgesToJS() {
-        let harness = makeHarness()
-        harness.context.setObject(HSEventKitModule.eventToDict(makeEvent()), forKeyedSubscript: "ev" as NSString)
-        harness.expectTrue("ev.startDate instanceof Date && ev.startDate.getTime() === 1000000")
-        harness.expectTrue("ev.endDate instanceof Date && ev.endDate.getTime() === 2000000")
-        harness.expectTrue("ev.url === null")
-        harness.expectEqual("ev.location", "https://example.zoom.us/j/123")
-        harness.expectTrue("Array.isArray(ev.attendees) && ev.attendees.length === 0 && ev.organizer === null")
-        harness.expectTrue("ev.structuredLocation.title === ev.location && ev.structuredLocation.latitude === null")
-        harness.context.setObject(HSEventKitModule.eventToDict(makeEventAtPlace()), forKeyedSubscript: "placed" as NSString)
-        harness.expectTrue("placed.structuredLocation.title === 'Office' && placed.structuredLocation.latitude === 51.5")
-        harness.expectEqual("placed.location", "Office")
+    /// Puts an HSCalendarEvent for `event` into JS as the global `name`
+    private func expose(_ event: EKEvent, as name: String, in harness: JSTestHarness) {
+        harness.context.setObject(HSCalendarEvent(event: event), forKeyedSubscript: name as NSString)
     }
 
-    @Test("eventToDict carries the event's other properties")
-    func testEventToDictExtraFields() {
-        let dict = HSEventKitModule.eventToDict(makeEventAtPlace())
-        #expect(dict["timeZone"] as? String == "Europe/London")
+    @Test("Event properties reach JS with Date fields and nulls")
+    func testEventBridgesToJS() {
+        let harness = makeHarness()
+        expose(makeEvent(), as: "ev", in: harness)
+        #expect(harness.evalString("ev.typeName") == "HSCalendarEvent")
+        #expect(harness.evalString("ev.title") == "Standup")
+        #expect(harness.evalString("ev.location") == "https://example.zoom.us/j/123")
+        #expect(harness.evalString("ev.notes") == "Join on Teams")
+        #expect(harness.evalString("ev.timeZone") == "Europe/London")
+        #expect(harness.evalBool("ev.allDay") == false)
+        #expect(harness.evalBool("ev.recurring") == false)
+        #expect(harness.evalBool("ev.detached") == false)
+        #expect(harness.evalString("ev.status") == "none")
         // An event without a calendar can't have an availability
-        #expect(dict["availability"] as? String == "notSupported")
-        #expect(dict["status"] as? String == "none")
-        #expect(dict["recurring"] as? Bool == false)
-        #expect(dict["detached"] as? Bool == false)
-        #expect(dict["hasAlarms"] as? Bool == false)
-        #expect(dict["birthdayContactID"] is NSNull)
-        let place = dict["structuredLocation"] as? [String: Any]
-        #expect(place?["longitude"] as? Double == -0.1)
-        #expect(place?["radius"] as? Double == 0)
+        #expect(harness.evalString("ev.availability") == "notSupported")
+        harness.expectTrue("ev.startDate instanceof Date && ev.startDate.getTime() === 1000000")
+        harness.expectTrue("ev.endDate instanceof Date && ev.endDate.getTime() === 2000000")
+        harness.expectTrue("ev.url === null && ev.calendarID === null && ev.calendarTitle === null")
+        #expect(!harness.hasException)
+    }
+
+    @Test("JSON.stringify serialises every property through toJSON()")
+    func testToJSON() {
+        let harness = makeHarness()
+        expose(makeEvent(), as: "ev", in: harness)
+        harness.eval("var parsed = JSON.parse(JSON.stringify(ev))")
+        #expect(harness.evalString("parsed.title") == "Standup")
+        #expect(harness.evalString("parsed.startDate") == "1970-01-01T00:16:40.000Z")
+        harness.expectTrue("parsed.url === null")
+        #expect(harness.evalString("Object.keys(parsed).sort().join(',')") ==
+            "allDay,availability,calendarID,calendarTitle,detached,endDate,externalID,id,location,notes,occurrenceDate,recurring,startDate,status,timeZone,title,url")
+        #expect(!harness.hasException)
+    }
+
+    @Test("toString names the event")
+    func testToString() {
+        let harness = makeHarness()
+        expose(makeEvent(), as: "ev", in: harness)
+        harness.expectTrue("String(ev).startsWith('<HSCalendarEvent: Standup (')")
+    }
+
+    @Test("An event the caller drops is garbage collected")
+    func testEventIsCollected() {
+        let harness = makeHarness()
+        weak var event: HSCalendarEvent?
+        autoreleasepool {
+            let strong = HSCalendarEvent(event: makeEvent())
+            event = strong
+            harness.context.setObject(strong, forKeyedSubscript: "ev" as NSString)
+            harness.eval("ev = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(event == nil)
     }
 
     @Test("EventKit enums map to their documented names")
     func testEnumNames() {
-        #expect(HSEventKitModule.statusName(.canceled) == "canceled")
-        #expect(HSEventKitModule.availabilityName(.notSupported) == "notSupported")
-        #expect(HSEventKitModule.participantStatusName(.inProcess) == "inProcess")
-        #expect(HSEventKitModule.participantRoleName(.nonParticipant) == "nonParticipant")
-        #expect(HSEventKitModule.participantTypeName(.room) == "room")
+        #expect(HSCalendarEvent.statusName(.canceled) == "canceled")
+        #expect(HSCalendarEvent.statusName(.tentative) == "tentative")
+        #expect(HSCalendarEvent.availabilityName(.notSupported) == "notSupported")
+        #expect(HSCalendarEvent.availabilityName(.busy) == "busy")
     }
 
     @Test("Calendar permission is checked and requested through hs.permissions")
@@ -146,22 +164,12 @@ struct HSEventKitIntegrationTests {
         harness.expectEqual("Array.isArray(hs.eventkit.calendars())", true)
     }
 
-    @Test("eventToDict carries location, notes and dates")
-    func testEventToDict() {
-        let dict = HSEventKitModule.eventToDict(makeEvent())
-        #expect(dict["title"] as? String == "Standup")
-        #expect(dict["location"] as? String == "https://example.zoom.us/j/123")
-        #expect(dict["notes"] as? String == "Join on Teams")
-        #expect(dict["url"] is NSNull)
-        #expect(dict["startDate"] as? Date == Date(timeIntervalSince1970: 1_000))
-    }
-
     @Test("search matches title, location and notes ignoring case")
     func testMatches() {
         let event = makeEvent()
-        #expect(HSEventKitModule.event(event, matches: "ZOOM.us"))
-        #expect(HSEventKitModule.event(event, matches: "teams"))
-        #expect(HSEventKitModule.event(event, matches: "standup"))
-        #expect(!HSEventKitModule.event(event, matches: "webex"))
+        #expect(HSCalendarEvent.event(event, matches: "ZOOM.us"))
+        #expect(HSCalendarEvent.event(event, matches: "teams"))
+        #expect(HSCalendarEvent.event(event, matches: "standup"))
+        #expect(!HSCalendarEvent.event(event, matches: "webex"))
     }
 }
