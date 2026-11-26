@@ -3,6 +3,7 @@
 //  Hammerspoon 2Tests
 //
 
+import CoreLocation
 import EventKit
 import Testing
 import JavaScriptCore
@@ -25,6 +26,16 @@ struct HSEventKitIntegrationTests {
         event.notes = "Join on Teams"
         event.startDate = Date(timeIntervalSince1970: 1_000)
         event.endDate = Date(timeIntervalSince1970: 2_000)
+        event.timeZone = TimeZone(identifier: "Europe/London")
+        return event
+    }
+
+    /// Setting structuredLocation also replaces location, so this is a separate event
+    private func makeEventAtPlace() -> EKEvent {
+        let event = makeEvent()
+        let place = EKStructuredLocation(title: "Office")
+        place.geoLocation = CLLocation(latitude: 51.5, longitude: -0.1)
+        event.structuredLocation = place
         return event
     }
 
@@ -52,6 +63,36 @@ struct HSEventKitIntegrationTests {
         harness.expectTrue("ev.endDate instanceof Date && ev.endDate.getTime() === 2000000")
         harness.expectTrue("ev.url === null")
         harness.expectEqual("ev.location", "https://example.zoom.us/j/123")
+        harness.expectTrue("Array.isArray(ev.attendees) && ev.attendees.length === 0 && ev.organizer === null")
+        harness.expectTrue("ev.structuredLocation.title === ev.location && ev.structuredLocation.latitude === null")
+        harness.context.setObject(HSEventKitModule.eventToDict(makeEventAtPlace()), forKeyedSubscript: "placed" as NSString)
+        harness.expectTrue("placed.structuredLocation.title === 'Office' && placed.structuredLocation.latitude === 51.5")
+        harness.expectEqual("placed.location", "Office")
+    }
+
+    @Test("eventToDict carries the event's other properties")
+    func testEventToDictExtraFields() {
+        let dict = HSEventKitModule.eventToDict(makeEventAtPlace())
+        #expect(dict["timeZone"] as? String == "Europe/London")
+        // An event without a calendar can't have an availability
+        #expect(dict["availability"] as? String == "notSupported")
+        #expect(dict["status"] as? String == "none")
+        #expect(dict["recurring"] as? Bool == false)
+        #expect(dict["detached"] as? Bool == false)
+        #expect(dict["hasAlarms"] as? Bool == false)
+        #expect(dict["birthdayContactID"] is NSNull)
+        let place = dict["structuredLocation"] as? [String: Any]
+        #expect(place?["longitude"] as? Double == -0.1)
+        #expect(place?["radius"] as? Double == 0)
+    }
+
+    @Test("EventKit enums map to their documented names")
+    func testEnumNames() {
+        #expect(HSEventKitModule.statusName(.canceled) == "canceled")
+        #expect(HSEventKitModule.availabilityName(.notSupported) == "notSupported")
+        #expect(HSEventKitModule.participantStatusName(.inProcess) == "inProcess")
+        #expect(HSEventKitModule.participantRoleName(.nonParticipant) == "nonParticipant")
+        #expect(HSEventKitModule.participantTypeName(.room) == "room")
     }
 
     @Test("Calendar permission is checked and requested through hs.permissions")

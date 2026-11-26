@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import EventKit
+import CoreLocation
 
 // MARK: - JavaScript API
 
@@ -19,22 +20,46 @@ import EventKit
 ///
 /// | Key | Type | Description |
 /// |-----|------|-------------|
-/// | `id` | `string` | The event's identifier. Every occurrence of a repeating event has the same `id`, so use it together with `startDate` to tell occurrences apart |
+/// | `id` | `string` | The event's identifier on this Mac. Every occurrence of a repeating event has the same `id`, so use it together with `occurrenceDate` (or `startDate`) to tell occurrences apart |
+/// | `externalID` | `string` or `null` | The identifier the calendar server gives the event, which is the same on every device but isn't guaranteed to be unique |
 /// | `title` | `string` | The event's title |
 /// | `location` | `string` or `null` | The event's location, which often holds a Zoom or Teams link |
+/// | `structuredLocation` | `object` or `null` | The location as a place, present whenever `location` is: `title`, `latitude` and `longitude` (`null` unless the location was picked as a place with coordinates), and `radius` in metres (`0` for the default) |
 /// | `notes` | `string` or `null` | The event's notes (description), which often holds a meeting link |
 /// | `url` | `string` or `null` | The URL attached to the event |
 /// | `startDate` | `Date` | When the event starts |
 /// | `endDate` | `Date` | When the event ends |
+/// | `occurrenceDate` | `Date` or `null` | The original start of this occurrence of a repeating event, which doesn't change if the occurrence is moved |
 /// | `allDay` | `boolean` | Whether it's an all-day event |
-/// | `calendarID` | `string` | The identifier of the event's calendar |
-/// | `calendarTitle` | `string` | The title of the event's calendar |
+/// | `timeZone` | `string` or `null` | The event's time zone (e.g. `"Europe/London"`), or `null` for a floating event that follows the Mac's time zone |
+/// | `recurring` | `boolean` | Whether the event repeats |
+/// | `detached` | `boolean` | Whether this occurrence of a repeating event has been changed from the rest |
+/// | `status` | `string` | `"none"`, `"confirmed"`, `"tentative"` or `"canceled"` |
+/// | `availability` | `string` | How the event shows on a schedule: `"busy"`, `"free"`, `"tentative"`, `"unavailable"`, or `"notSupported"` when its calendar doesn't support availability |
+/// | `organizer` | `object` or `null` | The participant who organised the event (see below) |
+/// | `attendees` | `object[]` | The event's attendees (see below), empty if it has none |
+/// | `hasAlarms` | `boolean` | Whether the event has any alarms |
+/// | `birthdayContactID` | `string` or `null` | For an event in the Birthdays calendar, the identifier of the contact whose birthday it is |
+/// | `creationDate` | `Date` or `null` | When the event was created |
+/// | `lastModifiedDate` | `Date` or `null` | When the event was last changed |
+/// | `calendarID` | `string` or `null` | The identifier of the event's calendar |
+/// | `calendarTitle` | `string` or `null` | The title of the event's calendar |
+///
+/// The organizer and each attendee is an object with these keys:
+///
+/// | Key | Type | Description |
+/// |-----|------|-------------|
+/// | `name` | `string` or `null` | Their name |
+/// | `url` | `string` | Their address, usually a `mailto:` URL |
+/// | `email` | `string` or `null` | Their email address, when `url` is a `mailto:` URL |
+/// | `status` | `string` | Their response: `"unknown"`, `"pending"`, `"accepted"`, `"declined"`, `"tentative"`, `"delegated"`, `"completed"` or `"inProcess"` |
+/// | `role` | `string` | `"unknown"`, `"required"`, `"optional"`, `"chair"` or `"nonParticipant"` |
+/// | `type` | `string` | `"unknown"`, `"person"`, `"room"`, `"resource"` or `"group"` |
+/// | `currentUser` | `boolean` | Whether this participant is the Mac's user |
 ///
 /// ## Finding meeting links for today
 /// ```js
-/// const start = new Date(); start.setHours(0, 0, 0, 0)
-/// const end = new Date(start.getTime() + 86400000)
-/// hs.eventkit.events(start, end).forEach(e => {
+/// hs.eventkit.eventsToday().forEach(e => {
 ///     const text = [e.location, e.notes, e.url].join(" ")
 ///     const link = text.match(/https:\/\/[\w.-]*(zoom\.us|teams\.microsoft\.com)\/\S+/)
 ///     if (link) console.log(e.title + ": " + link[0])
@@ -62,7 +87,7 @@ import EventKit
     /// - Parameter start: The start of the range
     /// - Parameter end: The end of the range
     /// - Parameter calendarIDs?: The `id`s of the calendars to search (default: all of them)
-    /// - Returns: {{id: string, title: string, location: string | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, allDay: boolean, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
+    /// - Returns: {{id: string, externalID: string | null, title: string, location: string | null, structuredLocation: {title: string | null, latitude: number | null, longitude: number | null, radius: number} | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, occurrenceDate: Date | null, allDay: boolean, timeZone: string | null, recurring: boolean, detached: boolean, status: "none" | "confirmed" | "tentative" | "canceled", availability: "notSupported" | "busy" | "free" | "tentative" | "unavailable", organizer: {name: string | null, url: string, email: string | null, status: string, role: string, type: string, currentUser: boolean} | null, attendees: {name: string | null, url: string, email: string | null, status: string, role: string, type: string, currentUser: boolean}[], hasAlarms: boolean, birthdayContactID: string | null, creationDate: Date | null, lastModifiedDate: Date | null, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -82,7 +107,7 @@ import EventKit
     /// - Parameter start: The start of the range
     /// - Parameter end: The end of the range
     /// - Parameter calendarIDs?: The `id`s of the calendars to search (default: all of them)
-    /// - Returns: {{id: string, title: string, location: string | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, allDay: boolean, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
+    /// - Returns: {{id: string, externalID: string | null, title: string, location: string | null, structuredLocation: {title: string | null, latitude: number | null, longitude: number | null, radius: number} | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, occurrenceDate: Date | null, allDay: boolean, timeZone: string | null, recurring: boolean, detached: boolean, status: "none" | "confirmed" | "tentative" | "canceled", availability: "notSupported" | "busy" | "free" | "tentative" | "unavailable", organizer: {name: string | null, url: string, email: string | null, status: string, role: string, type: string, currentUser: boolean} | null, attendees: {name: string | null, url: string, email: string | null, status: string, role: string, type: string, currentUser: boolean}[], hasAlarms: boolean, birthdayContactID: string | null, creationDate: Date | null, lastModifiedDate: Date | null, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -99,7 +124,7 @@ import EventKit
     /// The events that overlap today (from midnight to midnight, including any that have already
     /// finished), sorted by start date.
     /// - Parameter calendarIDs?: The `id`s of the calendars to search (default: all of them)
-    /// - Returns: {{id: string, title: string, location: string | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, allDay: boolean, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
+    /// - Returns: {{id: string, externalID: string | null, title: string, location: string | null, structuredLocation: {title: string | null, latitude: number | null, longitude: number | null, radius: number} | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, occurrenceDate: Date | null, allDay: boolean, timeZone: string | null, recurring: boolean, detached: boolean, status: "none" | "confirmed" | "tentative" | "canceled", availability: "notSupported" | "busy" | "free" | "tentative" | "unavailable", organizer: {name: string | null, url: string, email: string | null, status: string, role: string, type: string, currentUser: boolean} | null, attendees: {name: string | null, url: string, email: string | null, status: string, role: string, type: string, currentUser: boolean}[], hasAlarms: boolean, birthdayContactID: string | null, creationDate: Date | null, lastModifiedDate: Date | null, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -113,7 +138,7 @@ import EventKit
 
     /// The events that overlap tomorrow (from midnight to midnight), sorted by start date.
     /// - Parameter calendarIDs?: The `id`s of the calendars to search (default: all of them)
-    /// - Returns: {{id: string, title: string, location: string | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, allDay: boolean, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
+    /// - Returns: {{id: string, externalID: string | null, title: string, location: string | null, structuredLocation: {title: string | null, latitude: number | null, longitude: number | null, radius: number} | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, occurrenceDate: Date | null, allDay: boolean, timeZone: string | null, recurring: boolean, detached: boolean, status: "none" | "confirmed" | "tentative" | "canceled", availability: "notSupported" | "busy" | "free" | "tentative" | "unavailable", organizer: {name: string | null, url: string, email: string | null, status: string, role: string, type: string, currentUser: boolean} | null, attendees: {name: string | null, url: string, email: string | null, status: string, role: string, type: string, currentUser: boolean}[], hasAlarms: boolean, birthdayContactID: string | null, creationDate: Date | null, lastModifiedDate: Date | null, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -235,18 +260,117 @@ import EventKit
             .contains { $0?.localizedCaseInsensitiveContains(query) == true }
     }
 
+    // Most of these properties (title, location, notes, url, attendees, timeZone, ...) are
+    // EKCalendarItem's, which EKEvent inherits; the rest are EKEvent's own.
     static func eventToDict(_ event: EKEvent) -> [String: Any] {
         [
             "id": event.eventIdentifier ?? event.calendarItemIdentifier,
+            "externalID": event.calendarItemExternalIdentifier ?? NSNull(),
             "title": event.title ?? "",
             "location": event.location ?? NSNull(),
+            "structuredLocation": event.structuredLocation.map(locationToDict) ?? NSNull(),
             "notes": event.notes ?? NSNull(),
             "url": event.url?.absoluteString ?? NSNull(),
             "startDate": event.startDate ?? NSNull(),
             "endDate": event.endDate ?? NSNull(),
+            "occurrenceDate": event.occurrenceDate ?? NSNull(),
             "allDay": event.isAllDay,
+            "timeZone": event.timeZone?.identifier ?? NSNull(),
+            "recurring": event.hasRecurrenceRules,
+            "detached": event.isDetached,
+            "status": statusName(event.status),
+            "availability": availabilityName(event.availability),
+            "organizer": event.organizer.map(participantToDict) ?? NSNull(),
+            "attendees": (event.attendees ?? []).map(participantToDict),
+            "hasAlarms": event.hasAlarms,
+            "birthdayContactID": event.birthdayContactIdentifier ?? NSNull(),
+            "creationDate": event.creationDate ?? NSNull(),
+            "lastModifiedDate": event.lastModifiedDate ?? NSNull(),
             "calendarID": event.calendar?.calendarIdentifier ?? NSNull(),
             "calendarTitle": event.calendar?.title ?? NSNull()
         ]
+    }
+
+    static func locationToDict(_ location: EKStructuredLocation) -> [String: Any] {
+        let coordinate = location.geoLocation?.coordinate
+        return [
+            "title": location.title ?? NSNull(),
+            "latitude": coordinate?.latitude ?? NSNull(),
+            "longitude": coordinate?.longitude ?? NSNull(),
+            "radius": location.radius
+        ]
+    }
+
+    static func participantToDict(_ participant: EKParticipant) -> [String: Any] {
+        let url = participant.url
+        let email = url.scheme?.lowercased() == "mailto"
+            ? url.absoluteString.dropFirst("mailto:".count).removingPercentEncoding
+            : nil
+        return [
+            "name": participant.name ?? NSNull(),
+            "url": url.absoluteString,
+            "email": email ?? NSNull(),
+            "status": participantStatusName(participant.participantStatus),
+            "role": participantRoleName(participant.participantRole),
+            "type": participantTypeName(participant.participantType),
+            "currentUser": participant.isCurrentUser
+        ]
+    }
+
+    static func statusName(_ status: EKEventStatus) -> String {
+        switch status {
+        case .none:      return "none"
+        case .confirmed: return "confirmed"
+        case .tentative: return "tentative"
+        case .canceled:  return "canceled"
+        @unknown default: return "none"
+        }
+    }
+
+    static func availabilityName(_ availability: EKEventAvailability) -> String {
+        switch availability {
+        case .notSupported: return "notSupported"
+        case .busy:         return "busy"
+        case .free:         return "free"
+        case .tentative:    return "tentative"
+        case .unavailable:  return "unavailable"
+        @unknown default:   return "notSupported"
+        }
+    }
+
+    static func participantStatusName(_ status: EKParticipantStatus) -> String {
+        switch status {
+        case .unknown:   return "unknown"
+        case .pending:   return "pending"
+        case .accepted:  return "accepted"
+        case .declined:  return "declined"
+        case .tentative: return "tentative"
+        case .delegated: return "delegated"
+        case .completed: return "completed"
+        case .inProcess: return "inProcess"
+        @unknown default: return "unknown"
+        }
+    }
+
+    static func participantRoleName(_ role: EKParticipantRole) -> String {
+        switch role {
+        case .unknown:        return "unknown"
+        case .required:       return "required"
+        case .optional:       return "optional"
+        case .chair:          return "chair"
+        case .nonParticipant: return "nonParticipant"
+        @unknown default:     return "unknown"
+        }
+    }
+
+    static func participantTypeName(_ type: EKParticipantType) -> String {
+        switch type {
+        case .unknown:  return "unknown"
+        case .person:   return "person"
+        case .room:     return "room"
+        case .resource: return "resource"
+        case .group:    return "group"
+        @unknown default: return "unknown"
+        }
     }
 }
