@@ -88,16 +88,16 @@ import EventKit
     /// occurrence is moved.
     /// - Example:
     /// ```js
-    /// if (event.recurring) console.log(event.occurrenceDate.toLocaleString())
+    /// if (event.isRecurring) console.log(event.occurrenceDate.toLocaleString())
     /// ```
     @objc var occurrenceDate: Date? { get }
 
     /// Whether this is an all-day event.
     /// - Example:
     /// ```js
-    /// if (event.allDay) console.log(event.title + " (all day)")
+    /// if (event.isAllDay) console.log(event.title + " (all day)")
     /// ```
-    @objc var allDay: Bool { get }
+    @objc var isAllDay: Bool { get }
 
     /// The event's time zone (e.g. `"Europe/London"`), or `null` for a floating event that
     /// follows the Mac's time zone.
@@ -107,19 +107,30 @@ import EventKit
     /// ```
     @objc var timeZone: String? { get }
 
+    /// Whether the event is happening now: from its start up to (but not including) its end, or
+    /// for an all-day event, at any time on the days it covers.
+    ///
+    /// This is worked out each time you read it, so a long-lived event object stays accurate.
+    /// - Example:
+    /// ```js
+    /// const now = hs.eventkit.eventsToday().filter(e => e.isActive && !e.isAllDay)
+    /// now.forEach(e => console.log("In progress: " + e.title))
+    /// ```
+    @objc var isActive: Bool { get }
+
     /// Whether the event repeats.
     /// - Example:
     /// ```js
-    /// console.log(event.recurring)
+    /// console.log(event.isRecurring)
     /// ```
-    @objc var recurring: Bool { get }
+    @objc var isRecurring: Bool { get }
 
     /// Whether this occurrence of a repeating event has been changed from the rest.
     /// - Example:
     /// ```js
-    /// console.log(event.detached)
+    /// console.log(event.isDetached)
     /// ```
-    @objc var detached: Bool { get }
+    @objc var isDetached: Bool { get }
 
     /// The event's status: `"none"`, `"confirmed"`, `"tentative"` or `"canceled"`.
     /// - Example:
@@ -180,7 +191,7 @@ import EventKit
     }
 
     @objc func toString() -> String {
-        let when = startDate.formatted(date: .abbreviated, time: allDay ? .omitted : .shortened)
+        let when = startDate.formatted(date: .abbreviated, time: isAllDay ? .omitted : .shortened)
         return "<\(typeName): \(title) (\(when))>"
     }
 
@@ -199,10 +210,11 @@ import EventKit
     @objc var startDate: Date { event.startDate ?? .distantPast }
     @objc var endDate: Date { event.endDate ?? .distantPast }
     @objc var occurrenceDate: Date? { event.occurrenceDate }
-    @objc var allDay: Bool { event.isAllDay }
+    @objc var isAllDay: Bool { event.isAllDay }
     @objc var timeZone: String? { event.timeZone?.identifier }
-    @objc var recurring: Bool { event.hasRecurrenceRules }
-    @objc var detached: Bool { event.isDetached }
+    @objc var isActive: Bool { Self.isActive(event, at: Date()) }
+    @objc var isRecurring: Bool { event.hasRecurrenceRules }
+    @objc var isDetached: Bool { event.isDetached }
     @objc var status: String { Self.statusName(event.status) }
     @objc var availability: String { Self.availabilityName(event.availability) }
     @objc var calendarID: String? { event.calendar?.calendarIdentifier }
@@ -219,10 +231,11 @@ import EventKit
             "startDate": startDate,
             "endDate": endDate,
             "occurrenceDate": occurrenceDate.orNSNull,
-            "allDay": allDay,
+            "isAllDay": isAllDay,
             "timeZone": timeZone.orNSNull,
-            "recurring": recurring,
-            "detached": detached,
+            "isActive": isActive,
+            "isRecurring": isRecurring,
+            "isDetached": isDetached,
             "status": status,
             "availability": availability,
             "calendarID": calendarID.orNSNull,
@@ -234,6 +247,22 @@ import EventKit
     static func event(_ event: EKEvent, matches query: String) -> Bool {
         [event.title, event.location, event.notes, event.url?.absoluteString]
             .contains { $0?.localizedCaseInsensitiveContains(query) == true }
+    }
+
+    /// Whether `event` is happening at `now`.
+    ///
+    /// EventKit's dates are absolute instants that already account for the event's time zone
+    /// (and put floating events in the Mac's current one), so a timed event just compares them.
+    /// An all-day event covers whole local days instead. EventKit always stores its end as 23:59:59
+    /// on its last day (it moves any other end time there), which would leave the final second
+    /// uncovered, so its range runs to the following midnight.
+    static func isActive(_ event: EKEvent, at now: Date, calendar: Calendar = .current) -> Bool {
+        guard let start = event.startDate, let end = event.endDate else { return false }
+        guard event.isAllDay else { return start <= now && now < end }
+        let firstDay = calendar.startOfDay(for: start)
+        let lastDay = calendar.startOfDay(for: max(start, end))
+        guard let afterLastDay = calendar.date(byAdding: .day, value: 1, to: lastDay) else { return false }
+        return firstDay <= now && now < afterLastDay
     }
 
     static func statusName(_ status: EKEventStatus) -> String {

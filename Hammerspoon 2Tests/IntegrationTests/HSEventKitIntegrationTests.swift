@@ -59,9 +59,9 @@ struct HSEventKitIntegrationTests {
         #expect(harness.evalString("ev.location") == "https://example.zoom.us/j/123")
         #expect(harness.evalString("ev.notes") == "Join on Teams")
         #expect(harness.evalString("ev.timeZone") == "Europe/London")
-        #expect(harness.evalBool("ev.allDay") == false)
-        #expect(harness.evalBool("ev.recurring") == false)
-        #expect(harness.evalBool("ev.detached") == false)
+        #expect(harness.evalBool("ev.isAllDay") == false)
+        #expect(harness.evalBool("ev.isRecurring") == false)
+        #expect(harness.evalBool("ev.isDetached") == false)
         #expect(harness.evalString("ev.status") == "none")
         // An event without a calendar can't have an availability
         #expect(harness.evalString("ev.availability") == "notSupported")
@@ -80,7 +80,7 @@ struct HSEventKitIntegrationTests {
         #expect(harness.evalString("parsed.startDate") == "1970-01-01T00:16:40.000Z")
         harness.expectTrue("parsed.url === null")
         #expect(harness.evalString("Object.keys(parsed).sort().join(',')") ==
-            "allDay,availability,calendarID,calendarTitle,detached,endDate,externalID,id,location,notes,occurrenceDate,recurring,startDate,status,timeZone,title,url")
+            "availability,calendarID,calendarTitle,endDate,externalID,id,isActive,isAllDay,isDetached,isRecurring,location,notes,occurrenceDate,startDate,status,timeZone,title,url")
         #expect(!harness.hasException)
     }
 
@@ -103,6 +103,47 @@ struct HSEventKitIntegrationTests {
         }
         harness.collectGarbage()
         #expect(event == nil)
+    }
+
+    @Test("isActive covers a timed event from its start up to its end")
+    func testIsActiveTimed() {
+        let event = makeEvent() // 1000s to 2000s after the epoch
+        #expect(!HSCalendarEvent.isActive(event, at: Date(timeIntervalSince1970: 999)))
+        #expect(HSCalendarEvent.isActive(event, at: Date(timeIntervalSince1970: 1_000)))
+        #expect(HSCalendarEvent.isActive(event, at: Date(timeIntervalSince1970: 1_999)))
+        #expect(!HSCalendarEvent.isActive(event, at: Date(timeIntervalSince1970: 2_000)))
+    }
+
+    @Test("isActive covers the whole of every day of an all-day event")
+    func testIsActiveAllDay() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "Europe/London"))
+        func date(_ day: Int, _ hour: Int, _ minute: Int = 0, _ second: Int = 0) throws -> Date {
+            try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: day, hour: hour, minute: minute, second: second)))
+        }
+        // A two-day event on the 26th and 27th; EventKit stores its end as 23:59:59 on the 27th
+        let event = EKEvent(eventStore: EKEventStore())
+        event.isAllDay = true
+        event.startDate = try date(26, 0)
+        event.endDate = try date(27, 12)
+        #expect(!HSCalendarEvent.isActive(event, at: try date(25, 23, 59, 59), calendar: calendar))
+        #expect(HSCalendarEvent.isActive(event, at: try date(26, 0), calendar: calendar))
+        #expect(HSCalendarEvent.isActive(event, at: try date(27, 12), calendar: calendar))
+        #expect(HSCalendarEvent.isActive(event, at: try date(27, 23, 59, 59).addingTimeInterval(0.5), calendar: calendar))
+        #expect(!HSCalendarEvent.isActive(event, at: try date(28, 0), calendar: calendar))
+    }
+
+    @Test("isActive reaches JS and follows the current time")
+    func testIsActiveFromJS() {
+        let harness = makeHarness()
+        let event = makeEvent()
+        event.startDate = Date(timeIntervalSinceNow: -60)
+        event.endDate = Date(timeIntervalSinceNow: 60)
+        expose(event, as: "ev", in: harness)
+        #expect(harness.evalBool("ev.isActive") == true)
+        #expect(harness.evalBool("JSON.parse(JSON.stringify(ev)).isActive") == true)
+        event.endDate = Date(timeIntervalSinceNow: -1)
+        #expect(harness.evalBool("ev.isActive") == false)
     }
 
     @Test("EventKit enums map to their documented names")
