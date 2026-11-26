@@ -629,6 +629,45 @@ struct HSWindowFilterIntegrationTests {
             harness.eval("wf.off('windowMoved', record); wf.off('windowTitleChanged', record)")
         }
 
+        /// macOS reports every window of a hidden application as an AXDialog. A window read while
+        /// its application is hidden (here, because its title changed) has to be read again once
+        /// the application is unhidden, or it keeps that subrole (#485).
+        @Test("a standard window read while its application is hidden is allowed again by its subrole once it's unhidden")
+        func testUnhiddenWindowSubroleIsReadAgain() async {
+            let harness = makeHarness()
+            harness.eval("var app = hs.application.fromPID(testAppPID)")
+            defer {
+                harness.eval("app.unhide()")
+                TestAppControl.closeWindows()
+            }
+            listen(harness, to: ["windowCreated", "windowHidden", "windowTitleChanged"])
+            harness.eval("var byRole = hs.windowfilter.create({ default: false, apps: { [app.name]: { allowRoles: 'AXStandardWindow' } } })")
+
+            // Only the windows openWindow() opens can be retitled
+            TestAppControl.openWindow()
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.some(e => e.startsWith('windowCreated'))") as? Bool == true })
+            harness.eval("var newID = Number(events.find(e => e.startsWith('windowCreated')).split(':')[1])")
+            harness.eval("var newWin = () => app.allWindows.find(w => w.id === newID)")
+            harness.expectTrue("newWin().subrole === 'AXStandardWindow' && byRole.isWindowAllowed(newWin())")
+
+            harness.eval("app.hide()")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.includes('windowHidden:' + newID)") as? Bool == true })
+            TestAppControl.retitleWindows(to: "Retitled while hidden by \(#function)")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.includes('windowTitleChanged:' + newID)") as? Bool == true })
+            // A hidden application's windows are AXDialogs
+            harness.expectFalse("byRole.isWindowAllowed(newWin())")
+            // Hiding can come with a screen change (at least in a VM), whose refresh of every window
+            // would read this one again by chance if it came after unhiding
+            try? await Task.sleep(for: .seconds(1))
+
+            harness.eval("app.unhide()")
+            #expect(await harness.waitForAsync(timeout: 3) {
+                harness.eval("newWin().subrole === 'AXStandardWindow' && byRole.isWindowAllowed(newWin()) && byRole.windows().some(w => w.id === newID)") as? Bool == true
+            })
+            harness.eval("wf.off('windowCreated', record); wf.off('windowHidden', record); wf.off('windowTitleChanged', record)")
+            #expect(!harness.hasException)
+        }
+
         @Test("a filter with listeners keeps working after it's dropped and garbage is collected")
         func testUnreferencedFilterKeepsWorking() async {
             let harness = makeHarness()
