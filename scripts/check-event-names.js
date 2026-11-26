@@ -27,6 +27,7 @@ const MODULES_DIR = path.join(REPO_ROOT, 'Hammerspoon 2', 'Modules');
 // Emitters that legitimately accept any event name, keyed by their label (first constructor arg).
 const UNVALIDATED_EMITTERS = new Set([
     'hs.userdefaults',   // event names are arbitrary user-chosen preference keys
+    'hs.distributednotifications', // event names are arbitrary notification names
     'hs.camera device',  // per-camera on/off/once take no event name; Swift passes a fixed one
 ]);
 

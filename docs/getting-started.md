@@ -127,7 +127,7 @@ hs.hotkey.bindSpec({
 The `on()`/`off()`/`once()` pattern shown above is consistent across most modules that report
 ongoing state changes — clipboard contents, application launch/quit, connected hardware, input
 source and locale changes, system power/session events, and more (`hs.application`,
-`hs.audiodevice`, `hs.camera`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`, `hs.power`,
+`hs.audiodevice`, `hs.camera`, `hs.distributednotifications`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`, `hs.power`,
 `hs.screen`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`, `hs.wifi`). For these, the first
 argument is always the event name; most modules emit several, so check the API reference for
 the exact set a given module supports:

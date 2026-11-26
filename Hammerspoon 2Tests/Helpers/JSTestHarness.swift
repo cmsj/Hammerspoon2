@@ -669,6 +669,8 @@ extension JSTestHarness {
                 loadModule(HSPlistModule.self, as: name)
             case "userdefaults":
                 loadModule(HSUserDefaultsModule.self, as: name)
+            case "distributednotifications":
+                loadModule(HSDistributedNotificationsModule.self, as: name)
             case "wifi":
                 loadModule(HSWifiModule.self, as: name)
             default:
