@@ -102,9 +102,19 @@ final class WindowTracker {
         var state: WindowState
         let createdAt: Double
         var focusedAt: Double
-        /// Whether the window has been minimized or hidden since its subrole was last read while
-        /// it was visible: see `refresh(_:currentSpaces:)`
-        var subroleIsStale = false
+        /// Whether its subrole has been read since it was last minimized or hidden
+        var subroleFreshness: SubroleFreshness = .fresh
+    }
+
+    /// Whether a window's subrole has been read since it was last minimized or hidden, which
+    /// macOS reports as an AXDialog. See `reconcileSubrole(read:previous:isVisible:freshness:now:grace:)`.
+    enum SubroleFreshness: Equatable {
+        /// Read while visible
+        case fresh
+        /// Not read since it was minimized or hidden
+        case stale
+        /// Shown again at this moment, but still said it was a dialog when read since
+        case shown(since: ContinuousClock.Instant)
     }
 
     private var handlers: [ObjectIdentifier: Handler] = [:]
@@ -524,7 +534,7 @@ final class WindowTracker {
                 AKDebug("WindowTracker: \(state.appName) window \(state.id) doesn't support \(notification.rawValue): \(error)")
             }
         }
-        windows[state.id] = TrackedWindow(element: element, window: AXObjectCache.shared.window(element: element, app: app.app, id: state.id), state: state, createdAt: createdAt, focusedAt: focusedAt, subroleIsStale: !state.isVisible)
+        windows[state.id] = TrackedWindow(element: element, window: AXObjectCache.shared.window(element: element, app: app.app, id: state.id), state: state, createdAt: createdAt, focusedAt: focusedAt, subroleFreshness: state.isVisible ? .fresh : .stale)
         windowIDs[element] = state.id
     }
 
@@ -548,7 +558,7 @@ final class WindowTracker {
         change(&tracked.state)
         guard tracked.state != old else { return }
         if !tracked.state.isVisible {
-            tracked.subroleIsStale = true
+            tracked.subroleFreshness = .stale
         }
         if tracked.state.hasFocus && !old.hasFocus {
             tracked.focusedAt = Date().timeIntervalSince1970
@@ -574,20 +584,45 @@ final class WindowTracker {
             return
         }
         refreshRetries.removeValue(forKey: id)
-        // macOS reports a minimized or hidden window as an AXDialog, so a window keeps the
-        // subrole it was last seen with until it's shown again. Even then it can take a moment to
-        // report its real subrole, so a window that has just been shown and still says it's a
-        // dialog keeps its subrole until it's read once more.
-        if !state.isVisible {
-            state.subrole = tracked.state.subrole
-        } else if tracked.subroleIsStale {
-            windows[id]?.subroleIsStale = false
-            if state.subrole == Subrole.dialog.rawValue, tracked.state.subrole != state.subrole {
-                state.subrole = tracked.state.subrole
-                settle(id)
-            }
+        let subrole = Self.reconcileSubrole(read: state.subrole, previous: tracked.state.subrole, isVisible: state.isVisible,
+                                            freshness: tracked.subroleFreshness, now: .now, grace: Self.settleDelay)
+        state.subrole = subrole.subrole
+        windows[id]?.subroleFreshness = subrole.freshness
+        if subrole.readAgain {
+            settle(id)
         }
         update(id) { $0 = state }
+    }
+
+    /// What a window's subrole is after reading it again.
+    ///
+    /// macOS reports a minimized or hidden window as an AXDialog, so a window keeps the subrole it
+    /// was last seen with until it's shown again. Even then it can take a moment to report its
+    /// real subrole, so a window that has been shown again for less than `grace`, and still says
+    /// it's a dialog, keeps its subrole too, and is read again later, however many other reads
+    /// (e.g. after screen changes) come in between.
+    /// - Parameters:
+    ///   - read: The subrole just read
+    ///   - previous: The subrole the window had
+    ///   - isVisible: Whether the window is visible now
+    ///   - freshness: Whether its subrole has been read since it was last minimized or hidden
+    ///   - now: The time now
+    ///   - grace: How long a window shown again may say it's a dialog before it's believed
+    /// - Returns: The window's subrole and freshness, and whether to read it again shortly
+    nonisolated static func reconcileSubrole(read: String?, previous: String?, isVisible: Bool, freshness: SubroleFreshness,
+                                             now: ContinuousClock.Instant, grace: Duration)
+        -> (subrole: String?, freshness: SubroleFreshness, readAgain: Bool) {
+        guard isVisible else { return (previous, .stale, false) }
+        let shownSince: ContinuousClock.Instant
+        switch freshness {
+        case .fresh: return (read, .fresh, false)
+        case .stale: shownSince = now
+        case .shown(let since): shownSince = since
+        }
+        if read == Subrole.dialog.rawValue, previous != read, now - shownSince < grace {
+            return (previous, .shown(since: shownSince), true)
+        }
+        return (read, .fresh, false)
     }
 
     /// How many times to try again to read a window that can't be read right now

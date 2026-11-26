@@ -132,6 +132,62 @@ struct HSWindowFilterIntegrationTests {
 
     // MARK: - The set of allowed windows
 
+    @Suite("hs.windowfilter subroles of minimized and hidden windows")
+    struct HSWindowFilterSubroleTests {
+        private let standard = "AXStandardWindow"
+        private let dialog = "AXDialog"
+        private let grace = Duration.milliseconds(200)
+        private let start = ContinuousClock.now
+
+        private func reconcile(_ read: String?, previous: String?, isVisible: Bool = true,
+                               _ freshness: WindowTracker.SubroleFreshness, after elapsed: Duration = .zero) -> (subrole: String?, freshness: WindowTracker.SubroleFreshness, readAgain: Bool) {
+            WindowTracker.reconcileSubrole(read: read, previous: previous, isVisible: isVisible, freshness: freshness,
+                                           now: start + elapsed, grace: grace)
+        }
+
+        @Test("a minimized or hidden window keeps its subrole")
+        func testNotVisibleKeepsSubrole() {
+            for freshness in [WindowTracker.SubroleFreshness.fresh, .stale, .shown(since: start)] {
+                let result = reconcile(dialog, previous: standard, isVisible: false, freshness)
+                #expect(result.subrole == standard && result.freshness == .stale && !result.readAgain)
+            }
+        }
+
+        @Test("a visible window's subrole is believed once it has been read since being shown")
+        func testFreshIsBelieved() {
+            let result = reconcile(dialog, previous: standard, .fresh)
+            #expect(result.subrole == dialog && result.freshness == .fresh && !result.readAgain)
+        }
+
+        @Test("a window just shown that still says it's a dialog keeps its subrole, and is read again")
+        func testJustShownDialogKeepsSubrole() {
+            let result = reconcile(dialog, previous: standard, .stale)
+            #expect(result.subrole == standard && result.freshness == .shown(since: start) && result.readAgain)
+        }
+
+        @Test("a window just shown that reports its real subrole is believed")
+        func testJustShownStandardIsBelieved() {
+            let result = reconcile(standard, previous: standard, .stale)
+            #expect(result.subrole == standard && result.freshness == .fresh && !result.readAgain)
+        }
+
+        @Test("the grace period lasts across other reads in between, then a dialog is believed")
+        func testGraceLastsAcrossReads() {
+            let first = reconcile(dialog, previous: standard, .stale)
+            // e.g. a screen change's refresh of every window, before the delayed read
+            let between = reconcile(dialog, previous: first.subrole, first.freshness, after: .milliseconds(50))
+            #expect(between.subrole == standard && between.freshness == .shown(since: start) && between.readAgain)
+            let later = reconcile(dialog, previous: between.subrole, between.freshness, after: grace)
+            #expect(later.subrole == dialog && later.freshness == .fresh && !later.readAgain)
+        }
+
+        @Test("a window that was a dialog before is believed straight away")
+        func testRealDialogIsBelieved() {
+            let result = reconcile(dialog, previous: dialog, .stale)
+            #expect(result.subrole == dialog && result.freshness == .fresh && !result.readAgain)
+        }
+    }
+
     @Suite("hs.windowfilter allowed-window bookkeeping")
     struct HSWindowFilterMembershipTests {
         private typealias Emission = WindowFilterMembership.Emission
