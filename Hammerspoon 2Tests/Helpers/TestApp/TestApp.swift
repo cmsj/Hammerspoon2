@@ -17,7 +17,8 @@
 import AppKit
 
 /// Tests send commands as a distributed notification with this name. `userInfo`:
-/// `command` is `show` (with `test` and `detail`), `newWindow`, `fullScreenWindow`, `closeWindows`,
+/// `command` is `show` (with `test` and `detail`), `newWindow` (with `minimizable` "1" for a window
+/// that can be minimized), `fullScreenWindow`, `closeWindows`,
 /// `retitleWindows` (with `title`) or `revertMainOnActivate` (with `title`); `pid` is the copy it is meant
 /// for, since several can run at once.
 let commandNotification = Notification.Name("net.tenshu.Hammerspoon-2.TestApp.command")
@@ -59,7 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard info?["pid"] as? String == String(ProcessInfo.processInfo.processIdentifier) else { return }
         switch info?["command"] as? String {
         case "show": show(test: info?["test"] as? String, detail: info?["detail"] as? String)
-        case "newWindow": newWindow(nil)
+        case "newWindow": newWindow(minimizable: info?["minimizable"] as? String == "1")
         case "fullScreenWindow": fullScreenWindow()
         case "closeWindows": closeExtraWindows()
         case "revertMainOnActivate": revertTitle = info?["title"] as? String
@@ -74,8 +75,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func newWindow(_ sender: Any?) {
+        newWindow(minimizable: false)
+    }
+
+    private func newWindow(minimizable: Bool) {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 150),
-                              styleMask: [.titled, .closable], backing: .buffered, defer: false)
+                              styleMask: minimizable ? [.titled, .closable, .miniaturizable] : [.titled, .closable],
+                              backing: .buffered, defer: false)
         window.title = "Test window \(extraWindows.count + 1)"
         window.isReleasedWhenClosed = false
 

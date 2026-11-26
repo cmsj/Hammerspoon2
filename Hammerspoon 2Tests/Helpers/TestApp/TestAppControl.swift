@@ -118,9 +118,11 @@ nonisolated enum TestAppControl {
     }
 
     /// Has a copy open one more window.
-    /// - Parameter pid: The copy; the suite's copy by default
-    static func openWindow(in pid: pid_t? = TestAppControl.pid) {
-        send("newWindow", to: pid)
+    /// - Parameters:
+    ///   - minimizable: Whether the window can be minimized. They can't by default, as dialogs can't.
+    ///   - pid: The copy; the suite's copy by default
+    static func openWindow(minimizable: Bool = false, in pid: pid_t? = TestAppControl.pid) {
+        send("newWindow", to: pid, minimizable ? ["minimizable": "1"] : [:])
     }
 
     /// Has a copy open a window titled "Fullscreen test window" and put it in native fullscreen

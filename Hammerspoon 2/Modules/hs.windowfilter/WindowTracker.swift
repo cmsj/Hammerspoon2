@@ -102,6 +102,9 @@ final class WindowTracker {
         var state: WindowState
         let createdAt: Double
         var focusedAt: Double
+        /// Whether the window has been minimized or hidden since its subrole was last read while
+        /// it was visible: see `refresh(_:currentSpaces:)`
+        var subroleIsStale = false
     }
 
     private var handlers: [ObjectIdentifier: Handler] = [:]
@@ -521,7 +524,7 @@ final class WindowTracker {
                 AKDebug("WindowTracker: \(state.appName) window \(state.id) doesn't support \(notification.rawValue): \(error)")
             }
         }
-        windows[state.id] = TrackedWindow(element: element, window: AXObjectCache.shared.window(element: element, app: app.app, id: state.id), state: state, createdAt: createdAt, focusedAt: focusedAt)
+        windows[state.id] = TrackedWindow(element: element, window: AXObjectCache.shared.window(element: element, app: app.app, id: state.id), state: state, createdAt: createdAt, focusedAt: focusedAt, subroleIsStale: !state.isVisible)
         windowIDs[element] = state.id
     }
 
@@ -544,6 +547,9 @@ final class WindowTracker {
         let old = tracked.state
         change(&tracked.state)
         guard tracked.state != old else { return }
+        if !tracked.state.isVisible {
+            tracked.subroleIsStale = true
+        }
         if tracked.state.hasFocus && !old.hasFocus {
             tracked.focusedAt = Date().timeIntervalSince1970
         }
@@ -557,7 +563,7 @@ final class WindowTracker {
     private func refresh(_ id: Int, currentSpaces: Set<Int>? = nil) {
         settleTasks.removeValue(forKey: id)?.cancel()
         guard let tracked = windows[id], let app = apps[tracked.state.pid] else { return }
-        guard let state = Self.readState(of: tracked.element, app: app.app, id: id, currentSpaces: currentSpaces ?? Self.currentSpaceIDs(),
+        guard var state = Self.readState(of: tracked.element, app: app.app, id: id, currentSpaces: currentSpaces ?? Self.currentSpaceIDs(),
                                          focusedWindowID: focusedWindowID, activePID: activePID) else {
             if Self.isGone(tracked.element) {
                 windowDisappeared(id)
@@ -568,6 +574,19 @@ final class WindowTracker {
             return
         }
         refreshRetries.removeValue(forKey: id)
+        // macOS reports a minimized or hidden window as an AXDialog, so a window keeps the
+        // subrole it was last seen with until it's shown again. Even then it can take a moment to
+        // report its real subrole, so a window that has just been shown and still says it's a
+        // dialog keeps its subrole until it's read once more.
+        if !state.isVisible {
+            state.subrole = tracked.state.subrole
+        } else if tracked.subroleIsStale {
+            windows[id]?.subroleIsStale = false
+            if state.subrole == Subrole.dialog.rawValue, tracked.state.subrole != state.subrole {
+                state.subrole = tracked.state.subrole
+                settle(id)
+            }
+        }
         update(id) { $0 = state }
     }
 
@@ -721,6 +740,7 @@ final class WindowTracker {
             isOnCurrentSpace = true
         }
         let zoomButton: UIElement? = try? element.attribute(.zoomButton)
+        let isMinimized: Bool = (try? element.attribute(.minimized)) ?? false
 
         return WindowState(
             id: id,
@@ -728,11 +748,11 @@ final class WindowTracker {
             appName: app.localizedName ?? "",
             bundleID: app.bundleIdentifier,
             title: (try? element.attribute(.title)) ?? "",
-            subrole: try? element.attribute(.subrole),
+            subrole: HSWindow.likelySubrole(of: element, isMinimized: isMinimized, isAppHidden: app.isHidden),
             frame: frame,
             screenUUID: screen.map { HSScreen(screen: $0).uuid },
             screenName: screen?.localizedName,
-            isMinimized: (try? element.attribute(.minimized)) ?? false,
+            isMinimized: isMinimized,
             isAppHidden: app.isHidden,
             isFullscreen: (try? element.attribute(.fullScreen)) ?? false,
             hasTitlebar: zoomButton != nil,

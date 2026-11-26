@@ -17,7 +17,9 @@ nonisolated struct WindowState: Equatable {
     var appName: String
     var bundleID: String?
     var title: String
-    /// The window's accessibility subrole, e.g. AXStandardWindow
+    /// The window's accessibility subrole, e.g. AXStandardWindow. macOS reports a minimized or
+    /// hidden window as an AXDialog, so this is the subrole it had when it was last seen, or if
+    /// it hasn't been seen, the one `HSWindow.likelySubrole(of:isMinimized:isAppHidden:)` guesses.
     var subrole: String?
     /// Top-left origin, like every other frame in Hammerspoon
     var frame: CGRect

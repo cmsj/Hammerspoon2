@@ -63,7 +63,11 @@ import AppKit
 ///   them, for the screen holding most of the window
 /// - `allowRoles`: a window subrole (see `HSWindow.subrole`), an array of them, or `"*"` for any
 ///   window. Defaults to `hs.windowfilter.allowedWindowRoles`, except in the override rule,
-///   which allows any subrole unless it says otherwise.
+///   which allows any subrole unless it says otherwise. macOS reports minimized windows, and
+///   every window of a hidden application, as `"AXDialog"`, so these rules see the subrole a
+///   window had when it was last shown instead. A window that has only been seen minimized or
+///   hidden counts as an `"AXStandardWindow"` if it can be minimized, as dialogs can't (see
+///   `HSWindow.isStandard`).
 ///
 /// Regions and screens only apply to visible windows. RegExps support the `i`, `m` and `s` flags.
 ///
