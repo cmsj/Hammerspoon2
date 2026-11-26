@@ -32,20 +32,29 @@ npm init -y
 npm install --save-dev typescript
 ```
 
-### 2. Get the type definitions and a tsconfig
+### 2. Link the type definitions and add a tsconfig
 
-Every published version of these docs carries the exact `hammerspoon.d.ts` and
-`tsconfig.example.json` that match it, one directory up from this page, so the links below
-always point at files for the version you're reading right now:
+Every copy of Hammerspoon 2 ships the `hammerspoon.d.ts` that exactly matches it, inside the
+app bundle:
 
-- [hammerspoon.d.ts](../hammerspoon.d.ts) — the ambient type declarations
-- [tsconfig.example.json](../tsconfig.example.json) — a ready-to-use `tsconfig.json`
+```
+/Applications/Hammerspoon 2.app/Contents/Resources/hammerspoon.d.ts
+```
 
-Save the first as `hammerspoon.d.ts` and the second as `tsconfig.json`, both directly in your
-config directory. Re-download `hammerspoon.d.ts` whenever you update Hammerspoon 2, since
-module APIs can gain methods or change shape between versions — `hs.docs.show()` in the
-running app's console always matches your installed version exactly, if you'd rather not
-guess which docs version that corresponds to on this site.
+Rather than copying that file (and having to remember to re-copy it after every update),
+symlink it into your config directory, so TypeScript always sees the definitions for whichever
+version of Hammerspoon 2 you currently have installed:
+
+```bash
+cd ~/.config/Hammerspoon2
+ln -s "/Applications/Hammerspoon 2.app/Contents/Resources/hammerspoon.d.ts" hammerspoon.d.ts
+```
+
+(If you keep the app somewhere other than `/Applications`, adjust the path to match.)
+
+Then save [tsconfig.example.json](../tsconfig.example.json) as `tsconfig.json` in the same
+directory. Its `"*.ts"` include pattern picks up the symlinked `hammerspoon.d.ts`
+automatically.
 
 Everything `hammerspoon.d.ts` declares is also browsable as rendered documentation, in actual
 TypeScript syntax rather than the API reference's JS-flavored view — useful for seeing the
@@ -189,14 +198,15 @@ support, or `vim-lsp` with `typescript-language-server`.
 
 ### "Cannot find name 'hs'"
 
-`hammerspoon.d.ts` needs to be visible to the compiler. If it's sitting in your config
-directory alongside `tsconfig.json`, TypeScript's default `include` picks it up automatically
-as long as its extension (`.d.ts`) is included by the `include` glob you're using, or list it
-explicitly:
+`hammerspoon.d.ts` needs to be visible to the compiler. If the symlink from step 2 is sitting
+in your config directory alongside `tsconfig.json`, an `include` glob like `"*.ts"` picks it up
+automatically. Check that the symlink isn't dangling (`ls -lL hammerspoon.d.ts` should show a
+real file; if not, the app has moved and the link needs recreating). Alternatively, skip the
+symlink and point `files` straight at the copy in the app bundle:
 
 ```json
 {
-  "files": ["hammerspoon.d.ts"],
+  "files": ["/Applications/Hammerspoon 2.app/Contents/Resources/hammerspoon.d.ts"],
   "include": ["*.ts"]
 }
 ```
