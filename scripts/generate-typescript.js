@@ -65,6 +65,7 @@ function swiftTypeToTS(swiftType, promiseType = null) {
         'UInt64': 'number',
         'NSNumber': 'number',
         'NSDate': 'Date',
+        'Date': 'Date',
         'Any': 'any',
         'Void': 'void',
         // A JSValue param/return that isn't a JSFunction/JSPromise is a deliberately

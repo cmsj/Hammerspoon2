@@ -150,6 +150,24 @@ import AVFoundation
     /// hs.permissions.requestBluetooth().then(granted => console.log(granted))
     /// ```
     @objc func requestBluetooth() -> JSPromise?
+
+    /// Check if the app has full access to calendar events, which `hs.eventkit` needs.
+    /// - Returns: true if permission is granted, false otherwise
+    /// - Example:
+    /// ```js
+    /// console.log(hs.permissions.checkCalendars())
+    /// ```
+    @objc func checkCalendars() -> Bool
+
+    /// Request full access to calendar events (shows the system dialog if the user has not yet decided)
+    /// - Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied
+    /// - Example:
+    /// ```js
+    /// hs.permissions.requestCalendars().then(granted => {
+    ///     if (granted) console.log(hs.eventkit.calendars().length + " calendars")
+    /// })
+    /// ```
+    @objc func requestCalendars() -> JSPromise?
 }
 
 // MARK: - Implementation
@@ -280,6 +298,21 @@ import AVFoundation
         guard let context = JSContext.current() else { return nil }
         return wrapAsyncInJSPromise(in: context) { holder in
             PermissionsManager.shared.request(.bluetooth) { result in
+                Task { @MainActor in holder.resolveWith(result) }
+            }
+        }
+    }
+
+    // MARK: - Calendars
+
+    @objc func checkCalendars() -> Bool {
+        return PermissionsManager.shared.check(.calendars)
+    }
+
+    @objc func requestCalendars() -> JSPromise? {
+        guard let context = JSContext.current() else { return nil }
+        return wrapAsyncInJSPromise(in: context) { holder in
+            PermissionsManager.shared.request(.calendars) { result in
                 Task { @MainActor in holder.resolveWith(result) }
             }
         }

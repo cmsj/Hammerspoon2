@@ -1102,6 +1102,7 @@ function swiftTypeToJSDoc(swiftType) {
         'UInt32': 'number',
         'NSNumber': 'number',
         'NSDate': 'Date',
+        'Date': 'Date',
         'Any': '*'
     };
     
