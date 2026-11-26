@@ -645,6 +645,70 @@ import JavaScriptCore
         #expect(rejection?["reason"] as? String == "uncaughtSignal")
     }
 
+    @Test("A task whose program can't be started calls its termination callback")
+    func testLaunchFailureCallsTerminationCallback() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var termination: [String: Any]?
+        harness.registerCallback("onTerminate") { (info: [String: Any]) in
+            termination = info
+        }
+
+        harness.eval("""
+        var task = hs.task.create('/no/such/command', [], function(exitCode, reason, error) {
+            onTerminate({ exitCode: exitCode, reason: reason, error: error });
+        });
+        var startReturned = task.start() === task;
+        """)
+
+        harness.expectTrue("startReturned")
+        harness.expectFalse("task.isRunning")
+        harness.expectEqual("task.pid", -1)
+        harness.expectEqual("task.terminationReason", "launchFailed")
+
+        let success = await harness.waitForAsync(timeout: 2.0) { termination != nil }
+        #expect(success, "Termination callback should be called when the program can't be started")
+        #expect(termination?["exitCode"] as? Int == -1)
+        #expect(termination?["reason"] as? String == "launchFailed")
+        #expect((termination?["error"] as? String)?.isEmpty == false)
+
+        let tasksCompleted = await harness.waitForTasksToComplete(timeout: 2.0)
+        #expect(tasksCompleted, "A task that couldn't start should not stay active")
+        await harness.cleanup()
+    }
+
+    @Test("hs.task.runAsync() rejects when the program can't be started")
+    func testRunAsyncRejectsOnLaunchFailure() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var rejection: [String: Any]?
+        harness.registerCallback("onReject") { (info: [String: Any]) in
+            rejection = info
+        }
+
+        harness.eval("""
+        hs.task.runAsync('/no/such/command', [], { input: 'hello' }).then(function() {
+            onReject({ resolved: true });
+        }, function(error) {
+            onReject({ isError: error instanceof Error, message: error.message, reason: error.reason });
+        });
+        """)
+
+        let success = await harness.waitForAsync(timeout: 2.0) { rejection != nil }
+        #expect(success, "Promise should settle when the program can't be started")
+        #expect(rejection?["resolved"] == nil)
+        #expect(rejection?["isError"] as? Bool == true)
+        #expect(rejection?["reason"] as? String == "launchFailed")
+        let message = rejection?["message"] as? String ?? ""
+        #expect(message.hasPrefix("/no/such/command could not be started: "), "Unexpected message: \(message)")
+
+        let tasksCompleted = await harness.waitForTasksToComplete(timeout: 2.0)
+        #expect(tasksCompleted, "A task that couldn't start should not stay active")
+        await harness.cleanup()
+    }
+
     @Test("hs.task.runAsync() writes the input option to stdin")
     func testRunAsyncInput() async {
         let harness = JSTestHarness()
