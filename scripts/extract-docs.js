@@ -1367,7 +1367,7 @@ function generateCombinedJSDoc(moduleData) {
 
         // Add property definitions
         for (const prop of typeDef.properties || []) {
-            const propType = swiftTypeToJSDoc(extractPropertyType(prop.signature));
+            const propType = prop.tsType || swiftTypeToJSDoc(extractPropertyType(prop.signature));
             output += ` * @property {${propType}} ${prop.name}`;
             if (prop.description) {
                 output += ` - ${prop.description}`;
@@ -1422,7 +1422,7 @@ function generateCombinedJSDoc(moduleData) {
         if (prop.description) {
             output += ` * ${prop.description}\n`;
         }
-        const propType = swiftTypeToJSDoc(extractPropertyType(prop.signature));
+        const propType = prop.tsType || swiftTypeToJSDoc(extractPropertyType(prop.signature));
         output += ` * @type {${propType}}\n`;
         output += ` */\n`;
         output += `${moduleData.name}.${prop.name};\n\n`;
@@ -1477,7 +1477,7 @@ function generateTypesJSDoc(typesData) {
                 output += `/**\n`;
                 output += ` * @typedef {Object} ${typeName}Instance\n`;
                 for (const prop of protocol.properties) {
-                    const propType = swiftTypeToJSDoc(extractPropertyType(prop.signature));
+                    const propType = prop.tsType || swiftTypeToJSDoc(extractPropertyType(prop.signature));
                     output += ` * @property {${propType}} ${prop.name}`;
                     if (prop.description) {
                         output += ` - ${prop.description}`;
@@ -1493,7 +1493,7 @@ function generateTypesJSDoc(typesData) {
 
             // Add properties to the class documentation
             for (const prop of protocol.properties || []) {
-                const propType = swiftTypeToJSDoc(extractPropertyType(prop.signature));
+                const propType = prop.tsType || swiftTypeToJSDoc(extractPropertyType(prop.signature));
                 output += ` * @property {${propType}} ${prop.name}`;
                 if (prop.description) {
                     output += ` - ${prop.description}`;

@@ -36,7 +36,7 @@
     {% for prop in module.properties %}
     <div class="property" id="{{ prop.name }}">
         <h3><a href="#{{ prop.name }}">{{ module.name }}.{{ prop.name }}</a></h3>
-        <div class="prop-type">{{ prop.signature | extractPropertyType | formatType }}</div>
+        <div class="prop-type">{{ prop.tsType or (prop.signature | extractPropertyType | formatType) }}</div>
         <div class="description">{{ prop.description | markdown | safe }}</div>
         {% if prop | githubSourceUrl %}
         <div class="source-link">
