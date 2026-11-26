@@ -210,3 +210,18 @@ enum WindowEnumerator {
         return (found, true)
     }
 }
+
+/// The application that has keyboard focus, according to the system-wide accessibility element.
+///
+/// This differs from `NSWorkspace.frontmostApplication` when a process shows a non-activating panel
+/// that takes key focus without becoming the active application: Spotlight, for example, which on
+/// macOS 27 belongs to the Siri app. Falls back to the NSWorkspace frontmost app if AX can't answer.
+func keyboardFocusedApplication() -> NSRunningApplication? {
+    let systemWide = SystemWideElement(AXUIElementCreateSystemWide())
+    if let focusedApp: UIElement = try? systemWide.attribute(.focusedApplication),
+       let pid = try? focusedApp.pid(),
+       let runningApp = NSRunningApplication(processIdentifier: pid) {
+        return runningApp
+    }
+    return NSWorkspace.shared.frontmostApplication
+}

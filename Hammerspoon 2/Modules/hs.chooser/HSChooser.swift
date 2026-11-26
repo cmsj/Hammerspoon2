@@ -132,7 +132,10 @@ import SwiftUI
 
     // MARK: Appearance
 
-    /// Width of the chooser as a fraction of the screen width (default: `0.5` = 50 %).
+    /// Width of the chooser as a fraction of the main screen's width (default: `0.5` = 50 %).
+    ///
+    /// Changing it after the chooser has been shown resizes it about its centre. Setting `frame`
+    /// also updates it. Values that aren't finite, or aren't positive, are ignored.
     /// - Example:
     /// ```js
     /// chooser.width = 0.4
@@ -145,6 +148,24 @@ import SwiftUI
     /// chooser.visibleRows = 8
     /// ```
     @objc var visibleRows: Int { get set }
+
+    /// The chooser panel's frame on screen, in the same coordinates as `hs.window` and `hs.screen`
+    /// (y = 0 at the top of the primary screen, increasing downwards).
+    ///
+    /// Before the chooser is first shown, this is where it will appear: centred horizontally on the
+    /// main screen, a quarter of the way down it. It then stays wherever it was last placed.
+    ///
+    /// Setting `frame` moves the chooser so its top left corner is at `x`, `y`, and makes it `w`
+    /// points wide, updating `width` to match. `h` is ignored, since the chooser's height always
+    /// follows its rows (see `visibleRows`). Setting a frame whose values aren't finite, or whose
+    /// width isn't positive, does nothing.
+    /// - Example:
+    /// ```js
+    /// const f = chooser.frame
+    /// console.log(`The chooser's top left corner is at ${f.x}, ${f.y}`)
+    /// chooser.frame = new HSRect(100, 100, 600, 0)
+    /// ```
+    @objc var frame: HSRect? { get set }
 
     /// Background color of the chooser panel. When `nil` (the default), the panel uses
     /// the system's translucent glass/material effect.
@@ -274,6 +295,18 @@ import SwiftUI
     /// ```
     @objc var isVisible: Bool { get }
 
+    /// The window ID of the chooser panel while it's on screen, or `null` while it's hidden.
+    ///
+    /// The ID is the same one `hs.window` uses, so it can be passed to any function that takes a
+    /// window ID, such as `hs.window.snapshotForID()`.
+    /// - Example:
+    /// ```js
+    /// chooser.show()
+    /// const id = chooser.windowID
+    /// hs.window.snapshotForID(id).then(img => console.log("Captured " + img.size.w + "pt wide"))
+    /// ```
+    @objc var windowID: NSNumber? { get }
+
     // MARK: Callbacks
 
     /// {((item: Record<string, any> | null) => void) | null} Called when the user confirms a selection, or null to remove the handler.
@@ -351,13 +384,22 @@ import SwiftUI
     /// separator. Any other fields on an entry (e.g. an `id`) are passed back to
     /// `onContextMenuSelect` unchanged, so one handler can tell the entries apart.
     ///
+    /// A menu item can show a keyboard shortcut with a `shortcut` field: a string of modifier symbols
+    /// (`⌘` `⇧` `⌥` `⌃`) followed by one key, as the menu shows it (`"⇧⌘C"`, or just `"O"` for no
+    /// modifiers), or an object with the modifiers and key spelled out
+    /// (`{ mods: ["cmd", "shift"], key: "c" }`). Modifier and key names are the same as for
+    /// `hs.hotkey.bind()`.
+    ///
+    /// **A menu shortcut is not a system-wide hotkey**, nor a shortcut for the chooser: pressing it
+    /// chooses the item only while the context menu is open, and does nothing while it's closed.
+    ///
     /// Rows whose choice has `contextMenu: false` show no menu, e.g. for a "Clear history" row.
     /// - Example:
     /// ```js
     /// chooser.contextMenu = [
     ///     { title: "Reveal in Finder", id: "reveal" },
     ///     { type: "divider" },
-    ///     { title: "Copy path", id: "copy" }
+    ///     { title: "Copy path", id: "copy", shortcut: "⇧⌘C" }
     /// ]
     /// ```
     @objc var contextMenu: [Any] { get set }
@@ -450,7 +492,24 @@ import SwiftUI
 
     @objc var searchSubText = false
     @objc var enableDefaultForQuery = false
-    @objc var width: Double = 0.5
+    private var _width: Double = 0.5
+    @objc var width: Double {
+        get { _width }
+        set {
+            guard newValue.isFinite, newValue > 0 else {
+                AKWarning("hs.chooser.width: ignoring invalid width \(newValue)")
+                return
+            }
+            _width = newValue
+            guard let window else { return }
+            // Resize about the centre, so a chooser in its default place stays centred
+            var appKitFrame = window.frame
+            appKitFrame.origin.x = appKitFrame.midX - windowWidth / 2
+            appKitFrame.size.width = windowWidth
+            window.setFrame(appKitFrame, display: true)
+            window.refreshShadow()
+        }
+    }
     @objc var visibleRows: Int {
         get { viewModel.visibleRows }
         set { viewModel.visibleRows = newValue }
@@ -580,6 +639,48 @@ import SwiftUI
 
     @objc var isVisible: Bool { window?.isVisible ?? false }
 
+    @objc var windowID: NSNumber? {
+        guard let window, window.isVisible else { return nil }
+        return NSNumber(value: window.windowNumber)
+    }
+
+    @objc var frame: HSRect? {
+        get {
+            guard let window else {
+                let initial = ChooserPanel.initialFrame(
+                    on: NSScreen.main ?? NSScreen.screens[0],
+                    width: windowWidth,
+                    height: viewModel.expectedHeight()
+                )
+                return initial.flippedScreenCoordinates().toBridge()
+            }
+            var topDown = window.frame.flippedScreenCoordinates()
+            // A hidden panel is only resized to fit its rows by the next show(), so report that height
+            if !window.isVisible {
+                topDown.size.height = viewModel.expectedHeight()
+            }
+            return topDown.toBridge()
+        }
+        set {
+            guard let newValue else { return }
+            guard newValue.x.isFinite, newValue.y.isFinite, newValue.w.isFinite, newValue.w > 0 else {
+                AKWarning("hs.chooser.frame: ignoring invalid frame \(newValue.toString())")
+                return
+            }
+            if window == nil {
+                createWindow()
+            }
+            guard let window else { return }
+            // The height follows the rows, so ignore the requested one and pin the top-left corner
+            let topDown = CGRect(x: newValue.x, y: newValue.y, width: newValue.w,
+                                 height: viewModel.expectedHeight())
+            window.setFrame(topDown.flippedScreenCoordinates(), display: true)
+            // Keep `width` describing the panel
+            _width = newValue.w / mainScreenWidth
+            window.refreshShadow()
+        }
+    }
+
     @objc var selectedRow: Int {
         get { viewModel.selectedIndex }
         set {
@@ -666,7 +767,15 @@ import SwiftUI
                     AKWarning("hs.chooser.contextMenu: ignoring entry without a title")
                     return nil
                 }
-                return (entry, .item(title: title, entry: entry))
+                var shortcut: MenuShortcut?
+                if let shortcutValue = entry["shortcut"], !(shortcutValue is NSNull) {
+                    do {
+                        shortcut = try MenuShortcut(parsing: shortcutValue)
+                    } catch {
+                        AKWarning("hs.chooser.contextMenu: Ignoring shortcut for \"\(title)\": \(error)")
+                    }
+                }
+                return (entry, .item(title: title, shortcut: shortcut, entry: entry))
             }
             contextMenuEntries = parsed.map(\.entry)
             viewModel.contextMenuEntries = parsed.map(\.menuEntry)
@@ -926,9 +1035,12 @@ import SwiftUI
 
     // MARK: - Private
 
+    private var mainScreenWidth: CGFloat { NSScreen.main?.frame.width ?? 1440 }
+
+    /// The panel's width in points: `width` as a fraction of the main screen's width.
+    private var windowWidth: CGFloat { CGFloat(width) * mainScreenWidth }
+
     private func createWindow() {
-        let screenWidth = NSScreen.main?.frame.width ?? 1440
-        let windowWidth = CGFloat(width) * screenWidth
         let screen = NSScreen.main
 
         viewModel.onContentSizeChange = { [weak self] height in

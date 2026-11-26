@@ -4,7 +4,9 @@
 //
 
 import Testing
+import AppKit
 import JavaScriptCore
+import SwiftUI
 @testable import Hammerspoon_2
 
 @Suite("hs.chooser tests")
@@ -768,7 +770,7 @@ struct HSChooserTests {
 
         /// The JS object of the context menu item titled `title`, as the view hands it back.
         private func menuEntry(titled title: String, in chooser: HSChooser) -> [String: Any]? {
-            for case let .item(itemTitle, entry) in chooser.viewModel.contextMenuEntries where itemTitle == title {
+            for case let .item(itemTitle, _, entry) in chooser.viewModel.contextMenuEntries where itemTitle == title {
                 return entry
             }
             return nil
@@ -795,6 +797,39 @@ struct HSChooserTests {
 
             let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
             #expect(chooser.viewModel.contextMenuEntries.count == 3)
+        }
+
+        @Test("a context menu item's shortcut is parsed, and an invalid one is ignored")
+        func testContextMenuShortcut() throws {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.contextMenu = [
+                {title: "Plain"},
+                {title: "Key", shortcut: "O"},
+                {title: "Symbols", shortcut: "⇧⌘C"},
+                {title: "Object", shortcut: {mods: ["cmd", "shift"], key: "c"}},
+                {title: "Bad", shortcut: {mods: ["hyper"], key: "c"}}
+            ]
+        """)
+            #expect(!harness.hasException)
+            harness.expectEqual("c.contextMenu.length", 5)
+            harness.expectEqual("c.contextMenu[3].shortcut.key", "c")
+
+            let chooser = try #require(harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser)
+            let shortcuts = chooser.viewModel.contextMenuEntries.map { entry -> MenuShortcut? in
+                guard case let .item(_, shortcut, _) = entry else { return nil }
+                return shortcut
+            }
+            #expect(shortcuts == [
+                nil,
+                try MenuShortcut(parsing: "O"),
+                try MenuShortcut(parsing: ["mods": ["cmd", "shift"], "key": "c"]),
+                try MenuShortcut(parsing: ["mods": ["cmd", "shift"], "key": "c"]),
+                nil,
+            ])
+            #expect(shortcuts[1]?.keyboardShortcut == KeyboardShortcut("o", modifiers: []))
+            #expect(shortcuts[2]?.keyboardShortcut == KeyboardShortcut("c", modifiers: [.command, .shift]))
         }
 
         @Test("setting contextMenu to an empty array removes the menu")
@@ -1176,6 +1211,175 @@ struct HSChooserTests {
             harness.shutdownForLeakTest()
         }
         tracker.assertNoLeaks()
+    }
+}
+
+// MARK: - Window ID and frame (issue #449)
+
+extension HSChooserTests {
+    @Suite("hs.chooser windowID and frame tests")
+    struct HSChooserWindowGeometryTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSChooserModule.self, as: "chooser")
+            return harness
+        }
+
+        @Test("windowID is null before the chooser is shown")
+        func testWindowIDNullWhenHidden() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("c.windowID === null")
+        }
+
+        @Test("windowID is a positive integer while shown, and null again once hidden")
+        func testWindowIDWhileShown() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create(); c.setChoices([{text: 'One'}]); c.show()")
+            defer { harness.eval("c.hide()") }
+            harness.expectTrue("Number.isInteger(c.windowID) && c.windowID > 0")
+            harness.eval("c.hide()")
+            harness.expectTrue("c.windowID === null")
+        }
+
+        @Test("frame before the first show is where the chooser then appears")
+        func testFrameBeforeShowMatchesShownFrame() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([{text: 'One'}, {text: 'Two'}])
+            var before = c.frame
+            c.show()
+            var after = c.frame
+            """)
+            defer { harness.eval("c.hide()") }
+            harness.expectTrue("before instanceof HSRect && after instanceof HSRect")
+            harness.expectTrue("Math.abs(before.x - after.x) < 0.5")
+            harness.expectTrue("Math.abs(before.y - after.y) < 0.5")
+            harness.expectTrue("Math.abs(before.w - after.w) < 0.5")
+            harness.expectTrue("Math.abs(before.h - after.h) < 0.5")
+            #expect(!harness.hasException)
+        }
+
+        @Test("frame is in top-down screen coordinates")
+        func testFrameIsTopDown() throws {
+            let screen = try #require(NSScreen.main)
+            let primaryHeight = try #require(NSScreen.screens.first).frame.height
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            // The default placement puts the top a quarter of the way down the main screen
+            let visible = screen.visibleFrame
+            let expectedTop = primaryHeight - visible.maxY + visible.height * 0.25
+            let y = try #require(harness.evalDouble("c.frame.y"))
+            #expect(abs(y - Double(expectedTop)) < 0.5)
+            let w = try #require(harness.evalDouble("c.frame.w"))
+            #expect(abs(w - Double(screen.frame.width) * 0.5) < 0.5)
+        }
+
+        @Test("setting frame moves the chooser and sets its width, keeping its height")
+        func testSetFrame() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([{text: 'One'}])
+            var h = c.frame.h
+            c.frame = new HSRect(100, 120, 500, 999)
+            """)
+            harness.expectTrue("Math.abs(c.frame.x - 100) < 0.5")
+            harness.expectTrue("Math.abs(c.frame.y - 120) < 0.5")
+            harness.expectTrue("Math.abs(c.frame.w - 500) < 0.5")
+            harness.expectTrue("Math.abs(c.frame.h - h) < 0.5")
+            #expect(!harness.hasException)
+        }
+
+        @Test("a frame set while hidden is kept when the chooser is shown")
+        func testSetFrameSurvivesShow() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([{text: 'One'}])
+            c.frame = new HSRect(150, 130, 450, 0)
+            c.show()
+            """)
+            defer { harness.eval("c.hide()") }
+            harness.expectTrue("Math.abs(c.frame.x - 150) < 0.5")
+            harness.expectTrue("Math.abs(c.frame.y - 130) < 0.5")
+            harness.expectTrue("Math.abs(c.frame.w - 450) < 0.5")
+        }
+
+        @Test("setting width after the chooser has been shown resizes it about its centre")
+        func testWidthResizesExistingPanel() throws {
+            let screenWidth = try #require(NSScreen.main).frame.width
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([{text: 'One'}])
+            c.show()
+            c.hide()
+            var before = c.frame
+            c.width = 0.3
+            var after = c.frame
+            """)
+            let w = try #require(harness.evalDouble("after.w"))
+            // AppKit rounds the frame to whole pixels
+            #expect(abs(w - Double(screenWidth) * 0.3) <= 1)
+            harness.expectTrue("Math.abs((before.x + before.w / 2) - (after.x + after.w / 2)) <= 1")
+            harness.expectTrue("Math.abs(before.y - after.y) < 0.5")
+            #expect(!harness.hasException)
+        }
+
+        @Test("setting width while the chooser is shown resizes it")
+        func testWidthResizesVisiblePanel() throws {
+            let screenWidth = try #require(NSScreen.main).frame.width
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create(); c.setChoices([{text: 'One'}]); c.show(); c.width = 0.4")
+            defer { harness.eval("c.hide()") }
+            let w = try #require(harness.evalDouble("c.frame.w"))
+            // AppKit rounds the frame to whole pixels
+            #expect(abs(w - Double(screenWidth) * 0.4) <= 1)
+        }
+
+        @Test("setting frame updates width to match")
+        func testFrameUpdatesWidth() throws {
+            let screenWidth = try #require(NSScreen.main).frame.width
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create(); c.frame = new HSRect(100, 100, 400, 0)")
+            let width = try #require(harness.evalDouble("c.width"))
+            #expect(abs(width - 400 / Double(screenWidth)) < 0.001)
+        }
+
+        @Test("setting an invalid width is ignored")
+        func testSetInvalidWidth() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.width = 0.4
+            c.width = 0
+            c.width = -1
+            c.width = NaN
+            c.width = Infinity
+            """)
+            harness.expectTrue("Math.abs(c.width - 0.4) < 0.0001")
+            #expect(!harness.hasException)
+        }
+
+        @Test("setting an invalid frame is ignored")
+        func testSetInvalidFrame() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            var original = c.frame
+            c.frame = new HSRect(10, 10, 0, 100)
+            c.frame = new HSRect(10, 10, -50, 100)
+            c.frame = new HSRect(NaN, 10, 300, 100)
+            c.frame = null
+            """)
+            harness.expectTrue("Math.abs(c.frame.x - original.x) < 0.5")
+            harness.expectTrue("Math.abs(c.frame.y - original.y) < 0.5")
+            harness.expectTrue("Math.abs(c.frame.w - original.w) < 0.5")
+            #expect(!harness.hasException)
+        }
     }
 }
 

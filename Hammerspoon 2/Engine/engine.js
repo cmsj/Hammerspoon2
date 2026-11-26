@@ -100,8 +100,18 @@ EventEmitter.prototype.once = function (event, listener) {
 // logged here: every native `_addWatcher` already logs its specific cause (missing permission,
 // already watching, ...) before returning false, which also keeps the failure visible when
 // on()/once() is called from a promise callback, where the throw becomes an unhandled rejection.
-function failedToStart(caller, event) {
-    return new Error(caller + ": failed to start watcher for '" + event + "'");
+// A native side that can say why (hs.ax) passes `cause`: its `reason` is added to the message
+// and its `code`, if any, set as the error's `code`, so scripts can branch on it (#437).
+function failedToStart(caller, event, cause) {
+    let message = caller + ": failed to start watcher for '" + event + "'";
+    if (cause && cause.reason) {
+        message += ": " + cause.reason;
+    }
+    const error = new Error(message);
+    if (cause && cause.code) {
+        error.code = cause.code;
+    }
+    return error;
 }
 
 // MARK: - assertKnownEvent

@@ -10,7 +10,7 @@ import SwiftUI
 /// A single entry in the context menu shared by every row — either a menu item or a separator.
 enum ChooserContextMenuEntry {
     /// A menu item; `entry` is the original JS object, passed back to `onContextMenuSelect`.
-    case item(title: String, entry: [String: Any])
+    case item(title: String, shortcut: MenuShortcut?, entry: [String: Any])
     case divider
 }
 

@@ -64,29 +64,35 @@ import JavaScriptCoreExtras
     /// ```
     @objc func clearConsole()
 
+    /// Check for a newer version of Hammerspoon 2, the same as choosing "Check for Updates…" from its
+    /// menu. If there is one, a window offers to install it. This is useful when Hammerspoon 2 is
+    /// hidden from both the Dock and the menu bar, so that menu can't be reached.
+    /// - Returns: {boolean} true if the check started, false if it couldn't start, e.g. because a
+    ///   check is already in progress
+    /// - Example:
+    /// ```js
+    /// hs.checkForUpdates()
+    /// ```
+    @objc func checkForUpdates() -> Bool
+
     /// Get the messages currently in the Hammerspoon Console, oldest first. This is the same history
     /// the Console window shows, so it's limited by the "Console history length" setting (which
     /// applies to each level separately), and `hs.clearConsole()` empties it.
     ///
-    /// Each message is an object with:
-    ///  - `sequence`: a number that's higher for each newer message. Pass the last one you've seen
-    ///    as `since` to get only the messages logged after it
-    ///  - `date`: a `Date` for when the message was logged
-    ///  - `level`: `"garbage"`, `"debug"`, `"info"`, `"warning"`, `"error"` or `"javascript"`
-    ///    (for `console.log()` and friends)
-    ///  - `message`: the message's text
-    ///
-    /// Options (all optional):
-    ///  - `minimumLevel`: only get messages at this level or above, e.g. `"warning"` for warnings
-    ///    and errors (and `"javascript"` messages, which count as the highest level). Defaults to
-    ///    every level
-    ///  - `search`: only get messages that contain this text, ignoring case
-    ///  - `since`: only get messages whose `sequence` is higher than this
-    ///
     /// - Note: Messages reach the Console asynchronously, so one logged moments ago, including
     ///   by `console.log()` in the same function, may not be included yet.
-    /// - Parameter options?: {{minimumLevel?: "garbage" | "debug" | "info" | "warning" | "error" | "javascript", search?: string, since?: number}} Which messages to get
+    /// - Parameter options?: Which messages to get
+    ///   - minimumLevel?: {"garbage" | "debug" | "info" | "warning" | "error" | "javascript"} Only get
+    ///     messages at this level or above, e.g. `"warning"` for warnings and errors (and
+    ///     `"javascript"` messages, which count as the highest level). Defaults to every level
+    ///   - search?: {string} Only get messages that contain this text, ignoring case
+    ///   - since?: {number} Only get messages whose `sequence` is higher than this
     /// - Returns: {{sequence: number, date: Date, level: "garbage" | "debug" | "info" | "warning" | "error" | "javascript", message: string}[]} The matching messages, oldest first
+    ///   - sequence: A number that's higher for each newer message. Pass the last one you've seen
+    ///     as `since` to get only the messages logged after it
+    ///   - date: When the message was logged
+    ///   - level: The message's level, where `"javascript"` is for `console.log()` and friends
+    ///   - message: The message's text
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -184,9 +190,11 @@ import JavaScriptCoreExtras
     @objc var sound: HSSoundModule { get }
     @objc var network: HSNetworkModule { get }
     @objc var window: HSWindowModule { get }
+    @objc var windowfilter: HSWindowFilterModule { get }
     @objc var mouse: HSMouseModule { get }
     @objc var plist: HSPlistModule { get }
     @objc var userdefaults: HSUserDefaultsModule { get }
+    @objc var distributednotifications: HSDistributedNotificationsModule { get }
     @objc var wifi: HSWifiModule { get }
     @objc var spoons: HSSpoonsModule { get }
 }
@@ -206,6 +214,10 @@ import JavaScriptCoreExtras
 
     private var _onRelaunch: JSCallback?
     private var _onOpenFile: JSCallback?
+
+    /// The updater `hs.checkForUpdates()` uses. Fetched only when it's called, so creating a
+    /// ModuleRoot (e.g. in tests) doesn't start Sparkle's updater.
+    var updateChecker: () -> UpdateChecking = { AppUpdater.updater }
 
     // The context the modules were first used from, recorded with their wrappers, so shutdown()
     // can drop any pins its modules left behind.
@@ -321,15 +333,23 @@ import JavaScriptCoreExtras
 
     // MARK: - Console
     @objc func openConsole() {
-        if let url = URL(string: "hammerspoon2://openConsole") {
-            NSWorkspace.shared.open(url)
-        }
+        AppWindows.shared.showConsole()
     }
 
     @objc func closeConsole() {
         if let url = URL(string: "hammerspoon2://closeConsole") {
             NSWorkspace.shared.open(url)
         }
+    }
+
+    @objc func checkForUpdates() -> Bool {
+        let updater = updateChecker()
+        guard updater.canCheckForUpdates else {
+            AKWarning("hs.checkForUpdates(): unable to check for updates right now, a check may already be in progress")
+            return false
+        }
+        updater.checkForUpdates()
+        return true
     }
 
     // MARK: - Relaunch
@@ -478,9 +498,13 @@ import JavaScriptCoreExtras
     @objc var sound:        HSSoundModule           { getOrCreate(name: "sound",        type: HSSoundModule.self)}
     @objc var network:      HSNetworkModule         { getOrCreate(name: "network",      type: HSNetworkModule.self)}
     @objc var window:       HSWindowModule          { getOrCreate(name: "window",       type: HSWindowModule.self)}
+    @objc var windowfilter: HSWindowFilterModule    { getOrCreate(name: "windowfilter", type: HSWindowFilterModule.self)}
     @objc var mouse:        HSMouseModule           { getOrCreate(name: "mouse",        type: HSMouseModule.self)}
     @objc var plist:        HSPlistModule           { getOrCreate(name: "plist",        type: HSPlistModule.self)}
     @objc var userdefaults: HSUserDefaultsModule    { getOrCreate(name: "userdefaults", type: HSUserDefaultsModule.self)}
+    @objc var distributednotifications: HSDistributedNotificationsModule {
+        getOrCreate(name: "distributednotifications", type: HSDistributedNotificationsModule.self)
+    }
     @objc var wifi:         HSWifiModule            { getOrCreate(name: "wifi",         type: HSWifiModule.self)}
     @objc var spoons:       HSSpoonsModule          { getOrCreate(name: "spoons") { HSSpoonsModule(engineID: engineID, spoonManager: spoonManager) }}
     // swiftlint:enable colon opening_brace comma

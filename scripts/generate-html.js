@@ -14,6 +14,7 @@ const nunjucks = require('nunjucks');
 const { marked, Renderer } = require('marked');
 const hljs = require('highlight.js');
 const { THROWS_DESCRIPTION } = require('./docs-strings');
+const { fieldsOf, displayType } = require('./docs-params');
 
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'docs', 'js', 'html');
@@ -99,8 +100,27 @@ env.addFilter('formatReturnType', function(returns) {
     return formatType(returns.type, returns.promiseType);
 });
 
+// A parameter's (or field's) type: its TypeScript type hint if it has one, else its Swift type.
+// The object of one whose fields are listed beneath it is just "object", rather than every field
+// again.
 env.addFilter('resolveParamType', function(param) {
-    return formatType(param.type);
+    // A documented field may have no type at all
+    const type = param.tsType || (param.type ? formatType(param.type) : 'any');
+    return param.fields && param.fields.length > 0 ? displayType(type) : type;
+});
+
+// The rows of a params table: the parameters, each followed by the fields of any object it takes
+env.addFilter('paramRows', function(params) {
+    return treeRows((params || []).map(p => ({ ...p, fields: fieldsOf(p) })));
+});
+
+// A return value's type, and the rows of a table of the fields of the object it's about (if any)
+env.addFilter('returnTree', function(returns) {
+    const type = formatType(returns.type, returns.promiseType);
+    const fields = fieldsOf({ tsType: type, fields: returns.fields });
+    return fields.length > 0
+        ? { type: displayType(type), rows: treeRows(fields) }
+        : { type, rows: [] };
 });
 
 env.addFilter('extractPropertyType', function(signature) {
@@ -179,6 +199,27 @@ function validateType(protocol, typeName) {
 }
 
 /**
+ * Flatten a tree of parameters or fields into table rows, each with its depth and what's needed
+ * to draw the tree's lines: whether it's the last of its siblings, and, for each ancestor level
+ * above its own, whether that level's line carries on past it to a later sibling.
+ * groupEnd marks the last row of each top-level entry, where the table draws a rule.
+ */
+function treeRows(nodes) {
+    const rows = [];
+    const walk = (list, depth, trunks, closesGroup) => {
+        list.forEach((node, index) => {
+            const last = index === list.length - 1;
+            const fields = node.fields || [];
+            const closes = closesGroup && (depth === 0 || last);
+            rows.push({ node, depth, trunks, last, hasFields: fields.length > 0, groupEnd: closes && fields.length === 0 });
+            walk(fields, depth + 1, depth === 0 ? [] : [...trunks, !last], closes);
+        });
+    };
+    walk(nodes, 0, [], true);
+    return rows;
+}
+
+/**
  * Convert Swift type to display type
  * @param {string} swiftType - The Swift type to convert
  * @param {string|null} promiseType - If this is a JSPromise, the inner type from documentation
@@ -203,7 +244,7 @@ function formatType(swiftType, promiseType = null) {
     // Handle JSPromise - convert to Promise<T>
     if (swiftType === 'JSPromise?' || swiftType === 'JSPromise') {
         const innerType = promiseType ? formatType(promiseType) : 'any';
-        return `Promise&lt;${innerType}&gt;`;
+        return `Promise<${innerType}>`;
     }
 
     // Handle arrays

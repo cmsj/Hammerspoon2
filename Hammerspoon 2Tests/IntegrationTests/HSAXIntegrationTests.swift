@@ -1141,16 +1141,18 @@ struct HSAXTests {
             harness.loadModule(HSAXModule.self, as: "ax")
             let element = HSAXElement(element: SystemWideElement(AXUIElementCreateSystemWide()))
             harness.context.setObject(element, forKeyedSubscript: "sys" as NSString)
-            // `failing` lists the notification names whose native registration should fail;
-            // `added`/`removed` record which notifications reached the native layer.
+            // `failing` lists the notification names whose native registration should fail, with
+            // `failure` as the reason; `added`/`removed` record which notifications reached the
+            // native layer.
             harness.eval("""
             var failing = [];
+            var failure = { reason: 'stubbed failure (kAXErrorCannotComplete)', code: 'kAXErrorCannotComplete' };
             var added = [];
             var removed = [];
             Object.defineProperty(hs.ax, '_addWatcher', {
                 value: function(element, notification, callback) {
                     added.push(notification);
-                    return !failing.includes(notification);
+                    return failing.includes(notification) ? failure : null;
                 },
                 writable: true, configurable: true
             });
@@ -1260,7 +1262,35 @@ struct HSAXTests {
             try { hs.ax.once(sys, 'AXValueChanged', function() {}); } catch (e) { message = e.message; }
             """)
             #expect(!harness.hasException)
-            #expect(harness.evalString("message") == "hs.ax.once(): failed to start watcher for 'AXValueChanged'")
+            #expect(harness.evalString("message") == "hs.ax.once(): failed to start watcher for 'AXValueChanged': stubbed failure (kAXErrorCannotComplete)")
+        }
+
+        @Test("a native failure's reason and code reach the thrown Error (#437)", arguments: ["on", "once"])
+        func testFailureCarriesReasonAndCode(method: String) {
+            let harness = makeHarness()
+            harness.eval("""
+            failing = ['AXWindowCreated'];
+            failure = { reason: 'the Accessibility API is disabled (kAXErrorAPIDisabled)', code: 'kAXErrorAPIDisabled' };
+            var err = null;
+            try { hs.ax.\(method)(sys, ['AXWindowCreated'], function() {}); } catch (e) { err = e; }
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalString("err.message") == "hs.ax.\(method)(): failed to start watcher for 'AXWindowCreated': the Accessibility API is disabled (kAXErrorAPIDisabled)")
+            #expect(harness.evalString("err.code") == "kAXErrorAPIDisabled")
+        }
+
+        @Test("a native failure without an Accessibility error leaves the Error without a code")
+        func testFailureWithoutCode() {
+            let harness = makeHarness()
+            harness.eval("""
+            failing = ['AXWindowCreated'];
+            failure = { reason: 'no process' };
+            var err = null;
+            try { hs.ax.on(sys, 'AXWindowCreated', function() {}); } catch (e) { err = e; }
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalString("err.message") == "hs.ax.on(): failed to start watcher for 'AXWindowCreated': no process")
+            harness.expectFalse("'code' in err")
         }
 
         @Test("on()/once() with an empty notification array throws without registering", arguments: ["on", "once"])
@@ -1290,7 +1320,7 @@ struct HSAXTests {
             """)
             #expect(!harness.hasException)
             #expect(harness.evalString("removed.join(',')") == "AXWindowCreated,AXWindowMoved")
-            #expect(harness.evalString("message") == "hs.ax.on(): failed to start watcher for 'AXWindowResized'")
+            #expect(harness.evalString("message") == "hs.ax.on(): failed to start watcher for 'AXWindowResized': stubbed failure (kAXErrorCannotComplete)")
         }
 
         @Test("on() throws if the watcher emitter is unavailable")
@@ -1422,12 +1452,14 @@ struct HSAXTests {
             #expect(!harness.hasException)
         }
 
-        @Test("_addWatcher returns false when native registration fails")
-        func testUnderscoreAddWatcherReturnsFalseOnFailure() {
+        @Test("_addWatcher says why native registration failed")
+        func testUnderscoreAddWatcherReportsFailure() {
             let harness = makeHarness()
             // The system-wide element has no owning process (pid is -1), so native
-            // registration against it always fails.
-            #expect(harness.evalBool("hs.ax._addWatcher(hs.ax.systemWideElement(), 'AXValueChanged', function() {})") == false)
+            // registration against it always fails, before any Accessibility error.
+            harness.eval("var _lcFailure = hs.ax._addWatcher(hs.ax.systemWideElement(), 'AXValueChanged', function() {})")
+            #expect(harness.evalString("_lcFailure.reason") == "could not get the element's process ID")
+            harness.expectFalse("'code' in _lcFailure")
         }
 
         @Test("a failed on() does not permanently block later retries for the same element+notification")

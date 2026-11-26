@@ -31,7 +31,8 @@ import JavaScriptCoreExtras
 /// })
 /// ```
 @objc protocol HSSpoonsModuleAPI: JSExport {
-    /// Load an installed Spoon by name. A Spoon must contain a well-formed `spoon.json` (with
+    /// Load an installed Spoon by name, or a Spoon from any directory with the `path` option. A
+    /// Spoon must contain a well-formed `spoon.json` (with
     /// non-empty `name`, `author`, `version`, and `description` fields) and an `init.js`, or
     /// loading fails with an exception. `init.js` is loaded through the same `require()` used for
     /// the rest of your config, so it can itself `require()` further files from within the
@@ -51,10 +52,31 @@ import JavaScriptCoreExtras
     /// since the same cached object is returned each time - write it to be safe to call more
     /// than once, or do one-time setup at `init.js`'s top level instead.
     ///
-    /// The exception's `code` is `ENOTINSTALLED` if there's no such Spoon, `EINVALIDARG` if the name
-    /// can't be a Spoon's, or `EINVALIDSPOON` if the Spoon is malformed. An exception thrown by the
-    /// Spoon's own code is passed on as it is.
-    /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`
+    /// If the object has a `bindings` object (its actions, keyed by name), it's given a generic
+    /// `bindHotkeys(mapping)` before `init()` runs, which binds the hotkeys in `mapping` (e.g.
+    /// `{ show: [["cmd", "alt"], "g"] }`) to those actions, and an `unbindHotkeys(actions)` that
+    /// unbinds them again. These replace any `bindHotkeys()` and `unbindHotkeys()` the Spoon
+    /// exports itself. A Spoon without `bindings` keeps its own, if it has them. See the Spoons
+    /// guide for the details.
+    ///
+    /// `path` is for developing a Spoon: it loads the Spoon straight from that directory (such as
+    /// a `.spoon2` bundle in your own checkout of its repository), instead of from `Spoons/`, so
+    /// reloading your config picks up your changes. Nothing is installed or copied, and a Spoon
+    /// of the same name that's installed is ignored. A warning is logged each time, so a config
+    /// that still points at a development copy doesn't go unnoticed.
+    ///
+    /// A Spoon whose `spoon.json` has a `minimumHSVersion` isn't loaded by an older Hammerspoon 2
+    /// (see `hs.appinfo.version`): `init.js` isn't run, and `load()` throws, naming both versions.
+    ///
+    /// The exception's `code` is `ENOTINSTALLED` if there's no such Spoon, `ENOTFOUND` if `path`
+    /// isn't a directory, `EINVALIDARG` if the name can't be a Spoon's or an option is malformed,
+    /// `EINVALIDSPOON` if the Spoon is malformed, or `EVERSION` if it needs a newer Hammerspoon 2.
+    /// An exception thrown by the Spoon's own code is
+    /// passed on as it is.
+    /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`. It's also the name it's stored under on `hs.spoons`.
+    /// - Parameter options?: Where to load the Spoon from
+    ///   - path?: {string} A directory to load the Spoon from instead of `Spoons/`. A relative path
+    ///     is relative to your config directory, and `~` is your home directory.
     /// - Returns: {Object} Whatever the Spoon's `init.js` assigned to `module.exports`
     /// - Throws: true
     /// - Example:
@@ -67,8 +89,11 @@ import JavaScriptCoreExtras
     /// } catch (err) {
     ///     console.error(err.message)
     /// }
+    ///
+    /// // While working on a Spoon, load it from your own copy of it
+    /// hs.spoons.load("MySpoon", { path: "~/src/my-spoons/MySpoon.spoon2" })
     /// ```
-    @objc func load(_ name: String) -> JSValue?
+    @objc func load(_ name: String, _ options: [String: Any]?) -> JSValue?
 
     /// Download a Spoon and install it into the `Spoons` directory. It isn't loaded: call
     /// `hs.spoons.load()` (or use `hs.spoons.use()`, which does both) once it's installed.
@@ -82,7 +107,13 @@ import JavaScriptCoreExtras
     /// `EINTEGRITY` (the download didn't match `sha256`), `EINVALIDSPOON`, `EEXISTS`, or `EIO` (for
     /// anything else, such as failing to write the Spoon to disk).
     /// - Parameter name: The name of the Spoon to install
-    /// - Parameter options: {{source: string, ref?: string, sha256?: string, force?: boolean}} `source` is a GitHub repository (`"owner/repo"` or its `https://github.com/...` URL) or the `https://` URL of a zip file. `ref` is a branch, tag or commit to install from (GitHub only; the default branch if omitted). `sha256` is the expected SHA-256 of the download. `force: true` replaces a Spoon that's already installed, rather than failing.
+    /// - Parameter options: Where to install the Spoon from
+    ///   - source: {string} A GitHub repository (`"owner/repo"` or its `https://github.com/...` URL)
+    ///     or the `https://` URL of a zip file
+    ///   - ref?: {string} A branch, tag or commit to install from (GitHub only; the default branch
+    ///     if omitted)
+    ///   - sha256?: {string} The expected SHA-256 of the download
+    ///   - force?: {boolean} `true` replaces a Spoon that's already installed, rather than failing
     /// - Returns: {Promise<{name: string, version: string, author: string, description: string, source: string, ref: string | null, commit: string | null}>} Resolves with the installed Spoon's details
     /// - Example:
     /// ```js
@@ -94,7 +125,10 @@ import JavaScriptCoreExtras
 
     /// List the Spoons that can be installed from a source, without installing anything.
     /// - Parameter source: A GitHub repository (`"owner/repo"` or its `https://github.com/...` URL) or the `https://` URL of a zip file
-    /// - Parameter options?: {{ref?: string, sha256?: string}} As for `install()`
+    /// - Parameter options?: Where to look, as for `install()`
+    ///   - ref?: {string} A branch, tag or commit to look in (GitHub only; the default branch if
+    ///     omitted)
+    ///   - sha256?: {string} The expected SHA-256 of the download
     /// - Returns: {Promise<{name: string, version: string, author: string, description: string}[]>} Resolves with the Spoons found
     /// - Example:
     /// ```js
@@ -117,14 +151,40 @@ import JavaScriptCoreExtras
     /// - Returns: {Promise<boolean>} Resolves with true if the Spoon was updated, or false if it was already up to date
     /// - Example:
     /// ```js
-    /// // Update every Spoon that was installed from a source
-    /// for (const spoon of hs.spoons.installed().filter(s => s.source)) {
-    ///     hs.spoons.update(spoon.name)
-    ///         .then(updated => { if (updated) console.log(`Updated ${spoon.name}`) })
-    ///         .catch(err => console.error(`${spoon.name}: ${err.message}`))
-    /// }
+    /// hs.spoons.update("Greeter")
+    ///     .then(updated => { if (updated) console.log("Updated Greeter") })
+    ///     .catch(err => console.error(`Greeter: ${err.message}`))
     /// ```
     @objc func update(_ name: String) -> JSPromise?
+
+    /// Update every installed Spoon, as `update()` does, logging each one to the Console as it's
+    /// done, and then a summary. Spoons installed from the same source share one download, and
+    /// different sources are downloaded one at a time. Spoons installed some other way than by
+    /// `install()` (such as by opening a `.spoon2` file) are skipped, since there's nowhere to
+    /// update them from. A Spoon that fails to update doesn't stop the others. `isUpdating` is
+    /// true until they've all finished.
+    ///
+    /// Typing `hs.spoons.updateAll()` into the Console is enough: the updates start straight away,
+    /// and their progress is logged there. The returned Promise is for code that wants the
+    /// results. It never rejects: a Spoon that couldn't be updated has a status of `"failed"`, and
+    /// an `error` with the code and message `update()` would have rejected with.
+    /// - Returns: {Promise<{name: string, status: "updated" | "upToDate" | "skipped" | "failed", error: {code: string, message: string} | null}[]>} Resolves with what happened to each installed Spoon, sorted by name
+    /// - Example:
+    /// ```js
+    /// hs.spoons.updateAll().then(results => {
+    ///     const updated = results.filter(r => r.status === "updated").map(r => r.name)
+    ///     if (updated.length > 0) hs.notify.show("Spoons updated", updated.join(", "))
+    /// })
+    /// ```
+    @objc func updateAll() -> JSPromise?
+
+    /// Whether `update()` or `updateAll()` is running. It stays true for the whole of an
+    /// `updateAll()`.
+    /// - Example:
+    /// ```js
+    /// if (!hs.spoons.isUpdating) hs.spoons.updateAll()
+    /// ```
+    @objc var isUpdating: Bool { get }
 
     /// Remove an installed Spoon. If it's already loaded, it keeps running until your config is
     /// reloaded, so stop it first if it has a `stop()` method.
@@ -148,6 +208,8 @@ import JavaScriptCoreExtras
     // Set by hs.spoons.js. Must be pre-declared properties, or JSC drops them on GC (issue #185).
     /// SKIP_DOCS
     @objc var use: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var _installBindHotkeys: JSFunction? { get set }
 }
 
 @_documentation(visibility: private)
@@ -157,9 +219,13 @@ import JavaScriptCoreExtras
     let engineID: UUID
     let installer: SpoonInstaller
     @objc var use: JSFunction?
+    @objc var _installBindHotkeys: JSFunction?
 
     private let session: URLSession
     private var operations: [UUID: Task<Void, Never>] = [:]
+    // How many update() and updateAll() calls haven't finished. Each counts from when it's called,
+    // so isUpdating is true as soon as it returns, and updateAll() counts once for its whole run.
+    private var activeUpdates = 0
     // Names stored on this module's JS wrapper by load(), which may be overwritten by loading
     // them again. Any other name the wrapper already has is one of the module's own members.
     private var loadedNames: Set<String> = []
@@ -186,6 +252,7 @@ import JavaScriptCoreExtras
         session.invalidateAndCancel()
         loadedNames.removeAll()
         use = nil
+        _installBindHotkeys = nil
     }
 
     isolated deinit {
@@ -202,7 +269,7 @@ import JavaScriptCoreExtras
 
     // MARK: - Loading
 
-    @objc func load(_ name: String) -> JSValue? {
+    @objc func load(_ name: String, _ options: [String: Any]?) -> JSValue? {
         guard let context = JSContext.current() else { return nil }
 
         func fail(_ message: String, code: SpoonInstallError.Code = .invalidSpoon) -> JSValue? {
@@ -222,17 +289,40 @@ import JavaScriptCoreExtras
             return fail("'\(name)' can't be loaded, because hs.spoons.\(name) is part of hs.spoons itself", code: .invalidArgument)
         }
 
-        let spoonDir = installer.spoonManager.spoonsDirectory.appendingPathComponent(name)
+        let path: String?
+        do {
+            path = try Options(options).string("path")
+        } catch let error as SpoonInstallError {
+            return fail(error.message, code: error.code)
+        } catch {
+            return fail(error.localizedDescription, code: .invalidArgument)
+        }
+
+        let spoonDir: URL
+        if let path {
+            spoonDir = developmentDirectory(path)
+            let isDirectory = try? spoonDir.resolvingSymlinksInPath().resourceValues(forKeys: [.isDirectoryKey]).isDirectory
+            guard isDirectory == true else {
+                return fail("'\(name)' can't be loaded from \(spoonDir.path), because it isn't a directory", code: .notFound)
+            }
+            AKWarning("hs.spoons: loading '\(name)' from \(spoonDir.path), not from \(installer.spoonManager.spoonsDirectory.path)")
+        } else {
+            spoonDir = installer.spoonManager.spoonsDirectory.appendingPathComponent(name)
+        }
         let initJSURL = spoonDir.appendingPathComponent("init.js")
 
         let metadata: SpoonMetadata
         do {
             metadata = try installer.spoonManager.validateSpoon(at: spoonDir)
         } catch {
-            if !installer.isInstalled(name) {
+            if path == nil, !installer.isInstalled(name) {
                 return fail("No Spoon named '\(name)' is installed in \(installer.spoonManager.spoonsDirectory.path)", code: .notInstalled)
             }
             return fail("'\(name)' \(error.localizedDescription)")
+        }
+
+        if let failure = installer.spoonManager.versionRequirementFailure(for: metadata) {
+            return fail(failure, code: .unsupportedVersion)
         }
 
         guard let requireFn = context.globalObject.objectForKeyedSubscript("require"), !requireFn.isUndefined else {
@@ -253,7 +343,7 @@ import JavaScriptCoreExtras
         }
 
         if metadata.name != name {
-            AKWarning("hs.spoons: '\(name)' has the name '\(metadata.name)' in its spoon.json, which doesn't match its directory name")
+            AKWarning("hs.spoons: '\(name)' has the name '\(metadata.name)' in its spoon.json, which doesn't match the name it was loaded as")
         }
 
         // Authoritative from spoon.json, so these always reflect it even if the Spoon's own
@@ -262,6 +352,17 @@ import JavaScriptCoreExtras
         result.setValue(metadata.author, forProperty: "author")
         result.setValue(metadata.description, forProperty: "description")
         result.setValue(metadata.version, forProperty: "version")
+
+        // A Spoon that exports `bindings` gets a generic bindHotkeys() and unbindHotkeys() for them,
+        // in place of any of its own. Before init(), so init() can use them too.
+        if let installBindHotkeys = _installBindHotkeys {
+            _ = context.callCapturingException {
+                installBindHotkeys.call(withArguments: [result, metadata.name])
+            }
+            if context.exception != nil {
+                return nil
+            }
+        }
 
         // Matches v1: call init() automatically if the Spoon defines one.
         if let initFn = result.objectForKeyedSubscript("init"), !initFn.isUndefined {
@@ -313,9 +414,42 @@ import JavaScriptCoreExtras
 
     @objc func update(_ name: String) -> JSPromise? {
         guard let context = JSContext.current() else { return nil }
-        return run(in: context) { [installer] in
-            try await installer.update(name: name)
+        activeUpdates += 1
+        return run(in: context) { [weak self, installer] in
+            defer { self?.activeUpdates -= 1 }
+            return try await installer.update(name: name)
         }
+    }
+
+    @objc func updateAll() -> JSPromise? {
+        guard let context = JSContext.current() else { return nil }
+        AKInfo("hs.spoons.updateAll(): checking for updates")
+        activeUpdates += 1
+        return run(in: context) { [weak self, installer] in
+            defer { self?.activeUpdates -= 1 }
+            let results = try await installer.updateAll { result in
+                switch result.status {
+                case .updated:
+                    break // update() has already logged the old and new versions
+                case .upToDate:
+                    AKInfo("hs.spoons.updateAll(): \(result.name) is up to date")
+                case .skipped:
+                    AKInfo("hs.spoons.updateAll(): skipped \(result.name), which wasn't installed by hs.spoons.install()")
+                case .failed:
+                    let error = result.error.map { "\($0.message) (\($0.code.rawValue))" } ?? "unknown error"
+                    AKError("hs.spoons.updateAll(): couldn't update \(result.name): \(error)")
+                }
+            }
+            let count = { (status: SpoonUpdateResult.Status) in results.count { $0.status == status } }
+            let updated = results.filter { $0.status == .updated }.map(\.name)
+            let updatedNames = updated.isEmpty ? "" : " (\(updated.joined(separator: ", ")))"
+            AKInfo("hs.spoons.updateAll(): finished: \(updated.count) updated\(updatedNames), \(count(.upToDate)) up to date, \(count(.skipped)) skipped, \(count(.failed)) failed")
+            return results.map(\.dictionary)
+        }
+    }
+
+    @objc var isUpdating: Bool {
+        activeUpdates > 0
     }
 
     @objc func uninstall(_ name: String) -> Bool {
@@ -334,6 +468,14 @@ import JavaScriptCoreExtras
     }
 
     // MARK: - Private
+
+    /// The directory a `path` passed to `load()` names: relative to the config directory, with
+    /// `~` expanded
+    private func developmentDirectory(_ path: String) -> URL {
+        let expanded = (path as NSString).expandingTildeInPath
+        let configDir = installer.spoonManager.spoonsDirectory.deletingLastPathComponent()
+        return URL(filePath: expanded, directoryHint: .isDirectory, relativeTo: configDir).absoluteURL.standardizedFileURL
+    }
 
     /// Runs `body` as a Promise in `context`, rejecting with a coded Error if it throws. The work
     /// is cancelled, and the Promise never settles, if the module shuts down first.

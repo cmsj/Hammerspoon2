@@ -613,6 +613,8 @@ extension JSTestHarness {
                 loadModule(HSChooserModule.self, as: name)
             case "window":
                 loadModule(HSWindowModule.self, as: name)
+            case "windowfilter":
+                loadModule(HSWindowFilterModule.self, as: name)
             case "spotlight":
                 loadModule(HSSpotlightModule.self, as: name)
             case "streamdeck":
@@ -669,6 +671,8 @@ extension JSTestHarness {
                 loadModule(HSPlistModule.self, as: name)
             case "userdefaults":
                 loadModule(HSUserDefaultsModule.self, as: name)
+            case "distributednotifications":
+                loadModule(HSDistributedNotificationsModule.self, as: name)
             case "wifi":
                 loadModule(HSWifiModule.self, as: name)
             default:

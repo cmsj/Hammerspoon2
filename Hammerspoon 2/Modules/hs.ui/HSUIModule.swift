@@ -267,7 +267,11 @@ import SwiftUI
     /// Creates a borderless window that can contain custom UI elements built using a declarative,
     /// SwiftUI-like syntax with shapes, text, and layout containers.
     ///
-    /// - Parameter dict: Dictionary with keys: `x`, `y`, `w`, `h` (all numbers)
+    /// The window is placed in the same screen coordinates as `hs.screen` and `hs.window`:
+    /// `y = 0` is the top of the primary screen, and `y` increases downward. Like `hs.window`'s
+    /// `frame`, the rect is the whole window, including its title bar if it has one.
+    ///
+    /// - Parameter rect: {HSRect | object} The window's frame: an HSRect (e.g. a screen's `frame`) or a dictionary with keys `x`, `y`, `w`, `h` (all numbers)
     /// - Returns: An `HSUIWindow` object for chaining
     /// - Example:
     /// ```js
@@ -277,7 +281,7 @@ import SwiftUI
     ///         .frame({w: "100%", h: "100%"})
     ///     .show()
     /// ```
-    @objc func window(_ dict: [String: Any]) -> HSUIWindow
+    @objc func window(_ rect: JSValue) -> HSUIWindow
 
     /// Create a temporary on-screen alert
     ///
@@ -461,7 +465,9 @@ import SwiftUI
             window.ignoresMouseEvents = true
             window.level = .screenSaver
             window.isReleasedWhenClosed = false
-            window.contentView = NSHostingView(rootView: HSUIAlertStackView(manager: alertStackManager))
+            window.contentView = alertContainerView(
+                hosting: NSHostingView(rootView: HSUIAlertStackView(manager: alertStackManager)),
+                size: screen.visibleFrame.size)
             window.orderFrontRegardless()
             alertStackWindow = window
         }
@@ -484,10 +490,10 @@ import SwiftUI
 
     // MARK: - Factory Methods
 
-    @objc func window(_ dict: [String: Any]) -> HSUIWindow {
+    @objc func window(_ rect: JSValue) -> HSUIWindow {
         // Use assumeIsolated since JSContext evaluates on main thread
         return MainActor.assumeIsolated {
-            let window = HSUIWindow(dict: dict, module: self)
+            let window = HSUIWindow(rect: rect, module: self)
             return window
         }
     }
@@ -534,4 +540,22 @@ import SwiftUI
             UIWebView()
         }
     }
+}
+
+/// A view the size of an alert window, holding the alert's SwiftUI content.
+///
+/// The window must keep the size of the screen whatever its content needs. As the window's
+/// content view, an `NSHostingView` makes the window follow the size of its SwiftUI content, and
+/// a stack of alerts taller than the screen then resizes the window again on every layout pass.
+/// Inside a modal loop such as `hs.ui.textPrompt`'s, those passes repeated until AppKit threw "more
+/// Update Constraints in Window passes than there are views in the window", which crashed
+/// Hammerspoon 2. Held in a plain view with an autoresizing mask instead, the content takes the
+/// window's size, and what does not fit is cut off.
+@MainActor
+func alertContainerView<Content: View>(hosting: NSHostingView<Content>, size: NSSize) -> NSView {
+    let container = NSView(frame: NSRect(origin: .zero, size: size))
+    hosting.frame = container.bounds
+    hosting.autoresizingMask = [.width, .height]
+    container.addSubview(hosting)
+    return container
 }

@@ -1033,7 +1033,77 @@ pre code {
 .param-type {
     font-family: var(--font-mono);
     color: var(--accent);
-    white-space: nowrap;
+    max-width: 18rem;
+    overflow-wrap: break-word;
+}
+
+.param-optional {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-left: 0.25rem;
+}
+
+/* The fields of an object parameter, indented beneath it as a tree. Rows only get a
+   bottom border where a top-level parameter's group of rows ends. */
+.params-table .param-has-fields td,
+.params-table .param-field td {
+    border-bottom-color: transparent;
+}
+
+.params-table .param-group-end td {
+    border-bottom-color: var(--border-subtle);
+}
+
+.param-field td {
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+}
+
+.params-table .param-name {
+    position: relative;
+}
+
+.param-field .param-name {
+    padding-left: calc(0.75rem + var(--depth) * 1.25rem);
+}
+
+/* One vertical line per tree level: a field's own level, down to its branch (or past it to a
+   later sibling), and each ancestor level whose line carries on past it */
+.tree-line {
+    position: absolute;
+    top: 0;
+    /* Across the row's (transparent) bottom border, so the line doesn't break between rows */
+    bottom: -1px;
+    left: calc(0.75rem + var(--level) * 1.25rem - 0.85rem);
+    border-left: 1px solid var(--border);
+}
+
+.tree-last {
+    bottom: calc(100% - 0.95rem);
+}
+
+/* From beneath the name of a row with fields, down to its first field */
+.tree-stem {
+    top: 1.55rem;
+}
+
+.param-row:not(.param-field) .tree-stem {
+    top: 1.75rem;
+}
+
+/* The branch from a field's own level to its name */
+.tree-branch::after {
+    content: "";
+    position: absolute;
+    top: 0.95rem;
+    left: 0;
+    width: 0.6rem;
+    border-top: 1px solid var(--border);
+}
+
+.returns-table {
+    margin-top: 0.5rem;
 }
 
 .param-desc {

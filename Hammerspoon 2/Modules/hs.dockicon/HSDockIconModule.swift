@@ -40,6 +40,9 @@ import JavaScriptCoreExtras
     /// - `color` (HSColor or hex string): The colour of the item's title text.
     /// - `icon` (HSImage): Icon shown to the left of the title.
     /// - `menu` (array): Nested array of menu item objects to create a submenu.
+    /// - `shortcut` (string or object): Accepted so that the same items can be shared with `HSMenuBarItem.setMenu()`,
+    ///   but **the Dock ignores it**: it draws the menu itself, shows no shortcuts, and pressing one does nothing.
+    ///   Menu shortcuts are never system-wide hotkeys anyway; use `hs.hotkey.bind()` for those.
     ///
     /// The menu is removed when the config is reloaded.
     ///

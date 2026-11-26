@@ -47,12 +47,60 @@ struct InstalledSpoon {
     }
 }
 
+/// What happened to one Spoon in `updateAll()`
+struct SpoonUpdateResult {
+    enum Status: String {
+        /// A newer version was installed
+        case updated
+        /// The source had the same version
+        case upToDate
+        /// It wasn't installed by `install()`, so there's nowhere to update it from
+        case skipped
+        /// Updating it failed; see `error`
+        case failed
+    }
+
+    let name: String
+    let status: Status
+    let error: SpoonInstallError?
+
+    var dictionary: [String: Any] {
+        [
+            "name": name,
+            "status": status.rawValue,
+            // A nil dictionary value would just drop the key, which JS sees as undefined
+            "error": error.map { ["code": $0.code.rawValue, "message": $0.message] } ?? NSNull(),
+        ]
+    }
+}
+
+/// A download of an archive, and the `SpoonInstaller.withArchive()` calls waiting for or using it
+@MainActor
+private final class SharedDownload {
+    struct Key: Hashable {
+        let url: URL
+        let sha256: String?
+    }
+
+    let task: Task<ExtractedSpoonArchive, Error>
+    /// Every call still waiting for, or using, the archive
+    var callers: Set<UUID> = []
+    /// Those of `callers` that have been cancelled
+    var cancelledCallers: Set<UUID> = []
+
+    init(task: Task<ExtractedSpoonArchive, Error>) {
+        self.task = task
+    }
+}
+
 /// Installs, updates and removes Spoons from GitHub repositories and zip URLs. Used by
 /// `HSSpoonsModule`; holds no JS state.
 @MainActor
 final class SpoonInstaller {
     let spoonManager: SpoonManager
     private let fetch: SpoonFetcher
+    /// Downloads in progress, shared by every `withArchive()` call that wants the same archive
+    private var downloads: [SharedDownload.Key: SharedDownload] = [:]
 
     init(spoonManager: SpoonManager, fetch: @escaping SpoonFetcher) {
         self.spoonManager = spoonManager
@@ -166,6 +214,76 @@ final class SpoonInstaller {
         }
     }
 
+    /// Updates every installed Spoon that was installed from a source, carrying on past any that
+    /// fail, and skipping any that weren't installed from a source. Spoons installed from the same
+    /// download are updated together, so they share it (see `withArchive()`); different downloads
+    /// are made one at a time.
+    /// - Parameter report: Called with what happened to each Spoon, in name order, as soon as it
+    ///   and every Spoon before it have finished
+    /// - Returns: What happened to each Spoon, in name order
+    func updateAll(_ report: (SpoonUpdateResult) -> Void) async throws -> [SpoonUpdateResult] {
+        let spoons = installed()
+        var results = [SpoonUpdateResult?](repeating: nil, count: spoons.count)
+        var reported = 0
+        func finish(_ index: Int, with result: SpoonUpdateResult) {
+            results[index] = result
+            while reported < results.count, let next = results[reported] {
+                report(next)
+                reported += 1
+            }
+        }
+
+        // The Spoons (as indices into `spoons`) installed from each download, in the order each
+        // download is first needed
+        var batches: [[Int]] = []
+        var batchForDownload: [SharedDownload.Key: Int] = [:]
+        for (index, spoon) in spoons.enumerated() {
+            guard let record = spoon.record else {
+                finish(index, with: SpoonUpdateResult(name: spoon.name, status: .skipped, error: nil))
+                continue
+            }
+            // update() rejects a record without a usable URL, so it needn't share a batch
+            if let url = URL(string: record.url) {
+                let key = SharedDownload.Key(url: url, sha256: record.sha256)
+                if let batch = batchForDownload[key] {
+                    batches[batch].append(index)
+                    continue
+                }
+                batchForDownload[key] = batches.count
+            }
+            batches.append([index])
+        }
+
+        for batch in batches {
+            try await withThrowingTaskGroup(of: (Int, SpoonUpdateResult).self) { group in
+                for index in batch {
+                    let name = spoons[index].name
+                    group.addTask {
+                        let result = try await self.updateResult(for: name)
+                        return (index, result)
+                    }
+                }
+                for try await (index, result) in group {
+                    finish(index, with: result)
+                }
+            }
+        }
+        return results.compactMap { $0 }
+    }
+
+    /// Updates one Spoon for `updateAll()`, turning any error but cancellation into a result
+    private func updateResult(for name: String) async throws -> SpoonUpdateResult {
+        do {
+            let updated = try await update(name: name)
+            return SpoonUpdateResult(name: name, status: updated ? .updated : .upToDate, error: nil)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            let error = error as? SpoonInstallError ?? SpoonInstallError(.io, error.localizedDescription)
+            return SpoonUpdateResult(name: name, status: .failed, error: error)
+        }
+    }
+
     /// Removes an installed Spoon
     /// - Returns: false if it wasn't installed
     func uninstall(name: String) throws -> Bool {
@@ -201,12 +319,46 @@ final class SpoonInstaller {
         spoonManager.spoonsDirectory.appendingPathComponent(name)
     }
 
+    /// Downloads and extracts the archive at `url`, passes it to `body`, then removes it.
+    ///
+    /// Calls for the same `url` and `sha256` made while a download is in progress share it, and
+    /// its extracted archive, rather than each downloading it again: a config that `use()`s
+    /// several Spoons from one repository downloads it once on its first run. Nothing is kept
+    /// once the last of them has finished, so a later call downloads afresh.
     private func withArchive<T>(
         from url: URL,
         sha256: String?,
         _ body: (ExtractedSpoonArchive) throws -> T
     ) async throws -> T {
-        AKDebug("hs.spoons: downloading \(url.absoluteString)")
+        let key = SharedDownload.Key(url: url, sha256: sha256)
+        let shared: SharedDownload
+        if let existing = downloads[key] {
+            AKDebug("hs.spoons: sharing the download of \(url.absoluteString) already in progress")
+            shared = existing
+        } else {
+            AKDebug("hs.spoons: downloading \(url.absoluteString)")
+            shared = SharedDownload(task: Task { [fetch] in
+                try await Self.download(url, sha256: sha256, using: fetch)
+            })
+            downloads[key] = shared
+        }
+
+        let caller = UUID()
+        shared.callers.insert(caller)
+        let result = await withTaskCancellationHandler {
+            await shared.task.result
+        } onCancel: {
+            Task { @MainActor [weak self] in self?.abandon(key, shared, by: caller) }
+        }
+        defer { leave(key, shared, caller: caller, result: result) }
+
+        let archive = try result.get()
+        try Task.checkCancellation()
+        return try body(archive)
+    }
+
+    /// Fetches, checks and extracts an archive
+    private static func download(_ url: URL, sha256: String?, using fetch: SpoonFetcher) async throws -> ExtractedSpoonArchive {
         let data = try await fetch(url)
         try Task.checkCancellation()
 
@@ -218,9 +370,37 @@ final class SpoonInstaller {
         }
 
         let archive = try await ExtractedSpoonArchive.extract(data)
-        defer { archive.cleanUp() }
-        try Task.checkCancellation()
-        return try body(archive)
+        guard !Task.isCancelled else {
+            archive.cleanUp()
+            throw CancellationError()
+        }
+        return archive
+    }
+
+    /// A caller of `withArchive()` was cancelled. The download is cancelled once every caller
+    /// still waiting for it has been, and forgotten so that a new caller starts a new one.
+    private func abandon(_ key: SharedDownload.Key, _ shared: SharedDownload, by caller: UUID) {
+        guard shared.callers.contains(caller) else { return }
+        shared.cancelledCallers.insert(caller)
+        if shared.callers.isSubset(of: shared.cancelledCallers) {
+            shared.task.cancel()
+            if downloads[key] === shared { downloads[key] = nil }
+        }
+    }
+
+    /// A caller of `withArchive()` has finished with the archive, which is removed once the last
+    /// one has
+    private func leave(_ key: SharedDownload.Key, _ shared: SharedDownload, caller: UUID, result: Result<ExtractedSpoonArchive, Error>) {
+        shared.callers.remove(caller)
+        shared.cancelledCallers.remove(caller)
+        guard shared.callers.isEmpty else { return }
+        if downloads[key] === shared { downloads[key] = nil }
+        if case .success(let archive) = result { archive.cleanUp() }
+    }
+
+    /// How many calls are waiting for, or using, a download. For tests.
+    var downloadCallerCount: Int {
+        downloads.values.reduce(0) { $0 + $1.callers.count }
     }
 
     private static func find(_ name: String, in archive: ExtractedSpoonArchive, from source: String, spoonManager: SpoonManager) throws -> SpoonCandidate {

@@ -32,6 +32,15 @@ final class HSIPCBrokerConnection {
     /// Set while waiting for a broker we asked to exit to go away, so its disappearance isn't an error.
     private var isWaitingForStaleBrokerToExit = false
 
+    /// How long to wait for the broker to answer our hello. launchd holds messages to the broker
+    /// while it tries to start it, so if it can't (e.g. its registration refers to a copy of the
+    /// app that has since changed), the hello would otherwise wait forever, silently.
+    private static let helloTimeout: Duration = .seconds(10)
+    private var helloTimeoutTask: Task<Void, Never>?
+    /// Set once we've re-registered the broker with launchd because it didn't answer, so that we
+    /// only try that once per `start()`.
+    private var hasReRegisteredBroker = false
+
     /// The lowest log level any connected hs2 wants, as told to us by the broker.
     private var minLogLevel = HSIPC.noLogging
     /// Whether the broker has pushed a log level on the current session. Pushes are always at
@@ -53,6 +62,7 @@ final class HSIPCBrokerConnection {
         isWanted = true
         reconnectAttempts = 0
         hasRestartedStaleBroker = false
+        hasReRegisteredBroker = false
         connect()
     }
 
@@ -82,6 +92,7 @@ final class HSIPCBrokerConnection {
     }
 
     isolated deinit {
+        helloTimeoutTask?.cancel()
         // An XPCSession released while still active is a fatal API misuse.
         session?.cancel(reason: "HSIPCBrokerConnection deinit")
     }
@@ -91,17 +102,39 @@ final class HSIPCBrokerConnection {
     /// Make sure launchd knows about the broker, so that it can launch it on demand.
     private func registerBroker() -> Bool {
         let service = SMAppService.agent(plistName: HSIPC.launchAgentPlistName)
-
         if service.status != .enabled {
-            do {
-                try service.register()
-            } catch {
-                // Registration can fail while still leaving the service awaiting approval,
-                // which is reported below.
-                AKDebug("hs.ipc: Registering the IPC broker failed: \(error.localizedDescription)")
-            }
+            register(service)
         }
+        return checkRegistration(service)
+    }
 
+    /// Remove and re-add the broker's launchd registration. An enabled registration can still be
+    /// unusable (e.g. it was made by another copy of the app, and launchd can no longer find the
+    /// broker's executable), and the status doesn't show that, so this is used when the broker
+    /// doesn't answer.
+    private func reRegisterBroker() async -> Bool {
+        let service = SMAppService.agent(plistName: HSIPC.launchAgentPlistName)
+        do {
+            try await service.unregister()
+        } catch {
+            AKDebug("hs.ipc: Unregistering the IPC broker failed: \(error)")
+        }
+        register(service)
+        return checkRegistration(service)
+    }
+
+    private func register(_ service: SMAppService) {
+        do {
+            try service.register()
+        } catch {
+            // Registration can fail while still leaving the service awaiting approval,
+            // which checkRegistration() reports.
+            AKDebug("hs.ipc: Registering the IPC broker failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Whether the broker is registered and allowed to run, logging why not if it isn't.
+    private func checkRegistration(_ service: SMAppService) -> Bool {
         switch service.status {
         case .enabled:
             return true
@@ -176,10 +209,41 @@ final class HSIPCBrokerConnection {
         } catch {
             AKError("hs.ipc: Unable to send to the IPC broker: \(error)")
             stop()
+            return
+        }
+
+        helloTimeoutTask = Task { [weak self, weak session] in
+            try? await Task.sleep(for: Self.helloTimeout)
+            guard !Task.isCancelled, let self, let session, self.session === session else { return }
+            self.helloTimedOut()
+        }
+    }
+
+    private func helloTimedOut() {
+        helloTimeoutTask = nil
+        disconnect(reason: "The IPC broker did not respond")
+
+        guard !hasReRegisteredBroker else {
+            AKError("hs.ipc: The IPC broker did not respond, even after re-registering it with launchd, so hs.ipc has stopped. Check Hammerspoon 2 is enabled in System Settings → General → Login Items & Extensions, then call hs.ipc.start() again.")
+            isWanted = false
+            return
+        }
+
+        hasReRegisteredBroker = true
+        AKWarning("hs.ipc: The IPC broker did not respond, so re-registering it with launchd")
+        Task { [weak self] in
+            guard let self, await self.reRegisterBroker() else {
+                self?.isWanted = false
+                return
+            }
+            guard self.isWanted, self.session == nil else { return }
+            self.connect()
         }
     }
 
     private func helloReplied(_ result: Result<HSIPCHelloReply, any Error>) {
+        helloTimeoutTask?.cancel()
+        helloTimeoutTask = nil
         switch result {
         case .failure(let error):
             // The session's cancellation handler deals with reconnecting.
@@ -261,6 +325,8 @@ final class HSIPCBrokerConnection {
 
     /// Tear down the session and log forwarding. `reason` is nil when the session is already cancelled.
     private func disconnect(reason: String?) {
+        helloTimeoutTask?.cancel()
+        helloTimeoutTask = nil
         if let reason {
             session?.cancel(reason: reason)
         }

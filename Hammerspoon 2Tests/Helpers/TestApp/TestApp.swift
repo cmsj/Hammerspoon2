@@ -17,8 +17,9 @@
 import AppKit
 
 /// Tests send commands as a distributed notification with this name. `userInfo`:
-/// `command` is `show` (with `test` and `detail`), `newWindow`, `fullScreenWindow`, `closeWindows` or
-/// `revertMainOnActivate` (with `title`); `pid` is the copy it is meant for, since several can run at once.
+/// `command` is `show` (with `test` and `detail`), `newWindow`, `fullScreenWindow`, `closeWindows`,
+/// `retitleWindows` (with `title`) or `revertMainOnActivate` (with `title`); `pid` is the copy it is meant
+/// for, since several can run at once.
 let commandNotification = Notification.Name("net.tenshu.Hammerspoon-2.TestApp.command")
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -62,6 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case "fullScreenWindow": fullScreenWindow()
         case "closeWindows": closeExtraWindows()
         case "revertMainOnActivate": revertTitle = info?["title"] as? String
+        case "retitleWindows": extraWindows.forEach { $0.title = info?["title"] as? String ?? "" }
         default: break
         }
     }

@@ -33,8 +33,8 @@ diving into specifics:
   construct and `:start()` — but the exact shape varies enough that it's worth checking each
   module's own signature rather than assuming. Most use Node-style `on(event, listener)`/
   `off(event, listener)`/`once(event, listener)` — `hs.application`, `hs.audiodevice`, `hs.ax`,
-  `hs.camera`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`, `hs.power`, `hs.screen`, `hs.serial`,
-  `hs.streamdeck`, `hs.usb`, `hs.userdefaults`, `hs.wifi`. The rest don't fit that shape:
+  `hs.camera`, `hs.distributednotifications`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`,
+  `hs.power`, `hs.screen`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`, `hs.wifi`. The rest don't fit that shape:
   `hs.location`'s `addWatcher()` takes no callback at all, returning a configurable watcher
   object instead; `hs.eventtap.addWatcher()` needs an event types array and a listen-only flag
   (see [below](#present-but-check-before-you-port)); and `hs.fs` uses
@@ -128,7 +128,7 @@ for what changed within it.
 | `hs.crash` | Gone | dev-only hooks, not expected to return |
 | `hs.deezer` | Gone | drive via `hs.osascript` instead |
 | `hs.dialog` (+`.color`) | → `hs.ui` | [details](#rebuilding-ui-with-hsui); no system color-picker panel |
-| `hs.distributednotifications` | Gone | no general-purpose NSDistributedNotificationCenter wrapper |
+| `hs.distributednotifications` | Present | watcher folded in, see [details](#hsdistributednotifications) |
 | `hs.doc` (+`.builder`,`.hsdocs`,`.markdown`) | Gone | `hs.docs` is unrelated (read-only bundled-doc viewer) |
 | `hs.dockicon` | Gone | no Dock icon control |
 | `hs.drawing` (+`.color`) | → `hs.ui` or `hs.canvas` | [details](#rebuilding-ui-with-hsui) |
@@ -199,7 +199,8 @@ for what changed within it.
 | `hs.watchable` | Gone | only per-module watchers remain, no generic pub/sub |
 | `hs.webview` (+`.datastore`,`.toolbar`,`.usercontent`) | → `hs.ui` | [details](#rebuilding-ui-with-hsui) |
 | `hs.wifi` (+`.watcher`) | Present | watcher folded in, new permission gate |
-| `hs.window` (+`.filter`,`.highlight`,`.layout`,`.switcher`,`.tiling`) | Present, ecosystem gone | [details](#window-management) |
+| `hs.window` (+`.highlight`,`.layout`,`.switcher`,`.tiling`) | Present, ecosystem gone | [details](#window-management) |
+| `hs.window.filter` | → `hs.windowfilter` | v2-style API, title strings match exactly, see [details](#hswindowfilter) |
 
 ## Present, but check before you port
 
@@ -355,15 +356,12 @@ Two real capability regressions to know about:
 ### Window management
 
 Core `hs.window` covers direct queries and single-window actions well — `focusedWindow()`,
-`allWindows()`, `windowsForApp()`, and instance actions like `focus()`, `raise()`,
-`toggleFullscreen()`, `centerOnScreen()`. What's gone is the rest of v1's window ecosystem,
+`allWindows()`, `windowsForApp()`, `forID()` (v1's `hs.window.get(id)`), and instance actions like `focus()`, `raise()`,
+`toggleFullscreen()`, `centerOnScreen()`, and v1's directional `windowsToEast()`/`focusWindowEast()`
+family. Window filters are now
+[`hs.windowfilter`](#hswindowfilter). What's gone is the rest of v1's window ecosystem,
 module by module:
 
-- **`hs.window.filter`** — no equivalent. This was one of v1's most-used modules: persistent,
-  rule-based window filters with subscriptions to lifecycle events. `hs.window` gives you
-  one-shot queries and direct actions only, with no "tell me whenever a window matching X
-  changes" subscription system. Reactive window management needs to be hand-built on top of
-  `hs.ax`'s app-level `on()` notifications.
 - **`hs.window.highlight`** — no equivalent. The animated focus flash/dim effects have nothing
   built-in; approximate it yourself with `hs.ui` if needed.
 - **`hs.window.layout`** — no equivalent saved-layout/continuous-enforcement system.
@@ -379,9 +377,72 @@ module by module:
   with `hs.window` + `hs.ui`.
 
 If your v1 config's window management was mostly "get the focused window, move/resize/center
-it," porting to `hs.window` is straightforward. If it leaned on filters, subscriptions, saved
-layouts, or a switcher/highlight/expose UI, expect to rebuild that logic yourself on the
-smaller primitive set (`hs.window` + `hs.ax` + `hs.ui` + `hs.screen`).
+it," porting to `hs.window` is straightforward. If it leaned on saved layouts, or a
+switcher/highlight/expose UI, expect to rebuild that logic yourself on the smaller primitive set
+(`hs.window` + `hs.windowfilter` + `hs.ax` + `hs.ui` + `hs.screen`).
+
+### hs.windowfilter
+
+v1's `hs.window.filter` is now the top-level `hs.windowfilter` module. The ideas are the same: a
+filter has an `override` rule every window must pass, rules for particular applications, and a
+`default` rule for the rest, with the same conditions (`visible`, `currentSpace`, `fullscreen`,
+`allowTitles`, `allowRoles`, and so on). The API is v2-style:
+
+```lua
+-- v1
+local wf = hs.window.filter.new{ override = { currentSpace = true }, default = { visible = true },
+                                 Finder = false, Safari = { allowTitles = 1 } }
+wf:subscribe(hs.window.filter.windowFocused, function(win, appName) print(appName) end)
+```
+
+```js
+// v2
+const wf = hs.windowfilter.create({
+    override: { currentSpace: true },
+    default: { visible: true },
+    apps: { Finder: false, Safari: { allowTitles: 1 } },
+})
+wf.on("windowFocused", (win, appName) => console.log(appName))
+```
+
+| v1 | v2 |
+|---|---|
+| `hs.window.filter.new()` | `hs.windowfilter.create()` |
+| `hs.window.filter.new(true)` | `hs.windowfilter.create({})`: every window with a standard role, visible or not |
+| `hs.window.filter.new(false)` | `hs.windowfilter.create({ default: false })` |
+| `hs.window.filter.new{ Safari = true, ... }` | `hs.windowfilter.create({ default: false, apps: { Safari: true } })`: app rules go under `apps` |
+| `hs.window.filter.new(fn)` | `hs.windowfilter.create(fn)` |
+| `hs.window.filter.copy(wf)` | `wf.duplicate()` |
+| `hs.window.filter.default` / `.defaultCurrentSpace` | `hs.windowfilter.defaultFilter` / `.currentSpaceFilter` |
+| `wf:setAppFilter(app, rule)` | `wf.setAppRule(app, rule)`; `null` removes it |
+| `wf:setDefaultFilter(rule)` / `wf:setOverrideFilter(rule)` | `wf.setDefaultRule(rule)` / `wf.setOverrideRule(rule)` |
+| `wf:setFilters(t)` / `wf:getFilters()` | `wf.setRules(rules)` / `wf.rules` |
+| `wf:setSortOrder(hs.window.filter.sortByCreated)` | `wf.sortOrder = "created"` |
+| `wf:getWindows()` | `wf.windows()` |
+| `wf:subscribe(event, fn)` / `wf:unsubscribe(event, fn)` | `wf.on(event, fn)` / `wf.off(event, fn)`; also `once()` |
+| `wf:subscribe(event, fn, true)` (immediate) | `wf.windows().forEach(fn)`, then `wf.on(event, fn)` |
+| `wf:unsubscribeAll()` | `off()` each listener |
+| `hs.window.filter.ignoreAlways` | gone: background-only applications and helper processes are skipped automatically |
+| `hs.window.filter.switchedToSpace()`, `.forceRefreshOnSpaceChange` | gone: Space changes are always tracked |
+
+Things that behave differently:
+
+- **Title strings match exactly.** v1 matched `allowTitles`/`rejectTitles` strings as Lua
+  patterns anywhere in the title, so `"Preferences"` matched `"Safari Preferences"`, and
+  punctuation such as `-` had special meanings. In v2 a string must be the whole title; use a
+  RegExp for anything else, e.g. `/Preferences/`. RegExps support the `i`, `m` and `s` flags.
+- **Applications can be named by bundle ID** as well as by name.
+- **The override rule allows any window role** unless it has its own `allowRoles`, so it no
+  longer also applies `allowedWindowRoles`.
+- **Focus follows visibility.** A hidden or minimized window doesn't count as focused, so
+  unhiding an application emits `windowUnhidden`, `windowVisible`, then `windowFocused`. Focus
+  moving between two windows of the same application now emits `windowUnfocused` for the first.
+- **`hasNoWindows`** is only emitted once the last allowed window has gone.
+- **Hammerspoon's own windows are never included.**
+- **Directional focus**: `wf:focusWindowEast(win, frontmost, strict)` is
+  `wf.focusWindowEast({ window, frontmost, strict })`, and `hs.window.filter.focusEast()` is
+  `hs.windowfilter.focusEast()`. `HSWindow` has its own `windowsToEast()`/`focusWindowEast()`
+  family, which only considers windows actually on screen.
 
 ### hs.power
 
@@ -512,6 +573,25 @@ Differences from v1 worth knowing: SQL errors throw (catch them with `try`/`catc
 constraints are enforced by default, integers too large for a JS number throw unless you
 `setReadBigInts(true)`, and blobs come back as `Uint8Array`s. User-defined SQL functions
 (`db:create_function`), aggregates, extensions and the backup API aren't available.
+
+### hs.distributednotifications
+
+There's no watcher object to construct and `:start()` any more: listen with
+`hs.distributednotifications.on(name, listener)` and stop with `off(name, listener)`, or use
+`once(name, listener)` for a single posting. The notification name is now required, because
+macOS no longer delivers every distributed notification to an observer that asks for all of
+them. v1's `object` filter is gone too; check the listener's first argument instead. The
+listener receives `(object, userInfo)`, without the name v1 passed first, and `userInfo` is
+always an object (empty if the notification had none). `post(name[, object[, userInfo]])` is
+unchanged, and returns `false` instead of posting if `userInfo` holds something that can't be
+sent (anything other than strings, numbers, booleans, Dates, arrays and objects).
+
+```js
+// v1: hs.distributednotifications.new(fn, "com.apple.Music.playerInfo"):start()
+hs.distributednotifications.on("com.apple.Music.playerInfo", (object, userInfo) => {
+    if (userInfo["Player State"] === "Stopped") playSomethingElse()
+})
+```
 
 ### hs.sound
 
@@ -721,9 +801,7 @@ c:delete()
 becomes:
 
 ```js
-// y now counts up from the bottom: on a 900pt-tall primary screen, v1's y = 100 becomes
-// 900 - 100 - 100 = 700 (see "Window position" below)
-const c = hs.canvas.create({x: 100, y: 700, w: 200, h: 100})
+const c = hs.canvas.create({x: 100, y: 100, w: 200, h: 100})
 c.appendElements([
     { type: "rectangle", action: "fill", roundedRectRadii: 8,
       fillColor: { red: 0.2, green: 0.4, blue: 0.6, alpha: 1 } },
@@ -769,12 +847,9 @@ v1 had no direct equivalent for.
 `setElementAttribute()`/`elementAttribute()`, `appendElements()`/`assignElement()`, and
 `elementCount()` in place of `#c`.
 
-**Window position uses unflipped coordinates.** v1 placed a canvas in Hammerspoon's flipped
-screen coordinates (`y = 0` at the *top* of the primary screen). v2's `create()`, `frame()`,
-and `topLeft()` use AppKit's unflipped coordinates (`y = 0` at the *bottom*, increasing
-upward), matching `hs.ui.window`. A canvas that should sit `y` points from the top of a
-screen with height `H` needs `y: H - y - h`. Element geometry *inside* the canvas (`frame`,
-`center`, `coordinates`) is unchanged — still top-down, relative to the canvas.
+**Window position uses the same coordinates as v1.** As in v1, `y = 0` is the *top* of the
+primary screen, matching `hs.screen` and `hs.window`, so v1's rects work unchanged.
+`create()` and `setFrame()` also take an `HSRect`, such as a window's or screen's `frame`.
 
 **Colors are `{red, green, blue, alpha}` only.** v1's other color forms — `{hex = ...}`,
 `{white = ...}`, `{hue, saturation, brightness}`, and `{list, name}` — aren't accepted, and
@@ -894,9 +969,7 @@ recognition of any kind), `hs.noises`, `hs.redshift` (macOS's native Night Shift
 bidirectional-messaging use case, but arbitrary protocol work has no home), `hs.httpserver.hsminweb`
 (+`.cgilua`/`.cgilua.lp`/`.cgilua.urlcode` — the whole CGI-style templating framework; v2's
 `hs.httpserver` is a bare HTTP(S) server with a request-handler callback, not a web
-framework), `hs.distributednotifications` (no general-purpose observer for arbitrary
-distributed notifications — v2 uses `NSDistributedNotificationCenter` internally in a couple
-of places, but doesn't expose it to JS).
+framework).
 
 **From the `hs.ui` rewrite specifically:** `hs.canvas.matrix` (the matrix-building helper —
 `hs.canvas` itself still accepts transforms as plain matrix objects, see [hs.canvas](#hscanvas)),

@@ -773,16 +773,19 @@ struct HSMQTTTests {
             autoreleasepool {
                 harness.eval("""
                     var client = hs.mqtt.create('127.0.0.1', { port: \(port) });
+                    var subscribed = false;
                     client.on('message', () => {});
-                    client.connect().then(() => client.subscribe('a/#'));
+                    client.connect().then(() => client.subscribe('a/#')).then(() => subscribed = true);
                     """)
                 client = harness.evalValue("client")?.toObjectOf(HSMQTTClient.self) as? HSMQTTClient
             }
             tracker.track(try #require(client))
 
-            // Polls the Swift object rather than eval(), whose JSValues would be autoreleased
-            // outside any pool that closes before assertNoLeaks() (see HSUIWebViewTests)
-            #expect(await harness.waitForAsync(timeout: 5) { client?.subscriptions.isEmpty == false })
+            // Waits for subscribe()'s Promise to settle, not just for the subscription to be
+            // recorded: until the broker answers, the operation's Task holds the client, and
+            // nothing drains the main actor between shutdownForLeakTest() and assertNoLeaks()
+            #expect(await harness.waitForAsync(timeout: 5) { harness.evalBool("subscribed") == true })
+            #expect(client?.subscriptions.isEmpty == false)
             autoreleasepool {
                 harness.eval("client = null")
                 harness.shutdownForLeakTest()

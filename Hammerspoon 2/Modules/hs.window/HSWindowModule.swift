@@ -15,6 +15,9 @@ import AXSwift
 /// Module for interacting with windows
 @objc protocol HSWindowModuleAPI: JSExport {
     /// Get the currently focused window
+    ///
+    /// This is the window with keyboard focus, which isn't always a window of `hs.application.frontmost()`:
+    /// panels that take focus without activating their app (such as Spotlight's search panel) are returned too.
     /// - Returns: The focused window, or nil if none
     /// - Example:
     /// ```js
@@ -22,6 +25,34 @@ import AXSwift
     /// console.log(win && win.title)
     /// ```
     @objc func focusedWindow() -> HSWindow?
+
+    /// Get the frontmost window
+    ///
+    /// This is the focused window or, if no window has focus (for example when the desktop is clicked, or the
+    /// active application has no windows open), the first window from `orderedWindows()`.
+    /// - Returns: The frontmost window, or nil if there are no windows
+    /// - Example:
+    /// ```js
+    /// const win = hs.window.frontmostWindow()
+    /// console.log(win && win.title)
+    /// ```
+    @objc func frontmostWindow() -> HSWindow?
+
+    /// Get the window with the given ID
+    ///
+    /// This is much faster than searching `allWindows()` for the ID, because it only asks the
+    /// application that owns the window for its windows. Like `allWindows()`, this can find windows
+    /// in native fullscreen and on other Spaces, with the same limitation.
+    /// - Parameter id: The window's ID (see the `id` property on `hs.window` objects)
+    /// - Returns: The window, or null if there is no window with that ID
+    /// - Example:
+    /// ```js
+    /// const id = hs.window.focusedWindow().id
+    /// // ...later
+    /// const win = hs.window.forID(id)
+    /// if (win) win.focus()
+    /// ```
+    @objc func forID(_ id: Int) -> HSWindow?
 
     /// Get all windows from all applications
     ///
@@ -256,11 +287,7 @@ import AXSwift
     @objc func focusedWindow() -> HSWindow? {
         guard checkAccessibility() else { return nil }
 
-        guard let frontApp = NSWorkspace.shared.frontmostApplication else {
-            return nil
-        }
-
-        guard let axApp = Application(frontApp) else {
+        guard let frontApp = keyboardFocusedApplication(), let axApp = Application(frontApp) else {
             return nil
         }
 
@@ -274,6 +301,29 @@ import AXSwift
             AKDebug("Failed to get focused window: \(error.localizedDescription)")
             return nil
         }
+    }
+
+    @objc func frontmostWindow() -> HSWindow? {
+        return focusedWindow() ?? orderedWindows().first
+    }
+
+    @objc func forID(_ id: Int) -> HSWindow? {
+        guard id > 0, let windowID = CGWindowID(exactly: id), checkAccessibility() else { return nil }
+
+        // Ask the WindowServer which process owns the window, so only that app has to be asked for its windows
+        let info = CGWindowListCopyWindowInfo([.optionIncludingWindow], windowID) as? [[String: Any]] ?? []
+        guard let pid = info.first?[kCGWindowOwnerPID as String] as? pid_t,
+              let app = NSRunningApplication(processIdentifier: pid) else {
+            return nil
+        }
+
+        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.25)
+        defer { AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0) }
+
+        guard let element = WindowEnumerator.windowElements(for: app).first(where: { WindowEnumerator.windowID(of: $0) == windowID }) else {
+            return nil
+        }
+        return HSWindow(element: element, app: app)
     }
 
     @objc func allWindows() -> [HSWindow] {

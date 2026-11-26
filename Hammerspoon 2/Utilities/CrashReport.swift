@@ -61,6 +61,17 @@ nonisolated struct CrashReport {
         self.body = body.filter { !Self.identifyingKeys.contains($0.key) }
     }
 
+    /// A quick check of whether `text` could be a crash report of the process with
+    /// `bundleIdentifier` or one of its helpers: whether its header says it's a crash, and its
+    /// bundle identifier appears in it. It's much cheaper than parsing the whole report, so
+    /// other apps' crashes and other kinds of report can be skipped before that.
+    static func mightBeCrash(_ text: String, ofBundleIdentifier bundleIdentifier: String) -> Bool {
+        guard let newline = text.firstIndex(of: "\n"),
+              let header = jsonObject(text[..<newline]),
+              header["bug_type"] as? String == crashBugType else { return false }
+        return text.contains(bundleIdentifier)
+    }
+
     private static func jsonObject(_ text: Substring) -> [String: Any]? {
         (try? JSONSerialization.jsonObject(with: Data(text.utf8))) as? [String: Any]
     }

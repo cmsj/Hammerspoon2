@@ -17,7 +17,7 @@ import JavaScriptCoreExtras
     /// - Parameters:
     ///   - launchPath: The full path to the executable to run
     ///   - arguments: An array of arguments to pass to the executable
-    ///   - onTermination: {((exitCode: number, exitReason: string) => void) | null} Optional callback called when the task terminates with exit code and reason
+    ///   - onTermination: {((exitCode: number, exitReason: string, error?: string) => void) | null} Optional callback called when the task terminates with exit code and reason. If the program could not be started, exitReason is "launchFailed", exitCode is -1, and error describes why
     ///   - environment: Optional dictionary of environment variables for the task
     ///   - onOutput: {((stream: string, data: string) => void) | null} Optional callback called when the task produces output; stream is "stdout" or "stderr"
     /// - Returns: A task object. Call start() to begin execution.

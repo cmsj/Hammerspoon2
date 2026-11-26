@@ -299,10 +299,12 @@ struct HSWindowIntegrationTests {
 
         /// Closes the windows of documents whose names start with `prefix`, or quits the app if
         /// it wasn't running before the test. The documents are unmodified, so nothing prompts to save.
-        private func cleanUp(_ bundleID: String, documentsPrefixed prefix: String, wasRunning: Bool) {
+        /// When it quits the app, it waits for it to exit, so that the next test can launch it again.
+        private func cleanUp(_ bundleID: String, documentsPrefixed prefix: String, wasRunning: Bool) async {
             guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else { return }
             guard wasRunning else {
                 app.terminate()
+                _ = await waitUntil { app.isTerminated }
                 return
             }
             for window in HSApplication(runningApplication: app).allWindows where window.title?.hasPrefix(prefix) == true {
@@ -315,8 +317,13 @@ struct HSWindowIntegrationTests {
             !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty
         }
 
-        @Test("focus() brings forward only the requested window, not all of its application's windows")
-        func testFocusRaisesOnlyRequestedWindow() async throws {
+        /// With `otherWindowUsedLast`, the other TextEdit window is the application's last used one when
+        /// the requested window is focused. SetFrontProcessWithOptions(kSetFrontProcessFrontWindowOnly)
+        /// brings forward the last used window rather than the requested one, which pulled the other
+        /// window in front of Preview (#488, where it was on another display).
+        @Test("focus() brings forward only the requested window, not all of its application's windows",
+              arguments: [false, true])
+        func testFocusRaisesOnlyRequestedWindow(otherWindowUsedLast: Bool) async throws {
             let textEditWasRunning = isRunning(Self.textEditID)
             let previewWasRunning = isRunning(Self.previewID)
 
@@ -334,18 +341,41 @@ struct HSWindowIntegrationTests {
             try #require(image.representation(using: .png, properties: [:])).write(to: coverURL)
 
             defer {
-                cleanUp(Self.textEditID, documentsPrefixed: prefix, wasRunning: textEditWasRunning)
-                cleanUp(Self.previewID, documentsPrefixed: prefix, wasRunning: previewWasRunning)
                 for url in [behindURL, requestedURL, coverURL] {
                     try? FileManager.default.removeItem(at: url)
                 }
             }
 
+            // Not in the defer, which can't wait for the apps to quit.
+            do {
+                try await focusRequested(behindURL: behindURL, requestedURL: requestedURL, coverURL: coverURL,
+                                         prefix: prefix, otherWindowUsedLast: otherWindowUsedLast)
+            } catch {
+                await cleanUp(Self.textEditID, documentsPrefixed: prefix, wasRunning: textEditWasRunning)
+                await cleanUp(Self.previewID, documentsPrefixed: prefix, wasRunning: previewWasRunning)
+                throw error
+            }
+            await cleanUp(Self.textEditID, documentsPrefixed: prefix, wasRunning: textEditWasRunning)
+            await cleanUp(Self.previewID, documentsPrefixed: prefix, wasRunning: previewWasRunning)
+        }
+
+        private func focusRequested(behindURL: URL, requestedURL: URL, coverURL: URL,
+                                    prefix: String, otherWindowUsedLast: Bool) async throws {
             // Two TextEdit windows, both behind a Preview window.
             let (textEdit, textEditIDs) = try await open([behindURL, requestedURL], in: Self.textEditID)
             let (behindID, requestedID) = (textEditIDs[0], textEditIDs[1])
             let (preview, previewIDs) = try await open([coverURL], in: Self.previewID)
             let coverID = previewIDs[0]
+
+            if otherWindowUsedLast {
+                #expect(textEdit.setFrontmost(allWindows: false))
+                let behind = try #require(window(titled: "\(prefix)-behind", in: textEdit))
+                #expect(behind.becomeMain())
+                let behindUsedLast = await waitUntil {
+                    textEdit.isActive && HSApplication(runningApplication: textEdit).focusedWindow?.id == behindID
+                }
+                try #require(behindUsedLast, "the other TextEdit window did not become focused")
+            }
 
             #expect(preview.setFrontmost(allWindows: true))
             let coverInFront = await waitUntil {
@@ -528,6 +558,93 @@ extension HSWindowIntegrationTests {
     }
 }
 
+// MARK: - frontmostWindow()
+
+/// Stubs the two lookups `frontmostWindow()` is built from, so each branch can be tested without
+/// depending on which window the host happens to have focused.
+@MainActor
+private final class StubbedFocusWindowModule: HSWindowModule {
+    var stubbedFocusedWindow: HSWindow?
+    var stubbedOrderedWindows: [HSWindow] = []
+
+    override func focusedWindow() -> HSWindow? { stubbedFocusedWindow }
+    override func orderedWindows() -> [HSWindow] { stubbedOrderedWindows }
+}
+
+extension HSWindowIntegrationTests {
+    @MainActor
+    @Suite("hs.window.frontmostWindow()")
+    struct HSWindowFrontmostTests {
+        /// A window object that's distinct by identity. It wraps this process's own application
+        /// element, which is enough here: frontmostWindow() only passes windows through.
+        private func makeStubWindow() -> HSWindow {
+            HSWindow(element: UIElement(AXUIElementCreateApplication(getpid())), app: .current)
+        }
+
+        @Test("frontmostWindow() returns the focused window when there is one")
+        func testReturnsFocusedWindow() {
+            let module = StubbedFocusWindowModule(engineID: UUID())
+            let focused = makeStubWindow()
+            module.stubbedFocusedWindow = focused
+            module.stubbedOrderedWindows = [makeStubWindow()]
+
+            #expect(module.frontmostWindow() === focused)
+        }
+
+        @Test("frontmostWindow() falls back to the first of orderedWindows() when nothing has focus")
+        func testFallsBackToFirstOrderedWindow() {
+            let module = StubbedFocusWindowModule(engineID: UUID())
+            let first = makeStubWindow()
+            module.stubbedOrderedWindows = [first, makeStubWindow()]
+
+            #expect(module.frontmostWindow() === first)
+        }
+
+        @Test("frontmostWindow() returns null to JavaScript when there are no windows")
+        func testReturnsNullWithoutWindows() {
+            let harness = JSTestHarness()
+            harness.loadModule(StubbedFocusWindowModule.self, as: "window")
+
+            harness.expectTrue("hs.window.frontmostWindow() === null")
+            #expect(!harness.hasException)
+        }
+    }
+}
+
+// MARK: - Lookup by ID (#448)
+
+extension HSWindowIntegrationTests {
+    @Suite("hs.window.forID()", .serialized,
+           .disabled(if: !AXIsProcessTrusted(), "Accessibility permission not granted"),
+           .testApp)
+    struct HSWindowForIDTests {
+        @Test("forID() returns the window with that ID")
+        func testForIDFindsWindow() {
+            let harness = JSTestHarness()
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            harness.loadModule(HSWindowModule.self, as: "window")
+            harness.eval("var testAppPID = \(TestAppControl.pid ?? -1);")
+            TestAppControl.showCurrentTest()
+
+            harness.eval("""
+                var win = hs.application.fromPID(testAppPID).allWindows[0];
+                var found = hs.window.forID(win.id);
+                """)
+            harness.expectTrue("win.id > 0")
+            harness.expectTrue("found !== null && found.id === win.id && found.pid === testAppPID && found.title === win.title")
+            #expect(!harness.hasException)
+        }
+
+        @Test("forID() returns null when there is no such window", arguments: ["0", "-1", "999999999"])
+        func testForIDMissingWindow(id: String) {
+            let harness = JSTestHarness()
+            harness.loadModule(HSWindowModule.self, as: "window")
+            harness.expectTrue("hs.window.forID(\(id)) === null")
+            #expect(!harness.hasException)
+        }
+    }
+}
+
 // MARK: - Windows on other Spaces (#344)
 
 extension HSWindowIntegrationTests {
@@ -582,6 +699,7 @@ extension HSWindowIntegrationTests {
                 #expect(harness.evalString("describe(app.allWindows)") == expected, comment)
                 #expect(harness.evalBool("uniqueIDs(hs.window.windowsForApp(app))") == true, comment)
                 #expect(harness.evalBool("uniqueIDs(hs.window.allWindows())") == true, comment)
+                #expect(harness.evalBool("hs.window.windowsForApp(app).every(w => hs.window.forID(w.id)?.title === w.title)") == true, comment)
                 #expect(!harness.hasException, comment)
             }
 
@@ -602,6 +720,188 @@ extension HSWindowIntegrationTests {
             let onDesktopSpace = await waitUntil { axWindowTitles(axApp) == [Self.mainTitle] }
             try #require(onDesktopSpace, "AXWindows should list only the main window, but lists \(axWindowTitles(axApp))")
             expectBothWindowsListed("from the desktop's Space")
+        }
+    }
+}
+
+// MARK: - Roles
+
+extension HSWindowIntegrationTests {
+    @Suite("hs.window roles", .serialized,
+           .disabled(if: !AXIsProcessTrusted(), "Accessibility permission not granted"),
+           .testApp)
+    struct HSWindowRoleTests {
+        @Test("an ordinary window has the AXWindow role and AXStandardWindow subrole, in JS and in JSON")
+        func testStandardWindowRoles() {
+            let harness = JSTestHarness()
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            harness.eval("var testAppPID = \(TestAppControl.pid ?? -1);")
+            TestAppControl.showCurrentTest()
+
+            harness.eval("""
+                var win = hs.application.fromPID(testAppPID).allWindows[0];
+                var parsed = JSON.parse(JSON.stringify(win));
+                """)
+            #expect(harness.evalString("win.role") == "AXWindow")
+            #expect(harness.evalString("win.subrole") == "AXStandardWindow")
+            #expect(harness.evalString("parsed.role") == "AXWindow")
+            #expect(harness.evalString("parsed.subrole") == "AXStandardWindow")
+            #expect(!harness.hasException)
+        }
+    }
+}
+
+// MARK: - Neighbouring windows
+
+extension HSWindowIntegrationTests {
+    /// The ranking behind windowsToEast() and friends, with made-up frames
+    @Suite("hs.window neighbour ranking")
+    struct HSWindowNeighbourRankingTests {
+        private typealias Candidate = WindowNeighbours.Candidate
+
+        private let origin = Candidate(id: 1, frame: CGRect(x: 400, y: 400, width: 200, height: 200), z: 0)
+
+        private func rank(_ candidates: [Candidate], _ direction: WindowNeighbours.Direction, frontmost: Bool = false, strict: Bool = false) -> [Int] {
+            WindowNeighbours.rank(from: origin, candidates: candidates, direction: direction, frontmost: frontmost, strict: strict)
+        }
+
+        /// A window of the origin's size, offset from it, with the given ID and z-order
+        private func window(_ id: Int, dx: Double, dy: Double, z: Int = 1) -> Candidate {
+            Candidate(id: id, frame: origin.frame.offsetBy(dx: dx, dy: dy), z: z)
+        }
+
+        @Test("each direction finds only the windows on that side, nearest first")
+        func testDirections() {
+            let candidates = [
+                window(2, dx: 300, dy: 0),
+                window(3, dx: 700, dy: 0),
+                window(4, dx: -300, dy: 0),
+                window(5, dx: 0, dy: -300),
+                window(6, dx: 0, dy: 300),
+            ]
+            #expect(rank(candidates, .east) == [2, 3])
+            #expect(rank(candidates, .west) == [4])
+            // y grows downwards, so north is above
+            #expect(rank(candidates, .north) == [5])
+            #expect(rank(candidates, .south) == [6])
+        }
+
+        @Test("a window straight ahead beats a nearer one off to the side")
+        func testStraightAheadPreferred() {
+            let candidates = [
+                window(2, dx: 250, dy: 250),
+                window(3, dx: 320, dy: 0),
+            ]
+            #expect(rank(candidates, .east) == [3, 2])
+        }
+
+        @Test("the starting window, and windows with no area, are never included")
+        func testExcludesSelfAndEmptyWindows() {
+            let candidates = [
+                origin,
+                Candidate(id: 2, frame: CGRect(x: 800, y: 400, width: 0, height: 0), z: 1),
+                window(3, dx: 300, dy: 0),
+            ]
+            #expect(rank(candidates, .east) == [3])
+        }
+
+        @Test("strict only allows windows within 45 degrees of the direction")
+        func testStrict() {
+            let candidates = [
+                window(2, dx: 200, dy: 300),
+                window(3, dx: 400, dy: 100),
+            ]
+            #expect(Set(rank(candidates, .east)) == [2, 3])
+            #expect(rank(candidates, .east, strict: true) == [3])
+        }
+
+        @Test("frontmost leaves out windows the starting window almost entirely covers")
+        func testFrontmostSkipsWindowsBehind() {
+            let hidden = Candidate(id: 2, frame: origin.frame.insetBy(dx: 10, dy: 10).offsetBy(dx: 5, dy: 0), z: 3)
+            let visible = window(3, dx: 300, dy: 0, z: 2)
+            #expect(rank([hidden, visible], .east) == [2, 3])
+            #expect(rank([hidden, visible], .east, frontmost: true) == [3])
+        }
+
+        @Test("frontmost puts a window ahead of a nearer one it overlaps and is in front of")
+        func testFrontmostPrefersOccludingWindow() {
+            let behind = window(2, dx: 250, dy: 0, z: 5)
+            let inFront = window(3, dx: 350, dy: 0, z: 2)
+            #expect(rank([behind, inFront], .east) == [2, 3])
+            #expect(rank([behind, inFront], .east, frontmost: true) == [3, 2])
+        }
+    }
+
+    @Suite("hs.window neighbouring windows", .serialized,
+           .disabled(if: !AXIsProcessTrusted(), "Accessibility permission not granted"),
+           .testApp)
+    struct HSWindowNeighbourTests {
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            harness.loadModule(HSWindowModule.self, as: "window")
+            harness.eval("var testAppPID = \(TestAppControl.pid ?? -1);")
+            TestAppControl.showCurrentTest()
+            return harness
+        }
+
+        /// Opens a second test app window and puts the two at opposite sides of the screen, as `left` and `right`
+        private func placeSideBySide(_ harness: JSTestHarness) -> Bool {
+            TestAppControl.openWindow()
+            let opened = harness.waitFor(timeout: 3) {
+                (harness.eval("hs.application.fromPID(testAppPID).allWindows.length") as? Int ?? 0) >= 2
+            }
+            guard opened else { return false }
+            harness.eval("""
+                var wins = hs.application.fromPID(testAppPID).allWindows;
+                var left = wins[0], right = wins[1];
+                var screen = hs.screen.main().frame;
+                // The test app's windows can't be resized, so they're only moved: one to each edge
+                var rightX = screen.x + screen.w - right.frame.w;
+                left.position = new HSPoint(screen.x, screen.y + 40);
+                right.position = new HSPoint(rightX, screen.y + 40);
+                """)
+            return harness.waitFor(timeout: 2) {
+                harness.eval("""
+                    Math.abs(left.frame.x - screen.x) < 2 && Math.abs(right.frame.x - rightX) < 2 &&
+                    right.frame.x + right.frame.w / 2 > left.frame.x + left.frame.w / 2
+                    """) as? Bool == true
+            }
+        }
+
+        @Test("windowsToEast/West find the window beside this one among the windows given")
+        func testWindowsToEastAndWest() {
+            let harness = makeHarness()
+            harness.loadModule(HSScreenModule.self, as: "screen")
+            defer { TestAppControl.closeWindows() }
+            #expect(placeSideBySide(harness))
+
+            harness.eval("""
+                var both = { windows: [left, right] };
+                var east = left.windowsToEast(both);
+                var west = right.windowsToWest(both);
+                var none = left.windowsToWest(both);
+                """)
+            #expect(harness.evalInt("east.length") == 1)
+            harness.expectTrue("east[0].id === right.id")
+            #expect(harness.evalInt("west.length") == 1)
+            harness.expectTrue("west[0].id === left.id")
+            #expect(harness.evalInt("none.length") == 0)
+            #expect(!harness.hasException)
+        }
+
+        @Test("focusWindowEast focuses the window beside this one, and returns false when there is none")
+        func testFocusWindowEast() {
+            let harness = makeHarness()
+            harness.loadModule(HSScreenModule.self, as: "screen")
+            defer { TestAppControl.closeWindows() }
+            #expect(placeSideBySide(harness))
+
+            harness.eval("left.focus()")
+            #expect(harness.eval("left.focusWindowEast({ windows: [left, right] })") as? Bool == true)
+            #expect(harness.waitFor(timeout: 2) { harness.eval("right.isFocused") as? Bool == true })
+            #expect(harness.eval("right.focusWindowEast({ windows: [left, right] })") as? Bool == false)
+            #expect(!harness.hasException)
         }
     }
 }

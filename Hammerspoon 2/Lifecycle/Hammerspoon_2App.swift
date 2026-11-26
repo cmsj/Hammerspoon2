@@ -25,7 +25,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Before anything posts a notification, and before launching finishes
         UserNotificationRouter.shared.install()
         ConsoleCompletionEngine.shared.prewarm()
-        // Before the config loads, so a config that crashes the app can still be reported.
+        // Looks for crashes in the background and doesn't hold up startup. Crashes are only marked
+        // as seen once they've been offered, so if the config crashes the app before then, they're
+        // offered again next time.
         CrashReportManager.shared.offerToReportNewCrashes()
         let managerManager = ManagerManager.shared
         do {
@@ -194,8 +196,7 @@ struct Hammerspoon2App: App {
             }
 
             Button("Console...") {
-                NSApplication.shared.activate(ignoringOtherApps: true)
-                openWindow(id: "console")
+                AppWindows.shared.showConsole()
             }
 
             Button("API Documentation") {
@@ -232,8 +233,8 @@ struct Hammerspoon2App: App {
             NSApplication.shared.setActivationPolicy(settingsManager.dockMenuBehaviour.activationPolicy)
         }
         .onChange(of: true, initial: true) {
-            // Runs once, when the scenes exist, so code outside SwiftUI can open Settings
-            AppWindows.shared.register(openSettings: openSettings)
+            // Runs once, when the scenes exist, so code outside SwiftUI can open Settings and the Console
+            AppWindows.shared.register(openSettings: openSettings, openWindow: openWindow)
         }
 
         Window("Console", id: "console") {
@@ -252,14 +253,17 @@ struct Hammerspoon2App: App {
                 CheckForUpdatesView(updater: AppUpdater.updater)
             }
 
+            CommandGroup(after: .textEditing) {
+                ConsoleFindCommand()
+            }
+
             CommandMenu("Debug") {
                 Button("Reload Config") {
                     try? ManagerManager.shared.reload()
                 }
 
                 Button("Open Console") {
-                    NSApplication.shared.activate(ignoringOtherApps: true)
-                    openWindow(id: "console")
+                    AppWindows.shared.showConsole()
                 }
                 Button("Open Documentation") {
                     NSApplication.shared.activate(ignoringOtherApps: true)

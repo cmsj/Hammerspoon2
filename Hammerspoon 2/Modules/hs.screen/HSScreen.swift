@@ -426,10 +426,7 @@ private extension CGDisplayMode {
     /// Converts a rect from macOS coordinates (origin bottom-left, y-up) to
     /// Hammerspoon coordinates (origin top-left of primary screen, y-down).
     private func flip(_ rect: NSRect) -> NSRect {
-        NSRect(x: rect.origin.x,
-               y: primaryScreenHeight - rect.origin.y - rect.height,
-               width: rect.width,
-               height: rect.height)
+        rect.flippedScreenCoordinates()
     }
 
     // MARK: - Identity

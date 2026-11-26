@@ -11,6 +11,8 @@ struct SpoonMetadata: Decodable {
     let author: String
     let version: String
     let description: String
+    /// The oldest version of Hammerspoon 2 the Spoon works with, if it says
+    let minimumHSVersion: String?
 
     var hasNonEmptyFields: Bool {
         [name, author, version, description].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -23,6 +25,7 @@ enum SpoonValidationError: LocalizedError {
     case invalidSpoonJSON(underlying: String)
     case emptyRequiredFields
     case missingInitJS
+    case invalidMinimumHSVersion(String)
 
     var errorDescription: String? {
         switch self {
@@ -34,6 +37,8 @@ enum SpoonValidationError: LocalizedError {
             return "has an invalid spoon.json (name, author, version, and description must all be non-empty)"
         case .missingInitJS:
             return "has no init.js"
+        case .invalidMinimumHSVersion(let version):
+            return "has an invalid spoon.json (minimumHSVersion '\(version)' isn't a version like 1.2.3 or 1.2.3-beta.4)"
         }
     }
 }
@@ -86,15 +91,21 @@ class SpoonManager {
 
     let fileSystem: FileSystemProtocol
     let settings: SettingsManagerProtocol
+    /// The running Hammerspoon 2's version, which a Spoon's `minimumHSVersion` is checked against
+    let appVersion: String
 
+    /// - Parameter appVersion: Defaults to the app's `CFBundleShortVersionString`
     init(fileSystem: FileSystemProtocol = FileManager.default,
-         settings: SettingsManagerProtocol = SettingsManager.shared) {
+         settings: SettingsManagerProtocol = SettingsManager.shared,
+         appVersion: String? = nil) {
         self.fileSystem = fileSystem
         self.settings = settings
+        self.appVersion = appVersion ?? (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")
     }
 
     /// Validates that `directory` is a well-formed Spoon: a spoon.json with non-empty name,
-    /// author, version, and description fields, plus an init.js alongside it.
+    /// author, version, and description fields, and a well-formed minimumHSVersion if it has one,
+    /// plus an init.js alongside it.
     /// - Parameter directory: The Spoon's directory (or a .spoon2 bundle)
     /// - Returns: The parsed spoon.json metadata
     func validateSpoon(at directory: URL) throws -> SpoonMetadata {
@@ -123,11 +134,27 @@ class SpoonManager {
             throw SpoonValidationError.emptyRequiredFields
         }
 
+        if let minimumHSVersion = metadata.minimumHSVersion, SemanticVersion(minimumHSVersion) == nil {
+            throw SpoonValidationError.invalidMinimumHSVersion(minimumHSVersion)
+        }
+
         guard fileSystem.fileExists(atPath: initJSURL.path) else {
             throw SpoonValidationError.missingInitJS
         }
 
         return metadata
+    }
+
+    /// Why this Hammerspoon 2 is too old for a Spoon with `metadata`, or nil if it isn't. A
+    /// running version that can't be parsed is never too old, so it can't lock every Spoon out.
+    func versionRequirementFailure(for metadata: SpoonMetadata) -> String? {
+        guard let minimumHSVersion = metadata.minimumHSVersion.flatMap(SemanticVersion.init) else { return nil }
+        guard let running = SemanticVersion(appVersion) else {
+            AKWarning("hs.spoons: can't check that '\(metadata.name)' works with this Hammerspoon 2, whose version '\(appVersion)' isn't a version number")
+            return nil
+        }
+        guard running < minimumHSVersion else { return nil }
+        return "'\(metadata.name)' \(metadata.version) needs Hammerspoon 2 \(minimumHSVersion) or later, but this is \(running)"
     }
 
     /// The `Spoons` directory inside the user's config directory, where Spoons are installed

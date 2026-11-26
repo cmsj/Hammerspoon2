@@ -52,6 +52,18 @@ import JavaScriptCore
 /// }
 /// ```
 ///
+/// ## No user interface
+///
+/// Scripts cannot show user interface of their own. The helper process runs in
+/// the background, so Standard Additions commands that interact with the user,
+/// such as `display dialog`, fail with the error "No user interaction allowed."
+/// (`success` is `false`). Scripts can still tell
+/// other applications to do things, including showing their own windows.
+///
+/// To interact with the user, use Hammerspoon's own APIs instead, such as
+/// `hs.ui.dialog()`, `hs.ui.alert()`, `hs.ui.textPrompt()`, `hs.ui.filePicker()`
+/// or `hs.notify`, and pass the results to your script if needed.
+///
 /// ## Sync API
 ///
 /// The `*Sync` variants block until the script completes and return the same

@@ -127,7 +127,7 @@ hs.hotkey.bindSpec({
 The `on()`/`off()`/`once()` pattern shown above is consistent across most modules that report
 ongoing state changes — clipboard contents, application launch/quit, connected hardware, input
 source and locale changes, system power/session events, and more (`hs.application`,
-`hs.audiodevice`, `hs.camera`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`, `hs.power`,
+`hs.audiodevice`, `hs.camera`, `hs.distributednotifications`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`, `hs.power`,
 `hs.screen`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`, `hs.wifi`). For these, the first
 argument is always the event name; most modules emit several, so check the API reference for
 the exact set a given module supports:
@@ -261,7 +261,7 @@ hs.ui.alert("Saved!").duration(2).show()
 A small window with a couple of elements and a click handler:
 
 ```js
-const win = hs.ui.window({ x: 100, y: 100, w: 240, h: 120 })
+const win = hs.ui.window({ x: 100, y: 100, w: 240, h: 150 })
     .windowTitle("Quick Actions")
     .vstack()
         .text("Pick something:")
@@ -280,7 +280,7 @@ And a window whose text updates live via a reactive value, driven by a timer:
 ```js
 const clockText = hs.ui.string(new Date().toLocaleTimeString())
 
-const clockWindow = hs.ui.window({ x: 20, y: 20, w: 160, h: 60 })
+const clockWindow = hs.ui.window({ x: 20, y: 60, w: 160, h: 90 })
     .vstack()
         .text(clockText)
     .end()

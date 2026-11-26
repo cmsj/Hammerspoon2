@@ -166,7 +166,10 @@ import Observation
     @objc func duplicate() -> HSImage?
 
     /// Create a cropped copy of the image
-    /// - Parameter rect: HSRect defining the crop area (x, y, w, h)
+    ///
+    /// The crop area is measured from the top left corner of the image, like the frames of screens and windows,
+    /// so a screen snapshot can be cropped to a window's frame (after subtracting the screen's origin).
+    /// - Parameter rect: HSRect defining the crop area (x, y, w, h), with `y` measured down from the top of the image
     /// - Returns: A new cropped HSImage, or null if the rect falls outside the image bounds
     /// - Example:
     /// ```js
@@ -174,7 +177,8 @@ import Observation
     /// ```
     @objc func croppedCopy(_ rect: HSRect) -> HSImage?
 
-    /// Save the image to a file
+    /// Save the image to a file. The file is written atomically, so anything reading it sees
+    /// either the previous contents or the complete new image, never a partial write.
     /// - Parameter path: Destination file path (extension determines format: png, jpg, tiff, bmp, gif)
     /// - Returns: true if saved successfully, false otherwise
     /// - Example:
@@ -182,6 +186,33 @@ import Observation
     /// img.saveToFile("/tmp/output.png")
     /// ```
     @objc func saveToFile(_ path: String) -> Bool
+
+    /// Encode the image and return it as a base64 `data:` URL, without writing anything to disk.
+    ///
+    /// This is useful for handing an image to anything that accepts data URLs, such as web views or
+    /// JSON messages sent to other programs.
+    /// - Parameter type?: The image format, case-insensitive: `"png"` (the default), `"jpeg"`/`"jpg"`, `"tiff"`/`"tif"`, `"bmp"` or `"gif"`
+    /// - Returns: A string such as `"data:image/png;base64,iVBOR..."`, or null if the format is unknown or the image couldn't be encoded
+    /// - Example:
+    /// ```js
+    /// const url = HSImage.fromSymbol("star.fill").toDataURL()
+    /// console.log(url.slice(0, 22))  // "data:image/png;base64,"
+    /// const jpeg = img.toDataURL("jpeg")
+    /// ```
+    @objc func toDataURL(_ type: String?) -> String?
+
+    /// Encode the image and return its bytes as a `Uint8Array`, without writing anything to disk.
+    ///
+    /// The bytes are the same as `saveToFile()` would write for that format, so they can be sent over
+    /// a socket, used as an HTTP body, stored in a database, and so on.
+    /// - Parameter type?: The image format, case-insensitive: `"png"` (the default), `"jpeg"`/`"jpg"`, `"tiff"`/`"tif"`, `"bmp"` or `"gif"`
+    /// - Returns: {Uint8Array | null} The encoded image bytes, or null if the format is unknown or the image couldn't be encoded
+    /// - Example:
+    /// ```js
+    /// const bytes = HSImage.fromSymbol("star.fill").toUint8Array("png")
+    /// console.log(bytes.length)
+    /// ```
+    @objc func toUint8Array(_ type: String?) -> JSValue?
 
     /// Replace this image's content.
     ///
@@ -350,30 +381,43 @@ import Observation
 
     @objc func saveToFile(_ path: String) -> Bool {
         let url = URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
+        let format = Self.encodingFormat(for: url.pathExtension) ?? Self.defaultEncodingFormat
 
-        let fileType: NSBitmapImageRep.FileType
-        switch url.pathExtension.lowercased() {
-        case "jpg", "jpeg": fileType = .jpeg
-        case "tiff", "tif": fileType = .tiff
-        case "bmp":         fileType = .bmp
-        case "gif":         fileType = .gif
-        default:            fileType = .png
-        }
-
-        guard let tiffData = image.tiffRepresentation,
-              let bitmapRep = NSBitmapImageRep(data: tiffData),
-              let imageData = bitmapRep.representation(using: fileType, properties: [:]) else {
+        guard let imageData = encodedData(format.fileType) else {
             AKError("HSImage: Failed to convert image for saving")
             return false
         }
 
         do {
-            try imageData.write(to: url)
+            try imageData.write(to: url, options: .atomic)
             return true
         } catch {
             AKError("HSImage: Failed to save image: \(error.localizedDescription)")
             return false
         }
+    }
+
+    @objc func toDataURL(_ type: String?) -> String? {
+        guard let format = Self.requestedEncodingFormat(type, "toDataURL") else { return nil }
+        guard let data = encodedData(format.fileType) else {
+            AKError("HSImage: toDataURL() failed to encode image as \(format.mimeType)")
+            return nil
+        }
+        return "data:\(format.mimeType);base64,\(data.base64EncodedString())"
+    }
+
+    @objc func toUint8Array(_ type: String?) -> JSValue? {
+        guard let context = JSContext.current() else { return nil }
+        guard let format = Self.requestedEncodingFormat(type, "toUint8Array") else { return nil }
+        guard let data = encodedData(format.fileType) else {
+            AKError("HSImage: toUint8Array() failed to encode image as \(format.mimeType)")
+            return nil
+        }
+        guard let array = context.makeUint8Array(data) else {
+            AKError("HSImage: toUint8Array() could not allocate a Uint8Array")
+            return nil
+        }
+        return array
     }
 
     // MARK: - Reactive Mutation
@@ -397,6 +441,52 @@ import Observation
         return nil
     }
 
+    /// An image format that HSImage can encode to.
+    struct EncodingFormat {
+        let fileType: NSBitmapImageRep.FileType
+        let mimeType: String
+    }
+
+    static let defaultEncodingFormat = EncodingFormat(fileType: .png, mimeType: "image/png")
+
+    /// Map a format name or file extension (case-insensitive) to an encoding format.
+    /// - Returns: The format, or nil if the name isn't one HSImage can encode to
+    static func encodingFormat(for name: String) -> EncodingFormat? {
+        switch name.lowercased() {
+        case "png":         return defaultEncodingFormat
+        case "jpg", "jpeg": return EncodingFormat(fileType: .jpeg, mimeType: "image/jpeg")
+        case "tiff", "tif": return EncodingFormat(fileType: .tiff, mimeType: "image/tiff")
+        case "bmp":         return EncodingFormat(fileType: .bmp, mimeType: "image/bmp")
+        case "gif":         return EncodingFormat(fileType: .gif, mimeType: "image/gif")
+        default:            return nil
+        }
+    }
+
+    /// The format a JS caller asked for, defaulting to PNG when the argument was omitted.
+    /// Logs an error and returns nil for an unknown format.
+    private static func requestedEncodingFormat(_ type: String?, _ method: String) -> EncodingFormat? {
+        // An omitted trailing String? argument arrives from JSExport as the literal "undefined"
+        switch type {
+        case nil, "undefined", "null":
+            return defaultEncodingFormat
+        case let type?:
+            guard let format = encodingFormat(for: type) else {
+                AKError("HSImage: \(method)() unknown image type '\(type)'. Use png, jpeg, tiff, bmp or gif.")
+                return nil
+            }
+            return format
+        }
+    }
+
+    /// Encode the image in the given format.
+    private func encodedData(_ fileType: NSBitmapImageRep.FileType) -> Data? {
+        guard let tiffData = image.tiffRepresentation,
+              let bitmapRep = NSBitmapImageRep(data: tiffData) else {
+            return nil
+        }
+        return bitmapRep.representation(using: fileType, properties: [:])
+    }
+
     private func resizeImage(_ source: NSImage, to targetSize: CGSize) -> NSImage {
         let newImage = NSImage(size: targetSize)
         newImage.lockFocus()
@@ -411,10 +501,14 @@ import Observation
     private func cropImage(_ source: NSImage, to rect: CGRect) -> NSImage? {
         guard CGRect(origin: .zero, size: source.size).contains(rect) else { return nil }
 
+        // The rect measures y from the top, but NSImage's own coordinates measure it from the bottom
+        let sourceRect = NSRect(x: rect.minX, y: source.size.height - rect.maxY,
+                                width: rect.width, height: rect.height)
+
         let croppedImage = NSImage(size: rect.size)
         croppedImage.lockFocus()
         source.draw(in: NSRect(origin: .zero, size: rect.size),
-                    from: NSRect(origin: rect.origin, size: rect.size),
+                    from: sourceRect,
                     operation: .copy,
                     fraction: 1.0)
         croppedImage.unlockFocus()

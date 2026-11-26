@@ -20,7 +20,8 @@ private final class LoadSpoonContext {
     // Shut down in deinit, as JSEngine does on reload, so it releases the JSContext
     private let moduleRoot: ModuleRoot
 
-    init() throws {
+    /// - Parameter appVersion: The Hammerspoon 2 version Spoons' minimumHSVersion is checked against
+    init(appVersion: String = "1.0.0") throws {
         let vm = JSVirtualMachine()
         let ctx = JSContext(virtualMachine: vm)!
         ctx.name = "LoadSpoonTestContext"
@@ -32,7 +33,7 @@ private final class LoadSpoonContext {
 
         let settings = MockSettingsManager()
         settings.configLocation = configDir.appendingPathComponent("init.js")
-        moduleRoot = ModuleRoot(engineID: UUID(), settings: settings)
+        moduleRoot = ModuleRoot(engineID: UUID(), settings: settings, spoonManager: SpoonManager(settings: settings, appVersion: appVersion))
 
         ctx.exceptionHandler = { [weak self] _, exc in self?.lastException = exc }
         try NodeBuiltinModulesInstaller().install(in: ctx)
@@ -46,32 +47,36 @@ private final class LoadSpoonContext {
         try? FileManager.default.removeItem(at: configDir)
     }
 
-    // Write a Spoon's spoon.json. Pass nil for any field to omit it entirely.
+    // Write a Spoon's spoon.json. Pass nil for any field to omit it entirely. Spoons are written
+    // under Spoons/ unless `under` names another directory, relative to the config directory.
     @discardableResult
     func writeSpoonJSON(
         spoon: String,
+        under parent: String = "Spoons",
         name: String? = "TestSpoon",
         author: String? = "A. Developer",
         version: String? = "1.0.0",
-        description: String? = "A test spoon."
+        description: String? = "A test spoon.",
+        minimumHSVersion: String? = nil
     ) throws -> URL {
         var fields: [String] = []
         if let name { fields.append(#""name": "\#(name)""#) }
         if let author { fields.append(#""author": "\#(author)""#) }
         if let version { fields.append(#""version": "\#(version)""#) }
         if let description { fields.append(#""description": "\#(description)""#) }
+        if let minimumHSVersion { fields.append(#""minimumHSVersion": "\#(minimumHSVersion)""#) }
         let json = "{ " + fields.joined(separator: ", ") + " }"
-        return try write(spoon: spoon, "spoon.json", json)
+        return try write(spoon: spoon, under: parent, "spoon.json", json)
     }
 
     @discardableResult
-    func writeSpoonInit(spoon: String, _ content: String) throws -> URL {
-        try write(spoon: spoon, "init.js", content)
+    func writeSpoonInit(spoon: String, under parent: String = "Spoons", _ content: String) throws -> URL {
+        try write(spoon: spoon, under: parent, "init.js", content)
     }
 
     @discardableResult
-    func write(spoon: String, _ relativePath: String, _ content: String) throws -> URL {
-        let url = configDir.appendingPathComponent("Spoons/\(spoon)/\(relativePath)")
+    func write(spoon: String, under parent: String = "Spoons", _ relativePath: String, _ content: String) throws -> URL {
+        let url = configDir.appendingPathComponent("\(parent)/\(spoon)/\(relativePath)")
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),
             withIntermediateDirectories: true
@@ -166,6 +171,28 @@ struct HSSpoonsLoadTests {
             let result = ctx.eval("hs.spoons.load('TestSpoon').greet('World')")
             #expect(result?.toString() == "Hello, World")
             #expect(!ctx.hadException)
+        }
+
+        @Test("a Spoon needing a newer Hammerspoon 2 throws EVERSION without running init.js")
+        func testMinimumHSVersionTooNew() throws {
+            let ctx = try LoadSpoonContext(appVersion: "1.0.0-beta.3")
+            try ctx.writeSpoonJSON(spoon: "TestSpoon", minimumHSVersion: "1.0.0-beta.10")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "globalThis.__ran = true; module.exports = {};")
+            let error = ctx.eval("""
+                (function () { try { hs.spoons.load('TestSpoon'); return null; } catch (e) { return e.code + ': ' + e.message; } })()
+            """)
+            #expect(error?.toString() == "EVERSION: hs.spoons.load(): 'TestSpoon' 1.0.0 needs Hammerspoon 2 1.0.0-beta.10 or later, but this is 1.0.0-beta.3")
+            #expect(ctx.eval("typeof __ran")?.toString() == "undefined")
+            #expect(ctx.eval("hs.spoons.TestSpoon")?.isUndefined == true)
+        }
+
+        @Test("a Spoon whose minimumHSVersion is this Hammerspoon 2 or older loads", arguments: ["1.0.0-beta.3", "0.9"])
+        func testMinimumHSVersionSatisfied(minimumHSVersion: String) throws {
+            let ctx = try LoadSpoonContext(appVersion: "1.0.0-beta.3")
+            try ctx.writeSpoonJSON(spoon: "TestSpoon", minimumHSVersion: minimumHSVersion)
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { ok: true };")
+            #expect(ctx.eval("hs.spoons.load('TestSpoon').ok")?.toBool() == true)
+            #expect(ctx.hadException == false)
         }
 
         @Test("a Spoon's init.js can require() a sibling file relative to its own directory")
@@ -536,6 +563,59 @@ struct HSSpoonsLoadTests {
             ctx.eval("hs.spoons.load('SpoonA')")
             #expect(ctx.eval("Object.keys(hs.spoons).join(',')")?.toString() == "SpoonA")
             #expect(!ctx.hadException)
+        }
+    }
+
+    @Suite("loading from a path")
+    struct PathTests {
+
+        @Test("a relative path is relative to the config directory, and wins over an installed Spoon")
+        func testRelativePathWinsOverInstalled() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon", version: "1.0.0")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { from: 'installed' };")
+            try ctx.writeSpoonJSON(spoon: "TestSpoon.spoon2", under: "dev", version: "2.0.0-dev")
+            try ctx.write(spoon: "TestSpoon.spoon2", under: "dev", "lib/where.js", "module.exports = __dirname;")
+            try ctx.writeSpoonInit(spoon: "TestSpoon.spoon2", under: "dev", "module.exports = { from: require('./lib/where.js') };")
+
+            ctx.eval("var spoon = hs.spoons.load('TestSpoon', { path: 'Spoons/../dev/TestSpoon.spoon2/' })")
+            #expect(!ctx.hadException)
+            let libDir = ctx.configDir.appendingPathComponent("dev/TestSpoon.spoon2/lib").standardizedFileURL.path
+            #expect(ctx.eval("spoon.from")?.toString() == libDir)
+            #expect(ctx.eval("spoon.version")?.toString() == "2.0.0-dev")
+            #expect(ctx.eval("hs.spoons.TestSpoon === spoon")?.toBool() == true)
+        }
+
+        @Test("an absolute path loads a Spoon that isn't installed at all")
+        func testAbsolutePath() throws {
+            let ctx = try LoadSpoonContext()
+            let initJS = try ctx.writeSpoonInit(spoon: "Elsewhere", under: "dev", "module.exports = { ok: true };")
+            try ctx.writeSpoonJSON(spoon: "Elsewhere", under: "dev", name: "DevSpoon")
+            let path = initJS.deletingLastPathComponent().path
+
+            ctx.eval("var spoon = hs.spoons.load('DevSpoon', { path: '\(path)' })")
+            #expect(!ctx.hadException)
+            #expect(ctx.eval("spoon.ok")?.toBool() == true)
+            #expect(ctx.eval("hs.spoons.installed().length")?.toInt32() == 0)
+        }
+
+        @Test("a path that isn't a directory throws ENOTFOUND, a malformed Spoon EINVALIDSPOON, and a bad path EINVALIDARG")
+        func testPathErrorCodes() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "Broken.spoon2", under: "dev")
+            let spoonJSON = try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = {};")
+
+            for (path, expected) in [
+                ("'dev/Missing.spoon2'", "ENOTFOUND"),
+                ("'\(spoonJSON.path)'", "ENOTFOUND"),
+                ("'dev/Broken.spoon2'", "EINVALIDSPOON"),
+                ("42", "EINVALIDARG"),
+            ] {
+                let code = ctx.eval("(function () { try { hs.spoons.load('TestSpoon', { path: \(path) }); } catch (e) { return e.code; } })()")
+                #expect(code?.toString() == expected, "\(path)")
+            }
+            #expect(ctx.eval("hs.spoons.TestSpoon")?.isUndefined == true)
         }
     }
 }

@@ -8,8 +8,9 @@ start there — everything below builds on it.
 
 This part of Hammerspoon 2 is newer and smaller in scope than the rest of the app. One piece of
 Hammerspoon 1 lifecycle *is* built in - `init()` is called automatically, same as v1's `:init()`
-- but `start()`/`stop()` and `bindHotkeys()` below are recommended patterns for Spoon authors to
-follow, not things the runtime calls for you (unless you ask `hs.spoons.use()` to).
+- and so is a generic `bindHotkeys()` for Spoons that export their actions as `bindings`, but
+`start()`/`stop()` below are recommended patterns for Spoon authors to follow, not things the
+runtime calls for you (unless you ask `hs.spoons.use()` to).
 
 ## Finding Spoons
 
@@ -19,12 +20,16 @@ you choose where each one comes from. Good places to look:
 - **The [`hammerspoon2-spoon` topic on GitHub](https://github.com/topics/hammerspoon2-spoon)**
   lists repositories whose authors have tagged them as containing Hammerspoon 2 Spoons. Each
   repository's README should say which Spoons it holds and how to configure them.
+  [Searching for the topic](https://github.com/search?q=topic%3Ahammerspoon2-spoon&type=repositories)
+  lets you sort them by stars or by when they were last updated.
 - **[r/Hammerspoon](https://www.reddit.com/r/Hammerspoon)** is where people share Spoons and
   configs, and where you can ask whether something that does what you need already exists.
 
 Make sure it's a Hammerspoon 2 Spoon (a `.spoon2` bundle written in JavaScript) and not a
 Hammerspoon 1 `.spoon`, which won't load. As with any code you run in your config, read a
 Spoon before installing it: it runs with all the permissions you've granted Hammerspoon 2.
+Hammerspoon 1 Spoons are listed separately, on the
+[Hammerspoon 1 Spoons site](https://www.hammerspoon.org/Spoons/).
 
 ## Installing Spoons from GitHub or a URL
 
@@ -68,6 +73,7 @@ the name it's stored under on `hs.spoons`) and an object of options, all of them
 | `source` | Where to install the Spoon from if it isn't installed: a GitHub repository or a zip file's URL (see below). Without it, `use()` only uses an installed Spoon, and rejects with `ENOTINSTALLED` if there isn't one. |
 | `ref` | The tag, branch or commit to install from a GitHub `source`. |
 | `sha256` | The SHA-256 hash a zip file `source` must have. |
+| `path` | A directory to load the Spoon from instead, for working on a Spoon (see [Developing a Spoon](#developing-a-spoon)). It takes precedence over `source`, `ref` and `sha256`. |
 | `config` | An object whose properties are set on the Spoon. |
 | `hotkeys` | Passed to the Spoon's `bindHotkeys()` method. `"default"` passes the Spoon's own `defaultHotkeys` instead. |
 | `fn` | A function that's called with the Spoon, for any setup the other options don't cover. |
@@ -122,6 +128,10 @@ hs.spoons.installed().forEach(s => console.log(`${s.name} ${s.version} from ${s.
 // Download again from where it was installed from, and reinstall if its version changed
 hs.spoons.update("Greeter").then(updated => console.log(updated ? "Updated" : "Up to date"))
 
+// The same for every installed Spoon, logging what happens to the Console. It resolves with
+// each Spoon's status, and hs.spoons.isUpdating is true until it has finished.
+hs.spoons.updateAll().then(results => console.log(results.map(r => `${r.name}: ${r.status}`).join(", ")))
+
 hs.spoons.uninstall("Greeter")
 ```
 
@@ -131,9 +141,9 @@ Failures reject with an `Error` whose `code` says what went wrong (`ENOTFOUND`, 
 **Only install Spoons from people you trust.** A Spoon is code that runs with all of
 Hammerspoon 2's permissions. Pinning a version — a tag or commit with `ref`, or a `sha256` for a
 zip file — means you keep running the code you chose, even if the repository changes later.
-`use()` never updates a Spoon that's already installed; `update()` is the only thing that
-does, and only when you call it. It fetches the Spoon from exactly where it was installed from,
-so a Spoon pinned to a tag or commit stays as it is — to move to a newer version, install it
+`use()` never updates a Spoon that's already installed; `update()` and `updateAll()` are the
+only things that do, and only when you call them. They fetch each Spoon from exactly where it was
+installed from, so a Spoon pinned to a tag or commit stays as it is — to move to a newer version, install it
 with the new `ref` and `force: true`.
 
 ## Installing a Spoon by hand
@@ -181,7 +191,7 @@ hs.spoons.load("Greeter")
 hs.spoons.Greeter.show("Hello again")
 ```
 
-If the Spoon exposes `start()`/`stop()` methods (see [conventions](#conventions-worth-following)
+If the Spoon exposes `start()`/`stop()` methods (see [Lifecycle](#lifecycle)
 below), call `start()` yourself after loading — nothing calls it for you:
 
 ```js
@@ -211,6 +221,26 @@ non-empty, or `hs.spoons.load()` refuses to load it:
 }
 ```
 
+If your Spoon relies on something added or changed in a particular release of Hammerspoon 2, add
+an optional **`minimumHSVersion`** field with that release's version:
+
+```json
+{
+    "name": "Greeter",
+    "author": "Jane Dev <jane@example.com>",
+    "version": "1.1.0",
+    "description": "Shows a friendly notification on a hotkey or a timer.",
+    "minimumHSVersion": "1.0.0-beta.4"
+}
+```
+
+An older Hammerspoon 2 (see `hs.appinfo.version`) refuses to load the Spoon, without running its
+`init.js`: `hs.spoons.load()` throws an error with the code `EVERSION` that names both versions.
+Versions are compared as [Semantic Versioning](https://semver.org) orders them, so
+`1.0.0-beta.9` comes before `1.0.0-beta.10`, which comes before `1.0.0-rc.1` and then `1.0.0`. A
+copy of Hammerspoon 2 built from source reports the version of the last release before it, so it
+can load any Spoon that release could.
+
 You never need to repeat this information inside `init.js` — after a successful load,
 `hs.spoons.load()` sets `author`, `description`, and `version` directly on the object your Spoon
 returns, reading them from `spoon.json`. This is a deliberate difference from Hammerspoon 1,
@@ -228,39 +258,93 @@ points at that directory too — useful for loading bundled assets:
 const iconPath = __dirname + "/icon.png"
 ```
 
-**`init.js` must set `module.exports` to an object** (or a function — functions are objects in
-JS, so this works too) — `hs.spoons.load()` throws if it doesn't, since that's what the injected
-metadata needs to attach itself to. Keep the top level of `init.js` light: build the object and
-return it, but avoid starting timers, watchers, or hotkeys until `start()` is called (or, for a
-Spoon simple enough not to need a `start()`/`stop()` split at all, until the caller invokes
-whatever method actually needs them). Anything started keeps running until it's stopped
-(see [object lifecycle](getting-started.html#object-lifecycle-running-things-keep-running)), so
-`stop()` needs references to what `start()` started.
+**`init.js` must set `module.exports` to an object**, and not a function —
+`hs.spoons.load()` throws if it doesn't, since that's what the metadata from `spoon.json` is
+set on. Keep the top level of `init.js` light: build the object and
+return it, but don't start timers, watchers or hotkeys there (see [Lifecycle](#lifecycle)).
 
-**If the returned object has an `init()` method, it's called automatically** — matching
-Hammerspoon 1, where `:init()` ran the same way. Use it for setup that needs to happen once the
-object exists but shouldn't wait for `start()` — reading a config file, computing a derived
-value, and so on. `this` inside `init()` refers to the object itself, and by the time it runs,
-`author`/`description`/`version` are already set on `this`, since metadata injection happens
-first. A thrown exception inside `init()` fails the whole load: `hs.spoons.load()` throws, and
-nothing is stored on `hs.spoons`.
-
-One subtlety worth knowing: `init.js`'s own top level only ever runs once (`require()` caches
-the module), but `init()` runs again every time `hs.spoons.load()` is called for that Spoon, since
-the same cached object is handed back each time. Write `init()` to be safe to call more than
-once — or better, do true one-time setup directly at `init.js`'s top level, and reserve `init()`
-for things that are genuinely fine to redo.
+What else the object holds is up to you. The next section covers the names that Hammerspoon 2,
+`hs.spoons.use()` and your users expect to mean particular things.
 
 ## Conventions worth following
 
-These conventions are worth following for consistency with how other Spoons will likely behave,
-and they're what `hs.spoons.use()`'s options rely on, even though — unlike `init()` — nothing in
-the runtime calls them for you when a Spoon is loaded:
+Apart from `module.exports` being an object, everything a Spoon exports is optional. But a few
+names have a meaning that `hs.spoons.load()` and/or `hs.spoons.use()` can take advantage of, so use them
+where they fit, and your Spoon will work the way people expect a Spoon to:
 
-**Settings as properties** of the exported object, with their defaults, so users can change
-them with `use()`'s `config` option or by setting them directly. `config` copies each of its
-properties onto your Spoon's object, and that's all it does. It doesn't call anything to tell
-you, so:
+| Export | What it's for | What uses it |
+|--------|---------------|--------------|
+| `init()` | Setup once the Spoon's object exists | `hs.spoons.load()` calls it, every time |
+| `start()` / `stop()` | Starting and stopping anything that keeps running | Users, and `use()`'s `start` option (`start()` only) |
+| Settings | Properties that change how the Spoon behaves | Users, and `use()`'s `config` option |
+| `bindings` | Actions users can bind hotkeys to | `hs.spoons.load()`, which makes a `bindHotkeys()` and `unbindHotkeys()` for them |
+| `defaultHotkeys` | Suggested hotkeys for those actions | `use()`'s `hotkeys: "default"` option |
+| `bindHotkeys(mapping)` | Binding hotkeys yourself, when `bindings` isn't enough | Users, and `use()`'s `hotkeys` option |
+
+Don't export `name`, `author`, `description` or `version`: `hs.spoons.load()` sets them from
+`spoon.json`, replacing anything of the same name.
+
+### Lifecycle
+
+`hs.spoons.load("Greeter")` does this, in order:
+
+1. Checks that this Hammerspoon 2 is at least the Spoon's `minimumHSVersion`, if it has one.
+2. Runs `init.js` with `require()`. `require()` caches it, so the
+   top level only ever runs once, however many times the Spoon is loaded.
+3. Sets `name`, `author`, `description` and `version` on the exported object, from `spoon.json`.
+4. Gives the object a `bindHotkeys()` and an `unbindHotkeys()`, if it exports `bindings` (see
+   [Hotkeys](#hotkeys)).
+5. Calls the object's `init()`, if it has one.
+6. Stores the object in `hs.spoons` (as `hs.spoons.Greeter`) and returns it.
+
+`hs.spoons.use()` then applies its options to the loaded Spoon: `config`, then `hotkeys`, then
+`fn`, then `start` (see [`use()`'s options](#uses-options)).
+
+**`init()`** is for setup that needs to happen once the object exists, but shouldn't wait for
+`start()`: reading a file, working out a value from others, and so on. It's called with `this`
+set to the object, which by then has its `spoon.json` fields, and its `bindHotkeys()` and
+`unbindHotkeys()` if it exports `bindings`. Hammerspoon 1
+called `:init()` the same way.
+
+- **It runs on every `hs.spoons.load()`** of the Spoon, not just the first, since each one
+  hands back the same cached object. Write it to be safe to run more than once, or do one-time
+  setup at the top level of `init.js` instead.
+- **It runs before `use()`'s `config` is applied**, so it only ever sees your settings' defaults
+  (see [Configuration](#configuration)).
+- **An exception thrown in it fails the load**: `hs.spoons.load()` throws it, and nothing is
+  stored on `hs.spoons`.
+
+**`start()` and `stop()`** are for a Spoon that does anything that keeps running: timers,
+watchers, hotkeys that are always bound. Build the object and its settings in `init.js`, but
+don't start anything until `start()` is called. Nothing in Hammerspoon 2 calls `start()` unless
+a user passes `start: true` to `hs.spoons.use()` (which fails if there's no `start()`), and
+nothing ever calls `stop()`; both are for users to call when they want to. Anything started
+keeps running until it's stopped (see
+[object lifecycle](getting-started.html#object-lifecycle-running-things-keep-running)), so keep
+a reference to what `start()` starts, for `stop()` to stop. Make both safe to call twice:
+
+```js
+let timer = null
+
+function start() {
+    if (timer) return          // already started
+    timer = hs.timer.doEvery(3600, () => show())
+}
+
+function stop() {
+    if (timer) { timer.stop(); timer = null }
+}
+```
+
+A Spoon with nothing to start, such as one whose only job is to provide actions for hotkeys,
+doesn't need `start()` or `stop()` at all.
+
+### Configuration
+
+Make your Spoon's settings be properties of the exported object, set to their defaults, so
+users can change them by setting them directly, or with `use()`'s `config` option. `config`
+copies each of its properties onto your Spoon's object, and that's all it does. It doesn't call
+anything to tell you, so:
 
 - **Read a setting from the object whenever you use it**, rather than copying it into a
   variable. A variable in `init.js` can't be reached by `config`, and a copy taken earlier
@@ -286,45 +370,108 @@ function show() {
 If a setting needs checking, or something has to happen when it changes, make it a property
 with a setter: `config` assigns properties, so the setter runs.
 
-**`start()` / `stop()`** for a Spoon that does anything ongoing (timers, watchers, hotkeys bound
-persistently). Build the object and its configuration in `init.js`, but don't activate anything
-until `start()` runs:
+### Hotkeys
+
+Don't bind hotkeys to keys of your choosing: let users choose their own. The recommended way is
+to export **`bindings`**, the actions a hotkey can trigger, keyed by name, and Hammerspoon 2
+does the binding for you:
 
 ```js
-function start() {
-    if (timer) return          // already started
-    timer = hs.timer.doEvery(3600, () => show())
-}
-
-function stop() {
-    if (timer) { timer.stop(); timer = null }
+module.exports = {
+    bindings: {
+        show,                          // a function, called when the hotkey is pressed
+        peek: {                        // or an object, for more control
+            pressed: () => showPanel(),
+            released: () => hidePanel(),
+            repeat: null,              // called repeatedly while the hotkey is held down
+            message: "Peek"            // a description users can choose to show (see below)
+        }
+    },
+    // ...
 }
 ```
 
-**`bindHotkeys(mapping)`** for a Spoon whose behavior a user should be able to trigger with a
-hotkey, taking an object keyed by action name so the caller chooses their own keys rather than
-the Spoon hardcoding them:
+Any of `pressed`, `released` and `repeat` can be left out, but there must be at least one.
 
-```js
-function bindHotkeys(mapping) {
-    if (mapping.show) {
-        hs.hotkey.bind(mapping.show[0], mapping.show[1], () => show())
-    }
-}
-```
+`hs.spoons.load()` gives a Spoon that exports `bindings` a `bindHotkeys(mapping)` method, which
+binds the hotkeys in `mapping`, keyed by action name, to those actions. That's also what
+`hs.spoons.use()`'s `hotkeys` option calls. A hotkey is `[mods, key, message]` or
+`{ mods, key, message }`, where `message` is optional:
 
 ```js
 // in the user's init.js
 const Greeter = hs.spoons.load("Greeter")
-Greeter.bindHotkeys({ show: [["cmd", "alt"], "g"] })
+Greeter.bindHotkeys({
+    show: [["cmd", "alt"], "g"],
+    peek: { mods: ["cmd", "alt"], key: "p", message: true }
+})
 ```
 
-If your Spoon has sensible keys to suggest, export them as `defaultHotkeys`, in the same shape.
-Users can then pass `hotkeys: "default"` to `hs.spoons.use()` to bind them.
+- **`message`** is shown when the hotkey is pressed, as for any hotkey (see
+  `hs.hotkey`'s `message`). A string is used as it is, and `true` uses the action's own
+  `message`, prefixed with the Spoon's name — `"Greeter: Peek"` above. Without one, nothing is
+  shown.
+- **Binding an action again replaces its hotkey**, and `null` (or `false`) in place of a hotkey
+  unbinds it, so `bindHotkeys()` can be called as often as you like.
+- **Mistakes throw**, with a `code` of `EINVALIDARG`: an action the Spoon doesn't have
+  (so a misspelled name doesn't silently do nothing), or a hotkey of the wrong shape. Nothing in
+  that call is bound if one of its hotkeys is wrong. If a key can't be bound (it's not a real key,
+  or something else has it), it throws too. The actions before it in that call are bound, and
+  the ones from it on have no hotkey, even if they had one before.
+- **It returns the Spoon**, so calls can be chained.
+- **It's there before `init()` runs**, so `init()` can call it too.
 
-**Logging:** there's no per-Spoon logger like v1's `hs.logger` — use `console.log()`/`.error()`
-directly, optionally prefixing messages with the Spoon's name so they're identifiable in a
-config that's loaded several Spoons:
+It also gets an **`unbindHotkeys(actions)`** method, which unbinds the hotkeys of the actions
+named in `actions`, an array, or of all of them if `actions` is left out. An action without a
+hotkey is skipped, and one the Spoon doesn't have throws, as for `bindHotkeys()`. It returns the
+Spoon too.
+
+```js
+Greeter.unbindHotkeys(["peek"])   // just peek's hotkey
+Greeter.unbindHotkeys()           // all of them
+```
+
+The hotkeys are the user's, so `stop()` usually shouldn't unbind them: a user may well have
+bound a hotkey to start the Spoon again, or to toggle it. `unbindHotkeys()` is for when the
+hotkeys should go too, such as a method that tears the Spoon down completely, or a user who
+wants them gone. A Spoon that's loaded again keeps its hotkeys, so there's no need to unbind
+them first.
+
+If your Spoon has sensible keys to suggest, export them as **`defaultHotkeys`**, in the same
+shape as `mapping`. Users can then pass `hotkeys: "default"` to `hs.spoons.use()` to bind them.
+
+**Your own `bindHotkeys(mapping)`** is for when `bindings` can't do what your Spoon needs: say,
+hotkeys that are only active while a mode is on, keys made up at runtime rather than chosen
+from a fixed set of actions, or a mapping in some other shape. Export a `bindHotkeys()` method
+instead of `bindings`, and it's kept as it is: users call it the same way, and `use()`'s
+`hotkeys` option (including `"default"`) passes the mapping to it. It's then up to you to check
+the mapping, and to unbind a hotkey that's bound again:
+
+```js
+let modal = null
+
+module.exports = {
+    bindHotkeys(mapping) {
+        // The "enter" hotkey starts a mode in which "s" shows a greeting, and escape leaves it
+        if (modal) modal.destroy()
+        modal = hs.hotkey.createModal(mapping.enter[0], mapping.enter[1])
+        modal.bind([], "escape", () => modal.exit())
+        modal.bind([], "s", () => show())
+        return this
+    },
+    // ...
+}
+```
+
+Don't export both: if a Spoon exports both `bindings` and `bindHotkeys()` (or
+`unbindHotkeys()`), `hs.spoons.load()` will replace them with the generic ones, and log a warning
+to the Console.
+
+### Logging
+
+There's no per-Spoon logger like v1's `hs.logger` — use `console.log()`/`.error()` directly,
+optionally prefixing messages with the Spoon's name so they're identifiable in a config that's
+loaded several Spoons:
 
 ```js
 console.log("[Greeter] started")
@@ -344,9 +491,13 @@ const greeter = module.exports = {
     message: "Hello from Greeter!",   // the notification's text
     interval: 3600,                   // seconds between notifications once started
 
+    // Actions users can bind hotkeys to, with Greeter.bindHotkeys() or use()'s hotkeys option
+    bindings: {
+        show: { pressed: show, message: "Show a greeting" }
+    },
     defaultHotkeys: { show: [["cmd", "alt"], "g"] },
 
-    show, init, start, stop, bindHotkeys
+    show, init, start, stop
 }
 
 function show() {
@@ -370,12 +521,6 @@ function start() {
 function stop() {
     if (timer) { timer.stop(); timer = null }
     console.log("[Greeter] stopped")
-}
-
-function bindHotkeys(mapping) {
-    if (mapping.show) {
-        hs.hotkey.bind(mapping.show[0], mapping.show[1], show)
-    }
 }
 ```
 
@@ -413,6 +558,43 @@ Greeter.start()
 console.log(`Loaded ${Greeter.description} v${Greeter.version} by ${Greeter.author}`)
 ```
 
+## Developing a Spoon
+
+While you're writing or changing a Spoon, you want your config to run the copy you're editing,
+not one installed into `Spoons/`. Give `hs.spoons.load()` or `hs.spoons.use()` a `path`, and
+the Spoon is loaded straight from that directory, with nothing installed or copied:
+
+```js
+hs.spoons.use("Greeter", {
+    source: "jane/hs2-spoons",                 // where everyone else gets it from
+    path: "~/src/hs2-spoons/Greeter.spoon2",   // your working copy, which wins while it's here
+    config: { message: "Time for a break!" },
+    start: true
+})
+```
+
+`path` takes precedence over `source` (and `ref` and `sha256`), so you can keep the `source`
+the rest of the world uses in your config, and add or remove `path` as you start and stop
+working on the Spoon. A relative path is relative to your config directory, so a Spoon checked
+out next to it is `"../hs2-spoons/Greeter.spoon2"`, and `~` is your home directory. An installed
+copy with the same name is ignored while `path` is there, and the Spoon is still stored as
+`hs.spoons.Greeter`.
+
+Reload your config to pick up your changes: `require()` only runs a file once per config load,
+so edits to `init.js` and anything it requires take effect on the next reload.
+
+A few things to know:
+
+- If there's no directory at `path`, `load()` throws and `use()` rejects with `ENOTFOUND`. It
+  doesn't fall back to `source`, so a typo in `path` doesn't quietly run the published version
+  instead of yours.
+- A warning is logged every time a Spoon is loaded from a `path`, so you'll notice if you forget
+  to take it out.
+- A Spoon loaded from a `path` isn't installed, so `hs.spoons.installed()`, `update()` and
+  `uninstall()` don't know about it.
+
+`hs.spoons.load("Greeter", { path: "..." })` does the same for a Spoon you load yourself.
+
 ## Sharing a Spoon
 
 Rename the `Greeter` folder to `Greeter.spoon2` — that's the whole packaging step, since a
@@ -440,13 +622,14 @@ If you're coming from v1, the shape is familiar but several specifics changed:
   `homepage` optional). v2 doesn't currently check for a license field at all.
 - **`init()` is called automatically, same as v1.** One difference worth knowing: v2's `require()`
   caches `init.js`'s top-level code (it only ever runs once), but `init()` itself runs again on
-  every `hs.spoons.load()` call for that Spoon — see [above](#anatomy-of-a-spoon) for what that
+  every `hs.spoons.load()` call for that Spoon — see [Lifecycle](#lifecycle) for what that
   means for what you put in it.
 - **`hs.spoons` has different helpers.** v1's `hs.spoons` had `resourcePath()`, `scriptPath()`,
   and `bindHotkeysToSpec()`. v2's `hs.spoons` has `load()`, the installing functions above, and
   every loaded Spoon by name — use `__dirname` (built into `require()`) in place of
-  `resourcePath()`/`scriptPath()`, and see [`bindHotkeys()`](#conventions-worth-following) above
-  for the closest equivalent to `bindHotkeysToSpec()`.
+  `resourcePath()`/`scriptPath()`. In place of `bindHotkeysToSpec()`, export your actions as
+  [`bindings`](#hotkeys), and `bindHotkeys()` is written for you, with
+  `released` and `repeat` callbacks, and default messages, which v1's couldn't have.
 - **SpoonInstall is built in**, as `hs.spoons.use()` (v1's `andUse()`) and friends, but there's
   no default repository: each Spoon names its own `source`.
 - **JavaScript, not Lua** — `module.exports = {...}` instead of `return obj` at the end of

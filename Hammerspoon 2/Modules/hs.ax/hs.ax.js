@@ -49,16 +49,17 @@ class AXModuleWatcherEmitter {
         if (!bucket) {
             bucket = { element: element, notification: notification, listeners: [] };
 
-            const registered = hs.ax._addWatcher(element, notification, (notif, elem) => {
+            // null on success, otherwise { reason, code? } saying why it failed
+            const failure = hs.ax._addWatcher(element, notification, (notif, elem) => {
                 this.#handleEvent(bucket, notif, elem);
             });
 
-            if (!registered) {
+            if (failure) {
                 // Native registration failed (e.g. permissions, invalid PID, unsupported
                 // notification). Don't retain a bucket for a watcher that doesn't actually
                 // exist - otherwise a later on() call would see the bucket, skip
                 // _addWatcher entirely, and the listener would silently never fire.
-                throw failedToStart(caller, notification);
+                throw failedToStart(caller, notification, failure);
             }
 
             this.#buckets.push(bucket);

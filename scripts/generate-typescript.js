@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const { THROWS_DESCRIPTION } = require('./docs-strings');
+const { typeWithFieldDocs } = require('./docs-params');
 
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_FILE = path.join(__dirname, '..', 'docs', 'hammerspoon.d.ts');
@@ -123,6 +124,24 @@ function resolveParamType(p, fromSwift = true) {
 }
 
 /**
+ * A parameter as declared in a signature. The fields of an object it takes are listed one per
+ * line under their descriptions, so editors show those too. indent is the declaration's own.
+ */
+function paramDeclaration(p, indent, fromSwift = true) {
+    const prefix = p.rest ? '...' : '';
+    const type = typeWithFieldDocs(resolveParamType(p, fromSwift), p.fields, indent, escapeDocComment);
+    return `${prefix}${p.name}${p.optional ? '?' : ''}: ${type}`;
+}
+
+/**
+ * A return type as declared in a signature, with the fields of the object it's about documented
+ * as for paramDeclaration().
+ */
+function returnDeclaration(returns, type, indent) {
+    return typeWithFieldDocs(type, returns.fields, indent, escapeDocComment);
+}
+
+/**
  * Extract property type from Swift signature
  */
 function extractPropertyType(signature) {
@@ -200,12 +219,11 @@ function generateModuleDefinitions(moduleData) {
         // Method signature — p.optional maps to TypeScript's optional parameter (name?: type),
         // p.rest to a rest parameter (...name: type)
         const params = (method.params || []).map(p => {
-            const prefix = p.rest ? '...' : '';
-            return `${prefix}${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p, method.source === 'swift')}`;
+            return paramDeclaration(p, '    ', method.source === 'swift');
         }).join(', ');
 
         const returnType = method.returns
-            ? (method.source === 'swift' ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : method.returns.type)
+            ? returnDeclaration(method.returns, method.source === 'swift' ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : method.returns.type, '    ')
             : 'void';
 
         output += `    function ${tsName}(${params}): ${returnType};\n\n`;
@@ -322,7 +340,7 @@ function generateTypeDefinition(protocol) {
             output += `     */\n`;
 
             const params = (initMethod.params || []).map(p => {
-                return `${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p)}`;
+                return paramDeclaration(p, '    ');
             }).join(', ');
 
             output += `    constructor(${params});\n\n`;
@@ -352,11 +370,10 @@ function generateTypeDefinition(protocol) {
             output += `     */\n`;
 
             const params = (method.params || []).map(p => {
-                const prefix = p.rest ? '...' : '';
-                return `${prefix}${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p)}`;
+                return paramDeclaration(p, '    ');
             }).join(', ');
 
-            const returnType = method.returns ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : 'void';
+            const returnType = method.returns ? returnDeclaration(method.returns, swiftTypeToTS(method.returns.type, method.returns.promiseType), '    ') : 'void';
             const staticPrefix = method.isStatic ? 'static ' : '';
 
             output += `    ${staticPrefix}${method.name}(${params}): ${returnType};\n\n`;
@@ -396,7 +413,7 @@ function generateTypeDefinition(protocol) {
             output += `     */\n`;
 
             const params = (initMethod.params || []).map(p => {
-                return `${p.name}: ${resolveParamType(p)}`;
+                return paramDeclaration({ ...p, optional: false }, '    ');
             }).join(', ');
 
             output += `    constructor(${params});\n\n`;
@@ -441,10 +458,10 @@ function generateTypeDefinition(protocol) {
             output += `     */\n`;
 
             const params = (method.params || []).map(p => {
-                return `${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p)}`;
+                return paramDeclaration(p, '    ');
             }).join(', ');
 
-            const returnType = method.returns ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : 'void';
+            const returnType = method.returns ? returnDeclaration(method.returns, swiftTypeToTS(method.returns.type, method.returns.promiseType), '    ') : 'void';
 
             output += `    ${method.name}(${params}): ${returnType};\n\n`;
         }

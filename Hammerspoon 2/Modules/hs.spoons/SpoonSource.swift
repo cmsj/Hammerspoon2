@@ -10,7 +10,8 @@ nonisolated struct SpoonInstallError: LocalizedError, Equatable {
     enum Code: String {
         /// An argument was malformed, e.g. an unparseable source or a `ref` given for a zip URL
         case invalidArgument = "EINVALIDARG"
-        /// The download wasn't found, or the archive has no Spoon with the requested name
+        /// The download wasn't found, the archive has no Spoon with the requested name, or the
+        /// `path` a Spoon was to be loaded from isn't a directory
         case notFound = "ENOTFOUND"
         /// The download failed for any other reason
         case network = "ENETWORK"
@@ -27,6 +28,8 @@ nonisolated struct SpoonInstallError: LocalizedError, Equatable {
         /// The Spoon is installed, but wasn't installed by `hs.spoons.install()`, so there's
         /// nowhere to update it from
         case noSource = "ENOSOURCE"
+        /// The Spoon needs a newer Hammerspoon 2 than the one running
+        case unsupportedVersion = "EVERSION"
         /// Anything else, such as failing to write the Spoon to disk
         case io = "EIO"
     }
