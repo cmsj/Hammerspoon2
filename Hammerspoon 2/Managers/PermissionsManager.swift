@@ -12,6 +12,7 @@ import CoreLocation
 import UserNotifications
 import IOKit.hid
 import CoreBluetooth
+import EventKit
 
 @_documentation(visibility: private)
 enum PermissionsState: Int {
@@ -30,6 +31,7 @@ enum PermissionsType: Int, CaseIterable {
     case location
     case inputMonitoring
     case bluetooth
+    case calendars
 
     var displayName: String {
         switch self {
@@ -41,6 +43,7 @@ enum PermissionsType: Int, CaseIterable {
         case .location:       return "Location"
         case .inputMonitoring: return "Input Monitoring"
         case .bluetooth:      return "Bluetooth"
+        case .calendars:      return "Calendars"
         }
     }
 
@@ -54,6 +57,7 @@ enum PermissionsType: Int, CaseIterable {
         case .location:       return "Allows accessing this computer's location"
         case .inputMonitoring: return "Allows per-keyboard access to modifier key state and LEDs"
         case .bluetooth:      return "Allows inspecting, connecting to and scanning for Bluetooth devices"
+        case .calendars:      return "Allows reading calendar events"
         }
     }
 
@@ -68,6 +72,7 @@ enum PermissionsType: Int, CaseIterable {
         case .location:       path = "Privacy_LocationServices"
         case .inputMonitoring: path = "Privacy_ListenEvent"
         case .bluetooth:      path = "Privacy_Bluetooth"
+        case .calendars:      path = "Privacy_Calendars"
         }
         // swiftlint:disable:next force_unwrapping
         return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(path)")!
@@ -86,6 +91,11 @@ class PermissionsManager: NSObject {
     // the user has answered
     private var bluetoothManager: CBCentralManager?
     private var bluetoothCallbacks: [@Sendable (Bool) -> Void] = []
+
+    // The event store asking for calendar access, kept until the user has answered, with every
+    // caller waiting for that answer
+    private var calendarStore: EKEventStore?
+    private var calendarCallbacks: [@Sendable (Bool) -> Void] = []
 
     // Notification authorization has no synchronous status API, so we cache the last known state.
     // The cache is populated on first check and after every request.
@@ -150,6 +160,13 @@ class PermissionsManager: NSObject {
             case .notDetermined: return .unknown
             default:             return .notTrusted
             }
+        case .calendars:
+            // .writeOnly isn't enough to read events, so it counts as not trusted
+            switch EKEventStore.authorizationStatus(for: .event) {
+            case .fullAccess:    return .trusted
+            case .notDetermined: return .unknown
+            default:             return .notTrusted
+            }
         }
     }
 
@@ -173,6 +190,8 @@ class PermissionsManager: NSObject {
             return IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) == kIOHIDAccessTypeGranted
         case .bluetooth:
             return CBManager.authorization == .allowedAlways
+        case .calendars:
+            return EKEventStore.authorizationStatus(for: .event) == .fullAccess
         }
     }
 
@@ -245,6 +264,29 @@ class PermissionsManager: NSObject {
                     // arrives once the user has answered
                     bluetoothManager = CBCentralManager(delegate: self, queue: .main,
                                                         options: [CBCentralManagerOptionShowPowerAlertKey: false])
+                }
+            default:
+                callback?(false)
+            }
+        case .calendars:
+            switch EKEventStore.authorizationStatus(for: .event) {
+            case .fullAccess:
+                callback?(true)
+            case .notDetermined:
+                if let callback { calendarCallbacks.append(callback) }
+                guard calendarStore == nil else { return }
+                let store = EKEventStore()
+                calendarStore = store
+                store.requestFullAccessToEvents { granted, error in
+                    let message = error?.localizedDescription
+                    Task { @MainActor [weak self] in
+                        if let message { AKError("hs.permissions.requestCalendars(): \(message)") }
+                        guard let self else { return }
+                        let callbacks = self.calendarCallbacks
+                        self.calendarCallbacks.removeAll()
+                        self.calendarStore = nil
+                        callbacks.forEach { $0(granted) }
+                    }
                 }
             default:
                 callback?(false)

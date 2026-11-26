@@ -31,7 +31,7 @@ struct HSEventKitIntegrationTests {
     @Test("API is exposed")
     func testAPI() {
         let harness = makeHarness()
-        for name in ["hasAccess", "requestAccess", "calendars", "events", "search"] {
+        for name in ["calendars", "events", "search"] {
             #expect(harness.evalTypeOf("hs.eventkit.\(name)") == "function")
         }
     }
@@ -52,6 +52,24 @@ struct HSEventKitIntegrationTests {
         harness.expectTrue("ev.endDate instanceof Date && ev.endDate.getTime() === 2000000")
         harness.expectTrue("ev.url === null")
         harness.expectEqual("ev.location", "https://example.zoom.us/j/123")
+    }
+
+    @Test("Calendar permission is checked and requested through hs.permissions")
+    func testPermissionsAPI() {
+        let harness = makeHarness()
+        harness.loadModule(HSPermissionsModule.self, as: "permissions")
+        #expect(harness.evalTypeOf("hs.permissions.requestCalendars") == "function")
+        #expect(harness.evalTypeOf("hs.eventkit.requestAccess") == "undefined")
+        let granted = EKEventStore.authorizationStatus(for: .event) == .fullAccess
+        harness.expectEqual("hs.permissions.checkCalendars()", granted)
+    }
+
+    @Test("Calendar IDs that match nothing find no events", .enabled(if: EKEventStore.authorizationStatus(for: .event) == .fullAccess))
+    func testUnknownCalendarIDs() {
+        let harness = makeHarness()
+        harness.expectEqual("""
+            hs.eventkit.events(new Date(0), new Date(Date.now() + 86400000 * 365), ["no-such-calendar"]).length
+            """, 0)
     }
 
     @Test("Events are listed", .enabled(if: EKEventStore.authorizationStatus(for: .event) == .fullAccess))

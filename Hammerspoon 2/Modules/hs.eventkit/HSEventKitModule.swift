@@ -11,8 +11,9 @@ import EventKit
 
 /// Read calendar events from the macOS Calendar database (EventKit).
 ///
-/// Hammerspoon needs full access to calendars, which `requestAccess()` asks for. Every other
-/// method throws while access hasn't been granted.
+/// Hammerspoon needs full access to calendars: call `hs.permissions.requestCalendars()` to ask for
+/// it, and `hs.permissions.checkCalendars()` to see whether it has been granted. Every method here
+/// throws while access hasn't been granted.
 ///
 /// Each event is a plain object with the following keys:
 ///
@@ -40,22 +41,6 @@ import EventKit
 /// })
 /// ```
 @objc protocol HSEventKitModuleAPI: JSExport {
-    /// Whether Hammerspoon has full access to calendar events.
-    /// - Returns: true if access is granted
-    /// - Example:
-    /// ```js
-    /// console.log(hs.eventkit.hasAccess())
-    /// ```
-    @objc func hasAccess() -> Bool
-
-    /// Ask for full access to calendar events (shows the system dialog if the user has not yet decided).
-    /// - Returns: {Promise<boolean>} A Promise that resolves to true if access is granted
-    /// - Example:
-    /// ```js
-    /// hs.eventkit.requestAccess().then(granted => console.log(granted))
-    /// ```
-    @objc func requestAccess() -> JSPromise?
-
     /// The calendars that hold events.
     ///
     /// Each entry is an object with `id`, `title` and `source` (the account, e.g. "iCloud") keys.
@@ -118,10 +103,15 @@ import EventKit
 @objc class HSEventKitModule: NSObject, HSModuleAPI, HSEventKitModuleAPI {
     var moduleName = "hs.eventkit"
     let engineID: UUID
-    private let store = EKEventStore()
-    /// Promises from `requestAccess()` waiting for the user to answer the permission dialog.
-    /// Held here, not in the EventKit completion, so `shutdown()` can drop them (and their JSContext).
-    private var pendingAccessRequests: [JSPromiseHolder] = []
+    /// Created on first use, which is only once access has been granted: a store created before
+    /// then can keep returning no calendars after the user grants access.
+    private var _store: EKEventStore?
+    private var store: EKEventStore {
+        if let _store { return _store }
+        let store = EKEventStore()
+        _store = store
+        return store
+    }
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -130,7 +120,7 @@ import EventKit
     }
 
     func shutdown() {
-        pendingAccessRequests = []
+        _store = nil
     }
 
     isolated deinit {
@@ -138,7 +128,7 @@ import EventKit
     }
 
     @objc func toString() -> String {
-        "<\(moduleName): access \(hasAccess() ? "granted" : "not granted")>"
+        "<\(moduleName): access \(hasAccess ? "granted" : "not granted")>"
     }
 
     nonisolated override var description: String {
@@ -146,30 +136,6 @@ import EventKit
     }
 
     // MARK: - Public API
-
-    @objc func hasAccess() -> Bool {
-        EKEventStore.authorizationStatus(for: .event) == .fullAccess
-    }
-
-    @objc func requestAccess() -> JSPromise? {
-        guard let context = JSContext.current() else { return nil }
-        return wrapAsyncInJSPromise(in: context) { [weak self] holder in
-            guard let self else { return }
-            pendingAccessRequests.append(holder)
-            store.requestFullAccessToEvents { [weak self] granted, error in
-                let message = error?.localizedDescription
-                Task { @MainActor in
-                    if let message { AKError("hs.eventkit.requestAccess(): \(message)") }
-                    // Every pending request gets the same answer; after shutdown() there are none,
-                    // so a late answer never calls into a torn-down JSContext.
-                    guard let self else { return }
-                    let holders = self.pendingAccessRequests
-                    self.pendingAccessRequests = []
-                    holders.forEach { $0.resolveWith(granted) }
-                }
-            }
-        }
-    }
 
     @objc func calendars() -> [[String: Any]] {
         guard checkAccess("calendars") else { return [] }
@@ -190,15 +156,21 @@ import EventKit
 
     // MARK: - Helpers
 
+    private var hasAccess: Bool {
+        PermissionsManager.shared.check(.calendars)
+    }
+
     private func fetch(_ start: Date, _ end: Date, _ calendarIDs: [String]?) -> [EKEvent] {
         let calendars = calendarIDs.map { ids in store.calendars(for: .event).filter { ids.contains($0.calendarIdentifier) } }
+        // Never hand EventKit an empty calendar list: IDs that match no calendar must find no events
+        if let calendars, calendars.isEmpty { return [] }
         let predicate = store.predicateForEvents(withStart: start, end: end, calendars: calendars)
         return store.events(matching: predicate).sorted { $0.startDate < $1.startDate }
     }
 
     private func checkAccess(_ method: String) -> Bool {
-        guard !hasAccess() else { return true }
-        let message = "hs.eventkit.\(method)(): no access to calendar events, call hs.eventkit.requestAccess() first"
+        guard !hasAccess else { return true }
+        let message = "hs.eventkit.\(method)(): no access to calendar events, call hs.permissions.requestCalendars() first"
         AKError(message)
         if let context = JSContext.current() {
             context.exception = JSValue(newErrorFromMessage: message, in: context)
