@@ -285,7 +285,7 @@ struct HSAppInfoData {
             return false
         }
         // A version that isn't a version number can't be compared, so it's taken to be new enough,
-        // as hs.spoons does for a Spoon's minimumVersion
+        // as hs.spoons does for a Spoon's minimumHSVersion
         guard let running = SemanticVersion(_version) else {
             AKWarning("hs.appinfo.versionAtLeast(): this Hammerspoon 2's version '\(_version)' isn't a version number, so it can't be compared with \(version)")
             return true

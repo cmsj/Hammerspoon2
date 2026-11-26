@@ -64,7 +64,7 @@
 #   6. commits the version to MARKETING_VERSION in the project file on main and
 #      pushes it (bypassing main's ruleset, so you must be allowed to), so
 #      builds from source report the last release they include; Spoons'
-#      minimumVersion is checked against it. This is skipped if main doesn't
+#      minimumHSVersion is checked against it. This is skipped if main doesn't
 #      include the release's commit, or already has a newer release's version.
 #
 # Each step checks whether it's already done, so if execute stops partway, fix

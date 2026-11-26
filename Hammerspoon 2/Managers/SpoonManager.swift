@@ -12,7 +12,7 @@ struct SpoonMetadata: Decodable {
     let version: String
     let description: String
     /// The oldest version of Hammerspoon 2 the Spoon works with, if it says
-    let minimumVersion: String?
+    let minimumHSVersion: String?
 
     var hasNonEmptyFields: Bool {
         [name, author, version, description].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -25,7 +25,7 @@ enum SpoonValidationError: LocalizedError {
     case invalidSpoonJSON(underlying: String)
     case emptyRequiredFields
     case missingInitJS
-    case invalidMinimumVersion(String)
+    case invalidMinimumHSVersion(String)
 
     var errorDescription: String? {
         switch self {
@@ -37,8 +37,8 @@ enum SpoonValidationError: LocalizedError {
             return "has an invalid spoon.json (name, author, version, and description must all be non-empty)"
         case .missingInitJS:
             return "has no init.js"
-        case .invalidMinimumVersion(let version):
-            return "has an invalid spoon.json (minimumVersion '\(version)' isn't a version like 1.2.3 or 1.2.3-beta.4)"
+        case .invalidMinimumHSVersion(let version):
+            return "has an invalid spoon.json (minimumHSVersion '\(version)' isn't a version like 1.2.3 or 1.2.3-beta.4)"
         }
     }
 }
@@ -91,7 +91,7 @@ class SpoonManager {
 
     let fileSystem: FileSystemProtocol
     let settings: SettingsManagerProtocol
-    /// The running Hammerspoon 2's version, which a Spoon's `minimumVersion` is checked against
+    /// The running Hammerspoon 2's version, which a Spoon's `minimumHSVersion` is checked against
     let appVersion: String
 
     /// - Parameter appVersion: Defaults to the app's `CFBundleShortVersionString`
@@ -104,7 +104,7 @@ class SpoonManager {
     }
 
     /// Validates that `directory` is a well-formed Spoon: a spoon.json with non-empty name,
-    /// author, version, and description fields, and a well-formed minimumVersion if it has one,
+    /// author, version, and description fields, and a well-formed minimumHSVersion if it has one,
     /// plus an init.js alongside it.
     /// - Parameter directory: The Spoon's directory (or a .spoon2 bundle)
     /// - Returns: The parsed spoon.json metadata
@@ -134,8 +134,8 @@ class SpoonManager {
             throw SpoonValidationError.emptyRequiredFields
         }
 
-        if let minimumVersion = metadata.minimumVersion, SemanticVersion(minimumVersion) == nil {
-            throw SpoonValidationError.invalidMinimumVersion(minimumVersion)
+        if let minimumHSVersion = metadata.minimumHSVersion, SemanticVersion(minimumHSVersion) == nil {
+            throw SpoonValidationError.invalidMinimumHSVersion(minimumHSVersion)
         }
 
         guard fileSystem.fileExists(atPath: initJSURL.path) else {
@@ -148,13 +148,13 @@ class SpoonManager {
     /// Why this Hammerspoon 2 is too old for a Spoon with `metadata`, or nil if it isn't. A
     /// running version that can't be parsed is never too old, so it can't lock every Spoon out.
     func versionRequirementFailure(for metadata: SpoonMetadata) -> String? {
-        guard let minimumVersion = metadata.minimumVersion.flatMap(SemanticVersion.init) else { return nil }
+        guard let minimumHSVersion = metadata.minimumHSVersion.flatMap(SemanticVersion.init) else { return nil }
         guard let running = SemanticVersion(appVersion) else {
             AKWarning("hs.spoons: can't check that '\(metadata.name)' works with this Hammerspoon 2, whose version '\(appVersion)' isn't a version number")
             return nil
         }
-        guard running < minimumVersion else { return nil }
-        return "'\(metadata.name)' \(metadata.version) needs Hammerspoon 2 \(minimumVersion) or later, but this is \(running)"
+        guard running < minimumHSVersion else { return nil }
+        return "'\(metadata.name)' \(metadata.version) needs Hammerspoon 2 \(minimumHSVersion) or later, but this is \(running)"
     }
 
     /// The `Spoons` directory inside the user's config directory, where Spoons are installed

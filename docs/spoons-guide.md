@@ -222,7 +222,7 @@ non-empty, or `hs.spoons.load()` refuses to load it:
 ```
 
 If your Spoon relies on something added or changed in a particular release of Hammerspoon 2, add
-an optional **`minimumVersion`** field with that release's version:
+an optional **`minimumHSVersion`** field with that release's version:
 
 ```json
 {
@@ -230,7 +230,7 @@ an optional **`minimumVersion`** field with that release's version:
     "author": "Jane Dev <jane@example.com>",
     "version": "1.1.0",
     "description": "Shows a friendly notification on a hotkey or a timer.",
-    "minimumVersion": "1.0.0-beta.4"
+    "minimumHSVersion": "1.0.0-beta.4"
 }
 ```
 
@@ -288,7 +288,7 @@ Don't export `name`, `author`, `description` or `version`: `hs.spoons.load()` se
 
 `hs.spoons.load("Greeter")` does this, in order:
 
-1. Checks that this Hammerspoon 2 is at least the Spoon's `minimumVersion`, if it has one.
+1. Checks that this Hammerspoon 2 is at least the Spoon's `minimumHSVersion`, if it has one.
 2. Runs `init.js` with `require()`. `require()` caches it, so the
    top level only ever runs once, however many times the Spoon is loaded.
 3. Sets `name`, `author`, `description` and `version` on the exported object, from `spoon.json`.

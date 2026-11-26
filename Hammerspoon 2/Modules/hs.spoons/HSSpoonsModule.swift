@@ -65,7 +65,7 @@ import JavaScriptCoreExtras
     /// of the same name that's installed is ignored. A warning is logged each time, so a config
     /// that still points at a development copy doesn't go unnoticed.
     ///
-    /// A Spoon whose `spoon.json` has a `minimumVersion` isn't loaded by an older Hammerspoon 2
+    /// A Spoon whose `spoon.json` has a `minimumHSVersion` isn't loaded by an older Hammerspoon 2
     /// (see `hs.appinfo.version`): `init.js` isn't run, and `load()` throws, naming both versions.
     ///
     /// The exception's `code` is `ENOTINSTALLED` if there's no such Spoon, `ENOTFOUND` if `path`

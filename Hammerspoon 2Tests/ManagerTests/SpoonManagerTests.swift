@@ -92,25 +92,25 @@ struct SpoonManagerTests {
             #expect(metadata.author == "Someone")
             #expect(metadata.version == "1.0.0")
             #expect(metadata.description == "A Spoon")
-            #expect(metadata.minimumVersion == nil)
+            #expect(metadata.minimumHSVersion == nil)
         }
 
-        @Test("reads an optional minimumVersion")
-        func testMinimumVersion() throws {
+        @Test("reads an optional minimumHSVersion")
+        func testMinimumHSVersion() throws {
             let fs = MockFileSystem()
             fs.addFile(atPath: "/Spoons/Foo/spoon.json", contents: """
-                { "name": "Foo", "author": "Someone", "version": "1.0.0", "description": "A Spoon", "minimumVersion": "1.0.0-beta.4" }
+                { "name": "Foo", "author": "Someone", "version": "1.0.0", "description": "A Spoon", "minimumHSVersion": "1.0.0-beta.4" }
             """)
             fs.addFile(atPath: "/Spoons/Foo/init.js", contents: "module.exports = {};")
             let metadata = try SpoonManager(fileSystem: fs).validateSpoon(at: URL(fileURLWithPath: "/Spoons/Foo"))
-            #expect(metadata.minimumVersion == "1.0.0-beta.4")
+            #expect(metadata.minimumHSVersion == "1.0.0-beta.4")
         }
 
-        @Test("throws when minimumVersion isn't a version", arguments: [#""soon""#, #""""#, "4"])
-        func testInvalidMinimumVersion(minimumVersion: String) {
+        @Test("throws when minimumHSVersion isn't a version", arguments: [#""soon""#, #""""#, "4"])
+        func testInvalidMinimumHSVersion(minimumHSVersion: String) {
             let fs = MockFileSystem()
             fs.addFile(atPath: "/Spoons/Foo/spoon.json", contents: """
-                { "name": "Foo", "author": "Someone", "version": "1.0.0", "description": "A Spoon", "minimumVersion": \(minimumVersion) }
+                { "name": "Foo", "author": "Someone", "version": "1.0.0", "description": "A Spoon", "minimumHSVersion": \(minimumHSVersion) }
             """)
             fs.addFile(atPath: "/Spoons/Foo/init.js", contents: "module.exports = {};")
             #expect(throws: SpoonValidationError.self) {
@@ -124,18 +124,18 @@ struct SpoonManagerTests {
     @Suite("versionRequirementFailure()")
     struct VersionRequirementTests {
 
-        func metadata(minimumVersion: String?) -> SpoonMetadata {
-            SpoonMetadata(name: "Foo", author: "Someone", version: "2.0.0", description: "A Spoon", minimumVersion: minimumVersion)
+        func metadata(minimumHSVersion: String?) -> SpoonMetadata {
+            SpoonMetadata(name: "Foo", author: "Someone", version: "2.0.0", description: "A Spoon", minimumHSVersion: minimumHSVersion)
         }
 
         @Test("an older Hammerspoon 2 fails, naming both versions")
         func testOlderAppFails() throws {
             let manager = SpoonManager(fileSystem: MockFileSystem(), appVersion: "1.0.0-beta.3")
-            let failure = try #require(manager.versionRequirementFailure(for: metadata(minimumVersion: "1.0.0-beta.10")))
+            let failure = try #require(manager.versionRequirementFailure(for: metadata(minimumHSVersion: "1.0.0-beta.10")))
             #expect(failure == "'Foo' 2.0.0 needs Hammerspoon 2 1.0.0-beta.10 or later, but this is 1.0.0-beta.3")
         }
 
-        @Test("the same or a newer Hammerspoon 2, no minimumVersion, or an unparseable app version pass", arguments: [
+        @Test("the same or a newer Hammerspoon 2, no minimumHSVersion, or an unparseable app version pass", arguments: [
             ("1.0.0-beta.4", "1.0.0-beta.4"),
             ("1.0.0", "1.0.0-beta.4"),
             ("1.2", "1.0.0"),
@@ -143,9 +143,9 @@ struct SpoonManagerTests {
             ("", "99.0.0"),
             ("(unknown app version)", "99.0.0"),
         ] as [(String, String?)])
-        func testPasses(appVersion: String, minimumVersion: String?) {
+        func testPasses(appVersion: String, minimumHSVersion: String?) {
             let manager = SpoonManager(fileSystem: MockFileSystem(), appVersion: appVersion)
-            #expect(manager.versionRequirementFailure(for: metadata(minimumVersion: minimumVersion)) == nil)
+            #expect(manager.versionRequirementFailure(for: metadata(minimumHSVersion: minimumHSVersion)) == nil)
         }
     }
 
