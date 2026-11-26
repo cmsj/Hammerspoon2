@@ -1036,7 +1036,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HammerspoonOSAScriptHelper/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = HammerspoonOSAScriptHelper;
-				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.HammerspoonOSAScriptHelper";
@@ -1074,7 +1073,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HammerspoonOSAScriptHelper/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = HammerspoonOSAScriptHelper;
-				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.HammerspoonOSAScriptHelper";
