@@ -17,7 +17,7 @@ func readFromInfoPlist(withKey key: String) -> String? {
 struct HSAppInfoData {
     let appName = readFromInfoPlist(withKey: "CFBundleName") ?? "(unknown app name)"
     let displayName = readFromInfoPlist(withKey: "CFBundleDisplayName") ?? "(unknown app display name)"
-    let version = readFromInfoPlist(withKey: "CFBundleShortVersionString") ?? "(unknown app version)"
+    var version = readFromInfoPlist(withKey: "CFBundleShortVersionString") ?? "(unknown app version)"
     let build = readFromInfoPlist(withKey: "CFBundleVersion") ?? "(unknown build number)"
     let minimumOSVersion = readFromInfoPlist(withKey: "LSMinimumSystemVersion") ?? "(unknown minimum OS version)"
     let copyrightNotice = readFromInfoPlist(withKey: "NSHumanReadableCopyright") ?? "(unknown copyright notice)"
@@ -64,6 +64,24 @@ struct HSAppInfoData {
     /// console.log(hs.appinfo.build)
     /// ```
     @objc var build: String { get }
+
+    /// Whether this Hammerspoon 2 is at least a given version, so code that relies on a change
+    /// made in a particular release can check for it.
+    ///
+    /// Versions are compared as Semantic Versioning orders them, not as strings: `1.0.0-beta.9`
+    /// comes before `1.0.0-beta.10`, which comes before `1.0.0-rc.1` and then `1.0.0`. One to three
+    /// numbers may be given, and missing ones count as zero, so `"1.2"` is the same as `"1.2.0"`.
+    /// A copy of Hammerspoon 2 built from source has the version of the last release before it.
+    /// - Parameter version: A version such as `"1.0.0"` or `"1.0.0-beta.4"`
+    /// - Returns: true if this Hammerspoon 2's version (`hs.appinfo.version`) is the same as or newer than `version`
+    /// - Throws: true
+    /// - Example:
+    /// ```js
+    /// if (hs.appinfo.versionAtLeast("1.0.0-beta.3")) {
+    ///     // hs.canvas measures y from the top of the screen
+    /// }
+    /// ```
+    @objc func versionAtLeast(_ version: String) -> Bool
 
     /// The minimum macOS version required to run this application
     /// - Example:
@@ -181,11 +199,15 @@ struct HSAppInfoData {
     let engineID: UUID
 
     // MARK: - Module lifecycle
-    required init(engineID: UUID) {
-        self.engineID = engineID
+    required convenience init(engineID: UUID) {
         // Read all values from the bundle at initialization time
         // This is more efficient than reading from the plist on every access
-        let appData = HSAppInfoData()
+        self.init(engineID: engineID, appData: HSAppInfoData())
+    }
+
+    /// - Parameter appData: The values the module reports
+    init(engineID: UUID, appData: HSAppInfoData) {
+        self.engineID = engineID
         _appName = appData.appName
         _displayName = appData.displayName
         _version = appData.version
@@ -252,6 +274,24 @@ struct HSAppInfoData {
     @objc var displayName: String { _displayName }
     @objc var version: String { _version }
     @objc var build: String { _build }
+
+    @objc func versionAtLeast(_ version: String) -> Bool {
+        guard let wanted = SemanticVersion(version) else {
+            if let context = JSContext.current() {
+                let error = JSValue(newErrorFromMessage: "hs.appinfo.versionAtLeast(): '\(version)' isn't a version like 1.2.3 or 1.2.3-beta.4", in: context)
+                error?.setValue("EINVALIDARG", forProperty: "code")
+                context.exception = error
+            }
+            return false
+        }
+        // A version that isn't a version number can't be compared, so it's taken to be new enough,
+        // as hs.spoons does for a Spoon's minimumHSVersion
+        guard let running = SemanticVersion(_version) else {
+            AKWarning("hs.appinfo.versionAtLeast(): this Hammerspoon 2's version '\(_version)' isn't a version number, so it can't be compared with \(version)")
+            return true
+        }
+        return running >= wanted
+    }
     @objc var minimumOSVersion: String { _minimumOSVersion }
     @objc var copyrightNotice: String { _copyrightNotice }
     @objc var bundleIdentifier: String { _bundleIdentifier }
