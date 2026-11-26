@@ -68,6 +68,14 @@ import AppKit
 /// Regions and screens only apply to visible windows. RegExps support the `i`, `m` and `s` flags.
 ///
 /// Hammerspoon's own windows are never included.
+///
+/// ## Applications that turn Accessibility off
+///
+/// Window filters see windows through the Accessibility API, which an application can turn off
+/// for itself (Firefox does in kiosk mode). Such an application's windows never appear in any
+/// filter. `hs.windowfilter.inaccessibleApplications()` lists them, and the module's
+/// `inaccessibleApplication` event reports each one as it's found, so you can still offer them
+/// some other way, e.g. by activating the application.
 @objc protocol HSWindowFilterModuleAPI: JSExport {
     /// Creates a window filter
     /// - Parameter rules?: {{override?: boolean | object, default?: boolean | object, apps?: Record<string, boolean | object>, sortOrder?: "focusedLast" | "focused" | "createdLast" | "created"} | string | string[] | ((window: HSWindow) => boolean)} What the filter allows: omit it for a copy of `hs.windowfilter.defaultFilter` (including any changes you've made to it); an application's name or bundle ID, or an array of them, for those applications' visible windows; a function, called with each window, that returns `true` to allow it; or an object of rules:
@@ -154,9 +162,48 @@ import AppKit
     /// ```
     @objc func focusSouth() -> Bool
 
+    /// The running applications that have turned the Accessibility API off for themselves (e.g.
+    /// Firefox in kiosk mode), so no window filter can see their windows. Hammerspoon stops asking
+    /// such an application until it quits.
+    ///
+    /// While any filter or `inaccessibleApplication` listener is active, this is what Hammerspoon
+    /// has found so far, at no cost; otherwise, it asks every application. It's empty if
+    /// Hammerspoon hasn't been given Accessibility permission.
+    /// - Returns: {HSApplication[]} The applications
+    /// - Example:
+    /// ```js
+    /// for (const app of hs.windowfilter.inaccessibleApplications()) {
+    ///     console.log(app.name + " has turned Accessibility off")
+    /// }
+    /// ```
+    @objc func inaccessibleApplications() -> [HSApplication]
+
     // NOTE: Private API consumed only by hs.windowfilter.js
     /// SKIP_DOCS
     @objc var _makeFilterEmitter: JSFunction? { get set }
+
+    /// SKIP_DOCS
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool
+    /// SKIP_DOCS
+    @objc func _removeWatcher()
+    /// SKIP_DOCS
+    @objc var _watcherEmitter: JSFunction? { get set }
+    /// The event names the module's `on()`/`once()` accept - see HSWindowFilterModuleEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
+    // Set by hs.windowfilter.js. Must be pre-declared properties, or JSC drops them on GC (issue #185).
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
+}
+
+/// Events emitted by hs.windowfilter's module-level watcher
+nonisolated enum HSWindowFilterModuleEvent: String, HSEventName {
+    case inaccessibleApplication
 }
 
 // MARK: - Implementation
@@ -196,6 +243,13 @@ import AppKit
     private var sharedCurrentSpaceFilter: HSWindowFilter?
 
     @objc var _makeFilterEmitter: JSFunction?
+    @objc var _watcherEmitter: JSFunction?
+    @objc var _eventNames: [String] { HSWindowFilterModuleEvent.allNames }
+    @objc var on: JSFunction?
+    @objc var off: JSFunction?
+    @objc var once: JSFunction?
+    private var watcherCallback: JSCallback?
+    private var inaccessibleSubscription: WindowTracker.Subscription?
 
     // MARK: - Module lifecycle
 
@@ -206,10 +260,15 @@ import AppKit
     }
 
     func shutdown() {
+        _removeWatcher()
         filters.shutdown()
         sharedDefault = nil
         sharedCurrentSpaceFilter = nil
         _makeFilterEmitter = nil
+        _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
@@ -325,7 +384,40 @@ import AppKit
         currentSpaceFilter.neighbours(direction, ["strict": true]).contains { $0.focus() }
     }
 
+    // MARK: - Inaccessible applications
+
+    @objc func inaccessibleApplications() -> [HSApplication] {
+        WindowTracker.shared.inaccessibleApplications().map { HSApplication(runningApplication: $0) }
+    }
+
     // MARK: - Events
+
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool {
+        guard watcherCallback == nil else {
+            AKWarning("hs.windowfilter._addWatcher: already watching — refusing second subscription")
+            return false
+        }
+        watcherCallback = JSCallback(value: callback, owner: self)
+        inaccessibleSubscription = WindowTracker.shared.subscribeToInaccessibleApplications { [weak self] app in
+            self?.applicationFoundInaccessible(app)
+        }
+        AKDebug("hs.windowfilter._addWatcher: started")
+        return true
+    }
+
+    @objc func _removeWatcher() {
+        guard watcherCallback != nil else { return }
+        inaccessibleSubscription?.cancel()
+        inaccessibleSubscription = nil
+        watcherCallback?.detach(from: self)
+        watcherCallback = nil
+        AKDebug("hs.windowfilter._removeWatcher: stopped")
+    }
+
+    private func applicationFoundInaccessible(_ app: NSRunningApplication) {
+        _ = watcherCallback?.call(withArguments: [HSWindowFilterModuleEvent.inaccessibleApplication.rawValue,
+                                                  HSApplication(runningApplication: app)])
+    }
 
     /// Makes the JS emitter for a filter's on()/once(), via the factory in hs.windowfilter.js.
     /// Returns nil, having set `ctx.exception`, on failure.

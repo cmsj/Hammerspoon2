@@ -18,6 +18,11 @@ import AXSwift
 ///
 /// When nothing is subscribed it watches nothing, and `entries()` takes a one-off look instead.
 ///
+/// An application can turn Accessibility off for itself (e.g. Firefox in kiosk mode), refusing
+/// every request with `kAXErrorAPIDisabled`. The tracker takes that refusal as final until the
+/// application quits, rather than asking again each time it's activated, and remembers it, so
+/// `inaccessibleApplications()` can say which applications it can't see the windows of.
+///
 /// Hammerspoon's own windows are never included: its own process can't answer Accessibility
 /// requests while its main thread is busy asking them.
 @_documentation(visibility: private)
@@ -47,6 +52,7 @@ final class WindowTracker {
     }
 
     typealias Handler = @MainActor (Change) -> Void
+    typealias InaccessibleHandler = @MainActor (NSRunningApplication) -> Void
 
     /// Keeps a subscriber's handler registered until it's cancelled or released
     final class Subscription {
@@ -92,6 +98,7 @@ final class WindowTracker {
     }
 
     private var handlers: [ObjectIdentifier: Handler] = [:]
+    private var inaccessibleHandlers: [ObjectIdentifier: InaccessibleHandler] = [:]
     private var axClient: AXObserverHub.Client?
     private var workspaceObservers: [any NSObjectProtocol] = []
     private var screenObserver: (any NSObjectProtocol)?
@@ -101,6 +108,8 @@ final class WindowTracker {
     private var windowIDs: [UIElement: Int] = [:]
     private var activePID: pid_t?
     private var focusedWindowID: Int?
+    /// Applications that have refused Accessibility requests, until they quit
+    private var inaccessibleApps: [pid_t: NSRunningApplication] = [:]
 
     /// Pending work: per-window settle delays, per-app watch retries, the Space-change refresh
     private var settleTasks: [Int: Task<Void, Never>] = [:]
@@ -130,9 +139,21 @@ final class WindowTracker {
         return subscription
     }
 
+    /// Registers `handler` for every application found to have turned Accessibility off after
+    /// it starts watching (the ones it already knew of are in `inaccessibleApplications()`),
+    /// starting to watch windows if nothing was
+    func subscribeToInaccessibleApplications(_ handler: @escaping InaccessibleHandler) -> Subscription {
+        let subscription = Subscription(tracker: self)
+        inaccessibleHandlers[ObjectIdentifier(subscription)] = handler
+        if !isRunning {
+            start()
+        }
+        return subscription
+    }
+
     private func unsubscribe(_ id: ObjectIdentifier) {
-        guard handlers.removeValue(forKey: id) != nil else { return }
-        if handlers.isEmpty {
+        guard handlers.removeValue(forKey: id) != nil || inaccessibleHandlers.removeValue(forKey: id) != nil else { return }
+        if handlers.isEmpty && inaccessibleHandlers.isEmpty {
             stop()
         }
     }
@@ -140,6 +161,50 @@ final class WindowTracker {
     private func deliver(_ change: Change) {
         for handler in Array(handlers.values) {
             handler(change)
+        }
+    }
+
+    // MARK: - Inaccessible applications
+
+    /// Whether an Accessibility error means the application has turned Accessibility off for
+    /// itself, so asking again is pointless until it quits. Hammerspoon not being trusted gives
+    /// the same error for every application, so it only counts while Hammerspoon is trusted.
+    nonisolated static func isFinalRefusal(_ error: AXError, isTrusted: Bool) -> Bool {
+        error == .apiDisabled && isTrusted
+    }
+
+    /// The running applications that have turned Accessibility off, so their windows can't be
+    /// seen: those found so far while running, or a one-off look otherwise
+    func inaccessibleApplications() -> [NSRunningApplication] {
+        guard AXIsProcessTrusted() else { return [] }
+        let apps: [NSRunningApplication]
+        if isRunning {
+            apps = inaccessibleApps.values.filter { !$0.isTerminated }
+        } else {
+            apps = withShortTimeout {
+                NSWorkspace.shared.runningApplications.filter { Self.isCandidate($0) && Self.refusesAccessibility($0) }
+            }
+        }
+        return apps.sorted { $0.processIdentifier < $1.processIdentifier }
+    }
+
+    /// Whether an application refuses Accessibility requests outright
+    private static func refusesAccessibility(_ app: NSRunningApplication) -> Bool {
+        var value: CFTypeRef?
+        let error = unsafe AXUIElementCopyAttributeValue(AXUIElementCreateApplication(app.processIdentifier),
+                                                         kAXWindowsAttribute as CFString, &value)
+        return error == .apiDisabled
+    }
+
+    /// Remembers that an application has turned Accessibility off, telling subscribers if `announce`
+    private func applicationRefused(_ app: NSRunningApplication, announce: Bool) {
+        let pid = app.processIdentifier
+        guard inaccessibleApps[pid] == nil else { return }
+        inaccessibleApps[pid] = app
+        AKDebug("WindowTracker: \(app.localizedName ?? "PID \(pid)") has turned Accessibility off; not asking again until it quits")
+        guard announce else { return }
+        for handler in Array(inaccessibleHandlers.values) {
+            handler(app)
         }
     }
 
@@ -249,6 +314,7 @@ final class WindowTracker {
         retryTasks = [:]
         refreshTask = nil
         apps = [:]
+        inaccessibleApps = [:]
         windows = [:]
         windowIDs = [:]
         activePID = nil
@@ -268,10 +334,11 @@ final class WindowTracker {
     /// just launched may not answer yet, so this retries a few times, backing off, as Hammerspoon 1
     /// did. With `announce`, its windows are reported as created; otherwise, they're tracked
     /// silently, as windows that already existed. The first attempt while starting up leaves its
-    /// windows to `start()`, which already has them.
+    /// windows to `start()`, which already has them. An application that has turned
+    /// Accessibility off isn't asked again until it quits; with `announce`, that's reported too.
     private func watch(_ app: NSRunningApplication, attempt: Int, announce: Bool) {
         let pid = app.processIdentifier
-        guard let axClient, apps[pid] == nil, Self.isCandidate(app) else { return }
+        guard let axClient, apps[pid] == nil, inaccessibleApps[pid] == nil, Self.isCandidate(app) else { return }
         retryTasks.removeValue(forKey: pid)?.cancel()
 
         let element = UIElement(AXUIElementCreateApplication(pid))
@@ -280,6 +347,10 @@ final class WindowTracker {
             try axClient.add(UIElement.AXNotification(rawValue: kAXFocusedWindowChangedNotification as String), element: element, pid: pid)
         } catch {
             axClient.removeAll(pid: pid)
+            if Self.isFinalRefusal(error, isTrusted: AXIsProcessTrusted()) {
+                applicationRefused(app, announce: announce)
+                return
+            }
             guard attempt < 5, !app.isTerminated else {
                 AKDebug("WindowTracker: giving up on watching \(app.localizedName ?? "PID \(pid)"): \(error)")
                 return
@@ -319,6 +390,7 @@ final class WindowTracker {
 
     private func applicationTerminated(_ pid: pid_t) {
         retryTasks.removeValue(forKey: pid)?.cancel()
+        inaccessibleApps.removeValue(forKey: pid)
         for (id, tracked) in windows where tracked.state.pid == pid {
             windowDisappeared(id)
         }

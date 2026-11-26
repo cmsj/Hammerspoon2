@@ -494,6 +494,40 @@ struct HSWindowFilterIntegrationTests {
             harness.expectTrue("wf.resume().isPaused === false")
             #expect(!harness.hasException)
         }
+
+        @Test("inaccessibleApplications() returns an array of applications")
+        func testInaccessibleApplicationsShape() {
+            let harness = makeHarness()
+            harness.expectTrue("Array.isArray(hs.windowfilter.inaccessibleApplications())")
+            harness.expectTrue("hs.windowfilter.inaccessibleApplications().every(app => app instanceof HSApplication)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("the module's on() accepts inaccessibleApplication, throws for an unknown event, and off() stops watching")
+        func testModuleOnOff() {
+            let harness = makeHarness()
+            #expect(harness.evalString("(() => { try { hs.windowfilter.on('inaccessibleApp', () => {}); return 'no exception' } catch (e) { return 'threw' } })()") == "threw")
+            harness.eval("var fn = app => {}; hs.windowfilter.on('inaccessibleApplication', fn)")
+            #expect(!harness.hasException)
+            harness.eval("hs.windowfilter.off('inaccessibleApplication', fn)")
+            #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Accessibility refusals
+
+    @Suite("hs.windowfilter applications that turn Accessibility off")
+    struct HSWindowFilterRefusalTests {
+        @Test("only kAXErrorAPIDisabled while Hammerspoon is trusted is final", arguments: [
+            (AXError.apiDisabled, true, true),
+            (AXError.apiDisabled, false, false),
+            (AXError.cannotComplete, true, false),
+            (AXError.notImplemented, true, false),
+            (AXError.failure, true, false),
+        ])
+        func testFinalRefusal(error: AXError, isTrusted: Bool, isFinal: Bool) {
+            #expect(WindowTracker.isFinalRefusal(error, isTrusted: isTrusted) == isFinal)
+        }
     }
 
     // MARK: - Real windows
@@ -640,6 +674,30 @@ struct HSWindowFilterIntegrationTests {
             tracker.assertNoLeaks()
             // This suite's copy of the test app is watched by nothing else, so its observer only
             // goes once the shared window tracker has stopped and released its registrations
+            #expect(!AXObserverHub.shared.hasObserver(for: pid))
+        }
+
+        @Test("the test app isn't inaccessible, with or without anything watching")
+        func testTestAppIsNotInaccessible() {
+            let harness = makeHarness()
+            let script = "hs.windowfilter.inaccessibleApplications().some(app => app.pid === testAppPID)"
+            harness.expectFalse(script)
+            harness.eval("var fn = app => {}; hs.windowfilter.on('inaccessibleApplication', fn)")
+            harness.expectFalse(script)
+            harness.eval("hs.windowfilter.off('inaccessibleApplication', fn)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("a module listening for inaccessible applications watches windows, and stops after shutdown")
+        func testModuleListenerStopsAfterReload() throws {
+            let pid = try #require(TestAppControl.pid)
+            autoreleasepool {
+                let harness = makeHarness()
+                harness.eval("hs.windowfilter.on('inaccessibleApplication', app => {})")
+                #expect(!harness.hasException)
+                #expect(AXObserverHub.shared.hasObserver(for: pid))
+                harness.shutdownForLeakTest()
+            }
             #expect(!AXObserverHub.shared.hasObserver(for: pid))
         }
     }
