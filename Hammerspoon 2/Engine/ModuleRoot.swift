@@ -141,6 +141,30 @@ import JavaScriptCoreExtras
     /// ```
     @objc var onOpenFile: JSFunction? { get set }
 
+    /// {number} How long, in seconds, an Accessibility request waits for an application to
+    /// answer before giving up, or 0 for the macOS default (about 6 seconds). This affects
+    /// everything that uses Accessibility, e.g. `hs.window`, `hs.application`, `hs.ax` and
+    /// `hs.windowfilter`.
+    ///
+    /// A shorter timeout keeps Hammerspoon 2 responsive when an application is hung or slow,
+    /// but a request to a busy application may then fail when it would have succeeded.
+    ///
+    /// Code that asks many applications for things at once, such as `hs.window.allWindows()` and
+    /// `hs.windowfilter`, always waits at most 0.25 seconds, so one hung application can't stall
+    /// it. A shorter timeout set here applies to it too.
+    ///
+    /// This goes back to 0 when your config is reloaded, so set it in your config.
+    /// - Throws: true
+    /// - Example:
+    /// ```js
+    /// // Give up on applications that take more than a second to answer
+    /// hs.accessibilityTimeout = 1
+    ///
+    /// // Go back to the macOS default
+    /// hs.accessibilityTimeout = 0
+    /// ```
+    @objc var accessibilityTimeout: JSValue { get set }
+
     // Modules
     @objc var appinfo: HSAppInfoModule { get }
     @objc var application: HSApplicationModule { get }
@@ -290,6 +314,9 @@ import JavaScriptCoreExtras
         _onOpenFile?.detach(from: self)
         _onOpenFile = nil
 
+        // The timeout is process-wide, so a reloaded config that no longer sets it gets the default
+        MainActor.assumeIsolated { AXMessagingTimeout.reset() }
+
         modules.removeAll()
         moduleWrappers.removeAll()
         context = nil
@@ -390,6 +417,23 @@ import JavaScriptCoreExtras
         guard let callback = _onOpenFile?.value else { return false }
         callback.call(withArguments: [path])
         return true
+    }
+
+    // MARK: - Accessibility timeout
+    // A JSValue rather than a Double, so values that aren't numbers (e.g. null, true or "2")
+    // are rejected instead of being converted to one
+    @objc var accessibilityTimeout: JSValue {
+        get { JSValue(double: MainActor.assumeIsolated { AXMessagingTimeout.configured }, in: JSContext.current()) }
+        set {
+            guard newValue.isNumber, AXMessagingTimeout.isValid(newValue.toDouble()) else {
+                JSContext.current()?.exception = JSValue(
+                    newErrorFromMessage: "hs.accessibilityTimeout must be a number of seconds, 0 or more",
+                    in: JSContext.current())
+                return
+            }
+            let seconds = newValue.toDouble()
+            MainActor.assumeIsolated { AXMessagingTimeout.configure(seconds) }
+        }
     }
 
     @objc func clearConsole() {

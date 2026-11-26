@@ -626,9 +626,7 @@ final class WindowTracker {
 
     private func withShortTimeout<T>(_ body: () -> T) -> T {
         // Keeps a hung or slow application from stalling everything
-        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.25)
-        defer { AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0) }
-        return body()
+        withAXTimeoutLimit(0.25, body)
     }
 
     /// The IDs of the Spaces currently shown, or nil if Spaces are unavailable
