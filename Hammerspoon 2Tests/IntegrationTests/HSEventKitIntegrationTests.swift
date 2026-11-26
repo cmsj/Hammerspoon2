@@ -31,7 +31,7 @@ struct HSEventKitIntegrationTests {
     @Test("API is exposed")
     func testAPI() {
         let harness = makeHarness()
-        for name in ["calendars", "events", "search"] {
+        for name in ["calendars", "events", "search", "eventsToday", "eventsTomorrow"] {
             #expect(harness.evalTypeOf("hs.eventkit.\(name)") == "function")
         }
     }
@@ -64,12 +64,38 @@ struct HSEventKitIntegrationTests {
         harness.expectEqual("hs.permissions.checkCalendars()", granted)
     }
 
+    @Test("Day ranges cover a whole local day, including across a DST change")
+    func testDayRanges() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "Europe/London"))
+        // 11:00 on Saturday 28 March 2026; the clocks go forward at 01:00 the next day
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 3, day: 28, hour: 11)))
+        let today = HSEventKitModule.day(offsetFromToday: 0, now: now, calendar: calendar)
+        let tomorrow = HSEventKitModule.day(offsetFromToday: 1, now: now, calendar: calendar)
+        #expect(today.start == calendar.startOfDay(for: now))
+        #expect(today.duration == 24 * 3600)
+        #expect(tomorrow.start == today.end)
+        #expect(tomorrow.duration == 23 * 3600)
+    }
+
+    @Test("Convenience methods throw without calendar access", .enabled(if: EKEventStore.authorizationStatus(for: .event) != .fullAccess))
+    func testConvenienceThrowsWithoutAccess() {
+        let harness = makeHarness()
+        for name in ["eventsToday()", "eventsTomorrow()", "search('x', new Date(), new Date())"] {
+            harness.expectEqual("""
+                (() => { try { hs.eventkit.\(name); return false } catch (e) { return true } })()
+                """, true)
+        }
+    }
+
     @Test("Calendar IDs that match nothing find no events", .enabled(if: EKEventStore.authorizationStatus(for: .event) == .fullAccess))
     func testUnknownCalendarIDs() {
         let harness = makeHarness()
         harness.expectEqual("""
             hs.eventkit.events(new Date(0), new Date(Date.now() + 86400000 * 365), ["no-such-calendar"]).length
             """, 0)
+        harness.expectEqual("hs.eventkit.search('', new Date(0), new Date(), ['no-such-calendar']).length", 0)
+        harness.expectEqual("hs.eventkit.eventsToday(['no-such-calendar']).length", 0)
     }
 
     @Test("Events are listed", .enabled(if: EKEventStore.authorizationStatus(for: .event) == .fullAccess))

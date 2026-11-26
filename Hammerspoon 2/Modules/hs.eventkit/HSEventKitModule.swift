@@ -19,7 +19,7 @@ import EventKit
 ///
 /// | Key | Type | Description |
 /// |-----|------|-------------|
-/// | `id` | `string` | The event's identifier |
+/// | `id` | `string` | The event's identifier. Every occurrence of a repeating event has the same `id`, so use it together with `startDate` to tell occurrences apart |
 /// | `title` | `string` | The event's title |
 /// | `location` | `string` or `null` | The event's location, which often holds a Zoom or Teams link |
 /// | `notes` | `string` or `null` | The event's notes (description), which often holds a meeting link |
@@ -81,6 +81,7 @@ import EventKit
     /// - Parameter query: The text to look for
     /// - Parameter start: The start of the range
     /// - Parameter end: The end of the range
+    /// - Parameter calendarIDs?: The `id`s of the calendars to search (default: all of them)
     /// - Returns: {{id: string, title: string, location: string | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, allDay: boolean, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
     /// - Throws: true
     /// - Example:
@@ -93,7 +94,36 @@ import EventKit
     ///     console.error(err.message)
     /// }
     /// ```
-    @objc func search(_ query: String, _ start: Date, _ end: Date) -> [[String: Any]]
+    @objc func search(_ query: String, _ start: Date, _ end: Date, _ calendarIDs: [String]?) -> [[String: Any]]
+
+    /// The events that overlap today (from midnight to midnight, including any that have already
+    /// finished), sorted by start date.
+    /// - Parameter calendarIDs?: The `id`s of the calendars to search (default: all of them)
+    /// - Returns: {{id: string, title: string, location: string | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, allDay: boolean, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
+    /// - Throws: true
+    /// - Example:
+    /// ```js
+    /// try {
+    ///     hs.eventkit.eventsToday().forEach(e => console.log(e.startDate.toLocaleTimeString() + " " + e.title))
+    /// } catch (err) {
+    ///     console.error(err.message)
+    /// }
+    /// ```
+    @objc func eventsToday(_ calendarIDs: [String]?) -> [[String: Any]]
+
+    /// The events that overlap tomorrow (from midnight to midnight), sorted by start date.
+    /// - Parameter calendarIDs?: The `id`s of the calendars to search (default: all of them)
+    /// - Returns: {{id: string, title: string, location: string | null, notes: string | null, url: string | null, startDate: Date, endDate: Date, allDay: boolean, calendarID: string | null, calendarTitle: string | null}[]} An array of event objects
+    /// - Throws: true
+    /// - Example:
+    /// ```js
+    /// try {
+    ///     console.log(hs.eventkit.eventsTomorrow().length + " events tomorrow")
+    /// } catch (err) {
+    ///     console.error(err.message)
+    /// }
+    /// ```
+    @objc func eventsTomorrow(_ calendarIDs: [String]?) -> [[String: Any]]
 }
 
 // MARK: - Implementation
@@ -149,9 +179,21 @@ import EventKit
         return fetch(start, end, calendarIDs).map(Self.eventToDict)
     }
 
-    @objc func search(_ query: String, _ start: Date, _ end: Date) -> [[String: Any]] {
+    @objc func search(_ query: String, _ start: Date, _ end: Date, _ calendarIDs: [String]?) -> [[String: Any]] {
         guard checkAccess("search") else { return [] }
-        return fetch(start, end, nil).filter { Self.event($0, matches: query) }.map(Self.eventToDict)
+        return fetch(start, end, calendarIDs).filter { Self.event($0, matches: query) }.map(Self.eventToDict)
+    }
+
+    @objc func eventsToday(_ calendarIDs: [String]?) -> [[String: Any]] {
+        guard checkAccess("eventsToday") else { return [] }
+        let day = Self.day(offsetFromToday: 0)
+        return fetch(day.start, day.end, calendarIDs).map(Self.eventToDict)
+    }
+
+    @objc func eventsTomorrow(_ calendarIDs: [String]?) -> [[String: Any]] {
+        guard checkAccess("eventsTomorrow") else { return [] }
+        let day = Self.day(offsetFromToday: 1)
+        return fetch(day.start, day.end, calendarIDs).map(Self.eventToDict)
     }
 
     // MARK: - Helpers
@@ -176,6 +218,16 @@ import EventKit
             context.exception = JSValue(newErrorFromMessage: message, in: context)
         }
         return false
+    }
+
+    /// The whole of the local day `offset` days from today. Calendar arithmetic, not 86400 seconds,
+    /// so a day with a daylight saving change is still covered exactly.
+    static func day(offsetFromToday offset: Int, now: Date = Date(), calendar: Calendar = .current) -> DateInterval {
+        let today = calendar.startOfDay(for: now)
+        // swiftlint:disable:next force_unwrapping
+        let day = calendar.date(byAdding: .day, value: offset, to: today)!
+        // swiftlint:disable:next force_unwrapping
+        return calendar.dateInterval(of: .day, for: day)!
     }
 
     static func event(_ event: EKEvent, matches query: String) -> Bool {
