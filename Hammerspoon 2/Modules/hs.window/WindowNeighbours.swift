@@ -115,21 +115,20 @@ enum WindowNeighbours {
     static func onScreenWindows() -> [HSWindow] {
         let ordered = onScreenWindowIDs()
 
-        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.25)
-        defer { AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0) }
-
-        var byID: [CGWindowID: HSWindow] = [:]
-        var seenPIDs = Set<pid_t>()
-        for (pid, _) in ordered where seenPIDs.insert(pid).inserted {
-            guard let app = NSRunningApplication(processIdentifier: pid) else { continue }
-            for element in WindowEnumerator.windowElements(for: app) {
-                let id = WindowEnumerator.windowID(of: element)
-                if id != 0 {
-                    byID[id] = HSWindow(element: element, app: app)
+        return withAXTimeoutLimit(0.25) {
+            var byID: [CGWindowID: HSWindow] = [:]
+            var seenPIDs = Set<pid_t>()
+            for (pid, _) in ordered where seenPIDs.insert(pid).inserted {
+                guard let app = NSRunningApplication(processIdentifier: pid) else { continue }
+                for element in WindowEnumerator.windowElements(for: app) {
+                    let id = WindowEnumerator.windowID(of: element)
+                    if id != 0 {
+                        byID[id] = HSWindow(element: element, app: app)
+                    }
                 }
             }
+            return ordered.compactMap { byID[$0.id] }
         }
-        return ordered.compactMap { byID[$0.id] }
     }
 
     /// The windows in `direction` from `window`, nearest first.

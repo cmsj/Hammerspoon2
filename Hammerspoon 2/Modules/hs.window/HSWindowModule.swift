@@ -317,31 +317,27 @@ import AXSwift
             return nil
         }
 
-        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.25)
-        defer { AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0) }
-
-        guard let element = WindowEnumerator.windowElements(for: app).first(where: { WindowEnumerator.windowID(of: $0) == windowID }) else {
-            return nil
+        return withAXTimeoutLimit(0.25) {
+            guard let element = WindowEnumerator.windowElements(for: app).first(where: { WindowEnumerator.windowID(of: $0) == windowID }) else {
+                return nil
+            }
+            return HSWindow(element: element, app: app)
         }
-        return HSWindow(element: element, app: app)
     }
 
     @objc func allWindows() -> [HSWindow] {
         guard checkAccessibility() else { return [] }
 
-        var windows: [HSWindow] = []
-
         // Reduce the Accessibility API timeout to avoid weird/dead apps from making this take ages to respond
-        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.25)
-        defer { AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0) }
-
-        let windowServerIDs = WindowEnumerator.windowServerWindowIDs()
-        for app in candidateApplications() {
-            let windowElements = WindowEnumerator.windowElements(for: app, windowServerIDs: windowServerIDs)
-            windows.append(contentsOf: windowElements.map { HSWindow(element: $0, app: app) })
+        return withAXTimeoutLimit(0.25) {
+            var windows: [HSWindow] = []
+            let windowServerIDs = WindowEnumerator.windowServerWindowIDs()
+            for app in candidateApplications() {
+                let windowElements = WindowEnumerator.windowElements(for: app, windowServerIDs: windowServerIDs)
+                windows.append(contentsOf: windowElements.map { HSWindow(element: $0, app: app) })
+            }
+            return windows
         }
-
-        return windows
     }
 
     @objc func visibleWindows() -> [HSWindow] {
