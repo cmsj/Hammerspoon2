@@ -527,7 +527,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     }
 
     @objc var application: HSApplication? {
-        return HSApplication(runningApplication: app)
+        return AXObjectCache.shared.application(for: app)
     }
 
     @objc var pid: Int {
@@ -738,7 +738,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     private static var focusReassertion: Task<Void, Never>?
 
     @objc func focus() -> Bool {
-        let previousMainID = HSApplication(runningApplication: app).mainWindow?.id
+        let previousMainID = AXObjectCache.shared.application(for: app).mainWindow?.id
 
         let madeMain = becomeMain()
         let broughtToFront = bringToFront()
@@ -757,7 +757,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
             // A main window that is neither this one nor the one the application had before means
             // the user (or another script) has chosen another window since; don't undo that.
             // The desktop isn't an AX window, so Finder taking main status for it still gets here.
-            if let current = HSApplication(runningApplication: self.app).mainWindow,
+            if let current = AXObjectCache.shared.application(for: self.app).mainWindow,
                current.id > 0, current.id != self.id, current.id != previousMainID {
                 return
             }

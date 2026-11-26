@@ -11,6 +11,6 @@ import Cocoa
 
 extension NSRunningApplication {
     func asHSApplication() -> HSApplication? {
-        return HSApplication(runningApplication: self)
+        return AXObjectCache.shared.application(for: self)
     }
 }

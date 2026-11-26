@@ -296,7 +296,7 @@ import AXSwift
                 return nil
             }
 
-            return HSWindow(element: focusedWindow, app: frontApp)
+            return AXObjectCache.shared.window(element: focusedWindow, app: frontApp)
         } catch {
             AKDebug("Failed to get focused window: \(error.localizedDescription)")
             return nil
@@ -321,7 +321,7 @@ import AXSwift
             guard let element = WindowEnumerator.windowElements(for: app).first(where: { WindowEnumerator.windowID(of: $0) == windowID }) else {
                 return nil
             }
-            return HSWindow(element: element, app: app)
+            return AXObjectCache.shared.window(element: element, app: app)
         }
     }
 
@@ -334,7 +334,7 @@ import AXSwift
             let windowServerIDs = WindowEnumerator.windowServerWindowIDs()
             for app in candidateApplications() {
                 let windowElements = WindowEnumerator.windowElements(for: app, windowServerIDs: windowServerIDs)
-                windows.append(contentsOf: windowElements.map { HSWindow(element: $0, app: app) })
+                windows.append(contentsOf: windowElements.map { AXObjectCache.shared.window(element: $0, app: app) })
             }
             return windows
         }
@@ -348,7 +348,7 @@ import AXSwift
         guard let app, checkAccessibility() else { return [] }
 
         let windowElements = WindowEnumerator.windowElements(for: app.runningApplication)
-        return windowElements.map { HSWindow(element: $0, app: app.runningApplication) }
+        return windowElements.map { AXObjectCache.shared.window(element: $0, app: app.runningApplication) }
     }
 
     @objc func windowsOnScreen(_ screenIndex: Int) -> [HSWindow] {
@@ -391,7 +391,7 @@ import AXSwift
                     // Find the app for this window
                     let pid = try? elem.pid()
                     if let app = NSWorkspace.shared.runningApplications.first(where: { $0.processIdentifier == pid }) {
-                        return HSWindow(element: elem, app: app)
+                        return AXObjectCache.shared.window(element: elem, app: app)
                     }
                 }
 
@@ -424,7 +424,7 @@ import AXSwift
         let windowServerIDs = WindowEnumerator.windowServerWindowIDs()
         var windows: [HSWindow] = []
         for app in orderedApps {
-            let appWindows = WindowEnumerator.windowElements(for: app, windowServerIDs: windowServerIDs).map { HSWindow(element: $0, app: app) }
+            let appWindows = WindowEnumerator.windowElements(for: app, windowServerIDs: windowServerIDs).map { AXObjectCache.shared.window(element: $0, app: app) }
             windows.append(contentsOf: appWindows)
         }
 
