@@ -30,9 +30,13 @@ enum AXMessagingTimeout {
     /// The timeout in effect now
     static var current: Double { limits.last ?? configured }
 
-    /// Whether `seconds` can be used as a timeout
+    /// Whether `seconds` can be used as a timeout: 0, or a positive number that's still positive
+    /// and finite once converted to the `Float` the Accessibility API takes (so e.g. 1e-50,
+    /// which would round to 0 and select the macOS default, isn't)
     nonisolated static func isValid(_ seconds: Double) -> Bool {
-        seconds.isFinite && seconds >= 0
+        if seconds == 0 { return true }
+        let converted = Float(seconds)
+        return converted > 0 && converted.isFinite
     }
 
     /// Sets the timeout the user chose

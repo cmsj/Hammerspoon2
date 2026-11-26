@@ -38,7 +38,7 @@ struct HSAccessibilityTimeoutTests {
     }
 
     @Test("Invalid timeouts throw and leave the timeout unchanged",
-          arguments: ["-1", "NaN", "Infinity", "'soon'", "undefined"])
+          arguments: ["-1", "NaN", "Infinity", "'soon'", "'1'", "undefined", "null", "true", "1e-50", "1e39"])
     func testInvalid(value: String) {
         let harness = JSTestHarness()
         harness.loadModuleRoot()
@@ -47,6 +47,17 @@ struct HSAccessibilityTimeoutTests {
         harness.expectException()
         harness.expectEqual("hs.accessibilityTimeout", 2)
         #expect(AXMessagingTimeout.applied == 2)
+    }
+
+    @Test("The smallest and largest timeouts a Float can hold are accepted",
+          arguments: [Double(Float.leastNonzeroMagnitude), Double(Float.greatestFiniteMagnitude)])
+    func testFloatBoundaries(seconds: Double) {
+        let harness = JSTestHarness()
+        harness.loadModuleRoot()
+        harness.eval("hs.accessibilityTimeout = \(seconds)")
+        #expect(!harness.hasException)
+        harness.expectEqual("hs.accessibilityTimeout", seconds)
+        #expect(AXMessagingTimeout.applied == seconds)
     }
 
     @Test("Shutting down, as reloading does, goes back to the macOS default")

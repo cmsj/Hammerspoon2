@@ -163,7 +163,7 @@ import JavaScriptCoreExtras
     /// // Go back to the macOS default
     /// hs.accessibilityTimeout = 0
     /// ```
-    @objc var accessibilityTimeout: Double { get set }
+    @objc var accessibilityTimeout: JSValue { get set }
 
     // Modules
     @objc var appinfo: HSAppInfoModule { get }
@@ -420,16 +420,19 @@ import JavaScriptCoreExtras
     }
 
     // MARK: - Accessibility timeout
-    @objc var accessibilityTimeout: Double {
-        get { MainActor.assumeIsolated { AXMessagingTimeout.configured } }
+    // A JSValue rather than a Double, so values that aren't numbers (e.g. null, true or "2")
+    // are rejected instead of being converted to one
+    @objc var accessibilityTimeout: JSValue {
+        get { JSValue(double: MainActor.assumeIsolated { AXMessagingTimeout.configured }, in: JSContext.current()) }
         set {
-            guard AXMessagingTimeout.isValid(newValue) else {
+            guard newValue.isNumber, AXMessagingTimeout.isValid(newValue.toDouble()) else {
                 JSContext.current()?.exception = JSValue(
                     newErrorFromMessage: "hs.accessibilityTimeout must be a number of seconds, 0 or more",
                     in: JSContext.current())
                 return
             }
-            MainActor.assumeIsolated { AXMessagingTimeout.configure(newValue) }
+            let seconds = newValue.toDouble()
+            MainActor.assumeIsolated { AXMessagingTimeout.configure(seconds) }
         }
     }
 
