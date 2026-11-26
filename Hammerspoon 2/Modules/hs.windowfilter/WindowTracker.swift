@@ -426,6 +426,12 @@ final class WindowTracker {
     private func applicationHiddenChanged(_ pid: pid_t, hidden: Bool) {
         for (id, tracked) in windows where tracked.state.pid == pid {
             update(id) { $0.isAppHidden = hidden }
+            // macOS reports every window of a hidden application as an AXDialog, so a window
+            // read while it was hidden (e.g. after a title change) is read again once it's shown,
+            // as one restored from the Dock is. It can take a moment to report its real subrole.
+            if !hidden {
+                settle(id)
+            }
         }
         // An application unhidden by activating it has no focused window to read until it's shown
         if !hidden, pid == activePID, let app = apps[pid]?.app {
