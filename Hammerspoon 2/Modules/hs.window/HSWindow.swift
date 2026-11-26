@@ -232,7 +232,8 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// Focus this window
     ///
     /// The window becomes its application's main window, and the application is brought to the front
-    /// with only this window raised. The application's other windows keep their place in the stacking order.
+    /// with only this window raised. The application's other windows keep their place in the stacking order,
+    /// including those on other displays.
     ///
     /// The application finishes coming to the front after this returns, and some applications then bring
     /// a different window forward, so this makes the window main again 0.3 seconds later. That is skipped
@@ -739,10 +740,8 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     @objc func focus() -> Bool {
         let previousMainID = HSApplication(runningApplication: app).mainWindow?.id
 
-        // Mirrors Hammerspoon 1: the window must be main before the application is brought to the
-        // front, because only the main window is raised.
         let madeMain = becomeMain()
-        let broughtToFront = app.setFrontmost(allWindows: false)
+        let broughtToFront = bringToFront()
 
         // The application finishes coming to the front after this returns, and some then take main
         // status away from the window again: Finder gives it to the desktop
@@ -767,6 +766,20 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
         _ = becomeMain()
 
         return madeMain && broughtToFront
+    }
+
+    /// Makes the application frontmost with this window in front, and none of its other windows.
+    private func bringToFront() -> Bool {
+        // SkyLight activates the application through this window. SetFrontProcessWithOptions can't
+        // be told which window to bring forward and picks the application's last used one, which
+        // can be on another display (#488).
+        if id > 0, HSWindowBringToFront(app.processIdentifier, CGWindowID(id)) {
+            _ = raise()
+            return true
+        }
+        // Mirrors Hammerspoon 1: the window must already be main, because only one window is raised.
+        AKDebug("HSWindow.focus(): SkyLight activation unavailable, falling back to SetFrontProcessWithOptions")
+        return app.setFrontmost(allWindows: false)
     }
 
     @objc func becomeMain() -> Bool {

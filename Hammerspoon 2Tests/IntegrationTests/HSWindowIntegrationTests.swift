@@ -299,10 +299,12 @@ struct HSWindowIntegrationTests {
 
         /// Closes the windows of documents whose names start with `prefix`, or quits the app if
         /// it wasn't running before the test. The documents are unmodified, so nothing prompts to save.
-        private func cleanUp(_ bundleID: String, documentsPrefixed prefix: String, wasRunning: Bool) {
+        /// When it quits the app, it waits for it to exit, so that the next test can launch it again.
+        private func cleanUp(_ bundleID: String, documentsPrefixed prefix: String, wasRunning: Bool) async {
             guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else { return }
             guard wasRunning else {
                 app.terminate()
+                _ = await waitUntil { app.isTerminated }
                 return
             }
             for window in HSApplication(runningApplication: app).allWindows where window.title?.hasPrefix(prefix) == true {
@@ -315,8 +317,13 @@ struct HSWindowIntegrationTests {
             !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty
         }
 
-        @Test("focus() brings forward only the requested window, not all of its application's windows")
-        func testFocusRaisesOnlyRequestedWindow() async throws {
+        /// With `otherWindowUsedLast`, the other TextEdit window is the application's last used one when
+        /// the requested window is focused. SetFrontProcessWithOptions(kSetFrontProcessFrontWindowOnly)
+        /// brings forward the last used window rather than the requested one, which pulled the other
+        /// window in front of Preview (#488, where it was on another display).
+        @Test("focus() brings forward only the requested window, not all of its application's windows",
+              arguments: [false, true])
+        func testFocusRaisesOnlyRequestedWindow(otherWindowUsedLast: Bool) async throws {
             let textEditWasRunning = isRunning(Self.textEditID)
             let previewWasRunning = isRunning(Self.previewID)
 
@@ -334,18 +341,41 @@ struct HSWindowIntegrationTests {
             try #require(image.representation(using: .png, properties: [:])).write(to: coverURL)
 
             defer {
-                cleanUp(Self.textEditID, documentsPrefixed: prefix, wasRunning: textEditWasRunning)
-                cleanUp(Self.previewID, documentsPrefixed: prefix, wasRunning: previewWasRunning)
                 for url in [behindURL, requestedURL, coverURL] {
                     try? FileManager.default.removeItem(at: url)
                 }
             }
 
+            // Not in the defer, which can't wait for the apps to quit.
+            do {
+                try await focusRequested(behindURL: behindURL, requestedURL: requestedURL, coverURL: coverURL,
+                                         prefix: prefix, otherWindowUsedLast: otherWindowUsedLast)
+            } catch {
+                await cleanUp(Self.textEditID, documentsPrefixed: prefix, wasRunning: textEditWasRunning)
+                await cleanUp(Self.previewID, documentsPrefixed: prefix, wasRunning: previewWasRunning)
+                throw error
+            }
+            await cleanUp(Self.textEditID, documentsPrefixed: prefix, wasRunning: textEditWasRunning)
+            await cleanUp(Self.previewID, documentsPrefixed: prefix, wasRunning: previewWasRunning)
+        }
+
+        private func focusRequested(behindURL: URL, requestedURL: URL, coverURL: URL,
+                                    prefix: String, otherWindowUsedLast: Bool) async throws {
             // Two TextEdit windows, both behind a Preview window.
             let (textEdit, textEditIDs) = try await open([behindURL, requestedURL], in: Self.textEditID)
             let (behindID, requestedID) = (textEditIDs[0], textEditIDs[1])
             let (preview, previewIDs) = try await open([coverURL], in: Self.previewID)
             let coverID = previewIDs[0]
+
+            if otherWindowUsedLast {
+                #expect(textEdit.setFrontmost(allWindows: false))
+                let behind = try #require(window(titled: "\(prefix)-behind", in: textEdit))
+                #expect(behind.becomeMain())
+                let behindUsedLast = await waitUntil {
+                    textEdit.isActive && HSApplication(runningApplication: textEdit).focusedWindow?.id == behindID
+                }
+                try #require(behindUsedLast, "the other TextEdit window did not become focused")
+            }
 
             #expect(preview.setFrontmost(allWindows: true))
             let coverInFront = await waitUntil {

@@ -5,6 +5,7 @@
 
 #import "Modules/hs.screen/HSScreenPrivate.h"
 #import "Modules/hs.screen/HSSpacesPrivate.h"
+#import "Modules/hs.window/HSWindowPrivate.h"
 
 // JSSynchronousGarbageCollectForDebugging is exported from JavaScriptCore.framework
 // but not declared in its public headers. It runs a full synchronous GC cycle
@@ -44,8 +45,10 @@ hs_IOHIDSetAccelerationWithKey(io_connect_t handle, CFStringRef key, double acce
 #pragma clang diagnostic pop
 }
 
-// SetFrontProcessWithOptions is still the only API that activates another application while
-// bringing forward only its front window (kSetFrontProcessFrontWindowOnly).
+// SetFrontProcessWithOptions is still the only public API that activates another application while
+// bringing forward only its front window (kSetFrontProcessFrontWindowOnly). It can't be told which
+// window that is, so HSWindow.focus() prefers HSWindowBringToFront (HSWindowPrivate.h) and only
+// falls back to this.
 // NSRunningApplication.activate can only raise all windows or none, and since macOS 14 it is
 // refused outright unless the caller is the active application, which Hammerspoon usually is
 // not. Hammerspoon 1 relies on the same call (HSuicore.m setFrontmost:). It was deprecated in
