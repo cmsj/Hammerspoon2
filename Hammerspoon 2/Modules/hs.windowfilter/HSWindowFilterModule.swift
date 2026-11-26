@@ -387,7 +387,7 @@ nonisolated enum HSWindowFilterModuleEvent: String, HSEventName {
     // MARK: - Inaccessible applications
 
     @objc func inaccessibleApplications() -> [HSApplication] {
-        WindowTracker.shared.inaccessibleApplications().map { HSApplication(runningApplication: $0) }
+        WindowTracker.shared.inaccessibleApplications().map { AXObjectCache.shared.application(for: $0) }
     }
 
     // MARK: - Events
@@ -416,7 +416,7 @@ nonisolated enum HSWindowFilterModuleEvent: String, HSEventName {
 
     private func applicationFoundInaccessible(_ app: NSRunningApplication) {
         _ = watcherCallback?.call(withArguments: [HSWindowFilterModuleEvent.inaccessibleApplication.rawValue,
-                                                  HSApplication(runningApplication: app)])
+                                                  AXObjectCache.shared.application(for: app)])
     }
 
     /// Makes the JS emitter for a filter's on()/once(), via the factory in hs.windowfilter.js.

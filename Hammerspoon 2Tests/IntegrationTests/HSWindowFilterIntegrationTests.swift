@@ -668,6 +668,53 @@ struct HSWindowFilterIntegrationTests {
             #expect(!harness.hasException)
         }
 
+        @Test("a window and its application are the same objects wherever they come from")
+        func testSameObjects() async {
+            let harness = makeHarness()
+            defer { TestAppControl.closeWindows() }
+            harness.eval("var created = null; var onCreated = win => { created = win }; wf.on('windowCreated', onCreated)")
+            TestAppControl.openWindow()
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("created !== null") as? Bool == true })
+
+            // Compared natively: JS identity of bridged objects is unreliable across the many
+            // short-lived virtual machines in the test process
+            func object(_ script: String) -> AnyObject? {
+                harness.evalValue(script)?.toObject() as AnyObject?
+            }
+            let window = object("created")
+            #expect(window != nil)
+            #expect(object("wf.windows().find(w => w.id === created.id)") === window)
+            #expect(object("hs.application.fromPID(testAppPID).allWindows.find(w => w.id === created.id)") === window)
+
+            let application = object("created.application")
+            #expect(application != nil)
+            #expect(object("created.application") === application)
+            #expect(object("hs.application.fromPID(testAppPID)") === application)
+            harness.eval("wf.off('windowCreated', onCreated)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("a window that goes without a notification is found gone by the next sweep")
+        func testSweepFindsLostWindow() async throws {
+            let harness = makeHarness()
+            defer { TestAppControl.closeWindows() }
+            listen(harness, to: ["windowCreated", "windowDestroyed"])
+            TestAppControl.openWindow()
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.some(e => e.startsWith('windowCreated'))") as? Bool == true })
+            let newID = try #require(harness.evalInt("Number(events.find(e => e.startsWith('windowCreated')).split(':')[1])"))
+
+            WindowTracker.shared.stopListening(toWindowWithID: newID)
+            TestAppControl.closeWindows()
+            try await Task.sleep(for: .milliseconds(500))
+            // Without its notification, the window is still thought to exist
+            harness.expectFalse("events.includes('windowDestroyed:\(newID)')")
+
+            WindowTracker.shared.sweep()
+            harness.expectTrue("events.includes('windowDestroyed:\(newID)')")
+            harness.expectFalse("wf.windows().some(w => w.id === \(newID))")
+            harness.eval("wf.off('windowCreated', record); wf.off('windowDestroyed', record)")
+        }
+
         @Test("a filter with listeners keeps working after it's dropped and garbage is collected")
         func testUnreferencedFilterKeepsWorking() async {
             let harness = makeHarness()

@@ -123,7 +123,7 @@ enum WindowNeighbours {
                 for element in WindowEnumerator.windowElements(for: app) {
                     let id = WindowEnumerator.windowID(of: element)
                     if id != 0 {
-                        byID[id] = HSWindow(element: element, app: app)
+                        byID[id] = AXObjectCache.shared.window(element: element, app: app, id: Int(id))
                     }
                 }
             }

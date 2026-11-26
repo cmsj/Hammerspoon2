@@ -758,6 +758,6 @@ extension WindowTracker {
     /// The focused window of the frontmost application
     static func focusedWindow() -> HSWindow? {
         guard let app = NSWorkspace.shared.frontmostApplication, let element = focusedWindowElement(of: app) else { return nil }
-        return HSWindow(element: element, app: app)
+        return AXObjectCache.shared.window(element: element, app: app)
     }
 }

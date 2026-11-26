@@ -330,18 +330,18 @@ import AXSwift
         guard let mainWindow: UIElement = try? self.axUIElement?.attribute(.mainWindow) else {
             return nil
         }
-        return HSWindow(element: mainWindow, app: self.runningApplication)
+        return AXObjectCache.shared.window(element: mainWindow, app: self.runningApplication)
     }
 
     @objc var focusedWindow: HSWindow? {
         guard let focusedWindow: UIElement = try? self.axUIElement?.attribute(.focusedWindow) else {
             return nil
         }
-        return HSWindow(element: focusedWindow, app: self.runningApplication)
+        return AXObjectCache.shared.window(element: focusedWindow, app: self.runningApplication)
     }
 
     @objc var allWindows: [HSWindow] {
-        return WindowEnumerator.windowElements(for: runningApplication).map { HSWindow(element: $0, app: runningApplication) }
+        return WindowEnumerator.windowElements(for: runningApplication).map { AXObjectCache.shared.window(element: $0, app: runningApplication) }
     }
 
     @objc var visibleWindows: [HSWindow] {

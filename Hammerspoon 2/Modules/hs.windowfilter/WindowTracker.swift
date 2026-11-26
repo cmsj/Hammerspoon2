@@ -14,7 +14,10 @@ import AXSwift
 /// notifications), and each window being moved, resized, minimized, retitled or destroyed
 /// (window-level AX notifications, through the shared `AXObserverHub`). It keeps a
 /// `WindowState` for every window, and reports each change to a window to its subscribers as
-/// the window's old and new state and the events that amounts to.
+/// the window's old and new state and the events that amounts to. macOS doesn't promise to
+/// deliver every notification, so every so often it also sweeps away windows and applications
+/// that have gone without one. It keeps each tracked window's `HSWindow` and application's
+/// `HSApplication` (from `AXObjectCache`), so the same ones are handed out each time.
 ///
 /// When nothing is subscribed it watches nothing, and `entries()` takes a one-off look instead.
 ///
@@ -85,13 +88,17 @@ final class WindowTracker {
         "com.hnc.Discord.helper.Renderer",
     ]
 
+    /// Tracked applications and windows keep their `HSApplication` and `HSWindow` alive, so the
+    /// same object is handed to JavaScript each time (see `AXObjectCache`)
     private struct TrackedApp {
         let app: NSRunningApplication
         let element: UIElement
+        let application: HSApplication
     }
 
     private struct TrackedWindow {
         let element: UIElement
+        let window: HSWindow
         var state: WindowState
         let createdAt: Double
         var focusedAt: Double
@@ -117,6 +124,10 @@ final class WindowTracker {
     private var refreshRetries: [Int: Int] = [:]
     private var retryTasks: [pid_t: Task<Void, Never>] = [:]
     private var refreshTask: Task<Void, Never>?
+    private var sweepTask: Task<Void, Never>?
+
+    /// How often to look for windows and applications that have gone without saying so
+    private static let sweepInterval: Duration = .seconds(60)
 
     private static let windowNotifications: [UIElement.AXNotification] = [
         kAXUIElementDestroyedNotification, kAXWindowMovedNotification, kAXWindowResizedNotification,
@@ -214,8 +225,8 @@ final class WindowTracker {
     func entries() -> [Entry] {
         if isRunning {
             return windows.values.compactMap { tracked in
-                guard let app = apps[tracked.state.pid] else { return nil }
-                return Entry(state: tracked.state, window: makeWindow(tracked, app: app), createdAt: tracked.createdAt, focusedAt: tracked.focusedAt)
+                guard apps[tracked.state.pid] != nil else { return nil }
+                return Entry(state: tracked.state, window: tracked.window, createdAt: tracked.createdAt, focusedAt: tracked.focusedAt)
             }
         }
         return withShortTimeout {
@@ -240,12 +251,8 @@ final class WindowTracker {
 
     /// The tracked window with this ID, if any
     func window(withID id: Int) -> HSWindow? {
-        guard let tracked = windows[id], let app = apps[tracked.state.pid] else { return nil }
-        return makeWindow(tracked, app: app)
-    }
-
-    private func makeWindow(_ tracked: TrackedWindow, app: TrackedApp) -> HSWindow {
-        HSWindow(element: tracked.element, app: app.app, id: tracked.state.id)
+        guard let tracked = windows[id], apps[tracked.state.pid] != nil else { return nil }
+        return tracked.window
     }
 
     // MARK: - Starting and stopping
@@ -296,6 +303,7 @@ final class WindowTracker {
             }
         }
         AKDebug("WindowTracker: tracking \(windows.count) windows in \(apps.count) applications")
+        scheduleSweep()
     }
 
     private func stop() {
@@ -312,6 +320,8 @@ final class WindowTracker {
         screenObserver = nil
         for task in settleTasks.values { task.cancel() }
         for task in retryTasks.values { task.cancel() }
+        sweepTask?.cancel()
+        sweepTask = nil
         refreshTask?.cancel()
         settleTasks = [:]
         refreshRetries = [:]
@@ -368,7 +378,7 @@ final class WindowTracker {
             return
         }
 
-        apps[pid] = TrackedApp(app: app, element: element)
+        apps[pid] = TrackedApp(app: app, element: element, application: AXObjectCache.shared.application(for: app))
         if announce || attempt > 0 {
             withShortTimeout {
                 for windowElement in WindowEnumerator.windowElements(for: app) {
@@ -491,19 +501,19 @@ final class WindowTracker {
             // Older than any window created since, as for those found when starting up
             track(element, state: state, createdAt: now - 1_000_000 + Double(id) / 1000, focusedAt: state.hasFocus ? now : 0)
             if let tracked = windows[id] {
-                deliver(Change(windowID: id, old: nil, new: state, events: [], window: makeWindow(tracked, app: app), isSilent: true))
+                deliver(Change(windowID: id, old: nil, new: state, events: [], window: tracked.window, isSilent: true))
             }
             return
         }
         track(element, state: state, createdAt: now, focusedAt: state.hasFocus ? now : 0)
         if let tracked = windows[id] {
-            deliver(Change(windowID: id, old: nil, new: state, events: HSWindowFilterEvent.changes(from: nil, to: state), window: makeWindow(tracked, app: app)))
+            deliver(Change(windowID: id, old: nil, new: state, events: HSWindowFilterEvent.changes(from: nil, to: state), window: tracked.window))
         }
     }
 
     /// Records a window and registers for its notifications, without reporting it
     private func track(_ element: UIElement, state: WindowState, createdAt: Double, focusedAt: Double) {
-        guard let axClient else { return }
+        guard let axClient, let app = apps[state.pid] else { return }
         for notification in Self.windowNotifications {
             do {
                 try axClient.add(notification, element: element, pid: state.pid)
@@ -511,7 +521,7 @@ final class WindowTracker {
                 AKDebug("WindowTracker: \(state.appName) window \(state.id) doesn't support \(notification.rawValue): \(error)")
             }
         }
-        windows[state.id] = TrackedWindow(element: element, state: state, createdAt: createdAt, focusedAt: focusedAt)
+        windows[state.id] = TrackedWindow(element: element, window: AXObjectCache.shared.window(element: element, app: app.app, id: state.id), state: state, createdAt: createdAt, focusedAt: focusedAt)
         windowIDs[element] = state.id
     }
 
@@ -524,13 +534,13 @@ final class WindowTracker {
         if focusedWindowID == id {
             focusedWindowID = nil
         }
-        guard let app = apps[tracked.state.pid] else { return }
-        deliver(Change(windowID: id, old: tracked.state, new: nil, events: HSWindowFilterEvent.changes(from: tracked.state, to: nil), window: makeWindow(tracked, app: app)))
+        guard apps[tracked.state.pid] != nil else { return }
+        deliver(Change(windowID: id, old: tracked.state, new: nil, events: HSWindowFilterEvent.changes(from: tracked.state, to: nil), window: tracked.window))
     }
 
     /// Changes part of a window's state, and reports it
     private func update(_ id: Int, _ change: (inout WindowState) -> Void) {
-        guard var tracked = windows[id], let app = apps[tracked.state.pid] else { return }
+        guard var tracked = windows[id], apps[tracked.state.pid] != nil else { return }
         let old = tracked.state
         change(&tracked.state)
         guard tracked.state != old else { return }
@@ -538,7 +548,7 @@ final class WindowTracker {
             tracked.focusedAt = Date().timeIntervalSince1970
         }
         windows[id] = tracked
-        deliver(Change(windowID: id, old: old, new: tracked.state, events: HSWindowFilterEvent.changes(from: old, to: tracked.state), window: makeWindow(tracked, app: app)))
+        deliver(Change(windowID: id, old: old, new: tracked.state, events: HSWindowFilterEvent.changes(from: old, to: tracked.state), window: tracked.window))
     }
 
     /// Reads a window's state again, and reports any change. A window whose element AX says is
@@ -620,6 +630,56 @@ final class WindowTracker {
                 }
             }
         }
+    }
+
+    // MARK: - Sweeping
+
+    private func scheduleSweep() {
+        sweepTask?.cancel()
+        sweepTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: Self.sweepInterval)
+                guard !Task.isCancelled, let self else { return }
+                self.sweep()
+            }
+        }
+    }
+
+    /// Forgets the applications that have quit and the windows that have gone without a
+    /// notification saying so, since macOS doesn't promise to deliver every one, and reports each
+    /// as the notification would have.
+    ///
+    /// Each window is asked whether it still exists, one cheap Accessibility request. (The window
+    /// server can't say instead: applications often keep a closed window, just out of sight.) An
+    /// application that doesn't answer in time isn't asked about its other windows until the next
+    /// sweep, so a hung one costs one timeout, not one per window.
+    func sweep() {
+        for (pid, tracked) in apps where tracked.app.isTerminated {
+            AKDebug("WindowTracker: \(tracked.app.localizedName ?? "PID \(pid)") quit without saying so")
+            applicationTerminated(pid)
+        }
+        withShortTimeout {
+            var unresponsive = Set<pid_t>()
+            for (id, tracked) in windows where !unresponsive.contains(tracked.state.pid) {
+                do {
+                    _ = try tracked.element.role()
+                } catch AXError.invalidUIElement {
+                    AKDebug("WindowTracker: \(tracked.state.appName) window \(id) went without saying so")
+                    windowDisappeared(id)
+                } catch AXError.cannotComplete {
+                    unresponsive.insert(tracked.state.pid)
+                } catch {
+                    // Anything else says nothing about whether it's gone
+                }
+            }
+        }
+    }
+
+    /// Stops listening for a window's notifications while still tracking it, as if they were
+    /// being lost. For tests of `sweep()`.
+    func stopListening(toWindowWithID id: Int) {
+        guard let tracked = windows[id] else { return }
+        axClient?.removeAll(element: tracked.element)
     }
 
     // MARK: - Reading state
@@ -734,7 +794,7 @@ final class WindowTracker {
         }
 
         var entries: [Entry] {
-            tracked.map { Entry(state: $0.state, window: HSWindow(element: $0.element, app: $0.app, id: $0.state.id), createdAt: $0.createdAt, focusedAt: $0.focusedAt) }
+            tracked.map { Entry(state: $0.state, window: AXObjectCache.shared.window(element: $0.element, app: $0.app, id: $0.state.id), createdAt: $0.createdAt, focusedAt: $0.focusedAt) }
         }
     }
 }
