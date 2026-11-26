@@ -65,9 +65,13 @@ import JavaScriptCoreExtras
     /// of the same name that's installed is ignored. A warning is logged each time, so a config
     /// that still points at a development copy doesn't go unnoticed.
     ///
+    /// A Spoon whose `spoon.json` has a `minimumVersion` isn't loaded by an older Hammerspoon 2
+    /// (see `hs.appinfo.version`): `init.js` isn't run, and `load()` throws, naming both versions.
+    ///
     /// The exception's `code` is `ENOTINSTALLED` if there's no such Spoon, `ENOTFOUND` if `path`
     /// isn't a directory, `EINVALIDARG` if the name can't be a Spoon's or an option is malformed,
-    /// or `EINVALIDSPOON` if the Spoon is malformed. An exception thrown by the Spoon's own code is
+    /// `EINVALIDSPOON` if the Spoon is malformed, or `EVERSION` if it needs a newer Hammerspoon 2.
+    /// An exception thrown by the Spoon's own code is
     /// passed on as it is.
     /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`. It's also the name it's stored under on `hs.spoons`.
     /// - Parameter options?: Where to load the Spoon from
@@ -315,6 +319,10 @@ import JavaScriptCoreExtras
                 return fail("No Spoon named '\(name)' is installed in \(installer.spoonManager.spoonsDirectory.path)", code: .notInstalled)
             }
             return fail("'\(name)' \(error.localizedDescription)")
+        }
+
+        if let failure = installer.spoonManager.versionRequirementFailure(for: metadata) {
+            return fail(failure, code: .unsupportedVersion)
         }
 
         guard let requireFn = context.globalObject.objectForKeyedSubscript("require"), !requireFn.isUndefined else {

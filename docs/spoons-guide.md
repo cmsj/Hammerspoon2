@@ -221,6 +221,26 @@ non-empty, or `hs.spoons.load()` refuses to load it:
 }
 ```
 
+If your Spoon relies on something added or changed in a particular release of Hammerspoon 2, add
+an optional **`minimumVersion`** field with that release's version:
+
+```json
+{
+    "name": "Greeter",
+    "author": "Jane Dev <jane@example.com>",
+    "version": "1.1.0",
+    "description": "Shows a friendly notification on a hotkey or a timer.",
+    "minimumVersion": "1.0.0-beta.4"
+}
+```
+
+An older Hammerspoon 2 (see `hs.appinfo.version`) refuses to load the Spoon, without running its
+`init.js`: `hs.spoons.load()` throws an error with the code `EVERSION` that names both versions.
+Versions are compared as [Semantic Versioning](https://semver.org) orders them, so
+`1.0.0-beta.9` comes before `1.0.0-beta.10`, which comes before `1.0.0-rc.1` and then `1.0.0`. A
+copy of Hammerspoon 2 built from source reports the version of the last release before it, so it
+can load any Spoon that release could.
+
 You never need to repeat this information inside `init.js` — after a successful load,
 `hs.spoons.load()` sets `author`, `description`, and `version` directly on the object your Spoon
 returns, reading them from `spoon.json`. This is a deliberate difference from Hammerspoon 1,
@@ -268,13 +288,14 @@ Don't export `name`, `author`, `description` or `version`: `hs.spoons.load()` se
 
 `hs.spoons.load("Greeter")` does this, in order:
 
-1. Runs `init.js` with `require()`. `require()` caches it, so the
+1. Checks that this Hammerspoon 2 is at least the Spoon's `minimumVersion`, if it has one.
+2. Runs `init.js` with `require()`. `require()` caches it, so the
    top level only ever runs once, however many times the Spoon is loaded.
-2. Sets `name`, `author`, `description` and `version` on the exported object, from `spoon.json`.
-3. Gives the object a `bindHotkeys()` and an `unbindHotkeys()`, if it exports `bindings` (see
+3. Sets `name`, `author`, `description` and `version` on the exported object, from `spoon.json`.
+4. Gives the object a `bindHotkeys()` and an `unbindHotkeys()`, if it exports `bindings` (see
    [Hotkeys](#hotkeys)).
-4. Calls the object's `init()`, if it has one.
-5. Stores the object in `hs.spoons` (as `hs.spoons.Greeter`) and returns it.
+5. Calls the object's `init()`, if it has one.
+6. Stores the object in `hs.spoons` (as `hs.spoons.Greeter`) and returns it.
 
 `hs.spoons.use()` then applies its options to the loaded Spoon: `config`, then `hotkeys`, then
 `fn`, then `start` (see [`use()`'s options](#uses-options)).

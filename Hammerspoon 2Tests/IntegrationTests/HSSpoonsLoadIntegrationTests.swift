@@ -20,7 +20,8 @@ private final class LoadSpoonContext {
     // Shut down in deinit, as JSEngine does on reload, so it releases the JSContext
     private let moduleRoot: ModuleRoot
 
-    init() throws {
+    /// - Parameter appVersion: The Hammerspoon 2 version Spoons' minimumVersion is checked against
+    init(appVersion: String = "1.0.0") throws {
         let vm = JSVirtualMachine()
         let ctx = JSContext(virtualMachine: vm)!
         ctx.name = "LoadSpoonTestContext"
@@ -32,7 +33,7 @@ private final class LoadSpoonContext {
 
         let settings = MockSettingsManager()
         settings.configLocation = configDir.appendingPathComponent("init.js")
-        moduleRoot = ModuleRoot(engineID: UUID(), settings: settings)
+        moduleRoot = ModuleRoot(engineID: UUID(), settings: settings, spoonManager: SpoonManager(settings: settings, appVersion: appVersion))
 
         ctx.exceptionHandler = { [weak self] _, exc in self?.lastException = exc }
         try NodeBuiltinModulesInstaller().install(in: ctx)
@@ -55,13 +56,15 @@ private final class LoadSpoonContext {
         name: String? = "TestSpoon",
         author: String? = "A. Developer",
         version: String? = "1.0.0",
-        description: String? = "A test spoon."
+        description: String? = "A test spoon.",
+        minimumVersion: String? = nil
     ) throws -> URL {
         var fields: [String] = []
         if let name { fields.append(#""name": "\#(name)""#) }
         if let author { fields.append(#""author": "\#(author)""#) }
         if let version { fields.append(#""version": "\#(version)""#) }
         if let description { fields.append(#""description": "\#(description)""#) }
+        if let minimumVersion { fields.append(#""minimumVersion": "\#(minimumVersion)""#) }
         let json = "{ " + fields.joined(separator: ", ") + " }"
         return try write(spoon: spoon, under: parent, "spoon.json", json)
     }
@@ -168,6 +171,28 @@ struct HSSpoonsLoadTests {
             let result = ctx.eval("hs.spoons.load('TestSpoon').greet('World')")
             #expect(result?.toString() == "Hello, World")
             #expect(!ctx.hadException)
+        }
+
+        @Test("a Spoon needing a newer Hammerspoon 2 throws EVERSION without running init.js")
+        func testMinimumVersionTooNew() throws {
+            let ctx = try LoadSpoonContext(appVersion: "1.0.0-beta.3")
+            try ctx.writeSpoonJSON(spoon: "TestSpoon", minimumVersion: "1.0.0-beta.10")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "globalThis.__ran = true; module.exports = {};")
+            let error = ctx.eval("""
+                (function () { try { hs.spoons.load('TestSpoon'); return null; } catch (e) { return e.code + ': ' + e.message; } })()
+            """)
+            #expect(error?.toString() == "EVERSION: hs.spoons.load(): 'TestSpoon' 1.0.0 needs Hammerspoon 2 1.0.0-beta.10 or later, but this is 1.0.0-beta.3")
+            #expect(ctx.eval("typeof __ran")?.toString() == "undefined")
+            #expect(ctx.eval("hs.spoons.TestSpoon")?.isUndefined == true)
+        }
+
+        @Test("a Spoon whose minimumVersion is this Hammerspoon 2 or older loads", arguments: ["1.0.0-beta.3", "0.9"])
+        func testMinimumVersionSatisfied(minimumVersion: String) throws {
+            let ctx = try LoadSpoonContext(appVersion: "1.0.0-beta.3")
+            try ctx.writeSpoonJSON(spoon: "TestSpoon", minimumVersion: minimumVersion)
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { ok: true };")
+            #expect(ctx.eval("hs.spoons.load('TestSpoon').ok")?.toBool() == true)
+            #expect(ctx.hadException == false)
         }
 
         @Test("a Spoon's init.js can require() a sibling file relative to its own directory")

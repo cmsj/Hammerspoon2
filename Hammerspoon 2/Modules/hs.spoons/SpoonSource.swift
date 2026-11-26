@@ -28,6 +28,8 @@ nonisolated struct SpoonInstallError: LocalizedError, Equatable {
         /// The Spoon is installed, but wasn't installed by `hs.spoons.install()`, so there's
         /// nowhere to update it from
         case noSource = "ENOSOURCE"
+        /// The Spoon needs a newer Hammerspoon 2 than the one running
+        case unsupportedVersion = "EVERSION"
         /// Anything else, such as failing to write the Spoon to disk
         case io = "EIO"
     }

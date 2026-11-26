@@ -61,6 +61,11 @@
 #      gh-pages at /2/) and checks the feed it serves is the new one
 #   5. commits the new version and sha256 to the Homebrew cask in $TAP_REPO,
 #      unless --channel kept the release out of the default Sparkle channel
+#   6. commits the version to MARKETING_VERSION in the project file on main and
+#      pushes it (bypassing main's ruleset, so you must be allowed to), so
+#      builds from source report the last release they include; Spoons'
+#      minimumVersion is checked against it. This is skipped if main already
+#      has a newer release's version.
 #
 # Each step checks whether it's already done, so if execute stops partway, fix
 # the problem and run it again to carry on. `execute --dry-run` shows what's
@@ -103,6 +108,9 @@ PAGES_WORKFLOW="deploy.yml"
 # The Homebrew tap (brew install --cask hammerspoon/tap/hammerspoon2).
 TAP_REPO="Hammerspoon/homebrew-tap"
 CASK_PATH="Casks/hammerspoon2.rb"
+# The branch releases come from, whose project file records the last release.
+MAIN_BRANCH="main"
+PBXPROJ_PATH="Hammerspoon 2.xcodeproj/project.pbxproj"
 
 NOTARY_PROFILE="${NOTARY_PROFILE:-hammerspoon2-notary}"
 SPARKLE_KEY_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-ed25519}"
@@ -1073,6 +1081,52 @@ step_cask() {
         --jq .commit.html_url
 }
 
+# Print the distinct MARKETING_VERSIONs in the project file at <commit>, one
+# per line.
+project_version_of() {
+    git show "$1:$PBXPROJ_PATH" \
+        | sed -n -E 's/^[[:space:]]*MARKETING_VERSION = "?([^";]*)"?;$/\1/p' | sort -u
+}
+
+step_version() {
+    log "Setting the version on $MAIN_BRANCH to $VERSION"
+    local index="$WORK/main.index" pbxproj="$WORK/project.pbxproj" value blob tree commit before attempt
+    # Quoted only when it has to be, as Xcode writes it, so Xcode doesn't
+    # rewrite the line the next time it saves the project.
+    value="$VERSION"
+    [[ "$VERSION" =~ ^[0-9.]+$ ]] || value="\"$VERSION\""
+    for attempt in 1 2 3 4 5; do
+        git fetch --quiet origin "$MAIN_BRANCH"
+        before="$(git rev-parse "origin/$MAIN_BRANCH")"
+        if [ "$(project_version_of "$before")" = "$VERSION" ]; then
+            echo "  already there"
+            return
+        fi
+        git show "$before:$PBXPROJ_PATH" \
+            | sed -E "s/^([[:space:]]*MARKETING_VERSION = ).*;\$/\1$value;/" > "$pbxproj"
+        grep -q "MARKETING_VERSION = $value;" "$pbxproj" \
+            || die "couldn't find MARKETING_VERSION in $PBXPROJ_PATH on $MAIN_BRANCH"
+
+        # Commit on top of main without touching the working tree.
+        rm -f "$index"
+        GIT_INDEX_FILE="$index" git read-tree "$before"
+        blob="$(git hash-object -w "$pbxproj")"
+        GIT_INDEX_FILE="$index" git update-index --cacheinfo "100644,$blob,$PBXPROJ_PATH"
+        tree="$(GIT_INDEX_FILE="$index" git write-tree)"
+        rm -f "$index"
+        commit="$(git commit-tree "$tree" -p "$before" -m "Set the version to $VERSION" \
+            -m "Builds from source now report $VERSION, the last release they include.")"
+        # Not forced, so commits that land on main meanwhile are never lost.
+        git push origin "$commit:refs/heads/$MAIN_BRANCH" && return
+        git fetch --quiet origin "$MAIN_BRANCH"
+        [ "$(git rev-parse "origin/$MAIN_BRANCH")" != "$before" ] \
+            || die "couldn't push to $MAIN_BRANCH; you need to be allowed to bypass its ruleset (or set MARKETING_VERSION to $VERSION in a pull request, then run execute again)"
+        [ "$attempt" -lt 5 ] || break
+        warn "$MAIN_BRANCH changed while pushing; trying again"
+    done
+    die "$MAIN_BRANCH kept changing; run execute again"
+}
+
 EXECUTING=0
 on_exit() {
     local status=$?
@@ -1179,15 +1233,29 @@ cmd_execute() {
         fi
     fi
 
+    # main's project file follows the newest release, so it never goes back to
+    # an older one (when execute runs again for one after a newer release).
+    local version_state="to do" main_version main_build
+    main_version="$(project_version_of "origin/$MAIN_BRANCH")"
+    if [ "$main_version" = "$VERSION" ]; then
+        version_state="done"
+    elif [ "$(wc -l <<<"$main_version")" -eq 1 ]; then
+        main_build="$(appcast_build_of "$WORK/live.xml" "$main_version")"
+        if [ -n "$main_build" ] && [ "$main_build" -gt "$(jq -r .build "$MANIFEST")" ]; then
+            version_state="skipped (it has the newer $main_version)"
+        fi
+    fi
+
     printf '\nRelease %s (build %s) from %s:\n' "$VERSION" "$(jq -r .build "$MANIFEST")" "$COMMIT"
     printf '  1. %-36s %s\n' "Tag $VERSION and push it:" "$tag_state"
     printf '  2. %-36s %s\n' "Publish the GitHub release:" "$release_state_text"
     printf '  3. %-36s %s\n' "Push $APPCAST_NAME to gh-pages:" "$appcast_state"
     printf '  4. %-36s %s\n' "Deploy Pages and check the feed:" "$deploy_state"
     printf '  5. %-36s %s\n' "Update the Homebrew cask:" "$cask_state"
+    printf '  6. %-36s %s\n' "Set the version on $MAIN_BRANCH:" "$version_state"
 
     if [ "$tag_state:$release_state_text:$appcast_state:$deploy_state" = "done:done:done:done" ] \
-        && [ "$cask_state" != "to do" ]; then
+        && [ "$cask_state" != "to do" ] && [ "$version_state" != "to do" ]; then
         echo "Nothing left to do."
         return
     fi
@@ -1205,6 +1273,7 @@ cmd_execute() {
     [ "$appcast_state" = "done" ] || step_appcast
     step_deploy
     [ "$cask_state" != "to do" ] || step_cask
+    [ "$version_state" != "to do" ] || step_version
     EXECUTING=0
 
     log "Released $VERSION"
