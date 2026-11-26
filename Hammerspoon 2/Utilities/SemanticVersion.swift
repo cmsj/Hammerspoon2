@@ -10,7 +10,8 @@ import Foundation
 /// to (`1.0.0-beta.9` < `1.0.0-beta.10` < `1.0.0-rc.1` < `1.0.0`).
 ///
 /// One to three numeric components are accepted, and missing ones count as zero, so `1.2` equals
-/// `1.2.0`. Build metadata after a `+` is accepted and ignored.
+/// `1.2.0`. As in Semantic Versioning, numbers (other than zero) can't start with a zero. Build
+/// metadata after a `+` is accepted and ignored.
 struct SemanticVersion: Comparable, CustomStringConvertible, Sendable {
     /// The major, minor and patch numbers
     let numbers: [Int]
@@ -34,6 +35,7 @@ struct SemanticVersion: Comparable, CustomStringConvertible, Sendable {
             let identifiers = rest[rest.index(after: dash)...]
             guard Self.isValidIdentifierList(identifiers) else { return nil }
             prerelease = identifiers.split(separator: ".").map(String.init)
+            guard !prerelease.contains(where: { $0.allSatisfy(\.isASCIIDigit) && Self.hasLeadingZero($0) }) else { return nil }
             rest = rest[..<dash]
         }
 
@@ -41,7 +43,8 @@ struct SemanticVersion: Comparable, CustomStringConvertible, Sendable {
         guard (1...3).contains(components.count) else { return nil }
         var numbers: [Int] = []
         for component in components {
-            guard !component.isEmpty, component.allSatisfy(\.isASCIIDigit), let number = Int(component) else { return nil }
+            guard !component.isEmpty, component.allSatisfy(\.isASCIIDigit), !Self.hasLeadingZero(component),
+                  let number = Int(component) else { return nil }
             numbers.append(number)
         }
         numbers += Array(repeating: 0, count: 3 - numbers.count)
@@ -76,13 +79,18 @@ struct SemanticVersion: Comparable, CustomStringConvertible, Sendable {
     private static func precedes(_ left: String, _ right: String) -> Bool {
         switch (left.allSatisfy(\.isASCIIDigit), right.allSatisfy(\.isASCIIDigit)) {
         case (true, true):
-            // Compared as digit strings, so numbers too big for an Int still order correctly
-            let left = left.drop { $0 == "0" }, right = right.drop { $0 == "0" }
+            // Compared as digit strings, so numbers too big for an Int still order correctly. They
+            // have no leading zeroes, so the longer one is the bigger.
             return left.count != right.count ? left.count < right.count : left < right
         case (true, false): return true
         case (false, true): return false
         case (false, false): return left < right
         }
+    }
+
+    /// Whether a number has a leading zero, which Semantic Versioning doesn't allow
+    private static func hasLeadingZero(_ digits: some StringProtocol) -> Bool {
+        digits.count > 1 && digits.first == "0"
     }
 
     /// Whether `list` is one or more non-empty dot-separated identifiers of ASCII letters, digits

@@ -14,6 +14,8 @@ struct SemanticVersionTests {
         ("1.0.0-alpha.beta", "1.0.0-beta"),
         ("1.0.0-beta", "1.0.0-beta.2"),
         ("1.0.0-beta.2", "1.0.0-beta.11"),
+        ("1.0.0-beta.0", "1.0.0-beta.1"),
+        ("1.0.0-beta.9", "1.0.0-beta.0a"),
         ("1.0.0-beta.9", "1.0.0-beta.10"),
         ("1.0.0-beta.11", "1.0.0-rc.1"),
         ("1.0.0-rc.1", "1.0.0"),
@@ -36,6 +38,8 @@ struct SemanticVersionTests {
         ("1.2", "1.2.0"),
         ("1.2.3+build.7", "1.2.3"),
         ("1.0.0-beta.4+abc", "1.0.0-beta.4"),
+        ("1.0.0-beta.4+007", "1.0.0-beta.4"),
+        ("0.0.0", "0"),
         (" 1.2.3 ", "1.2.3"),
     ])
     func equality(left: String, right: String) throws {
@@ -48,7 +52,7 @@ struct SemanticVersionTests {
 
     @Test("strings that aren't versions aren't parsed", arguments: [
         "", "v1.2.3", "1.2.3.4", "1..2", "1.2.", ".1", "1.x", "-1.0", "1.0.0-", "1.0.0-beta..1",
-        "1.0.0+", "1.0.0-beta_1", "(unknown app version)", "١.٢.٣",
+        "1.0.0+", "1.0.0-beta_1", "(unknown app version)", "١.٢.٣", "01.0.0", "1.02", "1.0.0-beta.01",
     ])
     func malformed(string: String) {
         #expect(SemanticVersion(string) == nil)

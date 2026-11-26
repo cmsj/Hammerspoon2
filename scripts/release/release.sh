@@ -64,8 +64,8 @@
 #   6. commits the version to MARKETING_VERSION in the project file on main and
 #      pushes it (bypassing main's ruleset, so you must be allowed to), so
 #      builds from source report the last release they include; Spoons'
-#      minimumVersion is checked against it. This is skipped if main already
-#      has a newer release's version.
+#      minimumVersion is checked against it. This is skipped if main doesn't
+#      include the release's commit, or already has a newer release's version.
 #
 # Each step checks whether it's already done, so if execute stops partway, fix
 # the problem and run it again to carry on. `execute --dry-run` shows what's
@@ -1088,18 +1088,37 @@ project_version_of() {
         | sed -n -E 's/^[[:space:]]*MARKETING_VERSION = "?([^";]*)"?;$/\1/p' | sort -u
 }
 
+# Why main's project file at <commit> mustn't be given this release's version,
+# if it mustn't: it doesn't include the release, or it has a newer release's
+# version already (a release whose tagged commit has more commits behind it).
+version_skip_reason() {
+    local version
+    git merge-base --is-ancestor "$COMMIT" "$1" || { echo "it doesn't include $COMMIT"; return; }
+    version="$(project_version_of "$1")"
+    [ "$(wc -l <<<"$version")" -eq 1 ] && [ "$version" != "$VERSION" ] || return 0
+    git rev-parse -q --verify "refs/tags/$version^{commit}" >/dev/null || return 0
+    [ "$(git rev-list --count "refs/tags/$version")" -le "$(jq -r .build "$MANIFEST")" ] \
+        || echo "it has the newer $version"
+}
+
 step_version() {
     log "Setting the version on $MAIN_BRANCH to $VERSION"
-    local index="$WORK/main.index" pbxproj="$WORK/project.pbxproj" value blob tree commit before attempt
+    local index="$WORK/main.index" pbxproj="$WORK/project.pbxproj" value blob tree commit before attempt skip
     # Quoted only when it has to be, as Xcode writes it, so Xcode doesn't
     # rewrite the line the next time it saves the project.
     value="$VERSION"
     [[ "$VERSION" =~ ^[0-9.]+$ ]] || value="\"$VERSION\""
     for attempt in 1 2 3 4 5; do
-        git fetch --quiet origin "$MAIN_BRANCH"
+        git fetch --quiet --tags origin "$MAIN_BRANCH"
         before="$(git rev-parse "origin/$MAIN_BRANCH")"
         if [ "$(project_version_of "$before")" = "$VERSION" ]; then
             echo "  already there"
+            return
+        fi
+        # Checked again each time, since main (and its version) may have moved.
+        skip="$(version_skip_reason "$before")"
+        if [ -n "$skip" ]; then
+            echo "  skipped: $skip"
             return
         fi
         git show "$before:$PBXPROJ_PATH" \
@@ -1233,17 +1252,16 @@ cmd_execute() {
         fi
     fi
 
-    # main's project file follows the newest release, so it never goes back to
-    # an older one (when execute runs again for one after a newer release).
-    local version_state="to do" main_version main_build
-    main_version="$(project_version_of "origin/$MAIN_BRANCH")"
-    if [ "$main_version" = "$VERSION" ]; then
+    # main's project file follows the newest release that main includes, so it
+    # never goes back to an older one (when execute runs again for one after a
+    # newer release), or claims a release made from a branch main doesn't have.
+    local version_state="to do" version_skip
+    git fetch --quiet --tags origin
+    if [ "$(project_version_of "origin/$MAIN_BRANCH")" = "$VERSION" ]; then
         version_state="done"
-    elif [ "$(wc -l <<<"$main_version")" -eq 1 ]; then
-        main_build="$(appcast_build_of "$WORK/live.xml" "$main_version")"
-        if [ -n "$main_build" ] && [ "$main_build" -gt "$(jq -r .build "$MANIFEST")" ]; then
-            version_state="skipped (it has the newer $main_version)"
-        fi
+    else
+        version_skip="$(version_skip_reason "origin/$MAIN_BRANCH")"
+        [ -z "$version_skip" ] || version_state="skipped ($version_skip)"
     fi
 
     printf '\nRelease %s (build %s) from %s:\n' "$VERSION" "$(jq -r .build "$MANIFEST")" "$COMMIT"
