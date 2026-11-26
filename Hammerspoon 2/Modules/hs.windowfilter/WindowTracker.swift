@@ -262,7 +262,11 @@ final class WindowTracker {
                 guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
                 let pid = app.processIdentifier
                 MainActor.assumeIsolated {
-                    guard let self, let app = NSRunningApplication(processIdentifier: pid) ?? self.apps[pid]?.app else { return }
+                    // An application that has quit may no longer be found by its PID; one that's
+                    // tracked, or remembered as refusing, still has to be cleaned up
+                    guard let self,
+                          let app = NSRunningApplication(processIdentifier: pid) ?? self.apps[pid]?.app ?? self.inaccessibleApps[pid]
+                    else { return }
                     action(self, app)
                 }
             })
@@ -411,7 +415,12 @@ final class WindowTracker {
         for (id, tracked) in windows where tracked.state.pid == pid || tracked.state.pid == previous {
             update(id) { $0.isAppActive = $0.pid == pid }
         }
-        syncFocusedWindow(of: app)
+        if inaccessibleApps[pid] != nil {
+            // It would refuse to say which window is focused; none of its windows are tracked
+            setFocusedWindow(nil)
+        } else {
+            syncFocusedWindow(of: app)
+        }
     }
 
     private func applicationHiddenChanged(_ pid: pid_t, hidden: Bool) {
