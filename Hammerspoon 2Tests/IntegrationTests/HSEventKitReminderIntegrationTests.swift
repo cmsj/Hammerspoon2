@@ -194,6 +194,13 @@ struct HSEventKitReminderTests {
 
             try HSReminder.apply(try changes("{ dueDate: null }", in: harness), to: separately, in: EKEventStore())
             #expect(separately.dueDateComponents == nil)
+
+            // Clearing an all-day reminder's due date clears isAllDay too
+            let cleared = makeReminder()
+            try HSReminder.apply(try changes("{ dueDate: due, isAllDay: true }", in: harness), to: cleared, in: EKEventStore())
+            try HSReminder.apply(try changes("{ dueDate: null }", in: harness), to: cleared, in: EKEventStore())
+            #expect(cleared.dueDateComponents == nil)
+            #expect(!HSReminder.isAllDay(cleared.dueDateComponents))
         }
 
         @Test("Invalid changes throw without changing anything", arguments: [

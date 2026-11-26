@@ -151,7 +151,7 @@ import EventKit
     /// - `title` (string)
     /// - `notes`, `url` (string, or `null` to clear)
     /// - `dueDate` (Date, or `null` to clear). Keeps the reminder's `isAllDay` unless `changes`
-    ///   sets that too.
+    ///   sets that too; clearing the due date also clears `isAllDay`.
     /// - `isAllDay` (boolean): `true` makes the reminder due on its due date's day, rather than at
     ///   its time. Needs a due date.
     /// - `priority` (`"none"`, `"low"`, `"medium"` or `"high"`)
@@ -346,7 +346,8 @@ import EventKit
 
         // The due date and whether it's a day or a time are stored together, so work out both
         let newDueDate: Date? = if let dueDate { dueDate } else { Self.date(from: reminder.dueDateComponents) }
-        let newIsAllDay = isAllDay ?? Self.isAllDay(reminder.dueDateComponents)
+        // Clearing the due date clears isAllDay too, unless the change asks for it
+        let newIsAllDay = isAllDay ?? (newDueDate != nil && Self.isAllDay(reminder.dueDateComponents))
         if newIsAllDay && newDueDate == nil {
             throw InvalidChange("'isAllDay' needs a due date")
         }
