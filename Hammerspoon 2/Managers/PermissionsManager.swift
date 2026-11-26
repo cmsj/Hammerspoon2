@@ -32,6 +32,7 @@ enum PermissionsType: Int, CaseIterable {
     case inputMonitoring
     case bluetooth
     case calendars
+    case reminders
 
     var displayName: String {
         switch self {
@@ -44,6 +45,7 @@ enum PermissionsType: Int, CaseIterable {
         case .inputMonitoring: return "Input Monitoring"
         case .bluetooth:      return "Bluetooth"
         case .calendars:      return "Calendars"
+        case .reminders:      return "Reminders"
         }
     }
 
@@ -58,6 +60,7 @@ enum PermissionsType: Int, CaseIterable {
         case .inputMonitoring: return "Allows per-keyboard access to modifier key state and LEDs"
         case .bluetooth:      return "Allows inspecting, connecting to and scanning for Bluetooth devices"
         case .calendars:      return "Allows reading calendar events"
+        case .reminders:      return "Allows reading and changing reminders"
         }
     }
 
@@ -73,6 +76,7 @@ enum PermissionsType: Int, CaseIterable {
         case .inputMonitoring: path = "Privacy_ListenEvent"
         case .bluetooth:      path = "Privacy_Bluetooth"
         case .calendars:      path = "Privacy_Calendars"
+        case .reminders:      path = "Privacy_Reminders"
         }
         // swiftlint:disable:next force_unwrapping
         return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(path)")!
@@ -92,10 +96,10 @@ class PermissionsManager: NSObject {
     private var bluetoothManager: CBCentralManager?
     private var bluetoothCallbacks: [@Sendable (Bool) -> Void] = []
 
-    // The event store asking for calendar access, kept until the user has answered, with every
-    // caller waiting for that answer
-    private var calendarStore: EKEventStore?
-    private var calendarCallbacks: [@Sendable (Bool) -> Void] = []
+    // The event store asking for calendar or reminders access (.calendars/.reminders), kept until
+    // the user has answered, with every caller waiting for that answer
+    private var eventKitStores: [PermissionsType: EKEventStore] = [:]
+    private var eventKitCallbacks: [PermissionsType: [@Sendable (Bool) -> Void]] = [:]
 
     // Notification authorization has no synchronous status API, so we cache the last known state.
     // The cache is populated on first check and after every request.
@@ -167,6 +171,12 @@ class PermissionsManager: NSObject {
             case .notDetermined: return .unknown
             default:             return .notTrusted
             }
+        case .reminders:
+            switch EKEventStore.authorizationStatus(for: .reminder) {
+            case .fullAccess:    return .trusted
+            case .notDetermined: return .unknown
+            default:             return .notTrusted
+            }
         }
     }
 
@@ -192,6 +202,8 @@ class PermissionsManager: NSObject {
             return CBManager.authorization == .allowedAlways
         case .calendars:
             return EKEventStore.authorizationStatus(for: .event) == .fullAccess
+        case .reminders:
+            return EKEventStore.authorizationStatus(for: .reminder) == .fullAccess
         }
     }
 
@@ -269,28 +281,42 @@ class PermissionsManager: NSObject {
                 callback?(false)
             }
         case .calendars:
-            switch EKEventStore.authorizationStatus(for: .event) {
-            case .fullAccess:
-                callback?(true)
-            case .notDetermined:
-                if let callback { calendarCallbacks.append(callback) }
-                guard calendarStore == nil else { return }
-                let store = EKEventStore()
-                calendarStore = store
-                store.requestFullAccessToEvents { granted, error in
-                    let message = error?.localizedDescription
-                    Task { @MainActor [weak self] in
-                        if let message { AKError("hs.permissions.requestCalendars(): \(message)") }
-                        guard let self else { return }
-                        let callbacks = self.calendarCallbacks
-                        self.calendarCallbacks.removeAll()
-                        self.calendarStore = nil
-                        callbacks.forEach { $0(granted) }
-                    }
+            requestEventKitAccess(.calendars, entity: .event, callback: callback)
+        case .reminders:
+            requestEventKitAccess(.reminders, entity: .reminder, callback: callback)
+        }
+    }
+
+    /// Asks for full access to calendar events or reminders, sharing one prompt between every
+    /// caller that asks while it's showing
+    private func requestEventKitAccess(_ permType: PermissionsType, entity: EKEntityType,
+                                       callback: (@Sendable (Bool) -> Void)?) {
+        switch EKEventStore.authorizationStatus(for: entity) {
+        case .fullAccess:
+            callback?(true)
+        case .notDetermined:
+            if let callback { eventKitCallbacks[permType, default: []].append(callback) }
+            guard eventKitStores[permType] == nil else { return }
+            let store = EKEventStore()
+            eventKitStores[permType] = store
+            // Called on an arbitrary queue, so it must not be main-actor isolated
+            let completion: @Sendable (Bool, (any Error)?) -> Void = { [weak self] granted, error in
+                let message = error?.localizedDescription
+                Task { @MainActor [weak self] in
+                    if let message { AKError("hs.permissions.request\(permType.displayName)(): \(message)") }
+                    guard let self else { return }
+                    let callbacks = self.eventKitCallbacks.removeValue(forKey: permType) ?? []
+                    self.eventKitStores[permType] = nil
+                    callbacks.forEach { $0(granted) }
                 }
-            default:
-                callback?(false)
             }
+            if entity == .reminder {
+                store.requestFullAccessToReminders(completion: completion)
+            } else {
+                store.requestFullAccessToEvents(completion: completion)
+            }
+        default:
+            callback?(false)
         }
     }
 }

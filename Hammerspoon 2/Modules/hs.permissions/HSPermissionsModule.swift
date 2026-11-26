@@ -168,6 +168,24 @@ import AVFoundation
     /// })
     /// ```
     @objc func requestCalendars() -> JSPromise?
+
+    /// Check if the app has full access to reminders, which `hs.eventkit`'s reminder methods need.
+    /// - Returns: true if permission is granted, false otherwise
+    /// - Example:
+    /// ```js
+    /// console.log(hs.permissions.checkReminders())
+    /// ```
+    @objc func checkReminders() -> Bool
+
+    /// Request full access to reminders (shows the system dialog if the user has not yet decided)
+    /// - Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied
+    /// - Example:
+    /// ```js
+    /// hs.permissions.requestReminders().then(granted => {
+    ///     if (granted) console.log(hs.eventkit.reminderLists().length + " reminder lists")
+    /// })
+    /// ```
+    @objc func requestReminders() -> JSPromise?
 }
 
 // MARK: - Implementation
@@ -313,6 +331,21 @@ import AVFoundation
         guard let context = JSContext.current() else { return nil }
         return wrapAsyncInJSPromise(in: context) { holder in
             PermissionsManager.shared.request(.calendars) { result in
+                Task { @MainActor in holder.resolveWith(result) }
+            }
+        }
+    }
+
+    // MARK: - Reminders
+
+    @objc func checkReminders() -> Bool {
+        return PermissionsManager.shared.check(.reminders)
+    }
+
+    @objc func requestReminders() -> JSPromise? {
+        guard let context = JSContext.current() else { return nil }
+        return wrapAsyncInJSPromise(in: context) { holder in
+            PermissionsManager.shared.request(.reminders) { result in
                 Task { @MainActor in holder.resolveWith(result) }
             }
         }
