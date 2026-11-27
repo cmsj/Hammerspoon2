@@ -16,6 +16,7 @@ enum ConfigFilePickerValues: String, CaseIterable, Identifiable {
 @_documentation(visibility: private)
 struct SettingsConfigView: View {
     @State private var settingsManager = SettingsManager.shared
+    @State private var loginItemManager = LoginItemManager.shared
     @State private var configFilePicker: ConfigFilePickerValues = .url
     @State private var icon = NSImage(size: .init(width: 12, height: 12))
 
@@ -102,12 +103,52 @@ struct SettingsConfigView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
+                    GridRow {
+                        Text("Launch at login:")
+                            .gridColumnAlignment(.trailing)
+                        Toggle("Launch at login", isOn: $loginItemManager.isEnabled)
+                            .labelsHidden()
+                            .gridColumnAlignment(.leading)
+                    }
+                    if loginItemManager.requiresApproval {
+                        GridRow {
+                            Color.clear
+                                .gridCellUnsizedAxes([.horizontal, .vertical])
+                            HStack {
+                                Text("Hammerspoon 2 is not allowed to launch at login.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Button("Open Login Items Settings…") {
+                                    loginItemManager.openSystemSettingsLoginItems()
+                                }
+                                .controlSize(.small)
+                            }
+                            .gridColumnAlignment(.leading)
+                        }
+                    }
+                    if let error = loginItemManager.lastError {
+                        GridRow {
+                            Color.clear
+                                .gridCellUnsizedAxes([.horizontal, .vertical])
+                            Text(error)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                                .gridColumnAlignment(.leading)
+                                .frame(maxWidth: 400, alignment: .leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
                 }
                 Spacer()
             }
             .frame(width: 700)
             .padding(.vertical)
             Spacer()
+        }
+        // The user can change our login item in System Settings while this window is open.
+        .onAppear { loginItemManager.refresh() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            loginItemManager.refresh()
         }
     }
 }
