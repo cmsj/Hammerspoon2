@@ -167,6 +167,13 @@ import JavaScriptCore
     let engineID: UUID
     private let store: any KeychainStore
 
+    /// A get() that hasn't finished, perhaps because macOS is waiting for the user to authenticate
+    private struct PendingRead {
+        let holder: JSPromiseHolder
+        let authentication: KeychainAuthentication
+    }
+    private var pendingReads: [UUID: PendingRead] = [:]
+
     /// Tests use this to stand in a fake store
     init(engineID: UUID, store: any KeychainStore) {
         self.engineID = engineID
@@ -191,7 +198,17 @@ import JavaScriptCore
         MainActor.assumeIsolated { toString() }
     }
 
-    func shutdown() {}
+    func shutdown() {
+        // Dismiss any authentication prompt, and drop the old config's promises without settling
+        // them, so their handlers never run after a reload
+        for read in pendingReads.values {
+            read.authentication.cancel()
+        }
+        pendingReads = [:]
+    }
+
+    /// How many get()s haven't finished. For tests.
+    var pendingReadCount: Int { pendingReads.count }
 
     // MARK: - HSKeychainModuleAPI
 
@@ -201,7 +218,11 @@ import JavaScriptCore
 
     @objc func set(_ service: String, _ account: String, _ secret: String, _ options: [String: Any]?) {
         do throws(KeychainError) {
-            let write = try Self.makeWrite(service: service, account: account, secret: secret, options: options)
+            let arguments = Arguments()
+            let write = try Self.makeWrite(service: try arguments.service(at: 0),
+                                           account: try arguments.account(at: 1),
+                                           secret: try arguments.requiredString(at: 2, named: "secret"),
+                                           options: try arguments.options(at: 3, bridged: options))
             try store.set(write)
         } catch {
             fail("set", error)
@@ -210,31 +231,28 @@ import JavaScriptCore
 
     @objc func get(_ service: String, _ account: String, _ reason: String?) -> JSPromise? {
         guard let context = JSContext.current() else { return nil }
-        let reason = Self.optionalString(reason)
-        let store = store
+        // Read the arguments now: inside the Promise executor, they'd be the executor's own
+        let request = Result { () throws(KeychainError) in
+            let arguments = Arguments()
+            return (service: try arguments.service(at: 0), account: try arguments.account(at: 1),
+                    reason: try arguments.optionalString(at: 2, named: "reason"))
+        }
 
-        return wrapAsyncInJSPromise(in: context) { holder in
-            do throws(KeychainError) {
-                try Self.validate(service: service, account: account)
-            } catch {
+        return wrapAsyncInJSPromise(in: context) { [weak self] holder in
+            switch request {
+            case .failure(let error):
                 Self.reject(holder, "get", error)
-                return
-            }
-            Task {
-                switch await Self.readSecret(store, service: service, account: account, reason: reason) {
-                case .success(let secret):
-                    holder.resolveWith(secret ?? NSNull())
-                case .failure(let error):
-                    Self.reject(holder, "get", error)
-                }
+            case .success(let request):
+                self?.startRead(holder: holder, service: request.service, account: request.account,
+                                reason: request.reason)
             }
         }
     }
 
     @objc func remove(_ service: String, _ account: String) -> Bool {
         do throws(KeychainError) {
-            try Self.validate(service: service, account: account)
-            return try store.remove(service: service, account: account)
+            let arguments = Arguments()
+            return try store.remove(service: try arguments.service(at: 0), account: try arguments.account(at: 1))
         } catch {
             fail("remove", error)
             return false
@@ -243,7 +261,7 @@ import JavaScriptCore
 
     @objc func items(_ service: String?) -> [[String: Any]] {
         do throws(KeychainError) {
-            let service = Self.optionalString(service)
+            let service = try Arguments().optionalString(at: 0, named: "service")
             if service?.isEmpty == true {
                 throw .invalidArgument("service can't be empty")
             }
@@ -254,34 +272,89 @@ import JavaScriptCore
         }
     }
 
-    // MARK: - Private
+    // MARK: - Reading
+
+    private func startRead(holder: JSPromiseHolder, service: String, account: String, reason: String?) {
+        let id = UUID()
+        let authentication = KeychainAuthentication(reason: reason)
+        pendingReads[id] = PendingRead(holder: holder, authentication: authentication)
+        let store = store
+        Task { [weak self] in
+            let result = await Self.readSecret(store, service: service, account: account, authentication: authentication)
+            self?.finishRead(id, result)
+        }
+    }
+
+    private func finishRead(_ id: UUID, _ result: Result<String?, KeychainError>) {
+        // Gone if the module was shut down meanwhile
+        guard let read = pendingReads.removeValue(forKey: id) else { return }
+        switch result {
+        case .success(let secret):
+            read.holder.resolveWith(secret ?? NSNull())
+        case .failure(let error):
+            Self.reject(read.holder, "get", error)
+        }
+    }
 
     /// Reads off the main thread, since macOS may block the read while it asks the user to authenticate
     @concurrent
     private nonisolated static func readSecret(_ store: any KeychainStore, service: String, account: String,
-                                               reason: String?) async -> Result<String?, KeychainError> {
-        Result { () throws(KeychainError) in try store.secret(service: service, account: account, reason: reason) }
-    }
-
-    /// An omitted trailing String? argument arrives from JSExport as the literal "undefined"
-    private static func optionalString(_ value: String?) -> String? {
-        switch value {
-        case nil, "undefined", "null": nil
-        default: value
+                                               authentication: KeychainAuthentication) async -> Result<String?, KeychainError> {
+        Result { () throws(KeychainError) in
+            try store.secret(service: service, account: account, authentication: authentication)
         }
     }
 
-    private static func validate(service: String, account: String) throws(KeychainError) {
-        // An omitted String argument arrives as the literal "undefined"
-        guard !service.isEmpty, service != "undefined" else { throw .invalidArgument("a service is required") }
-        guard !account.isEmpty, account != "undefined" else { throw .invalidArgument("an account is required") }
+    // MARK: - Arguments
+
+    /// The JS values the current call was made with. JSExport turns an omitted String argument
+    /// into the string "undefined", null into "null", and a number into its digits, so the
+    /// bridged Swift parameters can't tell those apart from real strings.
+    private struct Arguments {
+        let values: [JSValue] = JSContext.currentArguments() as? [JSValue] ?? []
+
+        func isPresent(at index: Int) -> Bool {
+            index < values.count && !values[index].isUndefined && !values[index].isNull
+        }
+
+        func requiredString(at index: Int, named name: String) throws(KeychainError) -> String {
+            guard index < values.count, values[index].isString, let value = values[index].toString() else {
+                throw .invalidArgument("\(name) must be a string")
+            }
+            return value
+        }
+
+        func optionalString(at index: Int, named name: String) throws(KeychainError) -> String? {
+            guard isPresent(at: index) else { return nil }
+            return try requiredString(at: index, named: name)
+        }
+
+        /// The options object, as JSExport bridged it, or nil if it was omitted
+        func options(at index: Int, bridged: [String: Any]?) throws(KeychainError) -> [String: Any]? {
+            guard isPresent(at: index) else { return nil }
+            guard values[index].isObject, !values[index].isArray else {
+                throw .invalidArgument("options must be an object")
+            }
+            return bridged ?? [:]
+        }
+
+        func service(at index: Int) throws(KeychainError) -> String {
+            let service = try requiredString(at: index, named: "service")
+            guard !service.isEmpty else { throw .invalidArgument("service can't be empty") }
+            return service
+        }
+
+        func account(at index: Int) throws(KeychainError) -> String {
+            let account = try requiredString(at: index, named: "account")
+            guard !account.isEmpty else { throw .invalidArgument("account can't be empty") }
+            return account
+        }
     }
 
     private static let optionNames: Set<String> = ["label", "comment", "requireUserPresence", "synchronizable"]
 
     static func makeWrite(service: String, account: String, secret: String,
                           options: [String: Any]?) throws(KeychainError) -> KeychainWrite {
-        try validate(service: service, account: account)
         var write = KeychainWrite(service: service, account: account, secret: secret)
         guard let options else { return write }
 
@@ -311,6 +384,8 @@ import JavaScriptCore
         }
         return write
     }
+
+    // MARK: - Errors
 
     private func fail(_ function: String, _ error: KeychainError) {
         guard let context = JSContext.current() else { return }

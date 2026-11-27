@@ -15,6 +15,10 @@ nonisolated final class MockKeychainStore: KeychainStore {
         var lastReason: String??
         /// Thrown by every operation while set
         var failure: KeychainError?
+        /// Makes secret() block until its authentication is cancelled, like a read waiting for
+        /// the user to authenticate
+        var readsWaitForCancellation = false
+        var readsStarted = 0
     }
 
     let state = Mutex(State())
@@ -29,9 +33,21 @@ nonisolated final class MockKeychainStore: KeychainStore {
         }
     }
 
-    func secret(service: String, account: String, reason: String?) throws(KeychainError) -> String? {
-        try state.withLock { state throws(KeychainError) in
-            state.lastReason = .some(reason)
+    func secret(service: String, account: String,
+                authentication: KeychainAuthentication) throws(KeychainError) -> String? {
+        let waits = state.withLock { state in
+            state.readsStarted += 1
+            return state.readsWaitForCancellation
+        }
+        if waits {
+            let deadline = Date(timeIntervalSinceNow: 5)
+            while !authentication.isCancelled && Date() < deadline {
+                Thread.sleep(forTimeInterval: 0.01)
+            }
+            throw KeychainError(status: errSecUserCanceled)
+        }
+        return try state.withLock { state throws(KeychainError) in
+            state.lastReason = .some(authentication.reason)
             if let failure = state.failure { throw failure }
             return state.items[Self.key(service, account)]?.write.secret
         }

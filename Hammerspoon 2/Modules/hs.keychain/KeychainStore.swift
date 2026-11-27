@@ -6,6 +6,7 @@
 import Foundation
 import Security
 import LocalAuthentication
+import Synchronization
 
 // MARK: - Errors
 
@@ -96,6 +97,34 @@ nonisolated struct KeychainItemInfo: Sendable, Equatable {
     }
 }
 
+// MARK: - Authentication
+
+/// The authentication session for one read, so a read that's waiting for the user to
+/// authenticate can be cancelled (e.g. by a config reload), which dismisses the prompt.
+nonisolated final class KeychainAuthentication: @unchecked Sendable {
+    /// Why the secret is needed, shown in the authentication prompt
+    let reason: String?
+    /// LAContext isn't marked Sendable, but its only use on another thread is invalidate(), which
+    /// exists to cancel an evaluation running elsewhere. Everything else is set up in init.
+    let context: LAContext
+    private let cancelled = Mutex(false)
+
+    init(reason: String?) {
+        self.reason = reason
+        context = LAContext()
+        if let reason {
+            context.localizedReason = reason
+        }
+    }
+
+    var isCancelled: Bool { cancelled.withLock { $0 } }
+
+    func cancel() {
+        cancelled.withLock { $0 = true }
+        context.invalidate()
+    }
+}
+
 // MARK: - Store
 
 /// The keychain operations hs.keychain needs, so tests can stand in a fake: builds without code
@@ -108,8 +137,10 @@ nonisolated protocol KeychainStore: Sendable {
     var isAvailable: Bool { get }
     /// Adds the item, replacing any item with the same service and account
     func set(_ item: KeychainWrite) throws(KeychainError)
-    /// The item's secret, or nil if there's no such item
-    func secret(service: String, account: String, reason: String?) throws(KeychainError) -> String?
+    /// The item's secret, or nil if there's no such item. May block until the user authenticates,
+    /// or `authentication` is cancelled.
+    func secret(service: String, account: String,
+                authentication: KeychainAuthentication) throws(KeychainError) -> String?
     /// Removes the item. Returns false if there was no such item.
     func remove(service: String, account: String) throws(KeychainError) -> Bool
     /// Every item, or every item for one service, without their secrets
@@ -175,27 +206,22 @@ nonisolated struct SecurityKeychainStore: KeychainStore {
         let accessible = item.synchronizable
             ? kSecAttrAccessibleAfterFirstUnlock
             : kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        let protection: (key: CFString, value: Any)
         if item.requireUserPresence {
             var error: Unmanaged<CFError>?
             guard let access = unsafe SecAccessControlCreateWithFlags(nil, accessible, .userPresence, &error) else {
                 let message = unsafe error?.takeRetainedValue().localizedDescription ?? "unknown error"
                 throw KeychainError(code: "EKEYCHAIN", message: "couldn't create access control: \(message)", status: nil)
             }
-            attributes[kSecAttrAccessControl] = access
+            protection = (kSecAttrAccessControl, access)
         } else {
-            attributes[kSecAttrAccessible] = accessible
+            protection = (kSecAttrAccessible, accessible)
         }
+        attributes[protection.key] = protection.value
 
         var status = SecItemAdd(attributes as CFDictionary, nil)
         if status == errSecDuplicateItem {
-            // Replace it outright, rather than SecItemUpdate, so the new protection and
-            // attributes all apply. The add just failed only because the item exists, so
-            // it won't fail again for another reason after the old one is gone.
-            var existing = try baseQuery(service: item.service, account: item.account)
-            existing[kSecAttrSynchronizable] = item.synchronizable
-            status = SecItemDelete(existing as CFDictionary)
-            guard status == errSecSuccess || status == errSecItemNotFound else { throw KeychainError(status: status) }
-            status = SecItemAdd(attributes as CFDictionary, nil)
+            status = try replace(item, attributes: attributes, protection: protection)
         }
         guard status == errSecSuccess else { throw KeychainError(status: status) }
 
@@ -207,15 +233,49 @@ nonisolated struct SecurityKeychainStore: KeychainStore {
         guard status == errSecSuccess || status == errSecItemNotFound else { throw KeychainError(status: status) }
     }
 
-    func secret(service: String, account: String, reason: String?) throws(KeychainError) -> String? {
+    /// Replaces an existing item with the same identity as `item`, returning the final status
+    private func replace(_ item: KeychainWrite, attributes: [CFString: Any],
+                         protection: (key: CFString, value: Any)) throws(KeychainError) -> OSStatus {
+        var existing = try baseQuery(service: item.service, account: item.account)
+        existing[kSecAttrSynchronizable] = item.synchronizable
+
+        // Update in place where possible, so a concurrent get() never finds the secret missing.
+        // An item that requires user presence can't even be found without authenticating, so
+        // never let the update ask: it fails instead, and the item is replaced below.
+        let noInteraction = LAContext()
+        noInteraction.interactionNotAllowed = true
+        var lookup = existing
+        lookup[kSecUseAuthenticationContext] = noInteraction
+        let changes: [CFString: Any] = [
+            kSecValueData: Data(item.secret.utf8),
+            // Empty clears them: set() replaces a secret's label and comment too
+            kSecAttrLabel: item.label ?? "",
+            kSecAttrComment: item.comment ?? "",
+            protection.key: protection.value,
+        ]
+        var status = SecItemUpdate(lookup as CFDictionary, changes as CFDictionary)
+        switch status {
+        case errSecSuccess:
+            return status
+        case errSecItemNotFound:
+            // Removed since the add found it
+            return SecItemAdd(attributes as CFDictionary, nil)
+        default:
+            // Deleting needs no authentication, even for an item that requires user presence.
+            // The add only failed because the item existed, so it won't fail for another reason
+            // once it's gone.
+            status = SecItemDelete(existing as CFDictionary)
+            guard status == errSecSuccess || status == errSecItemNotFound else { return status }
+            return SecItemAdd(attributes as CFDictionary, nil)
+        }
+    }
+
+    func secret(service: String, account: String,
+                authentication: KeychainAuthentication) throws(KeychainError) -> String? {
         var query = try baseQuery(service: service, account: account)
         query[kSecReturnData] = true
         query[kSecMatchLimit] = kSecMatchLimitOne
-        let context = LAContext()
-        if let reason {
-            context.localizedReason = reason
-        }
-        query[kSecUseAuthenticationContext] = context
+        query[kSecUseAuthenticationContext] = authentication.context
 
         var result: CFTypeRef?
         let status = unsafe SecItemCopyMatching(query as CFDictionary, &result)
@@ -259,8 +319,9 @@ nonisolated struct SecurityKeychainStore: KeychainStore {
                 KeychainItemInfo(
                     service: row[kSecAttrService as String] as? String ?? "",
                     account: row[kSecAttrAccount as String] as? String ?? "",
-                    label: row[kSecAttrLabel as String] as? String,
-                    comment: row[kSecAttrComment as String] as? String,
+                    // An update clears them by setting them empty
+                    label: (row[kSecAttrLabel as String] as? String).flatMap { $0.isEmpty ? nil : $0 },
+                    comment: (row[kSecAttrComment as String] as? String).flatMap { $0.isEmpty ? nil : $0 },
                     created: row[kSecAttrCreationDate as String] as? Date,
                     modified: row[kSecAttrModificationDate as String] as? Date,
                     synchronizable: (row[kSecAttrSynchronizable as String] as? NSNumber)?.boolValue ?? false

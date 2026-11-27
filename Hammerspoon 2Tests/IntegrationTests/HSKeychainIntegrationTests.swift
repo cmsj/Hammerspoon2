@@ -139,6 +139,11 @@ struct HSKeychainTests {
             "hs.keychain.set('', 'alice', 'x')",
             "hs.keychain.set('svc', '', 'x')",
             "hs.keychain.set('svc')",
+            "hs.keychain.set('svc', 'alice')",
+            "hs.keychain.set('svc', 'alice', null)",
+            "hs.keychain.set('svc', 'alice', 42)",
+            "hs.keychain.set(null, 'alice', 'x')",
+            "hs.keychain.set('svc', 'alice', 'x', [1])",
             "hs.keychain.set('svc', 'alice', 'x', { lable: 'typo' })",
             "hs.keychain.set('svc', 'alice', 'x', { label: 42 })",
             "hs.keychain.set('svc', 'alice', 'x', { synchronizable: 1 })",
@@ -149,6 +154,68 @@ struct HSKeychainTests {
             harness.eval("var err; try { \(script) } catch (e) { err = e }")
             #expect(harness.evalString("err && err.code") == "EINVALIDARG")
             #expect(store.state.withLock { $0.items.isEmpty })
+        }
+
+        @Test("set throws for options that aren't an object")
+        func testSetStringOptions() {
+            let harness = makeHarness()
+            // JavaScriptCore refuses to bridge a string to a dictionary, so it throws a TypeError
+            // of its own before set() runs
+            harness.eval("var err; try { hs.keychain.set('svc', 'alice', 'x', 'not options') } catch (e) { err = e }")
+            #expect(harness.evalBool("err instanceof Error") == true)
+            #expect(store.state.withLock { $0.items.isEmpty })
+        }
+
+        @Test("set without a secret leaves the stored secret alone")
+        func testSetMissingSecretKeepsSecret() async {
+            let harness = makeHarness()
+            harness.eval("hs.keychain.set('svc', 'alice', 'original')")
+            harness.eval("var err; try { hs.keychain.set('svc', 'alice') } catch (e) { err = e }")
+            #expect(harness.evalString("err.code") == "EINVALIDARG")
+            #expect(store.write(service: "svc", account: "alice")?.secret == "original")
+        }
+
+        @Test("strings that JSExport would confuse with null or undefined are kept as they are")
+        func testLiteralNullAndUndefinedStrings() async {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.keychain.set('null', 'undefined', 'a')
+                hs.keychain.set('other', 'bob', 'b')
+                """)
+            #expect(!harness.hasException)
+            #expect(harness.evalString("hs.keychain.items('null').map(i => i.account).join(',')") == "undefined")
+            #expect(harness.evalInt("hs.keychain.items(null).length") == 2)
+            #expect(harness.evalInt("hs.keychain.items(undefined).length") == 2)
+            #expect(await settle(harness, "hs.keychain.get('null', 'undefined')"))
+            #expect(harness.evalString("__value") == "a")
+            #expect(harness.evalBool("hs.keychain.remove('null', 'undefined')") == true)
+        }
+
+        @Test("get rejects a reason that isn't a string")
+        func testGetBadReason() async {
+            let harness = makeHarness()
+            #expect(await settle(harness, "hs.keychain.get('svc', 'alice', 5)"))
+            #expect(harness.evalString("__error.code") == "EINVALIDARG")
+        }
+
+        @Test("shutdown cancels a read that's waiting to authenticate, without settling its promise")
+        func testShutdownCancelsPendingRead() async {
+            store.state.withLock { $0.readsWaitForCancellation = true }
+            let module = HSKeychainModule(engineID: UUID(), store: store)
+            let harness = JSTestHarness()
+            harness.loadModule(module, as: "keychain")
+            harness.eval("""
+                var __settled = false;
+                hs.keychain.get('svc', 'alice').then(() => { __settled = true }, () => { __settled = true });
+                """)
+            #expect(await harness.waitForAsync(timeout: 2) { store.state.withLock { $0.readsStarted } == 1 })
+            #expect(module.pendingReadCount == 1)
+
+            module.shutdown()
+            #expect(module.pendingReadCount == 0)
+            // The read ends (with ECANCELED) once cancelled, but its promise must stay unsettled
+            _ = await harness.waitForAsync(timeout: 0.3) { false }
+            #expect(harness.evalBool("__settled") == false)
         }
 
         @Test("set throws the store's error")
@@ -281,6 +348,36 @@ struct HSKeychainTests {
             #expect(harness.evalString("hs.keychain.items(svc).map(i => i.account).join(',')") == "alice")
             #expect(harness.evalBool("hs.keychain.remove(svc, 'bob')") == true)
             #expect(harness.evalBool("hs.keychain.remove(svc, 'bob')") == false)
+        }
+
+        @Test("replacing a secret updates it in place, and can add or remove user presence")
+        func testReplaceInPlaceAndChangeProtection() async {
+            defer { cleanUp(accounts: ["carol"]) }
+            let harness = makeHarness()
+            harness.eval("hs.keychain.set(svc, 'carol', 'one', { label: 'L' })")
+            let created = harness.evalDouble("hs.keychain.items(svc)[0].created.getTime()")
+            // Creation dates have one-second resolution
+            _ = await harness.waitForAsync(timeout: 1.1) { false }
+
+            harness.eval("hs.keychain.set(svc, 'carol', 'two')")
+            #expect(!harness.hasException)
+            // Updated, not deleted and re-added
+            #expect(harness.evalDouble("hs.keychain.items(svc)[0].created.getTime()") == created)
+            #expect(harness.evalBool("hs.keychain.items(svc)[0].label === undefined") == true)
+            #expect(await settle(harness, "hs.keychain.get(svc, 'carol')"))
+            #expect(harness.evalString("__value") == "two")
+
+            // Now protected, so it disappears from items()
+            harness.eval("hs.keychain.set(svc, 'carol', 'three', { requireUserPresence: true })")
+            #expect(!harness.hasException)
+            #expect(harness.evalInt("hs.keychain.items(svc).length") == 0)
+
+            // And unprotected again, readable without a prompt
+            harness.eval("hs.keychain.set(svc, 'carol', 'four')")
+            #expect(!harness.hasException)
+            #expect(harness.evalInt("hs.keychain.items(svc).length") == 1)
+            #expect(await settle(harness, "hs.keychain.get(svc, 'carol')"))
+            #expect(harness.evalString("__value") == "four")
         }
     }
 }
