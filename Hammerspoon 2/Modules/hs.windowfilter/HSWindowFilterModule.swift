@@ -67,7 +67,10 @@ import AppKit
 ///
 /// Regions and screens only apply to visible windows. RegExps support the `i`, `m` and `s` flags.
 ///
-/// Hammerspoon's own windows are never included.
+/// Hammerspoon's own windows (such as the Console) are included like any other application's.
+/// An `hs.canvas` reports a subrole ending in `.Hammerspoon` (see
+/// `HSCanvas.setAccessibilitySubrole`), which the default roles don't include, so only a rule
+/// that allows its subrole sees it.
 ///
 /// ## Applications that turn Accessibility off
 ///

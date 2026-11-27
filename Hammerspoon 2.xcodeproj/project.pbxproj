@@ -1250,7 +1250,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Hammerspoon/AXSwift";
 			requirement = {
-				branch = main;
+				branch = "self-request-guard";
 				kind = branch;
 			};
 		};

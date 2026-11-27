@@ -514,30 +514,67 @@ struct HSWindowFilterIntegrationTests {
             #expect(!harness.hasException)
         }
 
-        // Hammerspoon's own process answers Accessibility requests in-process, so without an
-        // explicit check a window passed straight to isWindowAllowed() was read and judged
-        // like any other. That also means this needs no Accessibility permission.
-        @Test("isWindowAllowed() rejects Hammerspoon's own windows, even for a filter that allows everything")
+        /// A titled window of Hammerspoon's own, on screen, and its HSWindow. Requests to
+        /// Hammerspoon's own process are answered in-process, so this needs no Accessibility
+        /// permission.
         @MainActor
-        func testOwnWindowsAreNeverAllowed() throws {
+        private func makeOwnWindow(title: String) throws -> (NSWindow, HSWindow) {
             let window = NSWindow(contentRect: NSRect(x: 100, y: 100, width: 200, height: 150),
                                   styleMask: [.titled], backing: .buffered, defer: false)
             window.isReleasedWhenClosed = false
-            window.title = "Hammerspoon's own window"
+            window.title = title
             window.orderFrontRegardless()
-            defer { window.orderOut(nil) }
 
             var value: CFTypeRef?
             let app = AXUIElementCreateApplication(getpid())
             try #require(unsafe AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &value) == .success)
             let elements = try #require(value as? [AXUIElement]).map { UIElement($0) }
             let element = try #require(elements.first { Int(WindowEnumerator.windowID(of: $0)) == window.windowNumber })
-            let ownWindow = AXObjectCache.shared.window(element: element, app: .current, id: window.windowNumber)
+            return (window, AXObjectCache.shared.window(element: element, app: .current, id: window.windowNumber))
+        }
+
+        @Test("isWindowAllowed() judges Hammerspoon's own windows by the filter's rules")
+        @MainActor
+        func testOwnWindowsFollowTheRules() throws {
+            let (window, ownWindow) = try makeOwnWindow(title: "Hammerspoon's own window")
+            defer { window.orderOut(nil) }
 
             let harness = makeHarness()
             harness.context.setObject(ownWindow, forKeyedSubscript: "ownWindow" as NSString)
-            harness.expectFalse("hs.windowfilter.create(win => true).isWindowAllowed(ownWindow)")
-            harness.expectFalse("hs.windowfilter.create({ default: { allowRoles: '*' } }).isWindowAllowed(ownWindow)")
+            harness.expectTrue("hs.windowfilter.create(win => true).isWindowAllowed(ownWindow)")
+            harness.expectFalse("hs.windowfilter.create(win => false).isWindowAllowed(ownWindow)")
+            harness.expectTrue("hs.windowfilter.create({ default: { allowRoles: '*' } }).isWindowAllowed(ownWindow)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("a filter reports Hammerspoon's own windows being created, moved, retitled and destroyed")
+        @MainActor
+        func testOwnWindowEvents() async throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var wf = hs.windowfilter.create(win => win.pid === \(getpid()));
+                var events = [];
+                var record = (win, appName, event) => events.push(event + ":" + (win ? win.id : null));
+                for (const name of ['windowCreated', 'windowMoved', 'windowTitleChanged', 'windowDestroyed']) wf.on(name, record);
+                """)
+            #expect(!harness.hasException)
+            defer {
+                harness.eval("for (const name of ['windowCreated', 'windowMoved', 'windowTitleChanged', 'windowDestroyed']) wf.off(name, record)")
+            }
+
+            let (window, _) = try makeOwnWindow(title: "Own window for a filter")
+            defer { window.orderOut(nil) }
+            func saw(_ event: String) -> Bool {
+                harness.eval("events.includes('\(event):\(window.windowNumber)')") as? Bool == true
+            }
+
+            #expect(await harness.waitForAsync(timeout: 3) { saw("windowCreated") })
+            window.setFrameOrigin(NSPoint(x: 160, y: 160))
+            #expect(await harness.waitForAsync(timeout: 3) { saw("windowMoved") })
+            window.title = "Own window, retitled"
+            #expect(await harness.waitForAsync(timeout: 3) { saw("windowTitleChanged") })
+            window.orderOut(nil)
+            #expect(await harness.waitForAsync(timeout: 3) { saw("windowDestroyed") })
             #expect(!harness.hasException)
         }
     }

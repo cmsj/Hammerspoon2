@@ -2077,4 +2077,42 @@ struct HSAXTests {
             }
         }
     }
+
+    /// AX won't observe Hammerspoon's own process, so these notifications come from
+    /// AXObserverHub's OwnWindowNotifier, made from AppKit's
+    @Suite("hs.ax watchers on Hammerspoon's own windows", .serialized,
+           .disabled(if: !isAccessibilityEnabled(), "Accessibility permissions not available"))
+    @MainActor
+    struct HSAXOwnWindowWatcherTests {
+        @Test("a watcher on Hammerspoon's own application hears its windows being created and moved")
+        func testOwnWindowNotifications() async {
+            let harness = JSTestHarness()
+            harness.loadModule(HSAXModule.self, as: "ax")
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            harness.eval("""
+                var ownElem = hs.ax.applicationElement(hs.application.fromPID(\(getpid())));
+                var ownEvents = [];
+                var ownFn = function(notification, elem) { ownEvents.push(notification + ':' + elem.title); };
+                hs.ax.on(ownElem, ['AXWindowCreated', 'AXWindowMoved'], ownFn);
+                """)
+            #expect(!harness.hasException)
+            defer { harness.eval("hs.ax.off(ownElem, ['AXWindowCreated', 'AXWindowMoved'], ownFn)") }
+
+            let window = NSWindow(contentRect: NSRect(x: 140, y: 140, width: 220, height: 140),
+                                  styleMask: [.titled], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            window.title = "Watched own window"
+            window.orderFrontRegardless()
+            defer { window.orderOut(nil) }
+
+            #expect(await harness.waitForAsync(timeout: 3) {
+                harness.eval("ownEvents.includes('windowCreated:Watched own window')") as? Bool == true
+            })
+            window.setFrameOrigin(NSPoint(x: 180, y: 180))
+            #expect(await harness.waitForAsync(timeout: 3) {
+                harness.eval("ownEvents.includes('windowMoved:Watched own window')") as? Bool == true
+            })
+            #expect(!harness.hasException)
+        }
+    }
 }

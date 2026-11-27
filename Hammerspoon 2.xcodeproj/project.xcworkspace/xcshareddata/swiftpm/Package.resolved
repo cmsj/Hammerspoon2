@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Hammerspoon/AXSwift",
       "state" : {
-        "branch" : "main",
-        "revision" : "71309f6274896bbd32c67fe5c1f6ae71b9c87a64"
+        "branch" : "self-request-guard",
+        "revision" : "263d44f39e0c03fcf0463d0e95b83918558a23a7"
       }
     },
     {
