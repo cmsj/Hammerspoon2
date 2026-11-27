@@ -22,6 +22,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AKGarbage("applicationDidFinishLaunching: Creating/booting shared manager")
 
         AppDelegate.instance = self
+        // Before anything can send an Accessibility request
+        AXSelfRequestGuard.install()
         // Before anything posts a notification, and before launching finishes
         UserNotificationRouter.shared.install()
         ConsoleCompletionEngine.shared.prewarm()

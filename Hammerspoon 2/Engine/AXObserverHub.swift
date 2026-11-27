@@ -24,6 +24,11 @@ import AXSwift
 /// delivers notifications registered on an application element with the descendant they happened
 /// on (e.g. AXWindowCreated arrives with the new window). Each client routes them to the right
 /// place itself.
+///
+/// Hammerspoon's own process can't be observed through AX (`AXObserverAddNotification` refuses
+/// it), so registrations there are served by an `OwnWindowNotifier` instead, which posts the
+/// window notifications AX would from AppKit's own. Only those notifications, on the application
+/// or one of its windows, can be registered for there.
 @_documentation(visibility: private)
 @MainActor
 final class AXObserverHub {
@@ -96,6 +101,8 @@ final class AXObserverHub {
     }
 
     private var observers: [pid_t: Observer] = [:]
+    /// Stands in for the observer of Hammerspoon's own process, while it has registrations
+    private var ownWindowNotifier: OwnWindowNotifier?
     /// The clients holding each registration. A registration is in the observer exactly while
     /// it's a key here.
     private var holders: [Registration: Set<ObjectIdentifier>] = [:]
@@ -126,8 +133,11 @@ final class AXObserverHub {
     /// The number of processes with an observer, for tests
     var observerCount: Int { observers.count }
 
-    /// Whether process `pid` has an observer, for tests
-    func hasObserver(for pid: pid_t) -> Bool { observers[pid] != nil }
+    /// Whether process `pid` has an observer (for Hammerspoon's own process, the notifier that
+    /// stands in for one), for tests
+    func hasObserver(for pid: pid_t) -> Bool {
+        pid == AXSelfRequestGuard.ownProcessID ? ownWindowNotifier != nil : observers[pid] != nil
+    }
 
     // MARK: - Registration
 
@@ -144,6 +154,10 @@ final class AXObserverHub {
         }
 
         let pid = registration.pid
+        if pid == AXSelfRequestGuard.ownProcessID {
+            try addOwnProcess(registration, for: id)
+            return
+        }
         let createdObserver = observers[pid] == nil
         let observer: Observer
         if let existing = observers[pid] {
@@ -163,6 +177,24 @@ final class AXObserverHub {
                 observers.removeValue(forKey: pid)?.stop()
             }
             throw error
+        }
+        holders[registration] = [id]
+    }
+
+    /// Registers for one of Hammerspoon's own window notifications, which the notifier posts
+    private func addOwnProcess(_ registration: Registration, for id: ObjectIdentifier) throws(AXError) {
+        guard OwnWindowNotifier.notifications.contains(registration.notification) else {
+            throw AXError.notificationUnsupported
+        }
+        let role = try registration.element.role()
+        guard role == .application || role == .window else {
+            throw AXError.notificationUnsupported
+        }
+        if ownWindowNotifier == nil {
+            ownWindowNotifier = OwnWindowNotifier { [weak self] element, notification in
+                self?.deliver(element: element, notification: notification, pid: AXSelfRequestGuard.ownProcessID)
+            }
+            AKDebug("AXObserverHub: Watching Hammerspoon's own windows")
         }
         holders[registration] = [id]
     }
@@ -199,6 +231,12 @@ final class AXObserverHub {
         }
 
         for pid in emptiedPIDs where !holders.keys.contains(where: { $0.pid == pid }) {
+            if pid == AXSelfRequestGuard.ownProcessID, let notifier = ownWindowNotifier {
+                notifier.stop()
+                ownWindowNotifier = nil
+                AKDebug("AXObserverHub: Stopped watching Hammerspoon's own windows (no more registrations)")
+                continue
+            }
             observers.removeValue(forKey: pid)?.stop()
             AKDebug("AXObserverHub: Removed observer for PID \(pid) (no more registrations)")
         }
