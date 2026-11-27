@@ -52,13 +52,17 @@ final class JSPromiseHolder {
     }
 
     /// Reject the promise with a JS `Error` whose `code` property is set, in the style of Node's
-    /// errors (e.g. `err.code === "ENOENT"`), so callers can tell failures apart
-    func rejectWith(code: String, message: String) {
+    /// errors (e.g. `err.code === "ENOENT"`), so callers can tell failures apart. `properties` are
+    /// set on the error as well.
+    func rejectWith(code: String, message: String, properties: [String: Any] = [:]) {
         guard let error = JSValue(newErrorFromMessage: message, in: reject.context) else {
             reject.call(withArguments: [message])
             return
         }
         error.setValue(code, forProperty: "code")
+        for (key, value) in properties {
+            error.setValue(value, forProperty: key)
+        }
         reject.call(withArguments: [error])
     }
 }

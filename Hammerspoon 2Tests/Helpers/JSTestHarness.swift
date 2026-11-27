@@ -577,6 +577,8 @@ extension JSTestHarness {
             switch name {
             case "hashing":
                 loadModule(HSHashModule.self, as: name)
+            case "keychain":
+                loadModule(HSKeychainModule.self, as: name)
             case "timer":
                 loadModule(HSTimerModule.self, as: name)
             case "application":
