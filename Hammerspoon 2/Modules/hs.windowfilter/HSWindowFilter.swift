@@ -64,6 +64,9 @@ final class WindowFilterSettings {
     @objc func windows(_ sortOrder: String?) -> [HSWindow]
 
     /// Whether this filter allows a window
+    ///
+    /// Always `false` for Hammerspoon's own windows (such as the Console, or an `hs.canvas`),
+    /// which no filter ever includes, whatever its rules.
     /// - Parameter window: The window
     /// - Returns: `true` if the window is allowed
     /// - Example:

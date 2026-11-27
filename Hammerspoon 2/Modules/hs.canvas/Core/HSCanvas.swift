@@ -210,8 +210,17 @@ import SwiftUI
     @objc func behaviorValue(_ value: Int) -> HSCanvas
 
     /// Set whether clicking the canvas activates the Hammerspoon app
+    ///
+    /// A canvas that isn't click-activating is also the only kind that can appear over another
+    /// application's fullscreen window while Hammerspoon shows a Dock icon. Without a Dock icon,
+    /// any canvas can, as long as its `behavior()` lets it join that Space (e.g. `canJoinAllSpaces`).
     /// - Parameter flag: Pass `false` to prevent clicks on the canvas from bringing the app forward
     /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// // An overlay that also shows over fullscreen applications
+    /// c.clickActivating(false).behavior("canJoinAllSpaces").level("screenSaver").show()
+    /// ```
     @objc func clickActivating(_ flag: Bool) -> HSCanvas
 
     /// Set whether the canvas window ignores all mouse events, passing clicks through to whatever is behind it
@@ -443,8 +452,15 @@ import SwiftUI
     // MARK: Accessibility
 
     /// Set the accessibility subrole reported for this canvas's window
-    /// - Parameter subrole: The accessibility subrole string
+    ///
+    /// By default a canvas reports AppKit's subrole for it with `.Hammerspoon` appended (e.g.
+    /// `AXUnknown.Hammerspoon`), so window managers don't treat it as an ordinary window.
+    /// - Parameter subrole: The accessibility subrole string, or `""` to go back to the default
     /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// c.setAccessibilitySubrole("MyOverlay")
+    /// ```
     @objc func setAccessibilitySubrole(_ subrole: String) -> HSCanvas
 
     // MARK: Drag and drop
@@ -473,7 +489,7 @@ import SwiftUI
 
     /// The window's frame in Hammerspoon screen coordinates (`y = 0` at the top of the primary screen)
     private var canvasFrame: CGRect
-    private var nsWindow: NSWindow?
+    private var nsWindow: HSCanvasWindow?
     private weak var module: HSCanvasModule?
 
     // A shown canvas is active: it stays on screen, with its callbacks, until it's hidden or
@@ -508,6 +524,15 @@ import SwiftUI
 
     /// The window's actual collectionBehavior, for tests -- not exposed to JS.
     var windowCollectionBehavior: NSWindow.CollectionBehavior? { nsWindow?.collectionBehavior }
+
+    /// The window's actual style mask, for tests -- not exposed to JS.
+    var windowStyleMask: NSWindow.StyleMask? { nsWindow?.styleMask }
+
+    /// Whether the window hides when Hammerspoon isn't frontmost, for tests -- not exposed to JS.
+    var windowHidesOnDeactivate: Bool? { nsWindow?.hidesOnDeactivate }
+
+    /// The window's window server number, for tests -- not exposed to JS.
+    var windowNumber: Int? { nsWindow?.windowNumber }
 
     /// The window's actual frame, in AppKit screen coordinates, for tests -- not exposed to JS.
     var windowAppKitFrame: CGRect? { nsWindow?.frame }
@@ -605,9 +630,6 @@ import SwiftUI
             hostingView.onDrop = { [weak self] paths in
                 _ = self?.draggingCallbackRef?.call(withArguments: [paths])
             }
-            if let subrole = accessibilitySubroleValue {
-                hostingView.setAccessibilitySubrole(NSAccessibility.Subrole(rawValue: subrole))
-            }
 
             var styleMask: NSWindow.StyleMask = [.borderless]
             if !isClickActivating {
@@ -629,6 +651,7 @@ import SwiftUI
             window.level = resolvedLevel()
             window.collectionBehavior = windowBehaviorRaw
             window.contentView = hostingView
+            window.subroleOverride = accessibilitySubroleValue
 
             self.nsWindow = window
             // Kept until the canvas is freed, including while hidden
@@ -1201,8 +1224,9 @@ import SwiftUI
     // MARK: - Accessibility
 
     @objc func setAccessibilitySubrole(_ subrole: String) -> HSCanvas {
-        accessibilitySubroleValue = subrole
-        nsWindow?.contentView?.setAccessibilitySubrole(NSAccessibility.Subrole(rawValue: subrole))
+        // An empty subrole goes back to the default, as in v1
+        accessibilitySubroleValue = subrole.isEmpty ? nil : subrole
+        nsWindow?.subroleOverride = accessibilitySubroleValue
         return self
     }
 

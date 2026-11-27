@@ -26,8 +26,9 @@ import AXSwift
 /// application quits, rather than asking again each time it's activated, and remembers it, so
 /// `inaccessibleApplications()` can say which applications it can't see the windows of.
 ///
-/// Hammerspoon's own windows are never included: its own process can't answer Accessibility
-/// requests while its main thread is busy asking them.
+/// Hammerspoon's own windows are never included, in what's tracked or in a window asked about
+/// directly (`isCandidate(_:)` rejects its process). Accessibility requests to its own process
+/// are answered in-process, so nothing else would keep them out.
 @_documentation(visibility: private)
 @MainActor
 final class WindowTracker {
@@ -237,6 +238,8 @@ final class WindowTracker {
 
     /// A window's state: the tracked one, or read now for a window that isn't tracked
     func state(of window: HSWindow) -> WindowState? {
+        // No filter sees windows the tracker never would, such as Hammerspoon's own
+        guard Self.isCandidate(window.app) else { return nil }
         if let tracked = windows[window.id] {
             return tracked.state
         }

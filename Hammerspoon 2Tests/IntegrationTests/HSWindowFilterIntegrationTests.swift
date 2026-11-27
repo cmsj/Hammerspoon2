@@ -6,6 +6,7 @@
 import Testing
 import JavaScriptCore
 import AppKit
+import AXSwift
 @testable import Hammerspoon_2
 
 /// A window's state, with every field defaulted to an ordinary visible, unfocused window
@@ -510,6 +511,33 @@ struct HSWindowFilterIntegrationTests {
             harness.eval("var fn = app => {}; hs.windowfilter.on('inaccessibleApplication', fn)")
             #expect(!harness.hasException)
             harness.eval("hs.windowfilter.off('inaccessibleApplication', fn)")
+            #expect(!harness.hasException)
+        }
+
+        // Hammerspoon's own process answers Accessibility requests in-process, so without an
+        // explicit check a window passed straight to isWindowAllowed() was read and judged
+        // like any other. That also means this needs no Accessibility permission.
+        @Test("isWindowAllowed() rejects Hammerspoon's own windows, even for a filter that allows everything")
+        @MainActor
+        func testOwnWindowsAreNeverAllowed() throws {
+            let window = NSWindow(contentRect: NSRect(x: 100, y: 100, width: 200, height: 150),
+                                  styleMask: [.titled], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            window.title = "Hammerspoon's own window"
+            window.orderFrontRegardless()
+            defer { window.orderOut(nil) }
+
+            var value: CFTypeRef?
+            let app = AXUIElementCreateApplication(getpid())
+            try #require(unsafe AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &value) == .success)
+            let elements = try #require(value as? [AXUIElement]).map { UIElement($0) }
+            let element = try #require(elements.first { Int(WindowEnumerator.windowID(of: $0)) == window.windowNumber })
+            let ownWindow = AXObjectCache.shared.window(element: element, app: .current, id: window.windowNumber)
+
+            let harness = makeHarness()
+            harness.context.setObject(ownWindow, forKeyedSubscript: "ownWindow" as NSString)
+            harness.expectFalse("hs.windowfilter.create(win => true).isWindowAllowed(ownWindow)")
+            harness.expectFalse("hs.windowfilter.create({ default: { allowRoles: '*' } }).isWindowAllowed(ownWindow)")
             #expect(!harness.hasException)
         }
     }

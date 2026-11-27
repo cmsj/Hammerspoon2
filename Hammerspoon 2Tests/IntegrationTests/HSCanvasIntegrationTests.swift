@@ -7,6 +7,7 @@ import Testing
 import JavaScriptCore
 import AppKit
 import SwiftUI
+import AXSwift
 @testable import Hammerspoon_2
 
 @Suite("hs.canvas tests", .serialized)
@@ -304,6 +305,78 @@ struct HSCanvasTests {
                 c.clickActivating(false).ignoreMouseEvents(true).show()
                 """)
             #expect(!harness.hasException)
+        }
+
+        // An NSWindow silently drops .nonactivatingPanel, which made clickActivating(false) a no-op
+        @Test("clickActivating() sets and clears the non-activating style, before and after show()")
+        @MainActor
+        func clickActivatingSetsNonactivatingStyle() throws {
+            let harness = makeHarness()
+            harness.eval("var c = hs.canvas.create({x: 0, y: 0, w: 50, h: 50}).clickActivating(false).show(); void 0")
+            let canvas = try #require(harness.evalValue("c")?.toObjectOf(HSCanvas.self) as? HSCanvas)
+            #expect(canvas.windowStyleMask?.contains(.nonactivatingPanel) == true)
+            harness.eval("c.clickActivating(true); void 0")
+            #expect(canvas.windowStyleMask?.contains(.nonactivatingPanel) == false)
+            harness.eval("c.clickActivating(false); void 0")
+            #expect(canvas.windowStyleMask?.contains(.nonactivatingPanel) == true)
+            #expect(!harness.hasException)
+            harness.eval("c.destroy()")
+        }
+
+        @Test("a canvas stays shown while Hammerspoon isn't the frontmost application")
+        @MainActor
+        func canvasDoesNotHideOnDeactivate() throws {
+            let harness = makeHarness()
+            harness.eval("var c = hs.canvas.create({x: 0, y: 0, w: 50, h: 50}).show(); void 0")
+            let canvas = try #require(harness.evalValue("c")?.toObjectOf(HSCanvas.self) as? HSCanvas)
+            #expect(canvas.windowHidesOnDeactivate == false)
+            harness.eval("c.destroy()")
+        }
+
+        /// The subrole Accessibility clients see for a canvas's window. Hammerspoon's own process
+        /// answers these requests in-process, so this needs no Accessibility permission.
+        @MainActor
+        private func accessibilitySubrole(of canvas: HSCanvas) throws -> String? {
+            let windowNumber = try #require(canvas.windowNumber)
+            var value: CFTypeRef?
+            let app = AXUIElementCreateApplication(getpid())
+            try #require(unsafe AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &value) == .success)
+            let windows = try #require(value as? [AXUIElement])
+            let window = try #require(windows.first { Int(WindowEnumerator.windowID(of: UIElement($0))) == windowNumber })
+            var subrole: CFTypeRef?
+            _ = unsafe AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &subrole)
+            return subrole as? String
+        }
+
+        @Test("a canvas's window reports a Hammerspoon subrole by default, or the one set with setAccessibilitySubrole()")
+        @MainActor
+        func accessibilitySubroleIsReportedByTheWindow() throws {
+            let harness = makeHarness()
+            harness.eval("var c = hs.canvas.create({x: 0, y: 0, w: 50, h: 50}).show(); void 0")
+            let canvas = try #require(harness.evalValue("c")?.toObjectOf(HSCanvas.self) as? HSCanvas)
+            #expect(try accessibilitySubrole(of: canvas) == "AXUnknown.Hammerspoon")
+
+            // AppKit's own subrole for a non-activating panel is AXSystemDialog
+            harness.eval("c.clickActivating(false); void 0")
+            #expect(try accessibilitySubrole(of: canvas) == "AXSystemDialog.Hammerspoon")
+
+            harness.eval("c.setAccessibilitySubrole('HSCanvasOverlay'); void 0")
+            #expect(try accessibilitySubrole(of: canvas) == "HSCanvasOverlay")
+
+            harness.eval("c.setAccessibilitySubrole(''); void 0")
+            #expect(try accessibilitySubrole(of: canvas) == "AXSystemDialog.Hammerspoon")
+            #expect(!harness.hasException)
+            harness.eval("c.destroy()")
+        }
+
+        @Test("a subrole set before show() is reported once the canvas is shown")
+        @MainActor
+        func accessibilitySubroleSetBeforeShow() throws {
+            let harness = makeHarness()
+            harness.eval("var c = hs.canvas.create({x: 0, y: 0, w: 50, h: 50}).setAccessibilitySubrole('HSCanvasOverlay').show(); void 0")
+            let canvas = try #require(harness.evalValue("c")?.toObjectOf(HSCanvas.self) as? HSCanvas)
+            #expect(try accessibilitySubrole(of: canvas) == "HSCanvasOverlay")
+            harness.eval("c.destroy()")
         }
     }
 
