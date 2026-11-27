@@ -682,6 +682,15 @@ extension HSWindowIntegrationTests {
 
             harness.expectTrue("hs.window.forID(\(id))?.id === \(id) && hs.window.forID(\(id)).pid === \(app.processIdentifier)")
             #expect(!harness.hasException)
+
+            // The public-API fallback, used if SkyLight's private API goes away or stops answering,
+            // finds the owner too
+            #expect(WindowEnumerator.windowListOwnerPID(of: id) == app.processIdentifier)
+        }
+
+        @Test("The public-API owner lookup finds nothing for a window that doesn't exist")
+        func testWindowListOwnerPIDMissingWindow() {
+            #expect(WindowEnumerator.windowListOwnerPID(of: 999_999_999) == nil)
         }
     }
 }

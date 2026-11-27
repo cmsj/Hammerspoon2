@@ -167,22 +167,33 @@ enum WindowEnumerator {
     /// The PID of the process that owns a window, or nil if the WindowServer has no such window.
     ///
     /// `CGWindowListCopyWindowInfo([.optionIncludingWindow], id)` returns nothing for a minimized
-    /// window or a window of a hidden application, so this asks SkyLight instead, or, if that API
-    /// is missing, looks for the window among all of the WindowServer's windows.
+    /// window or a window of a hidden application, so this asks SkyLight instead. If SkyLight's API
+    /// is missing or doesn't answer (which also happens when there's no such window), it looks for
+    /// the window among all of the WindowServer's windows.
     static func ownerPID(of id: CGWindowID) -> pid_t? {
-        if let mainConnectionID = CGSMainConnectionID,
-           let getWindowOwner = unsafe CGSGetWindowOwner,
-           let connectionGetPID = unsafe CGSConnectionGetPID {
-            var connection: Int32 = 0
-            var pid: pid_t = 0
-            guard unsafe getWindowOwner(mainConnectionID(), id, &connection) == 0,
-                  unsafe connectionGetPID(connection, &pid) == 0,
-                  pid > 0 else {
-                return nil
-            }
-            return pid
-        }
+        skyLightOwnerPID(of: id) ?? windowListOwnerPID(of: id)
+    }
 
+    /// The window's owner according to SkyLight, or nil if its API is missing or fails
+    private static func skyLightOwnerPID(of id: CGWindowID) -> pid_t? {
+        guard let mainConnectionID = CGSMainConnectionID,
+              let getWindowOwner = unsafe CGSGetWindowOwner,
+              let connectionGetPID = unsafe CGSConnectionGetPID else {
+            return nil
+        }
+        var connection: Int32 = 0
+        var pid: pid_t = 0
+        guard unsafe getWindowOwner(mainConnectionID(), id, &connection) == 0,
+              unsafe connectionGetPID(connection, &pid) == 0,
+              pid > 0 else {
+            return nil
+        }
+        return pid
+    }
+
+    /// The window's owner according to the list of all of the WindowServer's windows; slower than
+    /// asking SkyLight, but public API
+    static func windowListOwnerPID(of id: CGWindowID) -> pid_t? {
         let info = CGWindowListCopyWindowInfo([.optionAll], kCGNullWindowID) as? [[String: Any]] ?? []
         let window = info.first { ($0[kCGWindowNumber as String] as? CGWindowID) == id }
         return window?[kCGWindowOwnerPID as String] as? pid_t
