@@ -19,6 +19,12 @@ private let CGSMainConnectionID = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LA
 private let CGSCopySpacesForWindows = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "CGSCopySpacesForWindows"), to: (@convention(c) (Int32, Int32, CFArray) -> Unmanaged<CFArray>?)?.self)
 private let kCGSAllSpacesMask: Int32 = 0x7
 
+// Private SkyLight API: the connection that owns a window, and the process behind a connection.
+// Unlike `CGWindowListCopyWindowInfo([.optionIncludingWindow], id)`, these answer for minimized
+// windows and windows of hidden applications.
+private let CGSGetWindowOwner = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "CGSGetWindowOwner"), to: (@convention(c) (Int32, CGWindowID, UnsafeMutablePointer<Int32>) -> Int32)?.self)
+private let CGSConnectionGetPID = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "CGSConnectionGetPID"), to: (@convention(c) (Int32, UnsafeMutablePointer<pid_t>) -> Int32)?.self)
+
 /// Finds an application's windows across all Spaces.
 ///
 /// An app's `AXWindows` attribute only lists windows on the currently visible Space(s), so a
@@ -145,6 +151,41 @@ enum WindowEnumerator {
         knownWindows[pid] = found
 
         return windows
+    }
+
+    /// A window element found by an earlier call to `windowElements(for:)`, if it's still that
+    /// window and still on a Space (closed windows report no ID; ordered-out ones are on no Space)
+    static func knownWindow(id: CGWindowID) -> (pid: pid_t, element: UIElement)? {
+        for (pid, windows) in knownWindows {
+            if let element = windows[id], windowID(of: element) == id, isOnAnySpace(id) {
+                return (pid, element)
+            }
+        }
+        return nil
+    }
+
+    /// The PID of the process that owns a window, or nil if the WindowServer has no such window.
+    ///
+    /// `CGWindowListCopyWindowInfo([.optionIncludingWindow], id)` returns nothing for a minimized
+    /// window or a window of a hidden application, so this asks SkyLight instead, or, if that API
+    /// is missing, looks for the window among all of the WindowServer's windows.
+    static func ownerPID(of id: CGWindowID) -> pid_t? {
+        if let mainConnectionID = CGSMainConnectionID,
+           let getWindowOwner = unsafe CGSGetWindowOwner,
+           let connectionGetPID = unsafe CGSConnectionGetPID {
+            var connection: Int32 = 0
+            var pid: pid_t = 0
+            guard unsafe getWindowOwner(mainConnectionID(), id, &connection) == 0,
+                  unsafe connectionGetPID(connection, &pid) == 0,
+                  pid > 0 else {
+                return nil
+            }
+            return pid
+        }
+
+        let info = CGWindowListCopyWindowInfo([.optionAll], kCGNullWindowID) as? [[String: Any]] ?? []
+        let window = info.first { ($0[kCGWindowNumber as String] as? CGWindowID) == id }
+        return window?[kCGWindowOwnerPID as String] as? pid_t
     }
 
     /// The window ID of an AX window element, or 0 if it can't be determined

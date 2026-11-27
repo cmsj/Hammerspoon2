@@ -41,8 +41,9 @@ import AXSwift
     /// Get the window with the given ID
     ///
     /// This is much faster than searching `allWindows()` for the ID, because it only asks the
-    /// application that owns the window for its windows. Like `allWindows()`, this can find windows
-    /// in native fullscreen and on other Spaces, with the same limitation.
+    /// application that owns the window for its windows. Like `allWindows()`, this can find
+    /// minimized windows, windows of hidden applications, and windows in native fullscreen and on
+    /// other Spaces, with the same limitation.
     /// - Parameter id: The window's ID (see the `id` property on `hs.window` objects)
     /// - Returns: The window, or null if there is no window with that ID
     /// - Example:
@@ -310,9 +311,14 @@ import AXSwift
     @objc func forID(_ id: Int) -> HSWindow? {
         guard id > 0, let windowID = CGWindowID(exactly: id), checkAccessibility() else { return nil }
 
+        // A window found before (e.g. by allWindows()) needs no lookup, if it's still there
+        if let known = WindowEnumerator.knownWindow(id: windowID),
+           let app = NSRunningApplication(processIdentifier: known.pid) {
+            return AXObjectCache.shared.window(element: known.element, app: app, id: Int(windowID))
+        }
+
         // Ask the WindowServer which process owns the window, so only that app has to be asked for its windows
-        let info = CGWindowListCopyWindowInfo([.optionIncludingWindow], windowID) as? [[String: Any]] ?? []
-        guard let pid = info.first?[kCGWindowOwnerPID as String] as? pid_t,
+        guard let pid = WindowEnumerator.ownerPID(of: windowID),
               let app = NSRunningApplication(processIdentifier: pid) else {
             return nil
         }

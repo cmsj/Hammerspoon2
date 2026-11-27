@@ -642,6 +642,47 @@ extension HSWindowIntegrationTests {
             harness.expectTrue("hs.window.forID(\(id)) === null")
             #expect(!harness.hasException)
         }
+
+        /// Ways a window can leave the screen while staying open (#502)
+        enum OffScreen: String, CaseIterable, CustomTestStringConvertible {
+            case minimized, hidden
+            var testDescription: String { rawValue }
+        }
+
+        /// `CGWindowListCopyWindowInfo([.optionIncludingWindow], id)` returns nothing for a
+        /// minimized window or a window of a hidden app, which `forID()` used to rely on to find
+        /// the window's owner. `seen` is whether hs.window has listed the window before it went off
+        /// screen: if it hasn't, `forID()` has to ask the WindowServer who owns the window.
+        @Test("forID() finds a minimized window and a window of a hidden app",
+              arguments: OffScreen.allCases, [false, true])
+        func testForIDFindsOffScreenWindow(offScreen: OffScreen, seen: Bool) async throws {
+            // A copy of its own, so the window is one hs.window has never seen unless the test shows it
+            let app = try #require(await TestAppControl.launch(detail: "Makes its window \(offScreen.rawValue) and looks it up with forID()"))
+            defer { app.terminate() }
+            let window = try #require(try Application(app)?.windows()?.first)
+            let id = WindowEnumerator.windowID(of: window)
+            try #require(id > 0)
+
+            let harness = JSTestHarness()
+            harness.loadModule(HSWindowModule.self, as: "window")
+            if seen {
+                harness.expectTrue("hs.window.allWindows().some(w => w.id === \(id))")
+            }
+
+            switch offScreen {
+            case .minimized:
+                try window.setAttribute(.minimized, value: true)
+            case .hidden:
+                app.hide()
+            }
+            let offScreenNow = await harness.waitForAsync(timeout: 5.0) {
+                (CGWindowListCopyWindowInfo([.optionIncludingWindow], id) as? [[String: Any]] ?? []).isEmpty
+            }
+            try #require(offScreenNow, "the WindowServer still reports window \(id) after it was \(offScreen.rawValue)")
+
+            harness.expectTrue("hs.window.forID(\(id))?.id === \(id) && hs.window.forID(\(id)).pid === \(app.processIdentifier)")
+            #expect(!harness.hasException)
+        }
     }
 }
 
