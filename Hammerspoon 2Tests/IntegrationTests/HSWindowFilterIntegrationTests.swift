@@ -132,6 +132,62 @@ struct HSWindowFilterIntegrationTests {
 
     // MARK: - The set of allowed windows
 
+    @Suite("hs.windowfilter subroles of minimized and hidden windows")
+    struct HSWindowFilterSubroleTests {
+        private let standard = "AXStandardWindow"
+        private let dialog = "AXDialog"
+        private let grace = Duration.milliseconds(200)
+        private let start = ContinuousClock.now
+
+        private func reconcile(_ read: String?, previous: String?, isVisible: Bool = true,
+                               _ freshness: WindowTracker.SubroleFreshness, after elapsed: Duration = .zero) -> (subrole: String?, freshness: WindowTracker.SubroleFreshness, readAgain: Bool) {
+            WindowTracker.reconcileSubrole(read: read, previous: previous, isVisible: isVisible, freshness: freshness,
+                                           now: start + elapsed, grace: grace)
+        }
+
+        @Test("a minimized or hidden window keeps its subrole")
+        func testNotVisibleKeepsSubrole() {
+            for freshness in [WindowTracker.SubroleFreshness.fresh, .stale, .shown(since: start)] {
+                let result = reconcile(dialog, previous: standard, isVisible: false, freshness)
+                #expect(result.subrole == standard && result.freshness == .stale && !result.readAgain)
+            }
+        }
+
+        @Test("a visible window's subrole is believed once it has been read since being shown")
+        func testFreshIsBelieved() {
+            let result = reconcile(dialog, previous: standard, .fresh)
+            #expect(result.subrole == dialog && result.freshness == .fresh && !result.readAgain)
+        }
+
+        @Test("a window just shown that still says it's a dialog keeps its subrole, and is read again")
+        func testJustShownDialogKeepsSubrole() {
+            let result = reconcile(dialog, previous: standard, .stale)
+            #expect(result.subrole == standard && result.freshness == .shown(since: start) && result.readAgain)
+        }
+
+        @Test("a window just shown that reports its real subrole is believed")
+        func testJustShownStandardIsBelieved() {
+            let result = reconcile(standard, previous: standard, .stale)
+            #expect(result.subrole == standard && result.freshness == .fresh && !result.readAgain)
+        }
+
+        @Test("the grace period lasts across other reads in between, then a dialog is believed")
+        func testGraceLastsAcrossReads() {
+            let first = reconcile(dialog, previous: standard, .stale)
+            // e.g. a screen change's refresh of every window, before the delayed read
+            let between = reconcile(dialog, previous: first.subrole, first.freshness, after: .milliseconds(50))
+            #expect(between.subrole == standard && between.freshness == .shown(since: start) && between.readAgain)
+            let later = reconcile(dialog, previous: between.subrole, between.freshness, after: grace)
+            #expect(later.subrole == dialog && later.freshness == .fresh && !later.readAgain)
+        }
+
+        @Test("a window that was a dialog before is believed straight away")
+        func testRealDialogIsBelieved() {
+            let result = reconcile(dialog, previous: dialog, .stale)
+            #expect(result.subrole == dialog && result.freshness == .fresh && !result.readAgain)
+        }
+    }
+
     @Suite("hs.windowfilter allowed-window bookkeeping")
     struct HSWindowFilterMembershipTests {
         private typealias Emission = WindowFilterMembership.Emission
@@ -629,42 +685,130 @@ struct HSWindowFilterIntegrationTests {
             harness.eval("wf.off('windowMoved', record); wf.off('windowTitleChanged', record)")
         }
 
+        /// Makes a filter of the test app's standard windows, which records the windows it rejects
+        private func makeStandardWindowFilter(_ harness: JSTestHarness) {
+            harness.eval("""
+                var app = hs.application.fromPID(testAppPID);
+                var byRole = hs.windowfilter.create({ default: false, apps: { [app.name]: { allowRoles: 'AXStandardWindow' } } });
+                var rejected = [];
+                var recordRejected = win => rejected.push(win.id);
+                byRole.on('windowRejected', recordRejected);
+                var windowWithID = id => app.allWindows.find(w => w.id === id);
+                var isAllowed = id => byRole.isWindowAllowed(windowWithID(id)) && byRole.windows().some(w => w.id === id);
+                """)
+        }
+
+        /// The ID of the window the nth (from 0) windowCreated event recorded was about
+        private func createdWindowID(_ harness: JSTestHarness, _ index: Int = 0) async -> Int? {
+            #expect(await harness.waitForAsync(timeout: 3) {
+                harness.eval("events.filter(e => e.startsWith('windowCreated')).length > \(index)") as? Bool == true
+            })
+            return harness.eval("Number(events.filter(e => e.startsWith('windowCreated'))[\(index)].split(':')[1])") as? Int
+        }
+
         /// macOS reports every window of a hidden application as an AXDialog. A window read while
-        /// its application is hidden (here, because its title changed) has to be read again once
-        /// the application is unhidden, or it keeps that subrole (#485).
-        @Test("a standard window read while its application is hidden is allowed again by its subrole once it's unhidden")
-        func testUnhiddenWindowSubroleIsReadAgain() async {
+        /// its application is hidden (here, because its title changed) keeps the subrole it had
+        /// when it was shown, and is read again once the application is unhidden (#485).
+        @Test("a standard window read while its application is hidden keeps its subrole")
+        func testHiddenWindowKeepsSubrole() async throws {
+            let harness = makeHarness()
+            makeStandardWindowFilter(harness)
+            defer {
+                harness.eval("app.unhide()")
+                TestAppControl.closeWindows()
+            }
+            listen(harness, to: ["windowCreated", "windowHidden", "windowTitleChanged"])
+
+            // Only the windows openWindow() opens can be retitled
+            TestAppControl.openWindow()
+            let id = try #require(await createdWindowID(harness))
+            harness.expectTrue("windowWithID(\(id)).subrole === 'AXStandardWindow' && isAllowed(\(id))")
+
+            harness.eval("app.hide()")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.includes('windowHidden:\(id)')") as? Bool == true })
+            TestAppControl.retitleWindows(to: "Retitled while hidden by \(#function)")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.includes('windowTitleChanged:\(id)')") as? Bool == true })
+            // macOS says it's a dialog, but the filter still sees a standard window
+            harness.expectTrue("windowWithID(\(id)).subrole === 'AXDialog' && isAllowed(\(id))")
+            // Hiding can come with a screen change (at least in a VM), whose refresh of every window
+            // would read this one again by chance if it came after unhiding
+            try? await Task.sleep(for: .seconds(1))
+
+            harness.eval("app.unhide()")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("windowWithID(\(id)).subrole === 'AXStandardWindow'") as? Bool == true })
+            try? await Task.sleep(for: .milliseconds(500))
+            harness.expectTrue("isAllowed(\(id)) && !rejected.includes(\(id))")
+            harness.eval("wf.off('windowCreated', record); wf.off('windowHidden', record); wf.off('windowTitleChanged', record); byRole.off('windowRejected', recordRejected)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("a minimized standard window keeps its subrole, and counts as standard")
+        func testMinimizedWindowKeepsSubrole() async throws {
+            let harness = makeHarness()
+            makeStandardWindowFilter(harness)
+            defer { TestAppControl.closeWindows() }
+            listen(harness, to: ["windowCreated", "windowMinimized", "windowUnminimized", "windowTitleChanged"])
+
+            TestAppControl.openWindow(minimizable: true)
+            let id = try #require(await createdWindowID(harness))
+            harness.expectTrue("windowWithID(\(id)).subrole === 'AXStandardWindow' && isAllowed(\(id))")
+
+            harness.expectTrue("windowWithID(\(id)).minimize()")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.includes('windowMinimized:\(id)')") as? Bool == true })
+            // Read again while minimized
+            TestAppControl.retitleWindows(to: "Retitled while minimized by \(#function)")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.includes('windowTitleChanged:\(id)')") as? Bool == true })
+            harness.expectTrue("windowWithID(\(id)).subrole === 'AXDialog'")
+            harness.expectTrue("windowWithID(\(id)).isStandard")
+            harness.expectTrue("isAllowed(\(id))")
+
+            harness.expectTrue("windowWithID(\(id)).unminimize()")
+            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.includes('windowUnminimized:\(id)')") as? Bool == true })
+            try? await Task.sleep(for: .milliseconds(500))
+            harness.expectTrue("windowWithID(\(id)).subrole === 'AXStandardWindow' && isAllowed(\(id)) && !rejected.includes(\(id))")
+            harness.eval("wf.off('windowCreated', record); wf.off('windowMinimized', record); wf.off('windowUnminimized', record); wf.off('windowTitleChanged', record); byRole.off('windowRejected', recordRejected)")
+            #expect(!harness.hasException)
+        }
+
+        /// A window first seen while its application is hidden (e.g. hs.windowfilter starting
+        /// then) can only be told apart from a dialog if it can be minimized, which dialogs can't.
+        /// Opening a window unhides the application, so the windows here are opened first, and
+        /// read as the tracker reads a window it meets for the first time.
+        @Test("a window first seen while its application is hidden counts as standard if it can be minimized")
+        func testWindowFirstSeenHidden() async throws {
             let harness = makeHarness()
             harness.eval("var app = hs.application.fromPID(testAppPID)")
             defer {
                 harness.eval("app.unhide()")
                 TestAppControl.closeWindows()
             }
-            listen(harness, to: ["windowCreated", "windowHidden", "windowTitleChanged"])
-            harness.eval("var byRole = hs.windowfilter.create({ default: false, apps: { [app.name]: { allowRoles: 'AXStandardWindow' } } })")
-
-            // Only the windows openWindow() opens can be retitled
+            listen(harness, to: ["windowCreated", "windowHidden"])
+            TestAppControl.openWindow(minimizable: true)
+            let minimizable = try #require(await createdWindowID(harness, 0))
             TestAppControl.openWindow()
-            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.some(e => e.startsWith('windowCreated'))") as? Bool == true })
-            harness.eval("var newID = Number(events.find(e => e.startsWith('windowCreated')).split(':')[1])")
-            harness.eval("var newWin = () => app.allWindows.find(w => w.id === newID)")
-            harness.expectTrue("newWin().subrole === 'AXStandardWindow' && byRole.isWindowAllowed(newWin())")
+            let fixed = try #require(await createdWindowID(harness, 1))
 
             harness.eval("app.hide()")
-            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.includes('windowHidden:' + newID)") as? Bool == true })
-            TestAppControl.retitleWindows(to: "Retitled while hidden by \(#function)")
-            #expect(await harness.waitForAsync(timeout: 3) { harness.eval("events.includes('windowTitleChanged:' + newID)") as? Bool == true })
-            // A hidden application's windows are AXDialogs
-            harness.expectFalse("byRole.isWindowAllowed(newWin())")
-            // Hiding can come with a screen change (at least in a VM), whose refresh of every window
-            // would read this one again by chance if it came after unhiding
-            try? await Task.sleep(for: .seconds(1))
-
-            harness.eval("app.unhide()")
             #expect(await harness.waitForAsync(timeout: 3) {
-                harness.eval("newWin().subrole === 'AXStandardWindow' && byRole.isWindowAllowed(newWin()) && byRole.windows().some(w => w.id === newID)") as? Bool == true
+                harness.eval("events.includes('windowHidden:\(minimizable)') && events.includes('windowHidden:\(fixed)')") as? Bool == true
             })
-            harness.eval("wf.off('windowCreated', record); wf.off('windowHidden', record); wf.off('windowTitleChanged', record)")
+            let testApp = try #require(TestAppControl.pid.flatMap { NSRunningApplication(processIdentifier: $0) })
+            let windows = AXObjectCache.shared.application(for: testApp).allWindows
+            func firstSeen(_ id: Int) throws -> (window: HSWindow, state: WindowState) {
+                let window = try #require(windows.first { $0.id == id })
+                let state = try #require(WindowTracker.readState(of: window.element, app: testApp, id: id, currentSpaces: nil,
+                                                                 focusedWindowID: nil, activePID: nil))
+                return (window, state)
+            }
+            let (minimizableWindow, minimizableState) = try firstSeen(minimizable)
+            let (fixedWindow, fixedState) = try firstSeen(fixed)
+            #expect(minimizableState.isAppHidden && fixedState.isAppHidden)
+            #expect(minimizableWindow.subrole == "AXDialog" && fixedWindow.subrole == "AXDialog")
+            #expect(minimizableState.subrole == "AXStandardWindow")
+            #expect(minimizableWindow.isStandard)
+            #expect(fixedState.subrole == "AXDialog")
+            #expect(!fixedWindow.isStandard)
+            harness.eval("wf.off('windowCreated', record); wf.off('windowHidden', record)")
             #expect(!harness.hasException)
         }
 

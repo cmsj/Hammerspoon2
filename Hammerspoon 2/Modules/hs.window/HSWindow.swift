@@ -120,7 +120,15 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// ```
     @objc var isFullscreen: Bool { get set }
 
-    /// Whether the window is standard (has a titlebar)
+    /// Whether the window is an ordinary window (its subrole is `AXStandardWindow`), rather than
+    /// e.g. a dialog or a floating panel.
+    ///
+    /// macOS reports minimized windows, and every window of a hidden application, as `AXDialog`
+    /// (see `subrole`). While a window is minimized or hidden, this counts it as standard if it can
+    /// be minimized, which dialogs can't. A standard window that can't be minimized either, such as
+    /// TextEdit's Settings window, can't be told apart from a dialog while its application is hidden,
+    /// so this is `false` for it until it's shown again. This reads macOS each time and doesn't
+    /// remember what a window was while it was shown; `hs.windowfilter` does.
     /// - Example:
     /// ```js
     /// const win = hs.window.focusedWindow()
@@ -139,6 +147,10 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// The window's accessibility subrole, which says what kind of window it is: e.g.
     /// `"AXStandardWindow"` for an ordinary window, `"AXDialog"`, `"AXSystemDialog"` or
     /// `"AXFloatingWindow"`. Null if the window has no subrole, or it can't be read.
+    ///
+    /// This is what macOS says right now, which for a minimized window, or any window of a hidden
+    /// application, is always `"AXDialog"`. `isStandard` allows for that, and so do the rules of
+    /// `hs.windowfilter`.
     /// - Example:
     /// ```js
     /// const win = hs.window.focusedWindow()
@@ -579,10 +591,26 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     }
 
     @objc var isStandard: Bool {
-        guard let subrole = try? element.subrole() else {
-            return false
+        let isMinimized: Bool = (try? element.attribute(.minimized)) ?? false
+        return Self.likelySubrole(of: element, isMinimized: isMinimized, isAppHidden: app.isHidden) == Subrole.standardWindow.rawValue
+    }
+
+    /// A window's subrole, allowing for macOS reporting every minimized or hidden window as an
+    /// `AXDialog`: such a window that can still be minimized is taken to be a standard window, as
+    /// dialogs can't be minimized (their minimize button is disabled, or they have none). One
+    /// that can't be minimized either can't be told apart from a dialog until it's shown again.
+    /// - Parameters:
+    ///   - element: The window's accessibility element
+    ///   - isMinimized: Whether the window is minimized
+    ///   - isAppHidden: Whether its application is hidden
+    nonisolated static func likelySubrole(of element: UIElement, isMinimized: Bool, isAppHidden: Bool) -> String? {
+        let subrole: String? = try? element.attribute(.subrole)
+        guard subrole == Subrole.dialog.rawValue, isMinimized || isAppHidden,
+              let minimizeButton: UIElement = try? element.attribute(.minimizeButton),
+              (try? minimizeButton.attribute(.enabled) as Bool?) == true else {
+            return subrole
         }
-        return subrole == .standardWindow
+        return Subrole.standardWindow.rawValue
     }
 
     @objc var role: String? {
