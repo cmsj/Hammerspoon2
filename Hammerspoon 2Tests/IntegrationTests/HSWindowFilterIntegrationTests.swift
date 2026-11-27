@@ -547,7 +547,9 @@ struct HSWindowFilterIntegrationTests {
             #expect(!harness.hasException)
         }
 
-        @Test("a filter reports Hammerspoon's own windows being created, moved, retitled and destroyed")
+        // filter.on() needs Accessibility permission, even for Hammerspoon's own windows
+        @Test("a filter reports Hammerspoon's own windows being created, moved, retitled and destroyed",
+              .disabled(if: !AXIsProcessTrusted(), "Accessibility permission not granted"))
         @MainActor
         func testOwnWindowEvents() async throws {
             let harness = makeHarness()
