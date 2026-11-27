@@ -67,7 +67,8 @@ import AppKit
 ///   every window of a hidden application, as `"AXDialog"`, so these rules see the subrole a
 ///   window had when it was last shown instead. A window that has only been seen minimized or
 ///   hidden counts as an `"AXStandardWindow"` if it can be minimized, as dialogs can't (see
-///   `HSWindow.isStandard`).
+///   `HSWindow.isStandard`). One that can't be minimized, such as TextEdit's Settings window
+///   first seen while TextEdit is hidden, counts as an `"AXDialog"` until it's shown.
 ///
 /// Regions and screens only apply to visible windows. RegExps support the `i`, `m` and `s` flags.
 ///

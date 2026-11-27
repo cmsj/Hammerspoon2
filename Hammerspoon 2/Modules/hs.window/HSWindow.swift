@@ -126,7 +126,9 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// macOS reports minimized windows, and every window of a hidden application, as `AXDialog`
     /// (see `subrole`). While a window is minimized or hidden, this counts it as standard if it can
     /// be minimized, which dialogs can't. A standard window that can't be minimized either, such as
-    /// many settings windows, isn't counted as standard until it's shown again.
+    /// TextEdit's Settings window, can't be told apart from a dialog while its application is hidden,
+    /// so this is `false` for it until it's shown again. This reads macOS each time and doesn't
+    /// remember what a window was while it was shown; `hs.windowfilter` does.
     /// - Example:
     /// ```js
     /// const win = hs.window.focusedWindow()
