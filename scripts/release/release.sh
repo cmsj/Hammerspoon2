@@ -468,6 +468,11 @@ EOF
     signature_info="$(codesign -dvv "$app" 2>&1)"
     grep -q "^Authority=Developer ID Application: .*($TEAM_ID)" <<<"$signature_info" || die "app is not signed with a Developer ID for $TEAM_ID"
     grep -q "flags=.*runtime" <<<"$signature_info" || die "app is not signed with the hardened runtime"
+    # hs.keychain needs the keychain access group, which a Developer ID app only keeps if its
+    # provisioning profile allows it; without one, the app would ship with hs.keychain unavailable.
+    [ "$(codesign -d --entitlements - --xml "$app" 2>/dev/null | plutil -extract keychain-access-groups.0 raw -o - - 2>/dev/null)" \
+        = "$TEAM_ID.net.tenshu.Hammerspoon-2.keychainGroup" ] \
+        || die "app is missing its keychain-access-groups entitlement (check its Developer ID provisioning profile)"
 
     log "Notarising (this usually takes a few minutes)"
     local notary_zip="$work/notarize.zip"
