@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSCalendarEvent - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div id="guides-nav"></div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSCalendarEvent</span>
+</nav>
+<div class="page-header">
+    <h1>HSCalendarEvent</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>An event from a calendar, as returned by <code>hs.eventkit.events()</code> and its relatives.</p>
+<p>Each property is read from the underlying calendar event when you access it, so fetching many
+events is cheap even when you only look at a few of their properties. An event is a snapshot:
+if it changes in Calendar after you fetched it, fetch it again to see the change.</p>
+<p>Don&#39;t create these yourself; they come from <code>hs.eventkit</code>.</p>
+<ul>
+<li>Example:</li>
+</ul>
+<pre><code class="language-js">hs.eventkit.eventsToday().forEach(e =&gt; {
+    console.log(e.startDate.toLocaleTimeString() + &quot; &quot; + e.title + (e.location ? &quot; @ &quot; + e.location : &quot;&quot;))
+})
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="id">
+        <h3><a href="#id">id</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The event&#39;s identifier on this Mac.</p>
+<p>Every occurrence of a repeating event has the same <code>id</code>, so use it together with
+<code>occurrenceDate</code> (or <code>startDate</code>) to tell occurrences apart.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L33" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:33</a>
+        </div>
+    </div>
+    <div class="property" id="externalID">
+        <h3><a href="#externalID">externalID</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The identifier the calendar server gives the event, which is the same on every device
+but isn&#39;t guaranteed to be unique.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L41" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:41</a>
+        </div>
+    </div>
+    <div class="property" id="title">
+        <h3><a href="#title">title</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The event&#39;s title.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L48" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:48</a>
+        </div>
+    </div>
+    <div class="property" id="location">
+        <h3><a href="#location">location</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The event&#39;s location, which often holds a Zoom or Teams link.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L55" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:55</a>
+        </div>
+    </div>
+    <div class="property" id="notes">
+        <h3><a href="#notes">notes</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The event&#39;s notes (its description), which often hold a meeting link.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L63" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:63</a>
+        </div>
+    </div>
+    <div class="property" id="url">
+        <h3><a href="#url">url</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The URL attached to the event.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L70" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:70</a>
+        </div>
+    </div>
+    <div class="property" id="startDate">
+        <h3><a href="#startDate">startDate</a></h3>
+        <div class="prop-type">Date</div>
+        <div class="description"><p>When the event starts.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L77" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:77</a>
+        </div>
+    </div>
+    <div class="property" id="endDate">
+        <h3><a href="#endDate">endDate</a></h3>
+        <div class="prop-type">Date</div>
+        <div class="description"><p>When the event ends.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L85" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:85</a>
+        </div>
+    </div>
+    <div class="property" id="occurrenceDate">
+        <h3><a href="#occurrenceDate">occurrenceDate</a></h3>
+        <div class="prop-type">Date</div>
+        <div class="description"><p>The original start of this occurrence of a repeating event, which stays the same if the
+occurrence is moved.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L93" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:93</a>
+        </div>
+    </div>
+    <div class="property" id="isAllDay">
+        <h3><a href="#isAllDay">isAllDay</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether this is an all-day event.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L100" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:100</a>
+        </div>
+    </div>
+    <div class="property" id="timeZone">
+        <h3><a href="#timeZone">timeZone</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The event&#39;s time zone (e.g. <code>&quot;Europe/London&quot;</code>), or <code>null</code> for a floating event that
+follows the Mac&#39;s time zone.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L108" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:108</a>
+        </div>
+    </div>
+    <div class="property" id="isActive">
+        <h3><a href="#isActive">isActive</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether the event is happening now: from its start up to (but not including) its end, or
+for an all-day event, at any time on the days it covers.</p>
+<p>This is worked out each time you read it, so a long-lived event object stays accurate.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L119" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:119</a>
+        </div>
+    </div>
+    <div class="property" id="isRecurring">
+        <h3><a href="#isRecurring">isRecurring</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether the event repeats.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L126" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:126</a>
+        </div>
+    </div>
+    <div class="property" id="isDetached">
+        <h3><a href="#isDetached">isDetached</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether this occurrence of a repeating event has been changed from the rest.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L133" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:133</a>
+        </div>
+    </div>
+    <div class="property" id="status">
+        <h3><a href="#status">status</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The event&#39;s status: <code>&quot;none&quot;</code>, <code>&quot;confirmed&quot;</code>, <code>&quot;tentative&quot;</code> or <code>&quot;canceled&quot;</code>.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L140" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:140</a>
+        </div>
+    </div>
+    <div class="property" id="availability">
+        <h3><a href="#availability">availability</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>How the event shows on a schedule: <code>&quot;busy&quot;</code>, <code>&quot;free&quot;</code>, <code>&quot;tentative&quot;</code>, <code>&quot;unavailable&quot;</code>,
+or <code>&quot;notSupported&quot;</code> when its calendar doesn&#39;t support availability.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L148" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:148</a>
+        </div>
+    </div>
+    <div class="property" id="calendarID">
+        <h3><a href="#calendarID">calendarID</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The identifier of the event&#39;s calendar, as in <code>hs.eventkit.calendars()</code>.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L155" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:155</a>
+        </div>
+    </div>
+    <div class="property" id="calendarTitle">
+        <h3><a href="#calendarTitle">calendarTitle</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The title of the event&#39;s calendar.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L162" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:162</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="toJSON">
+        <h3>
+<a href="#toJSON">toJSON() -> {[key: string]: any}</a>
+        </h3>
+
+        <div class="description"><p>Returns a plain object holding all of the event&#39;s properties, for JSON serialisation.</p>
+<p><code>JSON.stringify()</code> calls this automatically, so you rarely need to call it yourself.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toJSON() -> {[key: string]: any}</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: any}</div>
+        <div class="return-desc">An object with every property of the event</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(JSON.stringify(hs.eventkit.eventsToday(), null, 2))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSCalendarEvent.swift#L172" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSCalendarEvent.swift:172</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSCalendarEvent');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+            initNavTracking();
+        });
+    </script>
+</body>
+</html>

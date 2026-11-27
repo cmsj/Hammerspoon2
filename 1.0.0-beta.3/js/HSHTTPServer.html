@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSHTTPServer - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div id="guides-nav"></div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSHTTPServer</span>
+</nav>
+<div class="page-header">
+    <h1>HSHTTPServer</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>An HTTP server instance created by <code>hs.httpserver.create()</code>.</p>
+<p>Configure with chainable setter methods, then call <code>start()</code> to begin accepting connections.
+The server supports synchronous and async (Promise-returning) request callbacks, optional
+static file serving, HTTP Basic authentication, Bonjour advertisement, and TLS via PKCS#12.</p>
+<p>Do not instantiate <code>HSHTTPServer</code> directly — use <code>hs.httpserver.create()</code>.</p>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="identifier">
+        <h3><a href="#identifier">identifier</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>A unique identifier for this server instance (UUID string).</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L23" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:23</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="setPort">
+        <h3>
+<a href="#setPort">setPort(port) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Set the TCP port to listen on. Must be called before <code>start()</code>.</p>
+<p>Pass 0 to let the OS assign an available port (use <code>getPort()</code> after <code>start()</code> to discover it).</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setPort(port) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">port</span></td>
+    <td class="param-type">number</td>
+    <td class="param-desc">TCP port number (0–65535).</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setPort(8080)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L35" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:35</a>
+        </div>
+    </div>
+    <div class="method" id="setInterface">
+        <h3>
+<a href="#setInterface">setInterface(iface) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Set the network interface to listen on.</p>
+<p>Pass <code>null</code> to listen on all interfaces (the default). Pass <code>&quot;localhost&quot;</code> or <code>&quot;loopback&quot;</code>
+to restrict to the loopback interface only.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setInterface(iface) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">iface</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">Interface name or IP address string, or <code>null</code> for all interfaces.</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setInterface(&quot;localhost&quot;)  // loopback only
+server.setInterface(null)         // all interfaces</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L49" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:49</a>
+        </div>
+    </div>
+    <div class="method" id="setPassword">
+        <h3>
+<a href="#setPassword">setPassword(password) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Set a password required for Basic authentication.</p>
+<p>When set, every request must supply an <code>Authorization: Basic</code> header with any
+username and the configured password. Pass <code>null</code> to disable authentication.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setPassword(password) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">password</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">The required password, or <code>null</code> to remove authentication.</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setPassword(&quot;s3cr3t&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L62" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:62</a>
+        </div>
+    </div>
+    <div class="method" id="setMaxBodySize">
+        <h3>
+<a href="#setMaxBodySize">setMaxBodySize(size) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Set the maximum allowed incoming request body size in bytes.</p>
+<p>Requests with a body exceeding this limit receive a 413 response. Defaults to 10 MB.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setMaxBodySize(size) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">size</span></td>
+    <td class="param-type">number</td>
+    <td class="param-desc">Maximum body size in bytes.</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setMaxBodySize(1024 * 1024)  // 1 MB</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L74" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:74</a>
+        </div>
+    </div>
+    <div class="method" id="setName">
+        <h3>
+<a href="#setName">setName(name) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Set the Bonjour service name advertised on the local network.</p>
+<p>Only used when Bonjour is enabled via <code>setBonjour(true)</code>.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setName(name) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">name</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">The Bonjour service name.</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setName(&quot;My Hammerspoon Server&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L86" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:86</a>
+        </div>
+    </div>
+    <div class="method" id="setBonjour">
+        <h3>
+<a href="#setBonjour">setBonjour(enable) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Enable or disable Bonjour advertisement of this server on the local network.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setBonjour(enable) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">enable</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to advertise via Bonjour, <code>false</code> to disable (default).</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setBonjour(true)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L96" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:96</a>
+        </div>
+    </div>
+    <div class="method" id="setCallback">
+        <h3>
+<a href="#setCallback">setCallback(callback) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Set the request handler callback.</p>
+<p>The callback receives <code>(method, path, headers, body, query)</code> and must return either:</p>
+<ul>
+<li>A plain object <code>{body, status, headers}</code> for a synchronous response.</li>
+<li>A Promise resolving to <code>{body, status, headers}</code> for an async response.</li>
+</ul>
+<p><code>path</code> never includes the query string. <code>query</code> is an object mapping each query parameter name
+to its percent-decoded value (<code>+</code> is decoded as a space). A parameter that appears more than once
+maps to an array of its values, in order. A parameter with no <code>=</code> maps to an empty string. If the
+request has no query string, <code>query</code> is an empty object.</p>
+<p>If the callback returns <code>null</code> or <code>undefined</code>, the server falls through to static file serving
+(if a document root is set), or responds with 404.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setCallback(callback) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">callback</span></td>
+    <td class="param-type">((method: string, path: string, headers: object, body: string, query: Record&lt;string, string | string[]&gt;) =&gt; ({body: string, status: number, headers: object} | Promise&lt;{body: string, status: number, headers: object}&gt;)) | null</td>
+    <td class="param-desc">The request handler, or <code>null</code> to clear.</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setCallback((method, path, headers, body, query) =&gt; {
+    // GET /hello?name=World
+    return {body: `&lt;h1&gt;Hello, ${query.name}!&lt;/h1&gt;`, status: 200, headers: {&quot;Content-Type&quot;: &quot;text/html&quot;}}
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L121" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:121</a>
+        </div>
+    </div>
+    <div class="method" id="setDocumentRoot">
+        <h3>
+<a href="#setDocumentRoot">setDocumentRoot(path) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Set the filesystem path to serve static files from.</p>
+<p>When a document root is set, requests not handled by the callback are served as
+static files from this directory. Pass <code>null</code> to disable static file serving.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setDocumentRoot(path) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">path</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">Absolute path to a directory, or <code>null</code> to disable.</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setDocumentRoot(&quot;/Users/me/Sites&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L134" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:134</a>
+        </div>
+    </div>
+    <div class="method" id="setDirectoryIndex">
+        <h3>
+<a href="#setDirectoryIndex">setDirectoryIndex(files) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Set the list of index filenames checked when a directory is requested.</p>
+<p>Defaults to <code>[&quot;index.html&quot;, &quot;index.htm&quot;]</code>. Files are checked in order.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setDirectoryIndex(files) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">files</span></td>
+    <td class="param-type">string[]</td>
+    <td class="param-desc">Array of filename strings.</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setDirectoryIndex([&quot;index.html&quot;, &quot;default.html&quot;])</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L146" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:146</a>
+        </div>
+    </div>
+    <div class="method" id="setAllowDirectoryListing">
+        <h3>
+<a href="#setAllowDirectoryListing">setAllowDirectoryListing(allow) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Enable or disable directory listing for requests that map to a directory with no index file.</p>
+<p>When disabled (the default), directory requests without an index file return 403.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setAllowDirectoryListing(allow) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">allow</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to serve directory listings, <code>false</code> to return 403 (default).</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setAllowDirectoryListing(true)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L158" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:158</a>
+        </div>
+    </div>
+    <div class="method" id="setTLSFromPKCS12">
+        <h3>
+<a href="#setTLSFromPKCS12">setTLSFromPKCS12(path, password) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Configure TLS using a PKCS#12 (.p12) identity file.</p>
+<p>When TLS is configured, the server accepts HTTPS connections. The <code>.p12</code> file must
+contain both the certificate and the private key.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setTLSFromPKCS12(path, password) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">path</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">Absolute path to the <code>.p12</code> file.</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">password</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">The password protecting the <code>.p12</code> file.</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setTLSFromPKCS12(&quot;/path/to/identity.p12&quot;, &quot;passphrase&quot;).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L172" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:172</a>
+        </div>
+    </div>
+    <div class="method" id="start">
+        <h3>
+<a href="#start">start() -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Start the server and begin accepting connections.</p>
+<p>The server must be configured before calling <code>start()</code>. To restart the server with new
+settings, call <code>stop()</code> followed by <code>start()</code>.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">start() -> HSHTTPServer</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">A running server, and its callbacks, stay alive until it&#39;s stopped, even if you don&#39;t keep a reference to it</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const server = hs.httpserver.create().setPort(8080).setCallback(handler).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L185" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:185</a>
+        </div>
+    </div>
+    <div class="method" id="stop">
+        <h3>
+<a href="#stop">stop() -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Stop the server and close all connections.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">stop() -> HSHTTPServer</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.stop()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L194" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:194</a>
+        </div>
+    </div>
+    <div class="method" id="destroy">
+        <h3>
+<a href="#destroy">destroy() -> None</a>
+        </h3>
+
+        <div class="description"><p>Destroy this server, releasing all resources.</p>
+<p>After calling <code>destroy()</code>, the server object should not be used.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">destroy() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.destroy()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L204" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:204</a>
+        </div>
+    </div>
+    <div class="method" id="getPort">
+        <h3>
+<a href="#getPort">getPort() -> number</a>
+        </h3>
+
+        <div class="description"><p>Get the TCP port the server is currently listening on.</p>
+<p>Returns 0 if the server is not running.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">getPort() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The TCP port number.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(&quot;Listening on port &quot; + server.getPort())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L215" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:215</a>
+        </div>
+    </div>
+    <div class="method" id="getName">
+        <h3>
+<a href="#getName">getName() -> string</a>
+        </h3>
+
+        <div class="description"><p>Get the configured Bonjour service name.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">getName() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The Bonjour service name.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(server.getName())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L224" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:224</a>
+        </div>
+    </div>
+    <div class="method" id="getInterface">
+        <h3>
+<a href="#getInterface">getInterface() -> string</a>
+        </h3>
+
+        <div class="description"><p>Get the configured network interface, or <code>null</code> if listening on all interfaces.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">getInterface() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The interface name or IP address string, or <code>null</code>.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(server.getInterface())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L233" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:233</a>
+        </div>
+    </div>
+    <div class="method" id="setWebSocketCallback">
+        <h3>
+<a href="#setWebSocketCallback">setWebSocketCallback(path, callback) -> HSHTTPServer</a>
+        </h3>
+
+        <div class="description"><p>Register a WebSocket handler for a URL path.</p>
+<p>When a client connects and performs a WebSocket upgrade handshake on <code>path</code>, the callback
+is invoked with three arguments: <code>event</code> (string), <code>connection</code> (HSWebSocketConnection),
+and <code>message</code> (string).</p>
+<p><strong>Events:</strong></p>
+<ul>
+<li><code>&quot;connected&quot;</code> — a new client connected; <code>message</code> is <code>&quot;&quot;</code>.</li>
+<li><code>&quot;message&quot;</code> — the client sent a text frame; <code>message</code> contains the text.</li>
+<li><code>&quot;closed&quot;</code> — the client disconnected; <code>message</code> is <code>&quot;&quot;</code>.</li>
+</ul>
+<p>Pass <code>null</code> to remove the WebSocket handler for the path.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setWebSocketCallback(path, callback) -> HSHTTPServer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">path</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">The URL path to handle WebSocket connections on (e.g. <code>&quot;/ws&quot;</code>).</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">callback</span></td>
+    <td class="param-type">((event: string, connection: HSWebSocketConnection, message: string) =&gt; void) | null</td>
+    <td class="param-desc">The event handler, or <code>null</code> to remove.</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSHTTPServer</div>
+        <div class="return-desc">This server, for chaining.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">server.setWebSocketCallback(&#39;/ws&#39;, (event, conn, msg) =&gt; {
+    if (event === &#39;connected&#39;) conn.send(&#39;Welcome!&#39;)
+    else if (event === &#39;message&#39;) conn.send(&#39;Echo: &#39; + msg)
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.httpserver/HSHTTPServer.swift#L258" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift:258</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSHTTPServer');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+            initNavTracking();
+        });
+    </script>
+</body>
+</html>

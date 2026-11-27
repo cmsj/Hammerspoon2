@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.bluetooth - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="canvas-guide.html" class="">hs.canvas</a>
+                    <a href="typescript-guide.html" class="">TypeScript</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.bluetooth</span>
+</nav>
+<div class="page-header">
+    <h1>hs.bluetooth</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Inspect, connect to and scan for Bluetooth devices, and watch them connect and disconnect.</p>
+<p>The module offers two kinds of object, because macOS identifies them in two different ways:</p>
+<ul>
+<li><code>HSBluetoothDevice</code>: a device macOS knows by its Bluetooth address, such as headphones, a
+keyboard or a mouse paired with this Mac. These have battery levels and system-wide
+connect/disconnect events.</li>
+<li><code>HSBluetoothPeripheral</code>: a Bluetooth Low Energy (BLE) peripheral, found by <code>scan()</code>, which
+Hammerspoon can connect to itself to read and write its GATT characteristics. macOS gives
+these a UUID <code>identifier</code> instead of revealing their address.</li>
+</ul>
+<pre><code class="language-javascript">hs.bluetooth.pairedDevices().forEach(d =&gt; console.log(d.name + &quot; &quot; + d.address))
+
+hs.bluetooth.connectedDevices()
+    .filter(d =&gt; d.batteryLevel !== null)
+    .forEach(d =&gt; console.log(d.name + &quot;: &quot; + d.batteryLevel + &quot;%&quot;))
+
+hs.bluetooth.on(&#39;connected&#39;, d =&gt; console.log(d.name + &quot; connected&quot;))
+hs.bluetooth.on(&#39;powerChanged&#39;, on =&gt; console.log(&quot;Bluetooth is &quot; + (on ? &quot;on&quot; : &quot;off&quot;)))
+
+const nearby = await hs.bluetooth.scan({ seconds: 5 })
+nearby.forEach(p =&gt; console.log((p.name ?? p.identifier) + &quot; &quot; + p.rssi + &quot; dBm&quot;))
+</code></pre>
+<p>macOS asks the user for Bluetooth permission the first time this module talks to Bluetooth.
+Use <code>hs.permissions.checkBluetooth()</code> to see whether it has been granted.</p>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSBluetoothDevice.html">HSBluetoothDevice</a>
+    </li>
+    <li>
+        <a href="HSBluetoothPeripheral.html">HSBluetoothPeripheral</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="powered">
+        <h3><a href="#powered">hs.bluetooth.powered</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the Mac&#39;s Bluetooth is turned on.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:46</a>
+        </div>
+    </div>
+    <div class="property" id="isScanning">
+        <h3><a href="#isScanning">hs.bluetooth.isScanning</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether a BLE scan started by `scan()` is running.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L53" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:53</a>
+        </div>
+    </div>
+    <div class="property" id="isInquiring">
+        <h3><a href="#isInquiring">hs.bluetooth.isInquiring</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether a search for classic devices started by `inquiry()` is running.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L60" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:60</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="pairedDevices">
+        <h3><a href="#pairedDevices">hs.bluetooth.pairedDevices() -> HSBluetoothDevice[]</a></h3>
+
+        <div class="description">All devices paired with this Mac, connected or not.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.pairedDevices() -> HSBluetoothDevice[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSBluetoothDevice[]</div>
+        <div class="return-desc">An array of `HSBluetoothDevice` objects</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.bluetooth.pairedDevices().forEach(d =&gt; console.log(d.name + &quot; &quot; + d.address))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L69" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:69</a>
+        </div>
+    </div>
+    <div class="method" id="connectedDevices">
+        <h3><a href="#connectedDevices">hs.bluetooth.connectedDevices() -> HSBluetoothDevice[]</a></h3>
+
+        <div class="description">The paired devices macOS currently has connected.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.connectedDevices() -> HSBluetoothDevice[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSBluetoothDevice[]</div>
+        <div class="return-desc">An array of `HSBluetoothDevice` objects</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.bluetooth.connectedDevices().forEach(d =&gt; console.log(d.name + &quot; is connected&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L78" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:78</a>
+        </div>
+    </div>
+    <div class="method" id="device">
+        <h3><a href="#device">hs.bluetooth.device(address) -> HSBluetoothDevice</a></h3>
+
+        <div class="description">Looks up a device macOS knows by its Bluetooth address.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.device(address) -> HSBluetoothDevice</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">address</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The device&#39;s address, as `&quot;a4-83-e7-12-34-56&quot;` or `&quot;A4:83:E7:12:34:56&quot;`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSBluetoothDevice</div>
+        <div class="return-desc">The `HSBluetoothDevice`, or `null` if macOS doesn&#39;t know a device with that address</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const keyboard = hs.bluetooth.device(&quot;a4-83-e7-12-34-56&quot;)
+if (keyboard) console.log(keyboard.name + &quot; battery: &quot; + keyboard.batteryLevel + &quot;%&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L89" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:89</a>
+        </div>
+    </div>
+    <div class="method" id="connectedPeripherals">
+        <h3><a href="#connectedPeripherals">hs.bluetooth.connectedPeripherals() -> HSBluetoothPeripheral[]</a></h3>
+
+        <div class="description">The BLE peripherals Hammerspoon is connected to, with `HSBluetoothPeripheral.connect()`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.connectedPeripherals() -> HSBluetoothPeripheral[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSBluetoothPeripheral[]</div>
+        <div class="return-desc">An array of `HSBluetoothPeripheral` objects</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.bluetooth.connectedPeripherals().forEach(p =&gt; console.log(p.name))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L98" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:98</a>
+        </div>
+    </div>
+    <div class="method" id="peripheral">
+        <h3><a href="#peripheral">hs.bluetooth.peripheral(identifier) -> HSBluetoothPeripheral</a></h3>
+
+        <div class="description">Looks up a BLE peripheral by its identifier.
+Hammerspoon must have seen the peripheral in a scan, or Bluetooth must already be in use, for it to be found. This lookup doesn&#39;t start Bluetooth itself, so it never shows the permission prompt.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.peripheral(identifier) -> HSBluetoothPeripheral</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">identifier</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The peripheral&#39;s `identifier`, a UUID</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSBluetoothPeripheral</div>
+        <div class="return-desc">The `HSBluetoothPeripheral`, or `null` if it isn&#39;t known</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const sensor = hs.bluetooth.peripheral(&quot;5D7E2C4A-1B3F-4E8A-9C6D-0F1E2D3C4B5A&quot;)
+if (sensor) await sensor.connect()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L110" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:110</a>
+        </div>
+    </div>
+    <div class="method" id="scan">
+        <h3><a href="#scan">hs.bluetooth.scan(options) -> Promise&lt;HSBluetoothPeripheral[]&gt;</a></h3>
+
+        <div class="description">Scans for BLE peripherals nearby. Only one scan can run at a time.
+Each peripheral found is also delivered to `&#39;discovered&#39;` listeners (see `on()`) as soon as it&#39;s seen.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.scan(options) -> Promise&lt;HSBluetoothPeripheral[]&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">[String: Any]</td>
+                    <td class="param-desc">An object with any of:</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;HSBluetoothPeripheral[]&gt;</div>
+        <div class="return-desc">A Promise resolving to the peripherals found when the scan ends, or when `stopScan()` is called. Rejects if a scan is already running, the options are invalid, or Bluetooth is unavailable</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const nearby = await hs.bluetooth.scan({ seconds: 5 })
+nearby.forEach(p =&gt; console.log((p.name ?? p.identifier) + &quot; &quot; + p.rssi + &quot; dBm&quot;))
+
+const heartStraps = await hs.bluetooth.scan({ services: [&quot;180D&quot;] })</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L128" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:128</a>
+        </div>
+    </div>
+    <div class="method" id="stopScan">
+        <h3><a href="#stopScan">hs.bluetooth.stopScan() -> None</a></h3>
+
+        <div class="description">Ends a scan started by `scan()` early. Its Promise resolves with the peripherals found so far.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.stopScan() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.bluetooth.once(&#39;discovered&#39;, p =&gt; hs.bluetooth.stopScan())
+const [first] = await hs.bluetooth.scan({ seconds: 30 })</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L136" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:136</a>
+        </div>
+    </div>
+    <div class="method" id="inquiry">
+        <h3><a href="#inquiry">hs.bluetooth.inquiry(options) -> Promise&lt;HSBluetoothDevice[]&gt;</a></h3>
+
+        <div class="description">Searches for discoverable classic Bluetooth devices nearby, such as headphones in pairing mode. Only one search can run at a time.
+This interrupts the audio of connected Bluetooth headphones while it runs.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.inquiry(options) -> Promise&lt;HSBluetoothDevice[]&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">[String: Any]</td>
+                    <td class="param-desc">An object with `seconds` (number, default `10`, at most `255`): how long to search for</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;HSBluetoothDevice[]&gt;</div>
+        <div class="return-desc">A Promise resolving to the devices found when the search ends, or when `stopInquiry()` is called. Rejects if a search is already running, the options are invalid, or the search fails</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const found = await hs.bluetooth.inquiry({ seconds: 10 })
+found.forEach(d =&gt; console.log(d.name + &quot; &quot; + d.address))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L148" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:148</a>
+        </div>
+    </div>
+    <div class="method" id="stopInquiry">
+        <h3><a href="#stopInquiry">hs.bluetooth.stopInquiry() -> None</a></h3>
+
+        <div class="description">Ends a search started by `inquiry()` early. Its Promise resolves with the devices found so far.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.stopInquiry() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.bluetooth.stopInquiry()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/HSBluetoothModule.swift#L155" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/HSBluetoothModule.swift:155</a>
+        </div>
+    </div>
+    <div class="method" id="on">
+        <h3><a href="#on">hs.bluetooth.on(event, listener) -> None</a></h3>
+
+        <div class="description">Register a listener for Bluetooth events.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.on(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">event</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">The event to listen for</td>
+                </tr>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">Called with the event&#39;s device or peripheral, or for `&quot;powerChanged&quot;` the new power state</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+hs.bluetooth.on(&#39;connected&#39;, device =&gt; console.log(device.name + &quot; connected&quot;))
+hs.bluetooth.on(&#39;disconnected&#39;, device =&gt; console.log(device.name + &quot; disconnected&quot;))
+hs.bluetooth.on(&#39;powerChanged&#39;, on =&gt; console.log(&quot;Bluetooth is &quot; + (on ? &quot;on&quot; : &quot;off&quot;)))
+} catch (err) {
+console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/hs.bluetooth.js#L40" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/hs.bluetooth.js:40</a>
+        </div>
+    </div>
+    <div class="method" id="off">
+        <h3><a href="#off">hs.bluetooth.off(event, listener) -> None</a></h3>
+
+        <div class="description">Remove a previously registered Bluetooth event listener.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.off(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">event</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">The event the listener was registered for</td>
+                </tr>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">The function originally passed to `on`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const onConnected = device =&gt; console.log(device.name)
+hs.bluetooth.on(&#39;connected&#39;, onConnected)
+// later…
+hs.bluetooth.off(&#39;connected&#39;, onConnected)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/hs.bluetooth.js#L55" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/hs.bluetooth.js:55</a>
+        </div>
+    </div>
+    <div class="method" id="once">
+        <h3><a href="#once">hs.bluetooth.once(event, listener) -> None</a></h3>
+
+        <div class="description">Register a listener that fires at most once for a Bluetooth event.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bluetooth.once(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">event</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">The event to listen for</td>
+                </tr>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">Called the next time the event occurs, then automatically removed</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+hs.bluetooth.once(&#39;connected&#39;, device =&gt; console.log(&quot;First connection: &quot; + device.name))
+} catch (err) {
+console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bluetooth/hs.bluetooth.js#L72" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bluetooth/hs.bluetooth.js:72</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.bluetooth');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

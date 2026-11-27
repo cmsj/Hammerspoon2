@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.eventkit - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div id="guides-nav"></div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.eventkit</span>
+</nav>
+<div class="page-header">
+    <h1>hs.eventkit</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Read calendar events, and read and change reminders, from the macOS Calendar and Reminders
+databases (EventKit).</p>
+<p>Events need full access to calendars: call <code>hs.permissions.requestCalendars()</code> to ask for it,
+and <code>hs.permissions.checkCalendars()</code> to see whether it has been granted. Reminders need access
+to reminders, from <code>hs.permissions.requestReminders()</code> and <code>hs.permissions.checkReminders()</code>.
+Every method here throws (or, for one that returns a Promise, rejects) while the access it
+needs hasn&#39;t been granted.</p>
+<p>Events are <code>HSCalendarEvent</code> objects, and reminders are <code>HSReminder</code> objects.</p>
+<h2>Finding meeting links for today</h2>
+<pre><code class="language-js">hs.eventkit.eventsToday().forEach(e =&gt; {
+    const text = [e.location, e.notes, e.url].join(&quot; &quot;)
+    const link = text.match(/https:\/\/[\w.-]*(zoom\.us|teams\.microsoft\.com)\/\S+/)
+    if (link) console.log(e.title + &quot;: &quot; + link[0])
+})
+</code></pre>
+<h2>Adding a reminder and ticking it off</h2>
+<pre><code class="language-js">const r = hs.eventkit.createReminder({
+    title: &quot;Water the plants&quot;,
+    dueDate: new Date(Date.now() + 3600000),
+    alarmDates: [new Date(Date.now() + 3600000)]
+})
+// ...later
+r.update({ isCompleted: true })
+</code></pre>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSCalendarEvent.html">HSCalendarEvent</a>
+    </li>
+    <li>
+        <a href="HSReminder.html">HSReminder</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="calendars">
+        <h3><a href="#calendars">hs.eventkit.calendars() -> object[]</a></h3>
+
+        <div class="description"><p>The calendars that hold events.</p>
+<p>Each entry is an object with <code>id</code>, <code>title</code> and <code>source</code> (the account, e.g. &quot;iCloud&quot;) keys.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.calendars() -> {id: string, title: string, source: string | null}[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">object[]</div>
+        <div class="return-desc">An array of calendar objects</div>
+        <table class="params-table returns-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">id</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc"></td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">title</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc"></td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">source</span></td>
+    <td class="param-type">string | null</td>
+    <td class="param-desc"></td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    hs.eventkit.calendars().forEach(c =&gt; console.log(c.source + &quot;: &quot; + c.title))
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L56" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:56</a>
+        </div>
+    </div>
+    <div class="method" id="events">
+        <h3><a href="#events">hs.eventkit.events(start, end, calendarIDs) -> HSCalendarEvent[]</a></h3>
+
+        <div class="description"><p>The events that overlap a date range, sorted by start date.</p>
+<p>EventKit only searches up to four years at a time; a longer range is cut short.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.events(start, end, calendarIDs) -> HSCalendarEvent[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">start</span></td>
+    <td class="param-type">Date</td>
+    <td class="param-desc">The start of the range</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">end</span></td>
+    <td class="param-type">Date</td>
+    <td class="param-desc">The end of the range</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">calendarIDs</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">[String]</td>
+    <td class="param-desc">The <code>id</code>s of the calendars to search (default: all of them)</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCalendarEvent[]</div>
+        <div class="return-desc">The events</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    const now = new Date()
+    const later = new Date(now.getTime() + 3600000)
+    hs.eventkit.events(now, later).forEach(e =&gt; console.log(e.title))
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L76" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:76</a>
+        </div>
+    </div>
+    <div class="method" id="search">
+        <h3><a href="#search">hs.eventkit.search(query, start, end, calendarIDs) -> HSCalendarEvent[]</a></h3>
+
+        <div class="description"><p>The events in a date range whose title, location, notes or URL contain some text
+(ignoring case), sorted by start date.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.search(query, start, end, calendarIDs) -> HSCalendarEvent[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">query</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">The text to look for</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">start</span></td>
+    <td class="param-type">Date</td>
+    <td class="param-desc">The start of the range</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">end</span></td>
+    <td class="param-type">Date</td>
+    <td class="param-desc">The end of the range</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">calendarIDs</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">[String]</td>
+    <td class="param-desc">The <code>id</code>s of the calendars to search (default: all of them)</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCalendarEvent[]</div>
+        <div class="return-desc">The events</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    const now = new Date()
+    const nextWeek = new Date(now.getTime() + 7 * 86400000)
+    hs.eventkit.search(&quot;zoom.us&quot;, now, nextWeek).forEach(e =&gt; console.log(e.title))
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L96" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:96</a>
+        </div>
+    </div>
+    <div class="method" id="eventsToday">
+        <h3><a href="#eventsToday">hs.eventkit.eventsToday(calendarIDs) -> HSCalendarEvent[]</a></h3>
+
+        <div class="description"><p>The events that overlap today (from midnight to midnight, including any that have already
+finished), sorted by start date.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.eventsToday(calendarIDs) -> HSCalendarEvent[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">calendarIDs</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">[String]</td>
+    <td class="param-desc">The <code>id</code>s of the calendars to search (default: all of them)</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCalendarEvent[]</div>
+        <div class="return-desc">The events</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    hs.eventkit.eventsToday().forEach(e =&gt; console.log(e.startDate.toLocaleTimeString() + &quot; &quot; + e.title))
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L111" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:111</a>
+        </div>
+    </div>
+    <div class="method" id="eventsTomorrow">
+        <h3><a href="#eventsTomorrow">hs.eventkit.eventsTomorrow(calendarIDs) -> HSCalendarEvent[]</a></h3>
+
+        <div class="description"><p>The events that overlap tomorrow (from midnight to midnight), sorted by start date.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.eventsTomorrow(calendarIDs) -> HSCalendarEvent[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">calendarIDs</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">[String]</td>
+    <td class="param-desc">The <code>id</code>s of the calendars to search (default: all of them)</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCalendarEvent[]</div>
+        <div class="return-desc">The events</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    console.log(hs.eventkit.eventsTomorrow().length + &quot; events tomorrow&quot;)
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L125" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:125</a>
+        </div>
+    </div>
+    <div class="method" id="reminderLists">
+        <h3><a href="#reminderLists">hs.eventkit.reminderLists() -> object[]</a></h3>
+
+        <div class="description"><p>The lists that hold reminders.</p>
+<p>Each entry is an object with <code>id</code>, <code>title</code>, <code>source</code> (the account, e.g. &quot;iCloud&quot;) and
+<code>isDefault</code> (whether new reminders go there unless told otherwise) keys.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.reminderLists() -> {id: string, title: string, source: string | null, isDefault: boolean}[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">object[]</div>
+        <div class="return-desc">An array of reminder list objects</div>
+        <table class="params-table returns-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">id</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc"></td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">title</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc"></td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">source</span></td>
+    <td class="param-type">string | null</td>
+    <td class="param-desc"></td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">isDefault</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"></td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    hs.eventkit.reminderLists().forEach(l =&gt; console.log(l.source + &quot;: &quot; + l.title))
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L141" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:141</a>
+        </div>
+    </div>
+    <div class="method" id="reminders">
+        <h3><a href="#reminders">hs.eventkit.reminders(listIDs) -> Promise&lt;HSReminder[]&gt;</a></h3>
+
+        <div class="description"><p>All reminders, completed or not.</p>
+<p>Sorted like <code>incompleteReminders()</code>.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.reminders(listIDs) -> Promise&lt;HSReminder[]&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">listIDs</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">[String]</td>
+    <td class="param-desc">The <code>id</code>s of the lists to search (default: all of them)</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;HSReminder[]&gt;</div>
+        <div class="return-desc">A Promise resolving to the reminders</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventkit.reminders().then(r =&gt; console.log(r.length + &quot; reminders&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L152" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:152</a>
+        </div>
+    </div>
+    <div class="method" id="incompleteReminders">
+        <h3><a href="#incompleteReminders">hs.eventkit.incompleteReminders(listIDs) -> Promise&lt;HSReminder[]&gt;</a></h3>
+
+        <div class="description"><p>The reminders that haven&#39;t been completed, sorted by due date (those without one last),
+then by when they were created.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.incompleteReminders(listIDs) -> Promise&lt;HSReminder[]&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">listIDs</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">[String]</td>
+    <td class="param-desc">The <code>id</code>s of the lists to search (default: all of them)</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;HSReminder[]&gt;</div>
+        <div class="return-desc">A Promise resolving to the reminders</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventkit.incompleteReminders().then(reminders =&gt; {
+    reminders.forEach(r =&gt; console.log(r.title + (r.dueDate ? &quot; (due &quot; + r.dueDate.toLocaleString() + &quot;)&quot; : &quot;&quot;)))
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L164" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:164</a>
+        </div>
+    </div>
+    <div class="method" id="completedReminders">
+        <h3><a href="#completedReminders">hs.eventkit.completedReminders(start, end, listIDs) -> Promise&lt;HSReminder[]&gt;</a></h3>
+
+        <div class="description"><p>The reminders that were completed during a date range, sorted by when they were completed.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.completedReminders(start, end, listIDs) -> Promise&lt;HSReminder[]&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">start</span></td>
+    <td class="param-type">Date</td>
+    <td class="param-desc">The start of the range</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">end</span></td>
+    <td class="param-type">Date</td>
+    <td class="param-desc">The end of the range</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">listIDs</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">[String]</td>
+    <td class="param-desc">The <code>id</code>s of the lists to search (default: all of them)</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;HSReminder[]&gt;</div>
+        <div class="return-desc">A Promise resolving to the reminders</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const weekAgo = new Date(Date.now() - 7 * 86400000)
+hs.eventkit.completedReminders(weekAgo, new Date()).then(r =&gt; console.log(r.length + &quot; done this week&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L176" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:176</a>
+        </div>
+    </div>
+    <div class="method" id="reminder">
+        <h3><a href="#reminder">hs.eventkit.reminder(id) -> HSReminder</a></h3>
+
+        <div class="description"><p>The reminder with an identifier, such as one saved from a reminder&#39;s <code>id</code> earlier.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.reminder(id) -> HSReminder</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">id</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">The reminder&#39;s <code>id</code></td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSReminder</div>
+        <div class="return-desc">The reminder, or <code>null</code> if there isn&#39;t one with that <code>id</code></div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    const r = hs.eventkit.reminder(hs.settings.get(&quot;reminderID&quot;))
+    if (r &amp;&amp; !r.isCompleted) console.log(&quot;Still to do: &quot; + r.title)
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L191" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:191</a>
+        </div>
+    </div>
+    <div class="method" id="createReminder">
+        <h3><a href="#createReminder">hs.eventkit.createReminder(properties) -> HSReminder</a></h3>
+
+        <div class="description"><p>Creates and saves a new reminder.</p>
+<p><code>properties</code> must have a <code>title</code>, and can have any of the other keys <code>HSReminder.update()</code>
+takes. Without a <code>listID</code>, the reminder goes in the default list for new reminders.</p>
+<p>A due date doesn&#39;t produce a notification by itself; add <code>alarmDates</code> for that.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventkit.createReminder(properties) -> HSReminder</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">properties</span></td>
+    <td class="param-type">{[key: string]: any}</td>
+    <td class="param-desc">The new reminder&#39;s properties</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSReminder</div>
+        <div class="return-desc">The new reminder</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    const tomorrow = new Date(Date.now() + 86400000)
+    hs.eventkit.createReminder({ title: &quot;Call the dentist&quot;, dueDate: tomorrow, isAllDay: true, priority: &quot;high&quot; })
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSEventKitModule.swift#L211" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSEventKitModule.swift:211</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.eventkit');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+            initNavTracking();
+        });
+    </script>
+</body>
+</html>

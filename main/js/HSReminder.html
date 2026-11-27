@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSReminder - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div id="guides-nav"></div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSReminder</span>
+</nav>
+<div class="page-header">
+    <h1>HSReminder</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>A reminder from the Reminders app, as returned by <code>hs.eventkit.incompleteReminders()</code> and its
+relatives.</p>
+<p>Each property is read from the underlying reminder when you access it. A reminder is a snapshot:
+if it changes in Reminders after you fetched it, fetch it again to see the change.</p>
+<p>The properties are read-only; change a reminder with <code>update()</code>, which saves the change straight
+away, and delete it with <code>remove()</code>.</p>
+<p>Don&#39;t create these yourself; they come from <code>hs.eventkit</code>, and <code>hs.eventkit.createReminder()</code>
+makes new ones.</p>
+<ul>
+<li>Example:</li>
+</ul>
+<pre><code class="language-js">hs.eventkit.incompleteReminders().then(reminders =&gt; {
+    reminders.filter(r =&gt; r.dueDate &amp;&amp; r.dueDate &lt; new Date())
+             .forEach(r =&gt; console.log(&quot;Overdue: &quot; + r.title))
+})
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="id">
+        <h3><a href="#id">id</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The reminder&#39;s identifier on this Mac, which <code>hs.eventkit.reminder()</code> finds it by.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L35" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:35</a>
+        </div>
+    </div>
+    <div class="property" id="externalID">
+        <h3><a href="#externalID">externalID</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The identifier the server gives the reminder, which is the same on every device but isn&#39;t
+guaranteed to be unique.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L43" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:43</a>
+        </div>
+    </div>
+    <div class="property" id="title">
+        <h3><a href="#title">title</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The reminder&#39;s title.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L50" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:50</a>
+        </div>
+    </div>
+    <div class="property" id="notes">
+        <h3><a href="#notes">notes</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The reminder&#39;s notes.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L57" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:57</a>
+        </div>
+    </div>
+    <div class="property" id="url">
+        <h3><a href="#url">url</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The URL attached to the reminder.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:64</a>
+        </div>
+    </div>
+    <div class="property" id="dueDate">
+        <h3><a href="#dueDate">dueDate</a></h3>
+        <div class="prop-type">Date</div>
+        <div class="description"><p>When the reminder is due, or <code>null</code> if it has no due date. For a reminder that is due on a
+day rather than at a time (see <code>isAllDay</code>), this is the start of that day.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L72" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:72</a>
+        </div>
+    </div>
+    <div class="property" id="isAllDay">
+        <h3><a href="#isAllDay">isAllDay</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether the reminder is due on a day, rather than at a particular time. Always <code>false</code> for a
+reminder with no due date.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L80" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:80</a>
+        </div>
+    </div>
+    <div class="property" id="priority">
+        <h3><a href="#priority">priority</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The reminder&#39;s priority: <code>&quot;none&quot;</code>, <code>&quot;low&quot;</code>, <code>&quot;medium&quot;</code> or <code>&quot;high&quot;</code>.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L87" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:87</a>
+        </div>
+    </div>
+    <div class="property" id="isCompleted">
+        <h3><a href="#isCompleted">isCompleted</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether the reminder has been completed.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L94" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:94</a>
+        </div>
+    </div>
+    <div class="property" id="completionDate">
+        <h3><a href="#completionDate">completionDate</a></h3>
+        <div class="prop-type">Date</div>
+        <div class="description"><p>When the reminder was completed, or <code>null</code> if it hasn&#39;t been.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L101" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:101</a>
+        </div>
+    </div>
+    <div class="property" id="alarmDates">
+        <h3><a href="#alarmDates">alarmDates</a></h3>
+        <div class="prop-type">Date[]</div>
+        <div class="description"><p>When the reminder&#39;s alerts go off. Only alerts at a set time are listed; Reminders can also
+have alerts for arriving at or leaving a place, which <code>update()</code> leaves alone.</p>
+<p>A due date doesn&#39;t produce a notification by itself: add an alert for that.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L111" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:111</a>
+        </div>
+    </div>
+    <div class="property" id="isRecurring">
+        <h3><a href="#isRecurring">isRecurring</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether the reminder repeats.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L118" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:118</a>
+        </div>
+    </div>
+    <div class="property" id="listID">
+        <h3><a href="#listID">listID</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The identifier of the reminder&#39;s list, as in <code>hs.eventkit.reminderLists()</code>.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L125" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:125</a>
+        </div>
+    </div>
+    <div class="property" id="listTitle">
+        <h3><a href="#listTitle">listTitle</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The title of the reminder&#39;s list.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L132" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:132</a>
+        </div>
+    </div>
+    <div class="property" id="creationDate">
+        <h3><a href="#creationDate">creationDate</a></h3>
+        <div class="prop-type">Date</div>
+        <div class="description"><p>When the reminder was created.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L139" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:139</a>
+        </div>
+    </div>
+    <div class="property" id="lastModifiedDate">
+        <h3><a href="#lastModifiedDate">lastModifiedDate</a></h3>
+        <div class="prop-type">Date</div>
+        <div class="description"><p>When the reminder was last changed.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L146" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:146</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="update">
+        <h3>
+<a href="#update">update(changes) -> HSReminder</a>
+        </h3>
+
+        <div class="description"><p>Changes some of the reminder&#39;s properties and saves the change.</p>
+<p><code>changes</code> can hold any of these keys; the properties it leaves out are left as they are:</p>
+<ul>
+<li><code>title</code> (string)</li>
+<li><code>notes</code>, <code>url</code> (string, or <code>null</code> to clear)</li>
+<li><code>dueDate</code> (Date, or <code>null</code> to clear). Keeps the reminder&#39;s <code>isAllDay</code> unless <code>changes</code>
+sets that too; clearing the due date also clears <code>isAllDay</code>.</li>
+<li><code>isAllDay</code> (boolean): <code>true</code> makes the reminder due on its due date&#39;s day, rather than at
+its time. Needs a due date.</li>
+<li><code>priority</code> (<code>&quot;none&quot;</code>, <code>&quot;low&quot;</code>, <code>&quot;medium&quot;</code> or <code>&quot;high&quot;</code>)</li>
+<li><code>isCompleted</code> (boolean), which also sets or clears <code>completionDate</code></li>
+<li><code>alarmDates</code> (array of Date): replaces the reminder&#39;s timed alerts; <code>[]</code> removes them</li>
+<li><code>listID</code> (string): moves the reminder to another list</li>
+</ul>
+<p>If anything in <code>changes</code> is invalid, or the change can&#39;t be saved, this throws and the
+reminder is left as it was.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">update(changes) -> HSReminder</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">changes</span></td>
+    <td class="param-type">{[key: string]: any}</td>
+    <td class="param-desc">The properties to change</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSReminder</div>
+        <div class="return-desc">The reminder, for chaining</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    reminder.update({ isCompleted: true })
+    reminder.update({ dueDate: new Date(Date.now() + 3600000), priority: &quot;high&quot; })
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L176" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:176</a>
+        </div>
+    </div>
+    <div class="method" id="remove">
+        <h3>
+<a href="#remove">remove() -> boolean</a>
+        </h3>
+
+        <div class="description"><p>Deletes the reminder.</p>
+<p>The object keeps its properties afterwards, but it can&#39;t be updated or saved again.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">remove() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true once the reminder has been deleted</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    reminder.remove()
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L191" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:191</a>
+        </div>
+    </div>
+    <div class="method" id="toJSON">
+        <h3>
+<a href="#toJSON">toJSON() -> {[key: string]: any}</a>
+        </h3>
+
+        <div class="description"><p>Returns a plain object holding all of the reminder&#39;s properties, for JSON serialisation.</p>
+<p><code>JSON.stringify()</code> calls this automatically, so you rarely need to call it yourself.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toJSON() -> {[key: string]: any}</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: any}</div>
+        <div class="return-desc">An object with every property of the reminder</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventkit.incompleteReminders().then(r =&gt; console.log(JSON.stringify(r, null, 2)))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventkit/HSReminder.swift#L201" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventkit/HSReminder.swift:201</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSReminder');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+            initNavTracking();
+        });
+    </script>
+</body>
+</html>

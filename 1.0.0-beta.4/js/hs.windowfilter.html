@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.windowfilter - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div id="guides-nav"></div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.windowfilter</span>
+</nav>
+<div class="page-header">
+    <h1>hs.windowfilter</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><h1>Window filters</h1>
+<p>A window filter picks out some of the windows on your Mac with a set of rules, such as &quot;visible
+windows in the current Space, except Finder&#39;s&quot;. You can ask a filter for the windows it allows
+right now, or listen for events about them: windows being created, focused, moved, minimized,
+joining or leaving the filter, and so on.</p>
+<pre><code class="language-js">// Every visible window of every app, except a few utility apps
+const wf = hs.windowfilter.defaultFilter
+
+// Only Safari and Mail&#39;s visible windows
+const mailAndWeb = hs.windowfilter.create([&quot;Safari&quot;, &quot;Mail&quot;])
+
+// Visible, non-fullscreen windows in the current Space; no windows at all from Finder, and
+// only titled windows from Terminal
+const custom = hs.windowfilter.create({
+    override: { currentSpace: true, fullscreen: false },
+    default: { visible: true },
+    apps: { Finder: false, &quot;com.apple.Terminal&quot;: { visible: true, allowTitles: 1 } },
+})
+
+custom.on(&quot;windowFocused&quot;, (win, appName) =&gt; console.log(appName + &quot;: &quot; + win.title))
+</code></pre>
+<h2>Rules</h2>
+<p>A window must pass the <code>override</code> rule, if there is one. Then the rule for its application
+decides, or the <code>default</code> rule if the application has none of its own. An application rule
+replaces the default rule rather than adding to it.</p>
+<p>A rule is <code>true</code> (the application&#39;s visible windows), <code>false</code> (none of them), or an object of
+conditions, all of which must hold:</p>
+<ul>
+<li><code>visible</code>: <code>true</code> for only visible windows (neither minimized nor hidden), <code>false</code> for only
+invisible ones</li>
+<li><code>currentSpace</code>: <code>true</code> for only windows in a Space currently shown, <code>false</code> for only
+windows in other Spaces. Minimized and hidden windows count as being in every Space.</li>
+<li><code>fullscreen</code>, <code>focused</code>, <code>hasTitlebar</code>: <code>true</code> to require the window to be fullscreen,
+focused, or to have a titlebar; <code>false</code> to require it not to be</li>
+<li><code>activeApplication</code>: <code>true</code> for only windows of the active application, <code>false</code> for only
+other applications&#39; windows</li>
+<li><code>allowTitles</code>: a number, for windows whose titles are at least that many characters long
+(so <code>1</code> rejects untitled windows); or a string (an exact title), a RegExp, or an array of
+them, for windows whose titles match one</li>
+<li><code>rejectTitles</code>: a string, RegExp, or array of them; windows whose titles match one are rejected</li>
+<li><code>allowRegions</code>, <code>rejectRegions</code>: an <code>HSRect</code> (or <code>{x, y, w, h}</code>), or an array of them.
+A window is in a region if at least half of it is inside, or it covers at least half of the
+region.</li>
+<li><code>allowScreens</code>, <code>rejectScreens</code>: an <code>HSScreen</code>, a screen&#39;s name or UUID, or an array of
+them, for the screen holding most of the window</li>
+<li><code>allowRoles</code>: a window subrole (see <code>HSWindow.subrole</code>), an array of them, or <code>&quot;*&quot;</code> for any
+window. Defaults to <code>hs.windowfilter.allowedWindowRoles</code>, except in the override rule,
+which allows any subrole unless it says otherwise.</li>
+</ul>
+<p>Regions and screens only apply to visible windows. RegExps support the <code>i</code>, <code>m</code> and <code>s</code> flags.</p>
+<p>Hammerspoon&#39;s own windows are never included.</p>
+<h2>Applications that turn Accessibility off</h2>
+<p>Window filters see windows through the Accessibility API, which an application can turn off
+for itself (Firefox does in kiosk mode). Such an application&#39;s windows never appear in any
+filter. <code>hs.windowfilter.inaccessibleApplications()</code> lists them, and the module&#39;s
+<code>inaccessibleApplication</code> event reports each one as it&#39;s found, so you can still offer them
+some other way, e.g. by activating the application.</p>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSWindowFilter.html">HSWindowFilter</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="defaultFilter">
+        <h3><a href="#defaultFilter">hs.windowfilter.defaultFilter</a></h3>
+        <div class="prop-type">HSWindowFilter</div>
+        <div class="description"><p>The default window filter: the visible windows of every application, except some whose
+windows are fleeting or not really windows (Spotlight, Notification Center, menu bar
+utilities, and so on). It&#39;s shared by everything in your config, so change it with care,
+before creating other filters from it.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilterModule.swift#L110" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilterModule.swift:110</a>
+        </div>
+    </div>
+    <div class="property" id="currentSpaceFilter">
+        <h3><a href="#currentSpaceFilter">hs.windowfilter.currentSpaceFilter</a></h3>
+        <div class="prop-type">HSWindowFilter</div>
+        <div class="description"><p>A copy of <code>hs.windowfilter.defaultFilter</code> that only allows windows in the current Space. It&#39;s
+made the first time you use it, from the default filter as it is then.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilterModule.swift#L118" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilterModule.swift:118</a>
+        </div>
+    </div>
+    <div class="property" id="allowedWindowRoles">
+        <h3><a href="#allowedWindowRoles">hs.windowfilter.allowedWindowRoles</a></h3>
+        <div class="prop-type">string[]</div>
+        <div class="description"><p>The window subroles rules allow when they don&#39;t say which subroles they allow:
+<code>AXStandardWindow</code>, <code>AXDialog</code> and <code>AXSystemDialog</code> to begin with. Changing it affects
+every filter; to allow other subroles in one filter, give its rules <code>allowRoles</code>.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilterModule.swift#L127" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilterModule.swift:127</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="create">
+        <h3><a href="#create">hs.windowfilter.create(rules) -> HSWindowFilter</a></h3>
+
+        <div class="description"><p>Creates a window filter</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.windowfilter.create(rules) -> HSWindowFilter</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-has-fields">
+    <td class="param-name"><span class="tree-line tree-stem" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">rules</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">{override?: boolean | object, default?: boolean | object, apps?: Record&lt;string, boolean | object&gt;, sortOrder?: &quot;focusedLast&quot; | &quot;focused&quot; | &quot;createdLast&quot; | &quot;created&quot;} | string | string[] | ((window: HSWindow) =&gt; boolean)</td>
+    <td class="param-desc">What the filter allows: omit it for a copy of <code>hs.windowfilter.defaultFilter</code> (including any changes you&#39;ve made to it); an application&#39;s name or bundle ID, or an array of them, for those applications&#39; visible windows; a function, called with each window, that returns <code>true</code> to allow it; or an object of rules:</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">override</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean | object</td>
+    <td class="param-desc">The rule every window must pass. See the module&#39;s description for rules&#39; conditions</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">default</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean | object</td>
+    <td class="param-desc">The rule for applications without one of their own. Defaults to every window with a standard role, visible or not</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">apps</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">Record&lt;string, boolean | object&gt;</td>
+    <td class="param-desc">Rules for particular applications, by name or bundle ID</td>
+</tr>
+<tr class="param-row param-field param-group-end" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch tree-last" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">sortOrder</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">&quot;focusedLast&quot; | &quot;focused&quot; | &quot;createdLast&quot; | &quot;created&quot;</td>
+    <td class="param-desc">How <code>windows()</code> sorts windows. Defaults to <code>&quot;focusedLast&quot;</code></td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">The new filter</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    const safari = hs.windowfilter.create(&quot;Safari&quot;)
+    const titled = hs.windowfilter.create({ default: { visible: true, allowTitles: 1 } })
+    const wide = hs.windowfilter.create(win =&gt; win.frame.w &gt; 1000)
+    const noScratch = hs.windowfilter.create({ apps: { TextEdit: { rejectTitles: /^Untitled/ } } })
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilterModule.swift#L99" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilterModule.swift:99</a>
+        </div>
+    </div>
+    <div class="method" id="focusEast">
+        <h3><a href="#focusEast">hs.windowfilter.focusEast() -> boolean</a></h3>
+
+        <div class="description"><p>Focuses the nearest window to the right of the focused one, among those in
+<code>hs.windowfilter.currentSpaceFilter</code>, only considering windows within 45° of that direction</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.windowfilter.focusEast() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc"><code>true</code> if a window was focused</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.hotkey.bind([&quot;cmd&quot;, &quot;ctrl&quot;], &quot;right&quot;, () =&gt; hs.windowfilter.focusEast())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilterModule.swift#L136" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilterModule.swift:136</a>
+        </div>
+    </div>
+    <div class="method" id="focusWest">
+        <h3><a href="#focusWest">hs.windowfilter.focusWest() -> boolean</a></h3>
+
+        <div class="description"><p>Focuses the nearest window to the left of the focused one, among those in
+<code>hs.windowfilter.currentSpaceFilter</code>, only considering windows within 45° of that direction</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.windowfilter.focusWest() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc"><code>true</code> if a window was focused</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.hotkey.bind([&quot;cmd&quot;, &quot;ctrl&quot;], &quot;left&quot;, () =&gt; hs.windowfilter.focusWest())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilterModule.swift#L145" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilterModule.swift:145</a>
+        </div>
+    </div>
+    <div class="method" id="focusNorth">
+        <h3><a href="#focusNorth">hs.windowfilter.focusNorth() -> boolean</a></h3>
+
+        <div class="description"><p>Focuses the nearest window above the focused one, among those in
+<code>hs.windowfilter.currentSpaceFilter</code>, only considering windows within 45° of that direction</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.windowfilter.focusNorth() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc"><code>true</code> if a window was focused</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.hotkey.bind([&quot;cmd&quot;, &quot;ctrl&quot;], &quot;up&quot;, () =&gt; hs.windowfilter.focusNorth())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilterModule.swift#L154" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilterModule.swift:154</a>
+        </div>
+    </div>
+    <div class="method" id="focusSouth">
+        <h3><a href="#focusSouth">hs.windowfilter.focusSouth() -> boolean</a></h3>
+
+        <div class="description"><p>Focuses the nearest window below the focused one, among those in
+<code>hs.windowfilter.currentSpaceFilter</code>, only considering windows within 45° of that direction</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.windowfilter.focusSouth() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc"><code>true</code> if a window was focused</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.hotkey.bind([&quot;cmd&quot;, &quot;ctrl&quot;], &quot;down&quot;, () =&gt; hs.windowfilter.focusSouth())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilterModule.swift#L163" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilterModule.swift:163</a>
+        </div>
+    </div>
+    <div class="method" id="inaccessibleApplications">
+        <h3><a href="#inaccessibleApplications">hs.windowfilter.inaccessibleApplications() -> HSApplication[]</a></h3>
+
+        <div class="description"><p>The running applications that have turned the Accessibility API off for themselves (e.g.
+Firefox in kiosk mode), so no window filter can see their windows. Hammerspoon stops asking
+such an application until it quits.</p>
+<p>While any filter or <code>inaccessibleApplication</code> listener is active, this is what Hammerspoon
+has found so far, at no cost; otherwise, it asks every application. It&#39;s empty if
+Hammerspoon hasn&#39;t been given Accessibility permission.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.windowfilter.inaccessibleApplications() -> HSApplication[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSApplication[]</div>
+        <div class="return-desc">The applications</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">for (const app of hs.windowfilter.inaccessibleApplications()) {
+    console.log(app.name + &quot; has turned Accessibility off&quot;)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilterModule.swift#L179" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilterModule.swift:179</a>
+        </div>
+    </div>
+    <div class="method" id="on">
+        <h3><a href="#on">hs.windowfilter.on(event, listener) -> None</a></h3>
+
+        <div class="description"><p>Register a listener for window filter module events.</p>
+<p><code>&quot;inaccessibleApplication&quot;</code> fires when an application is found to have turned the
+Accessibility API off for itself (e.g. Firefox in kiosk mode), so no window filter can see its
+windows. It fires once per launch of such an application, for applications found after the
+listener is registered; <code>hs.windowfilter.inaccessibleApplications()</code> lists the ones already
+known.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.windowfilter.on(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">event</span></td>
+    <td class="param-type">&quot;inaccessibleApplication&quot;</td>
+    <td class="param-desc">The event to listen for</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">listener</span></td>
+    <td class="param-type">(app: HSApplication) =&gt; void</td>
+    <td class="param-desc">Called with the application</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    hs.windowfilter.on(&quot;inaccessibleApplication&quot;, app =&gt; console.log(app.name + &quot; has turned Accessibility off&quot;))
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/hs.windowfilter.js#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/hs.windowfilter.js:46</a>
+        </div>
+    </div>
+    <div class="method" id="off">
+        <h3><a href="#off">hs.windowfilter.off(event, listener) -> None</a></h3>
+
+        <div class="description"><p>Remove a previously registered window filter module event listener.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.windowfilter.off(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">event</span></td>
+    <td class="param-type">&quot;inaccessibleApplication&quot;</td>
+    <td class="param-desc">The event the listener was registered for</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">listener</span></td>
+    <td class="param-type">(app: HSApplication) =&gt; void</td>
+    <td class="param-desc">The function originally passed to <code>on</code></td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const onInaccessible = app =&gt; console.log(app.name + &quot; has turned Accessibility off&quot;)
+hs.windowfilter.on(&quot;inaccessibleApplication&quot;, onInaccessible)
+// later…
+hs.windowfilter.off(&quot;inaccessibleApplication&quot;, onInaccessible)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/hs.windowfilter.js#L61" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/hs.windowfilter.js:61</a>
+        </div>
+    </div>
+    <div class="method" id="once">
+        <h3><a href="#once">hs.windowfilter.once(event, listener) -> None</a></h3>
+
+        <div class="description"><p>Register a listener that fires at most once, the next time a window filter module event happens. See <code>on()</code> for the events.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.windowfilter.once(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">event</span></td>
+    <td class="param-type">&quot;inaccessibleApplication&quot;</td>
+    <td class="param-desc">The event to listen for</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">listener</span></td>
+    <td class="param-type">(app: HSApplication) =&gt; void</td>
+    <td class="param-desc">Called once, then automatically removed</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    hs.windowfilter.once(&quot;inaccessibleApplication&quot;, app =&gt; console.log(app.name + &quot; has turned Accessibility off&quot;))
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/hs.windowfilter.js#L78" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/hs.windowfilter.js:78</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.windowfilter');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+            initNavTracking();
+        });
+    </script>
+</body>
+</html>

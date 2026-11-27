@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSSpace - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div id="guides-nav"></div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSSpace</span>
+</nav>
+<div class="page-header">
+    <h1>HSSpace</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>One space (a desktop, or a fullscreen app&#39;s space) on a screen.</p>
+<p>Get these from a screen (<code>screen.spaces</code>, <code>screen.currentSpace</code>), a window (<code>window.spaces</code>)
+or <code>hs.screen</code> (e.g. <code>hs.screen.focusedSpace()</code>); don&#39;t create them yourself. An <code>HSSpace</code>
+always reports the space&#39;s current state, so there&#39;s no need to fetch it again after
+something changes. If the space is removed, <code>exists</code> becomes <code>false</code>, its other properties
+become <code>null</code>, and its methods reject.</p>
+<p>To move a window to a space, use the window&#39;s <code>moveToSpace()</code>.</p>
+<p>Compare spaces by <code>id</code>, not with <code>===</code>: two lookups of the same space give two different objects.</p>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="id">
+        <h3><a href="#id">id</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description"><p>The space&#39;s ID. macOS assigns these, and they last until the space is removed, so a
+removed and re-added space gets a new ID. They may change when you log out or restart:
+use <code>uuid</code> (with <code>hs.screen.spaceForUUID()</code>) to find a space again in a later session.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L28" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:28</a>
+        </div>
+    </div>
+    <div class="property" id="uuid">
+        <h3><a href="#uuid">uuid</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>The space&#39;s UUID, which macOS keeps across logins (it&#39;s how it remembers which space
+is which). <code>null</code> if the space no longer exists, or if macOS hasn&#39;t given it one, which
+it doesn&#39;t for the first desktop of a new user account.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L39" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:39</a>
+        </div>
+    </div>
+    <div class="property" id="exists">
+        <h3><a href="#exists">exists</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether the space still exists</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:46</a>
+        </div>
+    </div>
+    <div class="property" id="type">
+        <h3><a href="#type">type</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>What kind of space this is: <code>&quot;desktop&quot;</code> for an ordinary desktop, <code>&quot;fullscreen&quot;</code> for a
+fullscreen app (or two apps in Split View), or <code>&quot;unknown&quot;</code> for a kind of space this
+version of Hammerspoon doesn&#39;t recognise. <code>null</code> if the space no longer exists.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L55" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:55</a>
+        </div>
+    </div>
+    <div class="property" id="screen">
+        <h3><a href="#screen">screen</a></h3>
+        <div class="prop-type">HSScreen</div>
+        <div class="description"><p>The screen the space belongs to. Every space belongs to exactly one screen. <code>null</code> if
+the space no longer exists, or its screen has been disconnected.</p>
+<p>If &quot;Displays have separate Spaces&quot; is turned off, all screens share one set of spaces,
+which macOS attributes to the primary screen.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L66" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:66</a>
+        </div>
+    </div>
+    <div class="property" id="desktopNumber">
+        <h3><a href="#desktopNumber">desktopNumber</a></h3>
+        <div class="prop-type">NSNumber</div>
+        <div class="description"><p>The &quot;Desktop N&quot; number Mission Control shows for this desktop. Mission Control only
+numbers desktops, and numbers them across all displays in turn, so a second display&#39;s
+first desktop can be &quot;Desktop 3&quot;. (When there&#39;s only one desktop, Mission Control calls
+it just &quot;Desktop&quot;, but this is still 1.) <code>null</code> for a fullscreen space, or if the space
+no longer exists.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L77" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:77</a>
+        </div>
+    </div>
+    <div class="property" id="isCurrent">
+        <h3><a href="#isCurrent">isCurrent</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether this is the space its screen is currently showing. Each screen shows one
+space at a time, so with several screens, several spaces are current.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L85" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:85</a>
+        </div>
+    </div>
+    <div class="property" id="isFocused">
+        <h3><a href="#isFocused">isFocused</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether this is the focused space: the current space of the screen with keyboard focus</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L93" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:93</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="windowIDs">
+        <h3>
+<a href="#windowIDs">windowIDs() -> number[]</a>
+        </h3>
+
+        <div class="description"><p>The IDs of the windows on this space, front to back. Only ordinary windows are
+included (not menus, panels, the menu bar, etc). Windows set to appear on every space are
+included for every space. Hammerspoon can&#39;t make <code>HSWindow</code> objects for windows on other
+spaces, which is why these are IDs.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">windowIDs() -> number[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number[]</div>
+        <div class="return-desc">An array of window IDs, empty if the space no longer exists</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const space = hs.screen.focusedSpace()
+console.log(space.windowIDs().length + &quot; windows on this space&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L105" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:105</a>
+        </div>
+    </div>
+    <div class="method" id="goto">
+        <h3>
+<a href="#goto">goto() -> Promise&lt;void&gt;</a>
+        </h3>
+
+        <div class="description"><p>Switches this space&#39;s screen to this space, by opening Mission Control and clicking it.
+Needs Accessibility permission.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">goto() -> Promise&lt;void&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;void&gt;</div>
+        <div class="return-desc">A Promise that resolves once the screen is showing this space</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.screen.main().spaces[0].goto()
+    .then(() =&gt; console.log(&quot;Switched&quot;))
+    .catch(err =&gt; console.error(err))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L117" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:117</a>
+        </div>
+    </div>
+    <div class="method" id="remove">
+        <h3>
+<a href="#remove">remove() -> Promise&lt;void&gt;</a>
+        </h3>
+
+        <div class="description"><p>Removes this desktop, by opening Mission Control and clicking its close button. Any
+windows on it move to another desktop on the same screen. Needs Accessibility permission.</p>
+<p>Only desktops can be removed - not fullscreen spaces - and macOS won&#39;t remove a screen&#39;s
+only desktop, or the desktop the screen is currently showing.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">remove() -> Promise&lt;void&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;void&gt;</div>
+        <div class="return-desc">A Promise that resolves once the desktop has gone, or rejects</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.screen.main().addSpace()
+    .then(space =&gt; space.remove())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L131" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:131</a>
+        </div>
+    </div>
+    <div class="method" id="toJSON">
+        <h3>
+<a href="#toJSON">toJSON() -> {[key: string]: any}</a>
+        </h3>
+
+        <div class="description"><p>A summary of the space, for <code>JSON.stringify()</code> and the Console</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toJSON() -> {[key: string]: any}</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: any}</div>
+        <div class="return-desc">An object with the space&#39;s <code>id</code>, <code>uuid</code>, <code>type</code>, <code>screen</code> (its UUID),</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(JSON.stringify(hs.screen.focusedSpace()))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSSpace.swift#L140" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSSpace.swift:140</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSSpace');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+            initNavTracking();
+        });
+    </script>
+</body>
+</html>

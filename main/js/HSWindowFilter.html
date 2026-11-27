@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSWindowFilter - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div id="guides-nav"></div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSWindowFilter</span>
+</nav>
+<div class="page-header">
+    <h1>HSWindowFilter</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>A window filter: a set of rules choosing some of the windows on the system.</p>
+<p>Get the windows it allows with <code>windows()</code>, or listen for windows being created, moved,
+focused etc. with <code>on()</code>. Create one with <code>hs.windowfilter.create()</code>.</p>
+<h2>Events</h2>
+<p>Listeners are called with the window, its application&#39;s name, and the event&#39;s name. They&#39;re
+only told about windows the filter allows, or has just stopped allowing (so they hear why it
+stopped).</p>
+<ul>
+<li><code>windowCreated</code>, <code>windowDestroyed</code>. A destroyed window has gone, so only its <code>id</code> can still be
+read (and its application&#39;s name is passed to the listener).</li>
+<li><code>windowMoved</code>: moved or resized, including going fullscreen</li>
+<li><code>windowFullscreened</code>, <code>windowUnfullscreened</code></li>
+<li><code>windowMinimized</code>, <code>windowUnminimized</code></li>
+<li><code>windowHidden</code>, <code>windowUnhidden</code>: its application was hidden or unhidden</li>
+<li><code>windowVisible</code>, <code>windowNotVisible</code>: it&#39;s visible when it&#39;s neither minimized nor hidden</li>
+<li><code>windowInCurrentSpace</code>, <code>windowNotInCurrentSpace</code>: whether it&#39;s on a Space currently shown.
+Minimized and hidden windows count as being in every Space.</li>
+<li><code>windowOnScreen</code>, <code>windowNotOnScreen</code>: whether it&#39;s actually on screen: visible, and in a
+Space currently shown</li>
+<li><code>windowFocused</code>, <code>windowUnfocused</code></li>
+<li><code>windowTitleChanged</code></li>
+</ul>
+<p>Five more events are about the filter&#39;s set of allowed windows:</p>
+<ul>
+<li><code>windowAllowed</code>: a window is now allowed. Emitted before any other event about it, e.g.
+before <code>windowCreated</code> for a new window.</li>
+<li><code>windowRejected</code>: a window is no longer allowed, or was destroyed. Emitted after the events
+that caused it.</li>
+<li><code>hasWindow</code>: the filter allows a window, having allowed none</li>
+<li><code>hasNoWindows</code>: the filter allows no windows any more. The listener gets the last one.</li>
+<li><code>windowsChanged</code>: the set of allowed windows changed. The listener gets one of the allowed
+windows, or <code>null</code> if there are none.</li>
+</ul>
+<p>Moves, resizes and title changes are reported once the window has stopped changing for a
+moment, so dragging a window emits one <code>windowMoved</code>, not hundreds.</p>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="rules">
+        <h3><a href="#rules">rules</a></h3>
+        <div class="prop-type">JSValue</div>
+        <div class="description"><p>This filter&#39;s rules, as an object <code>hs.windowfilter.create()</code> and <code>setRules()</code> accept, or
+<code>null</code> for a filter made from a function</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L92" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:92</a>
+        </div>
+    </div>
+    <div class="property" id="sortOrder">
+        <h3><a href="#sortOrder">sortOrder</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description"><p>How <code>windows()</code> sorts windows when not told otherwise: <code>&quot;focusedLast&quot;</code> (most recently
+focused first, the default), <code>&quot;focused&quot;</code>, <code>&quot;createdLast&quot;</code> (newest first) or <code>&quot;created&quot;</code>.
+Windows that existed before Hammerspoon started watching count as older than any created
+since, in order of their IDs, and as focused in their order on screen, front to back.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L186" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:186</a>
+        </div>
+    </div>
+    <div class="property" id="isPaused">
+        <h3><a href="#isPaused">isPaused</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description"><p>Whether this filter is paused</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L262" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:262</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="windows">
+        <h3>
+<a href="#windows">windows(sortOrder) -> HSWindow[]</a>
+        </h3>
+
+        <div class="description"><p>The windows this filter allows, sorted</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">windows(sortOrder) -> HSWindow[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">sortOrder</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">&quot;focusedLast&quot; | &quot;focused&quot; | &quot;createdLast&quot; | &quot;created&quot;</td>
+    <td class="param-desc">How to sort them: most or least recently focused first, or newest or oldest first. Defaults to the filter&#39;s <code>sortOrder</code></td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindow[]</div>
+        <div class="return-desc">The windows</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const wf = hs.windowfilter.create({ default: { visible: true, currentSpace: true } })
+for (const win of wf.windows()) console.log(win.title)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:64</a>
+        </div>
+    </div>
+    <div class="method" id="isWindowAllowed">
+        <h3>
+<a href="#isWindowAllowed">isWindowAllowed(window) -> boolean</a>
+        </h3>
+
+        <div class="description"><p>Whether this filter allows a window</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">isWindowAllowed(window) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">window</span></td>
+    <td class="param-type">HSWindow</td>
+    <td class="param-desc">The window</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc"><code>true</code> if the window is allowed</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const win = hs.window.focusedWindow()
+if (win &amp;&amp; hs.windowfilter.defaultFilter.isWindowAllowed(win)) console.log(&quot;The focused window counts&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L74" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:74</a>
+        </div>
+    </div>
+    <div class="method" id="isAppAllowed">
+        <h3>
+<a href="#isAppAllowed">isAppAllowed(app) -> boolean</a>
+        </h3>
+
+        <div class="description"><p>Whether this filter could allow any of an application&#39;s windows: <code>false</code> if the
+application is rejected outright</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">isAppAllowed(app) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">app</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">The application&#39;s name or bundle ID</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc"><code>false</code> if none of the application&#39;s windows can be allowed</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.windowfilter.defaultFilter.isAppAllowed(&quot;Spotlight&quot;))  // false</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L84" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:84</a>
+        </div>
+    </div>
+    <div class="method" id="setRules">
+        <h3>
+<a href="#setRules">setRules(rules) -> HSWindowFilter</a>
+        </h3>
+
+        <div class="description"><p>Replaces all of this filter&#39;s rules</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setRules(rules) -> HSWindowFilter</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">rules</span></td>
+    <td class="param-type">object</td>
+    <td class="param-desc">The rules, as for <code>hs.windowfilter.create()</code></td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">This filter</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    wf.setRules({ default: false, apps: { Safari: true } })
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L106" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:106</a>
+        </div>
+    </div>
+    <div class="method" id="setAppRule">
+        <h3>
+<a href="#setAppRule">setAppRule(app, rule) -> HSWindowFilter</a>
+        </h3>
+
+        <div class="description"><p>Sets the rule for one application&#39;s windows, which replaces the default rule for them</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setAppRule(app, rule) -> HSWindowFilter</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">app</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">The application&#39;s name or bundle ID</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">rule</span></td>
+    <td class="param-type">boolean | object | null</td>
+    <td class="param-desc"><code>true</code> for its visible windows, <code>false</code> for none, an object of conditions (as for the <code>default</code> rule of <code>hs.windowfilter.create()</code>), or <code>null</code> to remove the application&#39;s rule so the default applies again</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">This filter</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    wf.setAppRule(&quot;com.apple.Safari&quot;, { visible: true, allowTitles: 1 })
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L121" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:121</a>
+        </div>
+    </div>
+    <div class="method" id="setDefaultRule">
+        <h3>
+<a href="#setDefaultRule">setDefaultRule(rule) -> HSWindowFilter</a>
+        </h3>
+
+        <div class="description"><p>Sets the rule for applications that have no rule of their own</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setDefaultRule(rule) -> HSWindowFilter</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">rule</span></td>
+    <td class="param-type">boolean | object | null</td>
+    <td class="param-desc"><code>true</code> for visible windows, <code>false</code> for none, an object of conditions, or <code>null</code> for every window with a standard role</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">This filter</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    wf.setDefaultRule({ visible: true, fullscreen: false })
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L135" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:135</a>
+        </div>
+    </div>
+    <div class="method" id="setOverrideRule">
+        <h3>
+<a href="#setOverrideRule">setOverrideRule(rule) -> HSWindowFilter</a>
+        </h3>
+
+        <div class="description"><p>Sets the rule every window must pass, whatever its application&#39;s rule says</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setOverrideRule(rule) -> HSWindowFilter</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">rule</span></td>
+    <td class="param-type">boolean | object | null</td>
+    <td class="param-desc"><code>true</code> for visible windows only, <code>false</code> for none, an object of conditions, or <code>null</code> for no override rule</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">This filter</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    wf.setOverrideRule({ currentSpace: true })
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L149" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:149</a>
+        </div>
+    </div>
+    <div class="method" id="allowApp">
+        <h3>
+<a href="#allowApp">allowApp(app) -> HSWindowFilter</a>
+        </h3>
+
+        <div class="description"><p>Allows an application&#39;s visible windows. The same as <code>setAppRule(app, true)</code>.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">allowApp(app) -> HSWindowFilter</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">app</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">The application&#39;s name or bundle ID</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">This filter</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.windowfilter.defaultFilter.allowApp(&quot;Spotlight&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L158" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:158</a>
+        </div>
+    </div>
+    <div class="method" id="rejectApp">
+        <h3>
+<a href="#rejectApp">rejectApp(app) -> HSWindowFilter</a>
+        </h3>
+
+        <div class="description"><p>Rejects all of an application&#39;s windows. The same as <code>setAppRule(app, false)</code>.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">rejectApp(app) -> HSWindowFilter</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">app</span></td>
+    <td class="param-type">string</td>
+    <td class="param-desc">The application&#39;s name or bundle ID</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">This filter</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.windowfilter.defaultFilter.rejectApp(&quot;Cool New Launcher&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L167" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:167</a>
+        </div>
+    </div>
+    <div class="method" id="setCurrentSpace">
+        <h3>
+<a href="#setCurrentSpace">setCurrentSpace(value) -> HSWindowFilter</a>
+        </h3>
+
+        <div class="description"><p>Sets the override rule&#39;s <code>currentSpace</code> condition, leaving its other conditions alone</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setCurrentSpace(value) -> HSWindowFilter</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">value</span></td>
+    <td class="param-type">boolean | null</td>
+    <td class="param-desc"><code>true</code> to allow only windows in the current Space (along with minimized and hidden windows, which belong to every Space), <code>false</code> to reject them, or <code>null</code> to ignore Spaces</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">This filter</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const here = hs.windowfilter.create().setCurrentSpace(true)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L176" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:176</a>
+        </div>
+    </div>
+    <div class="method" id="duplicate">
+        <h3>
+<a href="#duplicate">duplicate() -> HSWindowFilter</a>
+        </h3>
+
+        <div class="description"><p>A new filter with the same rules, which can then be changed without affecting this one</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">duplicate() -> HSWindowFilter</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">The new filter</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const noFullscreen = hs.windowfilter.defaultFilter.duplicate().setOverrideRule({ fullscreen: false })</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L194" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:194</a>
+        </div>
+    </div>
+    <div class="method" id="on">
+        <h3>
+<a href="#on">on(event, listener) -> None</a>
+        </h3>
+
+        <div class="description"><p>Registers a listener for an event about this filter&#39;s windows. A filter with listeners
+keeps working after you drop your reference to it, until its listeners are removed or it&#39;s
+paused.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">on(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">event</span></td>
+    <td class="param-type">&quot;windowCreated&quot; | &quot;windowDestroyed&quot; | &quot;windowMoved&quot; | &quot;windowFullscreened&quot; | &quot;windowUnfullscreened&quot; | &quot;windowMinimized&quot; | &quot;windowUnminimized&quot; | &quot;windowHidden&quot; | &quot;windowUnhidden&quot; | &quot;windowVisible&quot; | &quot;windowNotVisible&quot; | &quot;windowOnScreen&quot; | &quot;windowNotOnScreen&quot; | &quot;windowInCurrentSpace&quot; | &quot;windowNotInCurrentSpace&quot; | &quot;windowFocused&quot; | &quot;windowUnfocused&quot; | &quot;windowTitleChanged&quot; | &quot;windowAllowed&quot; | &quot;windowRejected&quot; | &quot;hasWindow&quot; | &quot;hasNoWindows&quot; | &quot;windowsChanged&quot;</td>
+    <td class="param-desc">The event to listen for</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">listener</span></td>
+    <td class="param-type">(window: HSWindow | null, appName: string | null, event: string) =&gt; void</td>
+    <td class="param-desc">Called with the window, its application&#39;s name, and the event&#39;s name. Only <code>windowsChanged</code> passes <code>null</code>s, when there are no windows left</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    hs.windowfilter.defaultFilter.on(&quot;windowFocused&quot;, (win, appName) =&gt; {
+        console.log(&quot;Focused &quot; + appName + &quot;: &quot; + win.title)
+    })
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L212" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:212</a>
+        </div>
+    </div>
+    <div class="method" id="off">
+        <h3>
+<a href="#off">off(event, listener) -> None</a>
+        </h3>
+
+        <div class="description"><p>Removes a listener registered with <code>on()</code> or <code>once()</code></p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">off(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">event</span></td>
+    <td class="param-type">&quot;windowCreated&quot; | &quot;windowDestroyed&quot; | &quot;windowMoved&quot; | &quot;windowFullscreened&quot; | &quot;windowUnfullscreened&quot; | &quot;windowMinimized&quot; | &quot;windowUnminimized&quot; | &quot;windowHidden&quot; | &quot;windowUnhidden&quot; | &quot;windowVisible&quot; | &quot;windowNotVisible&quot; | &quot;windowOnScreen&quot; | &quot;windowNotOnScreen&quot; | &quot;windowInCurrentSpace&quot; | &quot;windowNotInCurrentSpace&quot; | &quot;windowFocused&quot; | &quot;windowUnfocused&quot; | &quot;windowTitleChanged&quot; | &quot;windowAllowed&quot; | &quot;windowRejected&quot; | &quot;hasWindow&quot; | &quot;hasNoWindows&quot; | &quot;windowsChanged&quot;</td>
+    <td class="param-desc">The event it was registered for</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">listener</span></td>
+    <td class="param-type">(window: HSWindow | null, appName: string | null, event: string) =&gt; void</td>
+    <td class="param-desc">The function originally registered</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const onFocus = (win) =&gt; console.log(win.title)
+wf.on(&quot;windowFocused&quot;, onFocus)
+// later…
+wf.off(&quot;windowFocused&quot;, onFocus)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L224" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:224</a>
+        </div>
+    </div>
+    <div class="method" id="once">
+        <h3>
+<a href="#once">once(event, listener) -> None</a>
+        </h3>
+
+        <div class="description"><p>Registers a listener that&#39;s called once, the next time the event happens, then removed</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">once(event, listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">event</span></td>
+    <td class="param-type">&quot;windowCreated&quot; | &quot;windowDestroyed&quot; | &quot;windowMoved&quot; | &quot;windowFullscreened&quot; | &quot;windowUnfullscreened&quot; | &quot;windowMinimized&quot; | &quot;windowUnminimized&quot; | &quot;windowHidden&quot; | &quot;windowUnhidden&quot; | &quot;windowVisible&quot; | &quot;windowNotVisible&quot; | &quot;windowOnScreen&quot; | &quot;windowNotOnScreen&quot; | &quot;windowInCurrentSpace&quot; | &quot;windowNotInCurrentSpace&quot; | &quot;windowFocused&quot; | &quot;windowUnfocused&quot; | &quot;windowTitleChanged&quot; | &quot;windowAllowed&quot; | &quot;windowRejected&quot; | &quot;hasWindow&quot; | &quot;hasNoWindows&quot; | &quot;windowsChanged&quot;</td>
+    <td class="param-desc">The event to listen for</td>
+</tr>
+<tr class="param-row param-group-end">
+    <td class="param-name"><span class="param-name-text">listener</span></td>
+    <td class="param-type">(window: HSWindow | null, appName: string | null, event: string) =&gt; void</td>
+    <td class="param-desc">Called once</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">try {
+    hs.windowfilter.create([&quot;Safari&quot;]).once(&quot;windowCreated&quot;, (win) =&gt; console.log(&quot;New Safari window: &quot; + win.title))
+} catch (err) {
+    console.error(err.message)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L238" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:238</a>
+        </div>
+    </div>
+    <div class="method" id="pause">
+        <h3>
+<a href="#pause">pause() -> HSWindowFilter</a>
+        </h3>
+
+        <div class="description"><p>Stops calling this filter&#39;s listeners, until <code>resume()</code>. Its listeners stay registered.
+A paused filter doesn&#39;t keep itself alive, so keep a reference to one you mean to resume.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">pause() -> HSWindowFilter</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">This filter</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wf.pause()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L247" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:247</a>
+        </div>
+    </div>
+    <div class="method" id="resume">
+        <h3>
+<a href="#resume">resume() -> HSWindowFilter</a>
+        </h3>
+
+        <div class="description"><p>Starts calling this filter&#39;s listeners again after <code>pause()</code></p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">resume() -> HSWindowFilter</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindowFilter</div>
+        <div class="return-desc">This filter</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wf.resume()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L255" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:255</a>
+        </div>
+    </div>
+    <div class="method" id="windowsToEast">
+        <h3>
+<a href="#windowsToEast">windowsToEast(options) -> HSWindow[]</a>
+        </h3>
+
+        <div class="description"><p>The windows this filter allows that are to the right of a window, nearest first. Only windows on
+screen count, so combine this with a <code>currentSpace</code> rule (or use
+<code>hs.windowfilter.currentSpaceFilter</code>) to ignore windows on other Spaces cheaply.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">windowsToEast(options) -> HSWindow[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-has-fields">
+    <td class="param-name"><span class="tree-line tree-stem" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">options</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">object</td>
+    <td class="param-desc">How to choose the windows</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">window</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">HSWindow</td>
+    <td class="param-desc">The window to start from. Defaults to the focused window</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">frontmost</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to put windows that can be seen before windows hidden behind others</td>
+</tr>
+<tr class="param-row param-field param-group-end" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch tree-last" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">strict</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to only consider windows within 45° of the direction, rather than anywhere on that side of the window</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindow[]</div>
+        <div class="return-desc">The windows, nearest first</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const next = hs.windowfilter.currentSpaceFilter.windowsToEast()[0]
+if (next) console.log(&quot;Next window east: &quot; + next.title)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L279" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:279</a>
+        </div>
+    </div>
+    <div class="method" id="focusWindowEast">
+        <h3>
+<a href="#focusWindowEast">focusWindowEast(options) -> boolean</a>
+        </h3>
+
+        <div class="description"><p>Focuses the nearest window this filter allows that is to the right of a window</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">focusWindowEast(options) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-has-fields">
+    <td class="param-name"><span class="tree-line tree-stem" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">options</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">object</td>
+    <td class="param-desc">How to choose the windows</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">window</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">HSWindow</td>
+    <td class="param-desc">The window to start from. Defaults to the focused window</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">frontmost</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to put windows that can be seen before windows hidden behind others</td>
+</tr>
+<tr class="param-row param-field param-group-end" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch tree-last" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">strict</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to only consider windows within 45° of the direction, rather than anywhere on that side of the window</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc"><code>true</code> if a window was focused, <code>false</code> if there was none to focus</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.hotkey.bind([&quot;cmd&quot;, &quot;ctrl&quot;], &quot;right&quot;, () =&gt; {
+    hs.windowfilter.currentSpaceFilter.focusWindowEast({ frontmost: true })
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L293" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:293</a>
+        </div>
+    </div>
+    <div class="method" id="windowsToWest">
+        <h3>
+<a href="#windowsToWest">windowsToWest(options) -> HSWindow[]</a>
+        </h3>
+
+        <div class="description"><p>The windows this filter allows that are to the left of a window, nearest first. Only windows on
+screen count, so combine this with a <code>currentSpace</code> rule (or use
+<code>hs.windowfilter.currentSpaceFilter</code>) to ignore windows on other Spaces cheaply.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">windowsToWest(options) -> HSWindow[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-has-fields">
+    <td class="param-name"><span class="tree-line tree-stem" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">options</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">object</td>
+    <td class="param-desc">How to choose the windows</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">window</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">HSWindow</td>
+    <td class="param-desc">The window to start from. Defaults to the focused window</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">frontmost</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to put windows that can be seen before windows hidden behind others</td>
+</tr>
+<tr class="param-row param-field param-group-end" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch tree-last" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">strict</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to only consider windows within 45° of the direction, rather than anywhere on that side of the window</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindow[]</div>
+        <div class="return-desc">The windows, nearest first</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const next = hs.windowfilter.currentSpaceFilter.windowsToWest()[0]
+if (next) console.log(&quot;Next window west: &quot; + next.title)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L308" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:308</a>
+        </div>
+    </div>
+    <div class="method" id="focusWindowWest">
+        <h3>
+<a href="#focusWindowWest">focusWindowWest(options) -> boolean</a>
+        </h3>
+
+        <div class="description"><p>Focuses the nearest window this filter allows that is to the left of a window</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">focusWindowWest(options) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-has-fields">
+    <td class="param-name"><span class="tree-line tree-stem" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">options</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">object</td>
+    <td class="param-desc">How to choose the windows</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">window</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">HSWindow</td>
+    <td class="param-desc">The window to start from. Defaults to the focused window</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">frontmost</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to put windows that can be seen before windows hidden behind others</td>
+</tr>
+<tr class="param-row param-field param-group-end" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch tree-last" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">strict</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to only consider windows within 45° of the direction, rather than anywhere on that side of the window</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc"><code>true</code> if a window was focused, <code>false</code> if there was none to focus</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.hotkey.bind([&quot;cmd&quot;, &quot;ctrl&quot;], &quot;left&quot;, () =&gt; {
+    hs.windowfilter.currentSpaceFilter.focusWindowWest({ frontmost: true })
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L322" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:322</a>
+        </div>
+    </div>
+    <div class="method" id="windowsToNorth">
+        <h3>
+<a href="#windowsToNorth">windowsToNorth(options) -> HSWindow[]</a>
+        </h3>
+
+        <div class="description"><p>The windows this filter allows that are above a window, nearest first. Only windows on
+screen count, so combine this with a <code>currentSpace</code> rule (or use
+<code>hs.windowfilter.currentSpaceFilter</code>) to ignore windows on other Spaces cheaply.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">windowsToNorth(options) -> HSWindow[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-has-fields">
+    <td class="param-name"><span class="tree-line tree-stem" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">options</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">object</td>
+    <td class="param-desc">How to choose the windows</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">window</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">HSWindow</td>
+    <td class="param-desc">The window to start from. Defaults to the focused window</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">frontmost</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to put windows that can be seen before windows hidden behind others</td>
+</tr>
+<tr class="param-row param-field param-group-end" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch tree-last" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">strict</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to only consider windows within 45° of the direction, rather than anywhere on that side of the window</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindow[]</div>
+        <div class="return-desc">The windows, nearest first</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const next = hs.windowfilter.currentSpaceFilter.windowsToNorth()[0]
+if (next) console.log(&quot;Next window north: &quot; + next.title)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L337" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:337</a>
+        </div>
+    </div>
+    <div class="method" id="focusWindowNorth">
+        <h3>
+<a href="#focusWindowNorth">focusWindowNorth(options) -> boolean</a>
+        </h3>
+
+        <div class="description"><p>Focuses the nearest window this filter allows that is above a window</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">focusWindowNorth(options) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-has-fields">
+    <td class="param-name"><span class="tree-line tree-stem" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">options</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">object</td>
+    <td class="param-desc">How to choose the windows</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">window</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">HSWindow</td>
+    <td class="param-desc">The window to start from. Defaults to the focused window</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">frontmost</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to put windows that can be seen before windows hidden behind others</td>
+</tr>
+<tr class="param-row param-field param-group-end" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch tree-last" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">strict</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to only consider windows within 45° of the direction, rather than anywhere on that side of the window</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc"><code>true</code> if a window was focused, <code>false</code> if there was none to focus</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.hotkey.bind([&quot;cmd&quot;, &quot;ctrl&quot;], &quot;up&quot;, () =&gt; {
+    hs.windowfilter.currentSpaceFilter.focusWindowNorth({ frontmost: true })
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L351" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:351</a>
+        </div>
+    </div>
+    <div class="method" id="windowsToSouth">
+        <h3>
+<a href="#windowsToSouth">windowsToSouth(options) -> HSWindow[]</a>
+        </h3>
+
+        <div class="description"><p>The windows this filter allows that are below a window, nearest first. Only windows on
+screen count, so combine this with a <code>currentSpace</code> rule (or use
+<code>hs.windowfilter.currentSpaceFilter</code>) to ignore windows on other Spaces cheaply.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">windowsToSouth(options) -> HSWindow[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-has-fields">
+    <td class="param-name"><span class="tree-line tree-stem" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">options</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">object</td>
+    <td class="param-desc">How to choose the windows</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">window</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">HSWindow</td>
+    <td class="param-desc">The window to start from. Defaults to the focused window</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">frontmost</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to put windows that can be seen before windows hidden behind others</td>
+</tr>
+<tr class="param-row param-field param-group-end" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch tree-last" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">strict</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to only consider windows within 45° of the direction, rather than anywhere on that side of the window</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindow[]</div>
+        <div class="return-desc">The windows, nearest first</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const next = hs.windowfilter.currentSpaceFilter.windowsToSouth()[0]
+if (next) console.log(&quot;Next window south: &quot; + next.title)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L366" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:366</a>
+        </div>
+    </div>
+    <div class="method" id="focusWindowSouth">
+        <h3>
+<a href="#focusWindowSouth">focusWindowSouth(options) -> boolean</a>
+        </h3>
+
+        <div class="description"><p>Focuses the nearest window this filter allows that is below a window</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">focusWindowSouth(options) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="param-row param-has-fields">
+    <td class="param-name"><span class="tree-line tree-stem" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">options</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">object</td>
+    <td class="param-desc">How to choose the windows</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">window</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">HSWindow</td>
+    <td class="param-desc">The window to start from. Defaults to the focused window</td>
+</tr>
+<tr class="param-row param-field" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">frontmost</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to put windows that can be seen before windows hidden behind others</td>
+</tr>
+<tr class="param-row param-field param-group-end" style="--depth: 1">
+    <td class="param-name"><span class="tree-line tree-branch tree-last" style="--level: 1" aria-hidden="true"></span><span class="param-name-text">strict</span> <span class="param-optional">optional</span></td>
+    <td class="param-type">boolean</td>
+    <td class="param-desc"><code>true</code> to only consider windows within 45° of the direction, rather than anywhere on that side of the window</td>
+</tr>
+
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc"><code>true</code> if a window was focused, <code>false</code> if there was none to focus</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.hotkey.bind([&quot;cmd&quot;, &quot;ctrl&quot;], &quot;down&quot;, () =&gt; {
+    hs.windowfilter.currentSpaceFilter.focusWindowSouth({ frontmost: true })
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.windowfilter/HSWindowFilter.swift#L380" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.windowfilter/HSWindowFilter.swift:380</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSWindowFilter');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+            initNavTracking();
+        });
+    </script>
+</body>
+</html>

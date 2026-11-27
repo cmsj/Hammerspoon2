@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div id="guides-nav"></div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs</span>
+</nav>
+<div class="page-header">
+    <h1>hs</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="onRelaunch">
+        <h3><a href="#onRelaunch">hs.onRelaunch</a></h3>
+        <div class="prop-type">function | null</div>
+        <div class="description"><p>Called when Hammerspoon 2 is launched again while it&#39;s already
+running (e.g. from Finder, Spotlight or <code>open -a</code>), or when its Dock icon is clicked, or null
+to remove it. It&#39;s only called when Settings → Advanced → &quot;When launched while running&quot; is
+set to &quot;Call hs.onRelaunch&quot;. If it&#39;s set to that and no callback is set (for example because
+your config failed to load), the Console is shown instead, so you can always get back to it.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L120" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:120</a>
+        </div>
+    </div>
+    <div class="property" id="onOpenFile">
+        <h3><a href="#onOpenFile">hs.onOpenFile</a></h3>
+        <div class="prop-type">function | null</div>
+        <div class="description"><p>Called when a file or folder is opened with Hammerspoon 2,
+e.g. by dropping it on the Dock icon, choosing Hammerspoon 2 from Finder&#39;s &quot;Open With&quot; menu,
+or <code>open -a &quot;Hammerspoon 2&quot; file.txt</code>, or null to remove it. It&#39;s called once for each item,
+with its path. Spoons (<code>.spoon2</code> files) are installed rather than passed to it, unless
+&quot;Install Spoons when opened&quot; is turned off in the Advanced tab of Settings.
+Items opened before your config has loaded (for example, the one that launched
+Hammerspoon 2) are passed to it once your config has loaded.</p>
+</div>
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L136" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:136</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="reload">
+        <h3><a href="#reload">hs.reload() -> None</a></h3>
+
+        <div class="description"><p>Destroy the current JavaScript runtime and start a new one, loading all configuration from disk again</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.reload() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.reload()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L21" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:21</a>
+        </div>
+    </div>
+    <div class="method" id="collectGarbage">
+        <h3><a href="#collectGarbage">hs.collectGarbage() -> None</a></h3>
+
+        <div class="description"><p>Force garbage collection of JavaScript objects that no longer have any references</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.collectGarbage() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">This uses private macOS API</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.collectGarbage()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L29" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:29</a>
+        </div>
+    </div>
+    <div class="method" id="activeObjects">
+        <h3><a href="#activeObjects">hs.activeObjects() -> any[]</a></h3>
+
+        <div class="description"><p>Get every object that is currently active: running tasks, scheduled timers, started
+watchers and so on. An active object keeps running, and its callbacks keep being called,
+until it finishes or you stop it, whether or not you kept a reference to it. Use this to
+find something you started and lost track of.</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.activeObjects() -> any[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">any[]</div>
+        <div class="return-desc">The active objects</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.activeObjects().forEach(obj =&gt; console.log(obj.toString()))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L44" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:44</a>
+        </div>
+    </div>
+    <div class="method" id="openConsole">
+        <h3><a href="#openConsole">hs.openConsole() -> None</a></h3>
+
+        <div class="description"><p>Open the Hammerspoon Console window</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.openConsole() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.openConsole()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L51" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:51</a>
+        </div>
+    </div>
+    <div class="method" id="closeConsole">
+        <h3><a href="#closeConsole">hs.closeConsole() -> None</a></h3>
+
+        <div class="description"><p>Close the Hammerspoon Console window</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.closeConsole() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.closeConsole()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L58" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:58</a>
+        </div>
+    </div>
+    <div class="method" id="clearConsole">
+        <h3><a href="#clearConsole">hs.clearConsole() -> None</a></h3>
+
+        <div class="description"><p>Clear the Hammerspoon Console log</p>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.clearConsole() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.clearConsole()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L65" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:65</a>
+        </div>
+    </div>
+    <div class="method" id="consoleHistory">
+        <h3><a href="#consoleHistory">hs.consoleHistory(options) -> {sequence: number, date: Date, level: "garbage" | "debug" | "info" | "warning" | "error" | "javascript", message: string}[]</a></h3>
+
+        <div class="description"><p>Get the messages currently in the Hammerspoon Console, oldest first. This is the same history
+the Console window shows, so it&#39;s limited by the &quot;Console history length&quot; setting (which
+applies to each level separately), and <code>hs.clearConsole()</code> empties it.</p>
+<p>Each message is an object with:</p>
+<ul>
+<li><code>sequence</code>: a number that&#39;s higher for each newer message. Pass the last one you&#39;ve seen
+as <code>since</code> to get only the messages logged after it</li>
+<li><code>date</code>: a <code>Date</code> for when the message was logged</li>
+<li><code>level</code>: <code>&quot;garbage&quot;</code>, <code>&quot;debug&quot;</code>, <code>&quot;info&quot;</code>, <code>&quot;warning&quot;</code>, <code>&quot;error&quot;</code> or <code>&quot;javascript&quot;</code>
+(for <code>console.log()</code> and friends)</li>
+<li><code>message</code>: the message&#39;s text</li>
+</ul>
+<p>Options (all optional):</p>
+<ul>
+<li><code>minimumLevel</code>: only get messages at this level or above, e.g. <code>&quot;warning&quot;</code> for warnings
+and errors (and <code>&quot;javascript&quot;</code> messages, which count as the highest level). Defaults to
+every level</li>
+<li><code>search</code>: only get messages that contain this text, ignoring case</li>
+<li><code>since</code>: only get messages whose <code>sequence</code> is higher than this</li>
+</ul>
+</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.consoleHistory(options) -> {sequence: number, date: Date, level: "garbage" | "debug" | "info" | "warning" | "error" | "javascript", message: string}[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">[String: Any]</td>
+                    <td class="param-desc">Which messages to get</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{sequence: number, date: Date, level: "garbage" | "debug" | "info" | "warning" | "error" | "javascript", message: string}[]</div>
+        <div class="return-desc">The matching messages, oldest first</div>
+
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">Throws an Error on failure; wrap calls in try/catch to handle it.</div>
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">Messages reach the Console asynchronously, so one logged moments ago, including</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">// Every 5 minutes, report how many errors were logged since the last check
+let lastSeen = 0
+const errorCheck = hs.timer.every(300, () =&gt; {
+    const errors = hs.consoleHistory({ minimumLevel: &quot;error&quot;, since: lastSeen })
+    if (errors.length &gt; 0) {
+        lastSeen = errors[errors.length - 1].sequence
+        // console.info(), not console.log(): &quot;javascript&quot; messages are above &quot;error&quot;, so a
+        // console.log() report would be found as a new error by the next check
+        console.info(`${errors.length} new errors, the latest: ${errors[errors.length - 1].message}`)
+    }
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/Hammerspoon/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L105" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:105</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+            initNavTracking();
+        });
+    </script>
+</body>
+</html>

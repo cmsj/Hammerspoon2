@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.timer - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.timer</span>
+</nav>
+<div class="page-header">
+    <h1>hs.timer</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Module for creating and managing timers</p>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSTimer.html">HSTimer</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="create">
+        <h3><a href="#create">hs.timer.create(interval, callback, continueOnError) -> HSTimer</a></h3>
+
+        <div class="description">Create a new timer</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.create(interval, callback, continueOnError) -> HSTimer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">interval</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The interval in seconds at which the timer should fire</td>
+                </tr>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">A JavaScript function to call when the timer fires</td>
+                </tr>
+                <tr>
+                    <td class="param-name">continueOnError</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">If true, the timer will continue running even if the callback throws an error</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">A timer object. Call start() to begin the timer.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const t = hs.timer.create(5, () =&gt; console.log(&quot;tick&quot;), false)
+t.start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L26" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:26</a>
+        </div>
+    </div>
+    <div class="method" id="doAfter">
+        <h3><a href="#doAfter">hs.timer.doAfter(seconds, callback) -> HSTimer</a></h3>
+
+        <div class="description">Create and start a one-shot timer</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.doAfter(seconds, callback) -> HSTimer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">seconds</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Number of seconds to wait before firing</td>
+                </tr>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">A JavaScript function to call when the timer fires</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">A timer object (already started)</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.timer.doAfter(5, () =&gt; console.log(&quot;fired&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L37" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:37</a>
+        </div>
+    </div>
+    <div class="method" id="doEvery">
+        <h3><a href="#doEvery">hs.timer.doEvery(interval, callback) -> HSTimer</a></h3>
+
+        <div class="description">Create and start a repeating timer</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.doEvery(interval, callback) -> HSTimer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">interval</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The interval in seconds at which the timer should fire</td>
+                </tr>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">A JavaScript function to call when the timer fires</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">A timer object (already started)</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.timer.doEvery(60, () =&gt; console.log(&quot;every minute&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L48" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:48</a>
+        </div>
+    </div>
+    <div class="method" id="doAt">
+        <h3><a href="#doAt">hs.timer.doAt(time, repeatInterval, callback, continueOnError) -> HSTimer</a></h3>
+
+        <div class="description">Create and start a timer that fires at a specific time</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.doAt(time, repeatInterval, callback, continueOnError) -> HSTimer</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">time</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Seconds since midnight (local time) when the timer should first fire</td>
+                </tr>
+                <tr>
+                    <td class="param-name">repeatInterval</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">If provided, the timer will repeat at this interval. Pass 0 for one-shot.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">A JavaScript function to call when the timer fires</td>
+                </tr>
+                <tr>
+                    <td class="param-name">continueOnError</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">If true, the timer will continue running even if the callback throws an error</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">A timer object (already started)</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">// Fire at 9am every day
+hs.timer.doAt(9 * 3600, 86400, () =&gt; console.log(&quot;morning&quot;), false)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L63" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:63</a>
+        </div>
+    </div>
+    <div class="method" id="usleep">
+        <h3><a href="#usleep">hs.timer.usleep(microseconds) -> None</a></h3>
+
+        <div class="description">Block execution for a specified number of microseconds (strongly discouraged)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.usleep(microseconds) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">microseconds</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Number of microseconds to sleep</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">This blocks the entire application and should be avoided. Use timers instead.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.timer.usleep(100000)  // 100ms</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L72" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:72</a>
+        </div>
+    </div>
+    <div class="method" id="secondsSinceEpoch">
+        <h3><a href="#secondsSinceEpoch">hs.timer.secondsSinceEpoch() -> number</a></h3>
+
+        <div class="description">Get the current time as seconds since the UNIX epoch with sub-second precision</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.secondsSinceEpoch() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">Fractional seconds since midnight, January 1, 1970 UTC</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.timer.secondsSinceEpoch())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L80" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:80</a>
+        </div>
+    </div>
+    <div class="method" id="absoluteTime">
+        <h3><a href="#absoluteTime">hs.timer.absoluteTime() -> number</a></h3>
+
+        <div class="description">Get the number of nanoseconds since the system was booted (excluding sleep time)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.absoluteTime() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">Nanoseconds since boot</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.timer.absoluteTime())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L88" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:88</a>
+        </div>
+    </div>
+    <div class="method" id="localTime">
+        <h3><a href="#localTime">hs.timer.localTime() -> number</a></h3>
+
+        <div class="description">Get the number of seconds since local midnight</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.localTime() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">Seconds since midnight in the local timezone</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.timer.localTime())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L96" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:96</a>
+        </div>
+    </div>
+    <div class="method" id="minutes">
+        <h3><a href="#minutes">hs.timer.minutes(n) -> number</a></h3>
+
+        <div class="description">Converts minutes to seconds</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.minutes(n) -> number</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">n</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A number of minutes</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The equivalent number of seconds</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.timer.minutes(5))  // 300</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L105" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:105</a>
+        </div>
+    </div>
+    <div class="method" id="hours">
+        <h3><a href="#hours">hs.timer.hours(n) -> number</a></h3>
+
+        <div class="description">Converts hours to seconds</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.hours(n) -> number</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">n</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A number of hours</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The equivalent number of seconds</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.timer.hours(2))  // 7200</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L114" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:114</a>
+        </div>
+    </div>
+    <div class="method" id="days">
+        <h3><a href="#days">hs.timer.days(n) -> number</a></h3>
+
+        <div class="description">Converts days to seconds</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.days(n) -> number</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">n</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A number of days</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The equivalent number of seconds</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.timer.days(1))  // 86400</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L123" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:123</a>
+        </div>
+    </div>
+    <div class="method" id="weeks">
+        <h3><a href="#weeks">hs.timer.weeks(n) -> number</a></h3>
+
+        <div class="description">Converts weeks to seconds</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.weeks(n) -> number</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">n</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A number of weeks</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The equivalent number of seconds</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.timer.weeks(1))  // 604800</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimerModule.swift#L132" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift:132</a>
+        </div>
+    </div>
+    <div class="method" id="doUntil">
+        <h3><a href="#doUntil">hs.timer.doUntil(predicateFn, actionFn, checkInterval) -> None</a></h3>
+
+        <div class="description">Repeat a function/lambda until a given predicate function/lambda returns true</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.doUntil(predicateFn, actionFn, checkInterval) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">predicateFn</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">A function/lambda to test if the timer should continue. Return True to end the timer, False to continue it</td>
+                </tr>
+                <tr>
+                    <td class="param-name">actionFn</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">A function/lambda to call until the predicateFn returns true</td>
+                </tr>
+                <tr>
+                    <td class="param-name">checkInterval</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">How often, in seconds, to call actionFn</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">let count = 0
+hs.timer.doUntil(() =&gt; count &gt;= 3, () =&gt; { count++; console.log(count) }, 1)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/hs.timer.js#L23" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/hs.timer.js:23</a>
+        </div>
+    </div>
+    <div class="method" id="doWhile">
+        <h3><a href="#doWhile">hs.timer.doWhile(predicateFn, actionFn, checkInterval) -> None</a></h3>
+
+        <div class="description">Repeat a function/lambda while a given predicate function/lambda returns true</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.doWhile(predicateFn, actionFn, checkInterval) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">predicateFn</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">A function/lambda to test if the timer should continue. Return True to continue the timer, False to end it</td>
+                </tr>
+                <tr>
+                    <td class="param-name">actionFn</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">A function/lambda to call while the predicateFn returns true</td>
+                </tr>
+                <tr>
+                    <td class="param-name">checkInterval</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">How often, in seconds, to call actionFn</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">let count = 0
+hs.timer.doWhile(() =&gt; count &lt; 3, () =&gt; { count++; console.log(count) }, 1)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/hs.timer.js#L55" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/hs.timer.js:55</a>
+        </div>
+    </div>
+    <div class="method" id="waitUntil">
+        <h3><a href="#waitUntil">hs.timer.waitUntil(predicateFn, actionFn, checkInterval) -> None</a></h3>
+
+        <div class="description">Wait to call a function/lambda until a given predicate function/lambda returns true</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.waitUntil(predicateFn, actionFn, checkInterval) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">predicateFn</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">A function/lambda to test if the actionFn should be called. Return True to call the actionFn, False to continue waiting</td>
+                </tr>
+                <tr>
+                    <td class="param-name">actionFn</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">A function/lambda to call when the predicateFn returns true. This will only be called once and then the timer will stop.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">checkInterval</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">How often, in seconds, to call predicateFn</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/hs.timer.js#L81" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/hs.timer.js:81</a>
+        </div>
+    </div>
+    <div class="method" id="waitWhile">
+        <h3><a href="#waitWhile">hs.timer.waitWhile(predicateFn, actionFn, checkInterval) -> None</a></h3>
+
+        <div class="description">Wait to call a function/lambda until a given predicate function/lambda returns false</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.timer.waitWhile(predicateFn, actionFn, checkInterval) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">predicateFn</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">A function/lambda to test if the actionFn should be called. Return False to call the actionFn, True to continue waiting</td>
+                </tr>
+                <tr>
+                    <td class="param-name">actionFn</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">A function/lambda to call when the predicateFn returns False. This will only be called once and then the timer will stop.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">checkInterval</td>
+                    <td class="param-type">any</td>
+                    <td class="param-desc">How often, in seconds, to call predicateFn</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/hs.timer.js#L106" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/hs.timer.js:106</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.timer');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

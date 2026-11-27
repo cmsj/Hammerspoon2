@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.wifi - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.wifi</span>
+</nav>
+<div class="page-header">
+    <h1>hs.wifi</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Control and query Wi-Fi interfaces, scan for networks, and watch for Wi-Fi events.</p>
+<p>Built on CoreWLAN. Fields that reveal network identity — <code>ssid</code>, <code>bssid</code>, <code>countryCode</code>,
+and BSSIDs inside scan results — are only populated once Location Services is enabled and
+the user has authorized this app; call <code>hs.permissions.requestLocation()</code> first (the same
+gate <code>hs.location</code> uses). Without authorization these fields are <code>null</code>/omitted, not errors.</p>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSWifiWatcher.html">HSWifiWatcher</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="watcherEventTypes">
+        <h3><a href="#watcherEventTypes">hs.wifi.watcherEventTypes</a></h3>
+        <div class="prop-type">string[]</div>
+        <div class="description">The Wi-Fi event types that can be passed to `HSWifiWatcher.events`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.wifi/HSWifiModule.swift#L275" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift:275</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="interfaces">
+        <h3><a href="#interfaces">hs.wifi.interfaces() -> string[]</a></h3>
+
+        <div class="description">Returns the names of all Wi-Fi interfaces attached to the system (e.g. `[&quot;en0&quot;]`).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.wifi.interfaces() -> string[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string[]</div>
+        <div class="return-desc">an array of interface name strings</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.wifi.interfaces())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.wifi/HSWifiModule.swift#L201" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift:201</a>
+        </div>
+    </div>
+    <div class="method" id="interfaceDetails">
+        <h3><a href="#interfaceDetails">hs.wifi.interfaceDetails(interface) -> [String: Any]</a></h3>
+
+        <div class="description">Returns detailed information about a Wi-Fi interface.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.wifi.interfaceDetails(interface) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">interface</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">the interface name as returned by `interfaces()`; omit for the system&#39;s default Wi-Fi interface</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">a table with keys `interface, active, power, ssid, bssid, security, interfaceMode, activePHYMode, rssi, noise, transmitRate, transmitPower, countryCode, hardwareAddress, wlanChannel, supportedChannels, cachedScanResults, configuration`; or null if the interface doesn&#39;t exist. `ssid`/`bssid`/`countryCode`/`wlanChannel` may be absent without Location Services authorization.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const info = hs.wifi.interfaceDetails()
+if (info) console.log(info.ssid + &quot; on channel &quot; + info.wlanChannel.number)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.wifi/HSWifiModule.swift#L211" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift:211</a>
+        </div>
+    </div>
+    <div class="method" id="currentNetwork">
+        <h3><a href="#currentNetwork">hs.wifi.currentNetwork(interface) -> string</a></h3>
+
+        <div class="description">Returns the SSID of the network currently joined on an interface.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.wifi.currentNetwork(interface) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">interface</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">the interface name as returned by `interfaces()`; omit for the system&#39;s default Wi-Fi interface</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">the SSID string, or null if not joined to a network (or Location Services is not authorized)</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.wifi.currentNetwork())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.wifi/HSWifiModule.swift#L220" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift:220</a>
+        </div>
+    </div>
+    <div class="method" id="setPower">
+        <h3><a href="#setPower">hs.wifi.setPower(state, interface) -> boolean</a></h3>
+
+        <div class="description">Turns a Wi-Fi interface on or off.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.wifi.setPower(state, interface) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">state</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">true to power the interface on, false to power it off</td>
+                </tr>
+                <tr>
+                    <td class="param-name">interface</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">the interface name as returned by `interfaces()`; omit for the system&#39;s default Wi-Fi interface</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the power state was changed successfully, false if the interface doesn&#39;t exist or the change failed (see the Console for the reason)</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.wifi.setPower(false) // turn Wi-Fi off</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.wifi/HSWifiModule.swift#L231" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift:231</a>
+        </div>
+    </div>
+    <div class="method" id="disassociate">
+        <h3><a href="#disassociate">hs.wifi.disassociate(interface) -> None</a></h3>
+
+        <div class="description">Disconnects an interface from its current network.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.wifi.disassociate(interface) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">interface</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">the interface name as returned by `interfaces()`; omit for the system&#39;s default Wi-Fi interface</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.wifi.disassociate()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.wifi/HSWifiModule.swift#L239" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift:239</a>
+        </div>
+    </div>
+    <div class="method" id="associate">
+        <h3><a href="#associate">hs.wifi.associate(ssid, passphrase, interface) -> Promise&lt;boolean&gt;</a></h3>
+
+        <div class="description">Scans for a network by SSID and joins it. Enterprise networks are not supported.
+This can take several seconds; it runs off the main thread so it does not block the app.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.wifi.associate(ssid, passphrase, interface) -> Promise&lt;boolean&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">ssid</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">the SSID of the network to join</td>
+                </tr>
+                <tr>
+                    <td class="param-name">passphrase</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">the network passphrase; required for WEP/WPA/WPA2/WPA3 Personal networks</td>
+                </tr>
+                <tr>
+                    <td class="param-name">interface</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">the interface name as returned by `interfaces()`; omit for the system&#39;s default Wi-Fi interface</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;boolean&gt;</div>
+        <div class="return-desc">A Promise that resolves `true` if joined successfully, `false` if no network with that SSID was found, or rejects if the interface doesn&#39;t exist or the association attempt fails</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.wifi.associate(&quot;MyNetwork&quot;, &quot;hunter2&quot;)
+    .then(joined =&gt; console.log(joined ? &quot;Joined&quot; : &quot;Network not found&quot;))
+    .catch(err =&gt; console.log(&quot;Error: &quot; + err))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.wifi/HSWifiModule.swift#L255" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift:255</a>
+        </div>
+    </div>
+    <div class="method" id="scanNetworks">
+        <h3><a href="#scanNetworks">hs.wifi.scanNetworks(interface) -> Promise&lt;object[]&gt;</a></h3>
+
+        <div class="description">Scans for visible Wi-Fi networks.
+This can take a few seconds; it runs off the main thread so it does not block the app.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.wifi.scanNetworks(interface) -> Promise&lt;object[]&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">interface</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">the interface name as returned by `interfaces()`; omit for the system&#39;s default Wi-Fi interface</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;object[]&gt;</div>
+        <div class="return-desc">A Promise that resolves to an array of network tables, each with keys `ssid, bssid, rssi, noise, ibss, countryCode, beaconInterval, security, phyModes, wlanChannel, informationElementData`; or rejects if the interface doesn&#39;t exist or the scan fails. `bssid`/`countryCode` may be absent without Location Services authorization. `informationElementData` is raw beacon/probe-response data returned as an array of byte values (0-255) rather than a string, since it can contain sequences that are unsafe to render as text.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.wifi.scanNetworks().then(networks =&gt; {
+    networks.forEach(n =&gt; console.log(n.ssid + &quot; (&quot; + n.rssi + &quot; dBm)&quot;))
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.wifi/HSWifiModule.swift#L268" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift:268</a>
+        </div>
+    </div>
+    <div class="method" id="addWatcher">
+        <h3><a href="#addWatcher">hs.wifi.addWatcher() -> HSWifiWatcher</a></h3>
+
+        <div class="description">Creates a new Wi-Fi event watcher. Call `.setCallback()` and `.start()` to activate it.
+The watcher is stopped automatically when the module shuts down.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.wifi.addWatcher() -> HSWifiWatcher</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWifiWatcher</div>
+        <div class="return-desc">an HSWifiWatcher</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const w = hs.wifi.addWatcher()
+w.setCallback((event, info) =&gt; console.log(event, info)).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.wifi/HSWifiModule.swift#L285" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift:285</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.wifi');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
