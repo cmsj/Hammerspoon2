@@ -15,6 +15,7 @@ import ServiceManagement
 private final class FakeLoginItemService: LoginItemService {
     var status: SMAppService.Status
     var registerError: (any Error)?
+    var unregisterError: (any Error)?
     /// What `register()` changes `status` to, e.g. `.requiresApproval` when the system wants the
     /// user to allow the app.
     var statusAfterRegister: SMAppService.Status = .enabled
@@ -34,6 +35,7 @@ private final class FakeLoginItemService: LoginItemService {
 
     func unregister() throws {
         unregisterCount += 1
+        if let unregisterError { throw unregisterError }
         status = .notRegistered
     }
 
@@ -125,6 +127,18 @@ struct LoginItemManagerTests {
         manager.isEnabled = true
 
         #expect(!manager.isEnabled)
+        #expect(manager.lastError == "Operation not permitted")
+    }
+
+    @Test("A failed unregistration is surfaced and leaves the app enabled")
+    func unregisterFailure() {
+        let service = FakeLoginItemService(status: .enabled)
+        service.unregisterError = FakeError()
+        let manager = LoginItemManager(service: service)
+
+        manager.isEnabled = false
+
+        #expect(manager.isEnabled)
         #expect(manager.lastError == "Operation not permitted")
     }
 
